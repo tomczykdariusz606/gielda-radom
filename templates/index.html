@@ -58,8 +58,12 @@
                     <div class="card-body">
                         <form action="/dodaj" method="POST" enctype="multipart/form-data">
                             <div class="mb-2">
-                                <label class="small text-muted">Zdjęcie pojazdu</label>
-                                <input type="file" name="zdjecie" class="form-control form-control-sm" accept="image/*">
+                            
+<label class="small text-muted">Zdjęcia (max 10)</label>
+<!-- Dodano atrybut multiple -->
+<input type="file" name="zdjecia" class="form-control form-control-sm" accept="image/*" multiple>
+
+
                             </div>
                             <div class="row g-2 mb-2">
                                 <div class="col-6"><input type="text" name="marka" class="form-control form-control-sm" placeholder="Marka" required></div>
