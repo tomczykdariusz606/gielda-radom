@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Zaloguj się</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center vh-100">
+    <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-3">Logowanie</h3>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for c, m in messages %}<div class="alert alert-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+        {% endwith %}
+        <form method="POST">
+            <div class="mb-3"><input type="text" name="username" class="form-control" placeholder="Login" required></div>
+            <div class="mb-3"><input type="password" name="password" class="form-control" placeholder="Hasło" required></div>
+            <button type="submit" class="btn btn-primary w-100">Wejdź</button>
+        </form>
+        <div class="text-center mt-3"><a href="/register">Załóż konto</a> | <a href="/">Powrót</a></div>
+    </div>
+</body>
+</html>
