@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-arrow-left"></i> Wróć do listy
+            </a>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row">
+            
+            <!-- LEWA KOLUMNA: Galeria Zdjęć (Karuzela) -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div id="carCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            
+                            <!-- Jeśli są dodatkowe zdjęcia w bazie -->
+                            {% if car.images %}
+                                {% for image in car.images %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <div style="height: 500px; background: #000; display: flex; align-items: center; justify-content: center;">
+                                        <img src="{{ image.image_path }}" class="d-block" style="max-height: 100%; max-width: 100%;" alt="Zdjecie">
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            
+                            <!-- Jeśli nie ma (stare ogłoszenia), użyj głównego -->
+                            {% else %}
+                                <div class="carousel-item active">
+                                    <img src="{{ car.img }}" class="d-block w-100" alt="Foto główne">
+                                </div>
+                            {% endif %}
+                            
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Opis szczegółowy -->
+                <div class="card shadow-sm border-0 p-4">
+                    <h4>Opis pojazdu</h4>
+                    <hr>
+                    <p class="lead" style="white-space: pre-line;">{{ car.opis }}</p>
+                </div>
+            </div>
+
+            <!-- PRAWA KOLUMNA: Dane i Kontakt -->
+            <div class="col-lg-4">
+                <div class="card shadow border-0 p-4 mb-3">
+                    <h2 class="fw-bold text-primary mb-1">{{ car.cena }} PLN</h2>
+                    <h4 class="mb-3">{{ car.marka }} {{ car.model }}</h4>
+                    
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Rok produkcji:</span>
+                            <strong>{{ car.rok }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Źródło:</span>
+                            <strong>{{ car.zrodlo }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>ID Ogłoszenia:</span>
+                            <strong>#{{ car.id }}</strong>
+                        </li>
+                    </ul>
+
+                    <button class="btn btn-success btn-lg w-100 mb-2">
+                        <i class="bi bi-telephone-fill"></i> Pokaż telefon
+                    </button>
+                    <a href="https://mubi.pl" target="_blank" class="btn btn-outline-primary w-100">
+                        Oblicz ubezpieczenie
+                    </a>
+                </div>
+
+                <div class="alert alert-info small">
+                    <i class="bi bi-shield-lock"></i> Pamiętaj o bezpiecznych zakupach. Sprawdź auto w serwisie przed zapłatą.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stopka -->
+    <footer class="text-center py-4 text-muted">
+        &copy; 2024 Giełda Radom
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
