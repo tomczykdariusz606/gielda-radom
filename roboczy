@@ -1,209 +1,239 @@
+<!DOCTYPE html>
+<html lang="pl" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giełda Radom - Nowoczesne Auta Lokalne</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0d6efd, #0a58ca);
+            --accent-color: #ff5722; /* Nowoczesny pomarańczowy akcent */
+            --bg-light: #f8f9fa;
+            --card-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+            --card-hover-shadow: 0 20px 30px -10px rgba(0,0,0,0.15);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+        }
+        /* Nowoczesny Navbar */
+        .navbar {
+            background: rgba(33, 37, 41, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        /* Nowoczesny Header */
+        .modern-header {
+            background: rgb(33,37,41);
+            background: linear-gradient(180deg, rgba(33,37,41,1) 0%, rgba(52,58,64,1) 100%);
+            padding: 5rem 0;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            margin-bottom: 3rem;
+        }
+        /* Nowoczesne Karty */
+        .modern-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: white;
+        }
+        .modern-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--card-hover-shadow);
+        }
+        .card-img-wrapper {
+            height: 220px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 16px 16px 0 0;
+        }
+        .card-img-wrapper img {
+            transition: transform 0.5s ease;
+        }
+        .modern-card:hover .card-img-wrapper img {
+            transform: scale(1.05);
+        }
+        /* Nowoczesne Przyciski */
+        .btn-primary-gradient {
+            background: var(--primary-gradient);
+            border: none;
+            font-weight: 600;
+        }
+        .btn-primary-gradient:hover {
+           filter: brightness(110%);
+        }
+        /* Formularze */
+        .form-control-modern {
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-control-modern:focus {
+            border-color: #0d6efd;
+            box-shadow: none;
+        }
+        .badge-modern {
+            background: rgba(255,255,255,0.9);
+            color: #212529;
+            font-weight: 700;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
 
-import os
-import uuid
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
-from sqlalchemy import or_
-# --- NOWE IMPORTY DLA ZNAKU WODNEGO ---
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-primary"></i> Giełda Radom</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="ms-auto d-flex gap-2 align-items-center">
+                    {% if current_user.is_authenticated %}
+                        <span class="text-white-50 me-2 small d-none d-lg-inline">Witaj, <strong>{{ current_user.username }}</strong></span>
+                        <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-4">Wyloguj</a>
+                    {% else %}
+                        <a href="/login" class="btn btn-link text-white text-decoration-none me-2">Logowanie</a>
+                        <a href="/register" class="btn btn-primary-gradient btn-sm rounded-pill px-4 shadow-sm">Rejestracja</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
 
-app = Flask(__name__)
-app.secret_key = 'sekretny_klucz_gieldy_radom_2024_v2' # Zmień na własny
+    <header class="modern-header text-white text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-3">Znajdź swoje następne auto</h1>
+            <p class="lead text-white-50 mb-4">Lokalny rynek. Bezpieczne transakcje. Nowoczesne podejście.</p>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <form action="/" method="GET" class="d-flex gap-2 bg-white p-2 rounded-pill shadow-lg">
+                        <input type="text" name="q" class="form-control border-0 rounded-pill ps-4 shadow-none" placeholder="Np. Audi A4, Passat..." value="{{ request.args.get('q', '') }}">
+                        <button type="submit" class="btn btn-primary-gradient rounded-pill px-4 py-2"><i class="bi bi-search"></i></button>
+                        {% if request.args.get('q') %}
+                            <a href="/" class="btn btn-light rounded-pill px-3 text-muted"><i class="bi bi-x-lg"></i></a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
 
-# --- KONFIGURACJA ---
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Zwiększamy limit, bo przetwarzanie zdjęć w pamięci wymaga trochę miejsca
-app.config['MAX_CONTENT_LENGTH'] = 128 * 1024 * 1024
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'} # Dodano webp
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    <div class="container my-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} shadow-sm border-0 rounded-4 mb-4 d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                        <div>{{ message }}</div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+        <div class="row g-4">
+            <div class="col-lg-4">
+                {% if current_user.is_authenticated %}
+                <div class="modern-card p-4 mb-4 bg-white">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-plus-circle-fill"></i> Wystaw auto</h5>
+                    <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Zdjęcia (max 10)</label>
+                            <input type="file" name="zdjecia" class="form-control form-control-modern" accept="image/*" multiple required>
+                            <div class="form-text small text-muted"><i class="bi bi-shield-check"></i> Automatycznie dodajemy znak wodny "darmowa Giełda".</div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><input type="text" name="marka" class="form-control form-control-modern" placeholder="Marka" required></div>
+                            <div class="col-6"><input type="text" name="model" class="form-control form-control-modern" placeholder="Model" required></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><input type="number" name="rok" class="form-control form-control-modern" placeholder="Rok" required></div>
+                            <div class="col-6"><input type="number" name="cena" class="form-control form-control-modern" placeholder="Cena (PLN)" required></div>
+                        </div>
+                        <div class="mb-3">
+                            <textarea name="opis" class="form-control form-control-modern" placeholder="Opis pojazdu..." rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill shadow-sm">Opublikuj ogłoszenie</button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="modern-card p-5 text-center bg-white">
+                    <i class="bi bi-person-lock fs-1 text-muted mb-3 d-block"></i>
+                    <h4 class="fw-bold">Chcesz sprzedać auto?</h4>
+                    <p class="text-muted mb-4">Zaloguj się, aby dodawać darmowe ogłoszenia ze znakiem wodnym.</p>
+                    <a href="/login" class="btn btn-primary-gradient w-100 rounded-pill">Zaloguj się</a>
+                    <a href="/register" class="btn btn-link text-muted mt-2">Załóż konto</a>
+                </div>
+                {% endif %}
 
-db = SQLAlchemy(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+                <div class="modern-card p-3 text-center bg-light border mt-4">
+                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.65rem; letter-spacing: 1px;">Reklama</small>
+                    <a href="https://google.pl" target="_blank" class="d-block text-decoration-none mt-2">
+                        <span class="fw-bold fs-5" style="color: #4285F4;"><i class="bi bi-google"></i> Google Ads</span>
+                    </a>
+                 </div>
+            </div>
 
-# --- MODELE BAZY DANYCH (Bez zmian) ---
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-    cars = db.relationship('Car', backref='seller', lazy=True) # Poprawiona relacja
-
-class Car(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    marka = db.Column(db.String(50), nullable=False)
-    model = db.Column(db.String(50), nullable=False)
-    rok = db.Column(db.Integer, nullable=False)
-    cena = db.Column(db.Float, nullable=False)
-    opis = db.Column(db.Text, nullable=False)
-    img = db.Column(db.String(200), nullable=False)
-    zrodlo = db.Column(db.String(20), default='Lokalne')
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
-
-class CarImage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    image_path = db.Column(db.String(200), nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# --- NOWA FUNKCJA: ZNAK WODNY ---
-def add_watermark(image_file, text="darmowa Giełda"):
-    """
-    Dodaje półprzezroczysty znak wodny w prawym dolnym rogu.
-    """
-    # Otwórz obraz
-    original_image = Image.open(image_file).convert("RGBA")
-    
-    # Ewentualny auto-obrót na podstawie metadanych (np. zdjęcia z telefonu)
-    original_image = ImageOps.exif_transpose(original_image)
-
-    width, height = original_image.size
-
-    # Stwórz nową warstwę dla znaku wodnego (przezroczystą)
-    txt_layer = Image.new('RGBA', original_image.size, (255, 255, 255, 0))
-    draw = ImageDraw.Draw(txt_layer)
-
-    # --- Konfiguracja czcionki ---
-    # Próbujemy załadować ładną czcionkę systemową, jeśli się nie uda, używamy domyślnej
-    font_size = int(height / 20) # Rozmiar zależny od wysokości zdjęcia
-    try:
-        # Przykładowe ścieżki dla Linuxa (Ubuntu) lub Windowsa. 
-        # Najlepiej wgrać plik .ttf (np. Roboto-Bold.ttf) do folderu static/fonts/
-        # font = ImageFont.truetype("static/fonts/Roboto-Bold.ttf", font_size)
-        font = ImageFont.truetype("arial.ttf", font_size) # Próba dla Windows
-    except IOError:
-         # Fallback dla Linuxa (często działa) lub domyślna brzydka czcionka
-        try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except IOError:
-            font = ImageFont.load_default()
-            print("Nie znaleziono ładnej czcionki, używam domyślnej.")
-
-    # --- Obliczanie pozycji tekstu ---
-    # Używamy getbbox dla nowszych wersji Pillow
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
-
-    # Margines od krawędzi (prawy dolny róg)
-    margin_x = int(width * 0.05)
-    margin_y = int(height * 0.05)
-    x = width - text_width - margin_x
-    y = height - text_height - margin_y
-
-    # --- Rysowanie tekstu ---
-    # Kolor: Biały, półprzezroczysty (alpha=128)
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 128))
-    
-    # --- Opcjonalnie: Dodaj lekki cień dla lepszej czytelności ---
-    # draw.text((x+2, y+2), text, font=font, fill=(0, 0, 0, 80))
-
-    # Połącz oryginalny obraz z warstwą tekstu
-    watermarked_image = Image.alpha_composite(original_image, txt_layer)
-
-    # Konwertuj z powrotem do RGB, żeby zapisać jako JPG
-    return watermarked_image.convert("RGB")
-
-
-# --- TRASY ---
-@app.route('/')
-def index():
-    q = request.args.get('q')
-    if q:
-        search = f"%{q}%"
-        cars = Car.query.filter(
-            or_(Car.marka.like(search), Car.model.like(search))
-        ).order_by(Car.id.desc()).all()
-        if not cars: flash(f'Brak wyników dla: "{q}"', 'warning')
-    else:
-        cars = Car.query.order_by(Car.id.desc()).all()
-    return render_template('index.html', cars=cars)
-
-@app.route('/ogloszenie/<int:car_id>')
-def car_details(car_id):
-    car = Car.query.get_or_404(car_id)
-    return render_template('details.html', car=car)
-
-@app.route('/dodaj', methods=['POST'])
-@login_required
-def dodaj_ogloszenie():
-    # (Pobieranie danych tekstowych bez zmian...)
-    marka = request.form.get('marka')
-    model = request.form.get('model')
-    rok = request.form.get('rok')
-    cena = request.form.get('cena')
-    opis = request.form.get('opis')
-
-    # --- ZMODYFIKOWANA OBSŁUGA ZDJĘĆ ---
-    files = request.files.getlist('zdjecia')
-    saved_images = []
-
-    for file in files[:10]:
-        if file and allowed_file(file.filename):
-            try:
-                # 1. Przetwórz obraz (dodaj znak wodny)
-                processed_img = add_watermark(file, text="darmowa Giełda")
-
-                # 2. Wygeneruj bezpieczną nazwę
-                filename = secure_filename(file.filename)
-                name_part, ext = os.path.splitext(filename)
-                # Zapisujemy zawsze jako .jpg dla ujednolicenia
-                unique_filename = str(uuid.uuid4())[:8] + "_" + name_part + ".jpg"
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                    <h4 class="fw-bold m-0">Najnowsze oferty</h4>
+                    <span class="text-muted small">{{ cars|length }} wyników</span>
+                </div>
                 
-                # 3. Zapisz przetworzony obraz (jako JPEG z wysoką jakością)
-                processed_img.save(save_path, "JPEG", quality=90, optimize=True)
-                
-                saved_images.append(url_for('static', filename='uploads/' + unique_filename))
-            except Exception as e:
-                print(f"Błąd przetwarzania obrazu: {e}")
-                flash('Wystąpił błąd podczas przetwarzania jednego ze zdjęć.', 'danger')
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    {% for car in cars %}
+                    <div class="col">
+                        <div class="card h-100 modern-card">
+                            <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
+                                <div class="card-img-wrapper bg-light">
+                                    <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
+                                    <span class="badge badge-modern position-absolute top-0 start-0 m-3 py-2 px-3 rounded-pill">{{ car.rok }}</span>
+                                </div>
+                            </a>
+                            <div class="card-body pt-4">
+                                <h5 class="card-title fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                                <h3 class="text-primary fw-bolder my-2" style="color: #0d6efd;">{{ car.cena|int }} PLN</h3>
+                                <p class="card-text small text-muted text-truncate">{{ car.opis }}</p>
+                            </div>
+                            <div class="card-footer bg-white border-0 pt-0 pb-4 px-4">
+                                <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
+                                    Szczegóły i kontakt <i class="bi bi-arrow-right-short"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-emoji-frown fs-1 text-muted mb-3 d-block"></i>
+                        <h4 class="fw-bold text-muted">Brak ogłoszeń</h4>
+                        <p class="text-muted">Spróbuj zmienić kryteria wyszukiwania.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-    if not saved_images:
-        flash('Musisz dodać przynajmniej jedno poprawne zdjęcie!', 'danger')
-        return redirect(url_for('index'))
+    <footer class="bg-dark text-white-50 mt-auto py-4 text-center">
+        <div class="container small">
+            <div class="mb-2">
+                <i class="bi bi-speedometer2 text-primary fs-4"></i>
+            </div>
+            &copy; 2024 Giełda Radom. Nowoczesna motoryzacja lokalna.
+        </div>
+    </footer>
 
-    main_img = saved_images[0]
-
-    # Zapis do bazy (bez zmian)
-    nowe_auto = Car(
-        marka=marka, model=model, rok=int(rok), cena=float(cena),
-        opis=opis, img=main_img, user_id=current_user.id
-    )
-    db.session.add(nowe_auto)
-    db.session.commit()
-
-    for img_path in saved_images:
-        new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
-        db.session.add(new_image)
-    
-    db.session.commit()
-
-    flash('Ogłoszenie dodane pomyślnie!', 'success')
-    return redirect(url_for('index'))
-
-# --- AUTH i Import (Bez istotnych zmian w logice) ---
-# (Reszta pliku app.py pozostaje taka sama jak w poprzedniej wersji, 
-#  upewnij się tylko, że masz poprawione relacje w modelach jak wyżej)
-# ...
-# ...
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
