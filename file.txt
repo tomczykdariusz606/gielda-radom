@@ -1,0 +1,11 @@
+gielda-radom/
+├── app.py
+├── requirements.txt
+├── gielda.db (utworzy się samo po uruchomieniu)
+├── static/
+│   ├── style.css
+│   └── uploads/ (folder utworzy się sam)
+└── templates/
+    ├── index.html
+    ├── login.html
+    └── register.html
