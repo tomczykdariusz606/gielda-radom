@@ -29,7 +29,7 @@
     <!-- HEADER -->
     <header class="radom-header text-white text-center py-5 mb-4">
         <div class="container">
-            <h1 class="fw-light">Najlepsze auta w Radomiu</h1>
+            <h1 class="fw-light">Najlepsze auta w Radomiu i nie tylko </h1>
             <p class="lead text-white-50">Kupuj, sprzedawaj, importuj bezpiecznie.</p>
         </div>
     </header>
@@ -144,6 +144,29 @@
         </div>
     </div>
 
+
+
+    
+    <!--card-footer-->
+    <!-- Kliknięcie w zdjęcie też przenosi -->
+<a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
+    <div style="height: 200px; overflow: hidden; background: #eee; position: relative;">
+        <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
+        <!-- ... badge z rokiem ... -->
+    </div>
+</a>
+
+<!-- ... treść ... -->
+
+<div class="card-footer bg-white border-top-0 pt-0">
+    <!-- Link do podstrony -->
+    <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-dark w-100 btn-sm">
+        Zobacz zdjęcia i opis &rarr;
+    </a>
+</div>
+
+
+    
     <!-- FOOTER Z RODO -->
     <footer class="bg-dark text-light mt-auto py-5 border-top border-secondary">
         <div class="container">
