@@ -1,239 +1,89 @@
+
 <!DOCTYPE html>
-<html lang="pl" data-bs-theme="light">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giełda Radom - Nowoczesne Auta Lokalne</title>
+    <title>Logowanie - Nowoczesna Giełda</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #0d6efd, #0a58ca);
-            --accent-color: #ff5722; /* Nowoczesny pomarańczowy akcent */
-            --bg-light: #f8f9fa;
-            --card-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
-            --card-hover-shadow: 0 20px 30px -10px rgba(0,0,0,0.15);
-        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-light);
+            /* Nowoczesne tło gradientowe */
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        /* Nowoczesny Navbar */
-        .navbar {
-            background: rgba(33, 37, 41, 0.95) !important;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px); /* Efekt szkła */
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 3rem;
         }
-        /* Nowoczesny Header */
-        .modern-header {
-            background: rgb(33,37,41);
-            background: linear-gradient(180deg, rgba(33,37,41,1) 0%, rgba(52,58,64,1) 100%);
-            padding: 5rem 0;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            margin-bottom: 3rem;
-        }
-        /* Nowoczesne Karty */
-        .modern-card {
+        .form-control-modern {
+            background: #f8f9fa;
             border: none;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            background: white;
-        }
-        .modern-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--card-hover-shadow);
-        }
-        .card-img-wrapper {
-            height: 220px;
-            overflow: hidden;
-            position: relative;
-            border-radius: 16px 16px 0 0;
-        }
-        .card-img-wrapper img {
-            transition: transform 0.5s ease;
-        }
-        .modern-card:hover .card-img-wrapper img {
-            transform: scale(1.05);
-        }
-        /* Nowoczesne Przyciski */
-        .btn-primary-gradient {
-            background: var(--primary-gradient);
-            border: none;
+            border-radius: 12px;
+            padding: 1rem;
             font-weight: 600;
         }
-        .btn-primary-gradient:hover {
-           filter: brightness(110%);
-        }
-        /* Formularze */
-        .form-control-modern {
-            border: 2px solid #eee;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            transition: border-color 0.3s;
-        }
         .form-control-modern:focus {
-            border-color: #0d6efd;
-            box-shadow: none;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
         }
-        .badge-modern {
-            background: rgba(255,255,255,0.9);
-            color: #212529;
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
             font-weight: 700;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-primary"></i> Giełda Radom</a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="ms-auto d-flex gap-2 align-items-center">
-                    {% if current_user.is_authenticated %}
-                        <span class="text-white-50 me-2 small d-none d-lg-inline">Witaj, <strong>{{ current_user.username }}</strong></span>
-                        <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-4">Wyloguj</a>
-                    {% else %}
-                        <a href="/login" class="btn btn-link text-white text-decoration-none me-2">Logowanie</a>
-                        <a href="/register" class="btn btn-primary-gradient btn-sm rounded-pill px-4 shadow-sm">Rejestracja</a>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="login-card text-center">
+                <div class="mb-4">
+                    <i class="bi bi-speedometer2 text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="fw-bold mt-3">Witaj ponownie!</h3>
+                    <p class="text-muted">Zaloguj się do Giełdy Radom</p>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} py-2 rounded-3 small border-0 mb-4">{{ message }}</div>
+                        {% endfor %}
                     {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
+                {% endwith %}
 
-    <header class="modern-header text-white text-center">
-        <div class="container">
-            <h1 class="display-5 fw-bold mb-3">Znajdź swoje następne auto</h1>
-            <p class="lead text-white-50 mb-4">Lokalny rynek. Bezpieczne transakcje. Nowoczesne podejście.</p>
-            
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6">
-                    <form action="/" method="GET" class="d-flex gap-2 bg-white p-2 rounded-pill shadow-lg">
-                        <input type="text" name="q" class="form-control border-0 rounded-pill ps-4 shadow-none" placeholder="Np. Audi A4, Passat..." value="{{ request.args.get('q', '') }}">
-                        <button type="submit" class="btn btn-primary-gradient rounded-pill px-4 py-2"><i class="bi bi-search"></i></button>
-                        {% if request.args.get('q') %}
-                            <a href="/" class="btn btn-light rounded-pill px-3 text-muted"><i class="bi bi-x-lg"></i></a>
-                        {% endif %}
-                    </form>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div class="container my-5">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} shadow-sm border-0 rounded-4 mb-4 d-flex align-items-center" role="alert">
-                        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                        <div>{{ message }}</div>
-                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                <form method="POST">
+                    <div class="mb-3">
+                        <input type="text" name="username" class="form-control form-control-modern" placeholder="Nazwa użytkownika" required>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="row g-4">
-            <div class="col-lg-4">
-                {% if current_user.is_authenticated %}
-                <div class="modern-card p-4 mb-4 bg-white">
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-plus-circle-fill"></i> Wystaw auto</h5>
-                    <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Zdjęcia (max 10)</label>
-                            <input type="file" name="zdjecia" class="form-control form-control-modern" accept="image/*" multiple required>
-                            <div class="form-text small text-muted"><i class="bi bi-shield-check"></i> Automatycznie dodajemy znak wodny "darmowa Giełda".</div>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><input type="text" name="marka" class="form-control form-control-modern" placeholder="Marka" required></div>
-                            <div class="col-6"><input type="text" name="model" class="form-control form-control-modern" placeholder="Model" required></div>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><input type="number" name="rok" class="form-control form-control-modern" placeholder="Rok" required></div>
-                            <div class="col-6"><input type="number" name="cena" class="form-control form-control-modern" placeholder="Cena (PLN)" required></div>
-                        </div>
-                        <div class="mb-3">
-                            <textarea name="opis" class="form-control form-control-modern" placeholder="Opis pojazdu..." rows="3" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill shadow-sm">Opublikuj ogłoszenie</button>
-                    </form>
-                </div>
-                {% else %}
-                <div class="modern-card p-5 text-center bg-white">
-                    <i class="bi bi-person-lock fs-1 text-muted mb-3 d-block"></i>
-                    <h4 class="fw-bold">Chcesz sprzedać auto?</h4>
-                    <p class="text-muted mb-4">Zaloguj się, aby dodawać darmowe ogłoszenia ze znakiem wodnym.</p>
-                    <a href="/login" class="btn btn-primary-gradient w-100 rounded-pill">Zaloguj się</a>
-                    <a href="/register" class="btn btn-link text-muted mt-2">Załóż konto</a>
-                </div>
-                {% endif %}
-
-                <div class="modern-card p-3 text-center bg-light border mt-4">
-                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.65rem; letter-spacing: 1px;">Reklama</small>
-                    <a href="https://google.pl" target="_blank" class="d-block text-decoration-none mt-2">
-                        <span class="fw-bold fs-5" style="color: #4285F4;"><i class="bi bi-google"></i> Google Ads</span>
-                    </a>
-                 </div>
-            </div>
-
-            <div class="col-lg-8">
-                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                    <h4 class="fw-bold m-0">Najnowsze oferty</h4>
-                    <span class="text-muted small">{{ cars|length }} wyników</span>
-                </div>
-                
-                <div class="row row-cols-1 row-cols-md-2 g-4">
-                    {% for car in cars %}
-                    <div class="col">
-                        <div class="card h-100 modern-card">
-                            <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
-                                <div class="card-img-wrapper bg-light">
-                                    <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
-                                    <span class="badge badge-modern position-absolute top-0 start-0 m-3 py-2 px-3 rounded-pill">{{ car.rok }}</span>
-                                </div>
-                            </a>
-                            <div class="card-body pt-4">
-                                <h5 class="card-title fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                                <h3 class="text-primary fw-bolder my-2" style="color: #0d6efd;">{{ car.cena|int }} PLN</h3>
-                                <p class="card-text small text-muted text-truncate">{{ car.opis }}</p>
-                            </div>
-                            <div class="card-footer bg-white border-0 pt-0 pb-4 px-4">
-                                <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
-                                    Szczegóły i kontakt <i class="bi bi-arrow-right-short"></i>
-                                </a>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <input type="password" name="password" class="form-control form-control-modern" placeholder="Hasło" required>
                     </div>
-                    {% else %}
-                    <div class="col-12 text-center py-5">
-                        <i class="bi bi-emoji-frown fs-1 text-muted mb-3 d-block"></i>
-                        <h4 class="fw-bold text-muted">Brak ogłoszeń</h4>
-                        <p class="text-muted">Spróbuj zmienić kryteria wyszukiwania.</p>
-                    </div>
-                    {% endfor %}
+                    <button type="submit" class="btn btn-primary-gradient w-100 text-white shadow-sm">Zaloguj się</button>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <p class="text-muted small mb-2">Nie masz konta?</p>
+                    <a href="/register" class="fw-bold text-primary text-decoration-none">Załóż darmowe konto</a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <footer class="bg-dark text-white-50 mt-auto py-4 text-center">
-        <div class="container small">
-            <div class="mb-2">
-                <i class="bi bi-speedometer2 text-primary fs-4"></i>
-            </div>
-            &copy; 2024 Giełda Radom. Nowoczesna motoryzacja lokalna.
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
