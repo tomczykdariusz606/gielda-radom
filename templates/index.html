@@ -101,46 +101,54 @@
             </div>
 
             <!-- PRAWA KOLUMNA: Lista -->
-            <div class="col-md-8">
-                <h4 class="mb-3 border-bottom pb-2">Aktualne oferty</h4>
-                <div class="row row-cols-1 row-cols-lg-2 g-4">
-                    {% for car in cars %}
-                    <div class="col">
-                        <div class="card h-100 shadow-sm car-card border-0">
-                            <!-- Zdjęcie -->
-                            <div style="height: 200px; overflow: hidden; background: #eee; position: relative;">
-                                <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
-                                <span class="badge bg-dark position-absolute top-0 start-0 m-2">{{ car.rok }}</span>
-                                {% if car.zrodlo == 'Otomoto' %}
-                                    <span class="badge bg-danger position-absolute top-0 end-0 m-2">Otomoto</span>
-                                {% endif %}
-                            </div>
-                            <!-- Dane -->
-                            <div class="card-body pb-0">
-                                <h5 class="card-title fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                                <h4 class="text-primary fw-bold">{{ car.cena }} PLN</h4>
-                                <p class="card-text small text-muted text-truncate">{{ car.opis }}</p>
-                            </div>
-                            <!-- Partnerzy -->
-                            <div class="bg-white px-3 pb-3 pt-2">
-                                <div class="d-grid gap-2">
-                                    <a href="https://mubi.pl/kalkulator-oc-ac/" target="_blank" class="btn btn-success btn-sm text-start py-1" style="font-size: 0.8rem;">
-                                        <i class="bi bi-shield-check"></i> Tanie OC <span class="float-end fw-bold">Mubi.pl</span>
-                                    </a>
-                                    <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-warning btn-sm text-start py-1 text-dark" style="font-size: 0.8rem;">
-                                        <i class="bi bi-search"></i> Historia VIN <span class="float-end fw-bold">CarVertical</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+           <div class="col-md-8">
+    <h4 class="mb-3 border-bottom pb-2">Aktualne oferty</h4>
+    <div class="row row-cols-1 row-cols-lg-2 g-4">
+        {% for car in cars %}
+        <div class="col">
+            <div class="card h-100 shadow-sm car-card border-0">
+                
+                <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
+                    <div style="height: 200px; overflow: hidden; background: #eee; position: relative;">
+                        <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
+                        <span class="badge bg-dark position-absolute top-0 start-0 m-2">{{ car.rok }}</span>
+                        {% if car.zrodlo == 'Otomoto' %}
+                            <span class="badge bg-danger position-absolute top-0 end-0 m-2">Otomoto</span>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="col-12 text-center text-muted py-5">
-                        <p>Brak ogłoszeń. Bądź pierwszy!</p>
+                </a>
+
+                <div class="card-body pb-0">
+                    <h5 class="card-title fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                    <h4 class="text-primary fw-bold">{{ car.cena }} PLN</h4>
+                    <p class="card-text small text-muted text-truncate">{{ car.opis }}</p>
+                </div>
+
+                <div class="card-footer bg-white border-top-0 pt-0">
+                    <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-dark w-100 btn-sm">
+                        Zobacz zdjęcia i opis &rarr;
+                    </a>
+                </div>
+
+                <div class="bg-white px-3 pb-3 pt-2">
+                    <div class="d-grid gap-2">
+                        <a href="https://mubi.pl/kalkulator-oc-ac/" target="_blank" class="btn btn-success btn-sm text-start py-1" style="font-size: 0.8rem;">
+                            <i class="bi bi-shield-check"></i> Tanie OC <span class="float-end fw-bold">Mubi.pl</span>
+                        </a>
+                        <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-warning btn-sm text-start py-1 text-dark" style="font-size: 0.8rem;">
+                            <i class="bi bi-search"></i> Historia VIN <span class="float-end fw-bold">CarVertical</span>
+                        </a>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center text-muted py-5">
+            <p>Brak ogłoszeń. Bądź pierwszy!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
         </div>
     </div>
 
