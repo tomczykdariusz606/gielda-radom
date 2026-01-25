@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giełda Radom - Auta Lokalne</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- NAWIGACJA -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-car-front-fill"></i> Giełda Radom</a>
+            <div class="ms-auto">
+                {% if current_user.is_authenticated %}
+                    <span class="navbar-text me-3 text-light small d-none d-md-inline">Witaj, {{ current_user.username }}</span>
+                    <a href="/logout" class="btn btn-outline-danger btn-sm">Wyloguj</a>
+                {% else %}
+                    <a href="/login" class="btn btn-outline-light btn-sm me-2">Logowanie</a>
+                    <a href="/register" class="btn btn-primary btn-sm">Rejestracja</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- HEADER -->
+    <header class="radom-header text-white text-center py-5 mb-4">
+        <div class="container">
+            <h1 class="fw-light">Najlepsze auta w Radomiu</h1>
+            <p class="lead text-white-50">Kupuj, sprzedawaj, importuj bezpiecznie.</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- KOMUNIKATY systemowe -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- LEWA KOLUMNA: Formularze -->
+            <div class="col-md-4 mb-4">
+                {% if current_user.is_authenticated %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white fw-bold">
+                        <i class="bi bi-plus-lg"></i> Dodaj Ogłoszenie
+                    </div>
+                    <div class="card-body">
+                        <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                            <div class="mb-2">
+                                <label class="small text-muted">Zdjęcie pojazdu</label>
+                                <input type="file" name="zdjecie" class="form-control form-control-sm" accept="image/*">
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-6"><input type="text" name="marka" class="form-control form-control-sm" placeholder="Marka" required></div>
+                                <div class="col-6"><input type="text" name="model" class="form-control form-control-sm" placeholder="Model" required></div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-6"><input type="number" name="rok" class="form-control form-control-sm" placeholder="Rok" required></div>
+                                <div class="col-6"><input type="number" name="cena" class="form-control form-control-sm" placeholder="Cena (PLN)" required></div>
+                            </div>
+                            <div class="mb-3">
+                                <textarea name="opis" class="form-control form-control-sm" placeholder="Opis..." rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 btn-sm fw-bold">Wystaw Auto</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Import -->
+                <div class="card shadow-sm border-info">
+                    <div class="card-body">
+                        <h6 class="card-title text-info"><i class="bi bi-cloud-arrow-down"></i> Import Otomoto</h6>
+                        <form action="/import-otomoto" method="POST" class="d-flex gap-2">
+                            <input type="url" name="link" class="form-control form-control-sm" placeholder="Link Otomoto...">
+                            <button class="btn btn-outline-info btn-sm" type="submit">Pobierz</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning shadow-sm text-center">
+                    <h5 class="alert-heading"><i class="bi bi-lock"></i> Sprzedajesz?</h5>
+                    <p class="small">Zaloguj się, aby dodawać ogłoszenia i importować oferty.</p>
+                    <a href="/login" class="btn btn-warning btn-sm w-100">Przejdź do logowania</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- PRAWA KOLUMNA: Lista -->
+            <div class="col-md-8">
+                <h4 class="mb-3 border-bottom pb-2">Aktualne oferty</h4>
+                <div class="row row-cols-1 row-cols-lg-2 g-4">
+                    {% for car in cars %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm car-card border-0">
+                            <!-- Zdjęcie -->
+                            <div style="height: 200px; overflow: hidden; background: #eee; position: relative;">
+                                <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
+                                <span class="badge bg-dark position-absolute top-0 start-0 m-2">{{ car.rok }}</span>
+                                {% if car.zrodlo == 'Otomoto' %}
+                                    <span class="badge bg-danger position-absolute top-0 end-0 m-2">Otomoto</span>
+                                {% endif %}
+                            </div>
+                            <!-- Dane -->
+                            <div class="card-body pb-0">
+                                <h5 class="card-title fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                                <h4 class="text-primary fw-bold">{{ car.cena }} PLN</h4>
+                                <p class="card-text small text-muted text-truncate">{{ car.opis }}</p>
+                            </div>
+                            <!-- Partnerzy -->
+                            <div class="bg-white px-3 pb-3 pt-2">
+                                <div class="d-grid gap-2">
+                                    <a href="https://mubi.pl/kalkulator-oc-ac/" target="_blank" class="btn btn-success btn-sm text-start py-1" style="font-size: 0.8rem;">
+                                        <i class="bi bi-shield-check"></i> Tanie OC <span class="float-end fw-bold">Mubi.pl</span>
+                                    </a>
+                                    <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-warning btn-sm text-start py-1 text-dark" style="font-size: 0.8rem;">
+                                        <i class="bi bi-search"></i> Historia VIN <span class="float-end fw-bold">CarVertical</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center text-muted py-5">
+                        <p>Brak ogłoszeń. Bądź pierwszy!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER Z RODO -->
+    <footer class="bg-dark text-light mt-auto py-5 border-top border-secondary">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Giełda Radom</h5>
+                    <p class="text-secondary small">Lokalny rynek aut. Bezpieczne transakcje.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Prawne</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-secondary text-decoration-none" data-bs-toggle="modal" data-bs-target="#rodoModal">RODO / Prywatność</a></li>
+                        <li><a href="#" class="text-secondary text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">Regulamin</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <p class="text-secondary small fst-italic">Serwis jest platformą ogłoszeniową. Nie ponosimy odpowiedzialności za treść ofert.</p>
+                </div>
+            </div>
+            <div class="text-center text-secondary small mt-4">&copy; 2024 Giełda Radom.</div>
+        </div>
+    </footer>
+
+    <!-- MODALE -->
+    <div class="modal fade" id="rodoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">RODO</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body small">Administratorem danych jest Giełda Radom. Przetwarzamy dane w celu realizacji usługi... (Tu wpisz pełną klauzulę).</div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Regulamin</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body small">1. Serwis służy do publikacji ogłoszeń... <br>2. Zabrania się dodawania treści nielegalnych...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
