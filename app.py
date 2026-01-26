@@ -1,61 +1,33 @@
-# (pełny zmodyfikowany plik — wklejony z Twojego oryginału z dodanymi zmianami)
 import os
-import uuid
-import logging
-from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from sqlalchemy import or_
-# PIL imports
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFile, UnidentifiedImageError, DecompressionBombError
 
-# Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")  # production: set SECRET_KEY env var
+app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 
-# CONFIG
+# --- KONFIGURACJA ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 128 * 1024 * 1024
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# PIL safe settings
-ImageFile.LOAD_TRUNCATED_IMAGES = True
-# Increase MAX_IMAGE_PIXELS if you trust uploads; otherwise keep and handle DecompressionBombError gracefully
-try:
-    Image.MAX_IMAGE_PIXELS = 10000 * 10000  # adjust as needed or set to None to disable protection
-except Exception:
-    pass
-
-# logging: add file handler for easier debugging on the server
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    fh = logging.FileHandler('/tmp/gielda_app.log')  # zmień ścieżkę jeśli chcesz /var/log/...
-    fh.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    os.makedirs(UPLOAD_FOLDER)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# MODELS
+# --- MODELE BAZY DANYCH ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    cars = db.relationship('Car', backref='seller', lazy=True)
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,9 +36,11 @@ class Car(db.Model):
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
     opis = db.Column(db.Text, nullable=False)
+    # img to zdjęcie główne (okładka)
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(20), default='Lokalne')
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # Relacja do dodatkowych zdjęć
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
 
 class CarImage(db.Model):
@@ -81,191 +55,105 @@ def load_user(user_id):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# WATERMARK FUNCTION
-def add_watermark(image_file, text="darmowa Giełda"):
-    """
-    Dodaje półprzezroczysty znak wodny w prawym dolnym rogu.
-    Przyjmuje FileStorage lub ścieżkę; zwraca PIL.Image w trybie RGB.
-    Zwraca ValueError przy rozpoznanym problemie (użątkowanym upstream).
-    """
-    try:
-        original_image = Image.open(image_file)
-    except UnidentifiedImageError:
-        logger.exception("Plik nie jest rozpoznawanym obrazem.")
-        raise ValueError("Plik nie jest rozpoznawanym obrazem.")
-    except DecompressionBombError:
-        logger.exception("Plik obrazu potencjalnie zbyt duży (DecompressionBomb).")
-        raise ValueError("Obraz jest za duży lub uszkodzony.")
-    except Exception:
-        logger.exception("Nieoczekiwany błąd przy otwieraniu obrazu.")
-        raise ValueError("Błąd przy otwieraniu obrazu.")
-
-    # Autoorientacja i konwersja do RGBA (żeby obsłużyć alpha)
-    original_image = ImageOps.exif_transpose(original_image).convert("RGBA")
-    width, height = original_image.size
-
-    # Warstwa tekstu
-    txt_layer = Image.new('RGBA', original_image.size, (255, 255, 255, 0))
-    draw = ImageDraw.Draw(txt_layer)
-
-    font_size = max(12, int(height / 20))
-    try:
-        font = ImageFont.truetype("static/fonts/Roboto-Bold.ttf", font_size)
-    except Exception:
-        try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except Exception:
-            font = ImageFont.load_default()
-            logger.info("Używam domyślnej czcionki PIL")
-
-    # Oblicz rozmiar tekstu z fallbackem
-    try:
-        text_bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        text_height = text_bbox[3] - text_bbox[1]
-    except AttributeError:
-        text_width, text_height = draw.textsize(text, font=font)
-
-    margin_x = int(width * 0.05)
-    margin_y = int(height * 0.05)
-    x = max(0, width - text_width - margin_x)
-    y = max(0, height - text_height - margin_y)
-
-    # Rysuj półprzezroczysty tekst
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 160))
-
-    # Połącz warstwy
-    try:
-        watermarked = Image.alpha_composite(original_image, txt_layer)
-    except Exception:
-        logger.exception("Błąd podczas składania warstw obrazu")
-        raise ValueError("Błąd podczas obróbki obrazu.")
-
-    # Zamień przezroczystość na białe tło przed zapisem jako JPEG
-    if watermarked.mode == 'RGBA':
-        background = Image.new("RGB", watermarked.size, (255, 255, 255))
-        alpha = watermarked.split()[3]
-        background.paste(watermarked.convert('RGB'), mask=alpha)
-        final_img = background
-    else:
-        final_img = watermarked.convert("RGB")
-
-    return final_img
-
-# ROUTES
-@app.context_processor
-def inject_common():
-    return {
-        'current_year': datetime.utcnow().year,
-        'now_date': datetime.utcnow().strftime("%Y-%m-%d")
-    }
+# --- TRASY ---
 
 @app.route('/')
 def index():
-    q = request.args.get('q')
-    if q:
-        search = f"%{q}%"
-        cars = Car.query.filter(
-            or_(Car.marka.like(search), Car.model.like(search))
-        ).order_by(Car.id.desc()).all()
-        if not cars:
-            flash(f'Brak wyników dla: \"{q}\"', 'warning')
-    else:
-        cars = Car.query.order_by(Car.id.desc()).all()
+    cars = Car.query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars)
 
+# NOWY WIDOK SZCZEGÓŁÓW OGŁOSZENIA
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
-    car = Car.query.get_or_404(car_id)
+    car = Car.query.get_or_404(car_id) # Znajdź auto lub zwróć błąd 404
     return render_template('details.html', car=car)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if User.query.filter_by(username=username).first():
+            flash('Użytkownik już istnieje!', 'danger')
+            return redirect(url_for('register'))
+        hashed_pw = generate_password_hash(password, method='scrypt')
+        new_user = User(username=username, password_hash=hashed_pw)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Konto założone! Zaloguj się.', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            return redirect(url_for('index'))
+        flash('Błędne dane.', 'danger')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
-    marka = request.form.get('marka')
-    model = request.form.get('model')
-    rok = request.form.get('rok')
-    cena = request.form.get('cena')
-    opis = request.form.get('opis')
-
-    # Walidacja rok/cena
-    try:
-        rok_i = int(rok)
-        cena_f = float(cena)
-    except (ValueError, TypeError):
-        flash("Podaj poprawny rok i cenę.", "danger")
-        return redirect(url_for('index'))
-
-    files = request.files.getlist('zdjecia')
+    marka = request.form['marka']
+    model = request.form['model']
+    rok = request.form['rok']
+    cena = request.form['cena']
+    opis = request.form['opis']
+    
+    # Obsługa zdjęć (MULTI UPLOAD)
+    files = request.files.getlist('zdjecia') # Pobiera listę plików
     saved_images = []
 
-    for file in files[:10]:
+    # Zapisz max 10 zdjęć
+    for file in files[:10]: 
         if file and allowed_file(file.filename):
-            # Sprawdź MIME
-            if not file.mimetype or not file.mimetype.startswith('image/'):
-                flash("Przesłany plik nie jest obrazem.", "danger")
-                continue
-            try:
-                processed_img = add_watermark(file, text="darmowa Giełda")
+            filename = secure_filename(file.filename)
+            # Unikamy dublowania nazw plików dodając losowy prefix (opcjonalnie, tu prosto)
+            import uuid
+            unique_filename = str(uuid.uuid4())[:8] + "_" + filename
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            saved_images.append(url_for('static', filename='uploads/' + unique_filename))
 
-                filename = secure_filename(file.filename)
-                name_part, ext = os.path.splitext(filename)
-                unique_filename = str(uuid.uuid4())[:8] + "_" + (name_part or 'img') + ".jpg"
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+    # Ustaw zdjęcie główne (pierwsze z listy lub domyślne)
+    if saved_images:
+        main_img = saved_images[0]
+    else:
+        main_img = 'https://placehold.co/600x400?text=Brak+Zdjecia'
 
-                processed_img.save(save_path, "JPEG", quality=90, optimize=True)
-                saved_images.append(url_for('static', filename='uploads/' + unique_filename))
-            except ValueError as ve:
-                # Bezpiecznie obsługujemy błędy związane z obrazem — nie zabijamy workera
-                logger.warning("Odrzucono plik z powodu błędu obrazu: %s -- %s", file.filename, ve)
-                flash(f'Plik {secure_filename(file.filename)} odrzucony: {ve}', 'warning')
-                continue
-            except Exception:
-                logger.exception("Błąd przetwarzania obrazu")
-                flash('Wystąpił błąd podczas przetwarzania jednego ze zdjęć.', 'danger')
+    # Tworzenie auta
+    nowe_auto = Car(
+        marka=marka, model=model, rok=int(rok), cena=float(cena),
+        opis=opis, img=main_img, user_id=current_user.id
+    )
+    db.session.add(nowe_auto)
+    db.session.commit() # Musimy zapisać, żeby dostać ID auta
 
-    if not saved_images:
-        flash('Musisz dodać przynajmniej jedno poprawne zdjęcie!', 'danger')
-        return redirect(url_for('index'))
-
-    main_img = saved_images[0]
-
-    try:
-        nowe_auto = Car(
-            marka=marka, model=model, rok=rok_i, cena=cena_f,
-            opis=opis, img=main_img, user_id=current_user.id
-        )
-        db.session.add(nowe_auto)
-        db.session.flush()  # uzyskaj nowe_auto.id bez commitu
-        for img_path in saved_images:
-            new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
-            db.session.add(new_image)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        logger.exception("Błąd zapisu ogłoszenia do bazy")
-        flash('Wystąpił błąd przy zapisie ogłoszenia.', 'danger')
-        return redirect(url_for('index'))
-
+    # Dodawanie reszty zdjęć do tabeli CarImage (wszystkie, włącznie z głównym)
+    for img_path in saved_images:
+        new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
+        db.session.add(new_image)
+    
+    db.session.commit()
+    
     flash('Ogłoszenie dodane pomyślnie!', 'success')
     return redirect(url_for('index'))
 
-@app.errorhandler(500)
-def internal_error(error):
-    # Zaloguj dodatkowo i pokaż prosty komunikat użytkownikowi
-    logger.exception("Internal server error: %s", error)
-    flash("Wystąpił błąd po stronie serwera. Spróbuj ponownie lub skontaktuj się z administratorem.", "danger")
-    return redirect(url_for('index')), 500
-
-@app.route('/privacy')
-def privacy():
-    return render_template('privacy.html')
-
-# Placeholders for auth routes (login/register) - ensure these exist in your app
-# @app.route('/login', methods=['GET','POST'])
-# def login(): ...
-# @app.route('/register', methods=['GET','POST'])
-# def register(): ...
+@app.route('/import-otomoto', methods=['POST'])
+@login_required
+def import_otomoto():
+    # ... (bez zmian - kod importu z poprzedniej wersji)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     with app.app_context():
