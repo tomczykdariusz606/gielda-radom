@@ -1,3 +1,5 @@
+Wlasnosc Tomczyk Dariusz ADT
+
 gielda-radom/
 ├── app.py
 ├── requirements.txt
