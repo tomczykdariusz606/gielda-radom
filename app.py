@@ -155,6 +155,16 @@ def import_otomoto():
     # ... (bez zmian - kod importu z poprzedniej wersji)
     return redirect(url_for('index'))
 
+
+@app.route('/polityka-prywatnosci')
+def polityka():
+    return render_template('polityka.html')
+
+@app.route('/regulamin')
+def regulamin():
+    return render_template('regulamin.html')
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
