@@ -1,40 +1,51 @@
 import os
 import uuid
+import logging
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_
-# --- NOWE IMPORTY DLA ZNAKU WODNEGO ---
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+# PIL imports
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFile, UnidentifiedImageError, DecompressionBombError
 
+# Flask app
 app = Flask(__name__)
-app.secret_key = 'sekretny_klucz_gieldy_radom_2024_v2' # Zmień na własny
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")  # production: set SECRET_KEY env var
 
-# --- KONFIGURACJA ---
+# CONFIG
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# Zwiększamy limit, bo przetwarzanie zdjęć w pamięci wymaga trochę miejsca
 app.config['MAX_CONTENT_LENGTH'] = 128 * 1024 * 1024
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'} # Dodano webp
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# PIL safe settings
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+# Optionally set Image.MAX_IMAGE_PIXELS to avoid decompression bombs if needed:
+# Image.MAX_IMAGE_PIXELS = 20000 * 20000
+
+# logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- MODELE BAZY DANYCH (Bez zmian) ---
+# MODELS
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    cars = db.relationship('Car', backref='seller', lazy=True) # Poprawiona relacja
+    cars = db.relationship('Car', backref='seller', lazy=True)
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -60,66 +71,84 @@ def load_user(user_id):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- NOWA FUNKCJA: ZNAK WODNY ---
+# WATERMARK FUNCTION
 def add_watermark(image_file, text="darmowa Giełda"):
     """
     Dodaje półprzezroczysty znak wodny w prawym dolnym rogu.
+    Przyjmuje FileStorage lub ścieżkę; zwraca PIL.Image w trybie RGB.
     """
-    # Otwórz obraz
-    original_image = Image.open(image_file).convert("RGBA")
-    
-    # Ewentualny auto-obrót na podstawie metadanych (np. zdjęcia z telefonu)
-    original_image = ImageOps.exif_transpose(original_image)
+    try:
+        original_image = Image.open(image_file)
+    except UnidentifiedImageError:
+        logger.exception("Plik nie jest rozpoznawanym obrazem.")
+        raise
+    except DecompressionBombError:
+        logger.exception("Plik obrazu potencjalnie zbyt duży (DecompressionBomb).")
+        raise
+    except Exception:
+        logger.exception("Nieoczekiwany błąd przy otwieraniu obrazu.")
+        raise
 
+    # Autoorientacja i konwersja do RGBA (żeby obsłużyć alpha)
+    original_image = ImageOps.exif_transpose(original_image).convert("RGBA")
     width, height = original_image.size
 
-    # Stwórz nową warstwę dla znaku wodnego (przezroczystą)
+    # Warstwa tekstu
     txt_layer = Image.new('RGBA', original_image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(txt_layer)
 
-    # --- Konfiguracja czcionki ---
-    # Próbujemy załadować ładną czcionkę systemową, jeśli się nie uda, używamy domyślnej
-    font_size = int(height / 20) # Rozmiar zależny od wysokości zdjęcia
+    font_size = max(12, int(height / 20))
     try:
-        # Przykładowe ścieżki dla Linuxa (Ubuntu) lub Windowsa. 
-        # Najlepiej wgrać plik .ttf (np. Roboto-Bold.ttf) do folderu static/fonts/
-        # font = ImageFont.truetype("static/fonts/Roboto-Bold.ttf", font_size)
-        font = ImageFont.truetype("arial.ttf", font_size) # Próba dla Windows
-    except IOError:
-         # Fallback dla Linuxa (często działa) lub domyślna brzydka czcionka
+        font = ImageFont.truetype("static/fonts/Roboto-Bold.ttf", font_size)
+    except Exception:
         try:
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-        except IOError:
+        except Exception:
             font = ImageFont.load_default()
-            print("Nie znaleziono ładnej czcionki, używam domyślnej.")
+            logger.info("Używam domyślnej czcionki PIL")
 
-    # --- Obliczanie pozycji tekstu ---
-    # Używamy getbbox dla nowszych wersji Pillow
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
+    # Oblicz rozmiar tekstu z fallbackem
+    try:
+        text_bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+    except AttributeError:
+        text_width, text_height = draw.textsize(text, font=font)
 
-    # Margines od krawędzi (prawy dolny róg)
     margin_x = int(width * 0.05)
     margin_y = int(height * 0.05)
-    x = width - text_width - margin_x
-    y = height - text_height - margin_y
+    x = max(0, width - text_width - margin_x)
+    y = max(0, height - text_height - margin_y)
 
-    # --- Rysowanie tekstu ---
-    # Kolor: Biały, półprzezroczysty (alpha=128)
-    draw.text((x, y), text, font=font, fill=(255, 255, 255, 128))
-    
-    # --- Opcjonalnie: Dodaj lekki cień dla lepszej czytelności ---
-    # draw.text((x+2, y+2), text, font=font, fill=(0, 0, 0, 80))
+    # Rysuj półprzezroczysty tekst
+    draw.text((x, y), text, font=font, fill=(255, 255, 255, 160))
 
-    # Połącz oryginalny obraz z warstwą tekstu
-    watermarked_image = Image.alpha_composite(original_image, txt_layer)
+    # Połącz warstwy
+    try:
+        watermarked = Image.alpha_composite(original_image, txt_layer)
+    except Exception:
+        logger.exception("Błąd podczas składania warstw obrazu")
+        raise
 
-    # Konwertuj z powrotem do RGB, żeby zapisać jako JPG
-    return watermarked_image.convert("RGB")
+    # Zamień przezroczystość na białe tło przed zapisem jako JPEG
+    if watermarked.mode == 'RGBA':
+        background = Image.new("RGB", watermarked.size, (255, 255, 255))
+        alpha = watermarked.split()[3]
+        background.paste(watermarked.convert('RGB'), mask=alpha)
+        final_img = background
+    else:
+        final_img = watermarked.convert("RGB")
 
+    return final_img
 
-# --- TRASY ---
+# ROUTES
+@app.context_processor
+def inject_common():
+    return {
+        'current_year': datetime.utcnow().year,
+        'now_date': datetime.utcnow().strftime("%Y-%m-%d")
+    }
+
 @app.route('/')
 def index():
     q = request.args.get('q')
@@ -128,7 +157,8 @@ def index():
         cars = Car.query.filter(
             or_(Car.marka.like(search), Car.model.like(search))
         ).order_by(Car.id.desc()).all()
-        if not cars: flash(f'Brak wyników dla: "{q}"', 'warning')
+        if not cars:
+            flash(f'Brak wyników dla: "{q}"', 'warning')
     else:
         cars = Car.query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars)
@@ -141,36 +171,41 @@ def car_details(car_id):
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
-    # (Pobieranie danych tekstowych bez zmian...)
     marka = request.form.get('marka')
     model = request.form.get('model')
     rok = request.form.get('rok')
     cena = request.form.get('cena')
     opis = request.form.get('opis')
 
-    # --- ZMODYFIKOWANA OBSŁUGA ZDJĘĆ ---
+    # Walidacja rok/cena
+    try:
+        rok_i = int(rok)
+        cena_f = float(cena)
+    except (ValueError, TypeError):
+        flash("Podaj poprawny rok i cenę.", "danger")
+        return redirect(url_for('index'))
+
     files = request.files.getlist('zdjecia')
     saved_images = []
 
     for file in files[:10]:
         if file and allowed_file(file.filename):
+            # Sprawdź MIME
+            if not file.mimetype or not file.mimetype.startswith('image/'):
+                flash("Przesłany plik nie jest obrazem.", "danger")
+                continue
             try:
-                # 1. Przetwórz obraz (dodaj znak wodny)
                 processed_img = add_watermark(file, text="darmowa Giełda")
 
-                # 2. Wygeneruj bezpieczną nazwę
                 filename = secure_filename(file.filename)
                 name_part, ext = os.path.splitext(filename)
-                # Zapisujemy zawsze jako .jpg dla ujednolicenia
                 unique_filename = str(uuid.uuid4())[:8] + "_" + name_part + ".jpg"
                 save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                
-                # 3. Zapisz przetworzony obraz (jako JPEG z wysoką jakością)
+
                 processed_img.save(save_path, "JPEG", quality=90, optimize=True)
-                
                 saved_images.append(url_for('static', filename='uploads/' + unique_filename))
-            except Exception as e:
-                print(f"Błąd przetwarzania obrazu: {e}")
+            except Exception:
+                logger.exception("Błąd przetwarzania obrazu")
                 flash('Wystąpił błąd podczas przetwarzania jednego ze zdjęć.', 'danger')
 
     if not saved_images:
@@ -179,28 +214,35 @@ def dodaj_ogloszenie():
 
     main_img = saved_images[0]
 
-    # Zapis do bazy (bez zmian)
-    nowe_auto = Car(
-        marka=marka, model=model, rok=int(rok), cena=float(cena),
-        opis=opis, img=main_img, user_id=current_user.id
-    )
-    db.session.add(nowe_auto)
-    db.session.commit()
-
-    for img_path in saved_images:
-        new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
-        db.session.add(new_image)
-    
-    db.session.commit()
+    try:
+        nowe_auto = Car(
+            marka=marka, model=model, rok=rok_i, cena=cena_f,
+            opis=opis, img=main_img, user_id=current_user.id
+        )
+        db.session.add(nowe_auto)
+        db.session.flush()  # uzyskaj nowe_auto.id bez commitu
+        for img_path in saved_images:
+            new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
+            db.session.add(new_image)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        logger.exception("Błąd zapisu ogłoszenia do bazy")
+        flash('Wystąpił błąd przy zapisie ogłoszenia.', 'danger')
+        return redirect(url_for('index'))
 
     flash('Ogłoszenie dodane pomyślnie!', 'success')
     return redirect(url_for('index'))
 
-# --- AUTH i Import (Bez istotnych zmian w logice) ---
-# (Reszta pliku app.py pozostaje taka sama jak w poprzedniej wersji, 
-#  upewnij się tylko, że masz poprawione relacje w modelach jak wyżej)
-# ...
-# ...
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+# Placeholders for auth routes (login/register) - ensure these exist in your app
+# @app.route('/login', methods=['GET','POST'])
+# def login(): ...
+# @app.route('/register', methods=['GET','POST'])
+# def register(): ...
 
 if __name__ == '__main__':
     with app.app_context():
