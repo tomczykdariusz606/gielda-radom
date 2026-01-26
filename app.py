@@ -1,3 +1,4 @@
+# (pełny zmodyfikowany plik — wklejony z Twojego oryginału z dodanymi zmianami)
 import os
 import uuid
 import logging
@@ -28,12 +29,21 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # PIL safe settings
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-# Optionally set Image.MAX_IMAGE_PIXELS to avoid decompression bombs if needed:
-# Image.MAX_IMAGE_PIXELS = 20000 * 20000
+# Increase MAX_IMAGE_PIXELS if you trust uploads; otherwise keep and handle DecompressionBombError gracefully
+try:
+    Image.MAX_IMAGE_PIXELS = 10000 * 10000  # adjust as needed or set to None to disable protection
+except Exception:
+    pass
 
-# logging
+# logging: add file handler for easier debugging on the server
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    fh = logging.FileHandler('/tmp/gielda_app.log')  # zmień ścieżkę jeśli chcesz /var/log/...
+    fh.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -76,18 +86,19 @@ def add_watermark(image_file, text="darmowa Giełda"):
     """
     Dodaje półprzezroczysty znak wodny w prawym dolnym rogu.
     Przyjmuje FileStorage lub ścieżkę; zwraca PIL.Image w trybie RGB.
+    Zwraca ValueError przy rozpoznanym problemie (użątkowanym upstream).
     """
     try:
         original_image = Image.open(image_file)
     except UnidentifiedImageError:
         logger.exception("Plik nie jest rozpoznawanym obrazem.")
-        raise
+        raise ValueError("Plik nie jest rozpoznawanym obrazem.")
     except DecompressionBombError:
         logger.exception("Plik obrazu potencjalnie zbyt duży (DecompressionBomb).")
-        raise
+        raise ValueError("Obraz jest za duży lub uszkodzony.")
     except Exception:
         logger.exception("Nieoczekiwany błąd przy otwieraniu obrazu.")
-        raise
+        raise ValueError("Błąd przy otwieraniu obrazu.")
 
     # Autoorientacja i konwersja do RGBA (żeby obsłużyć alpha)
     original_image = ImageOps.exif_transpose(original_image).convert("RGBA")
@@ -128,7 +139,7 @@ def add_watermark(image_file, text="darmowa Giełda"):
         watermarked = Image.alpha_composite(original_image, txt_layer)
     except Exception:
         logger.exception("Błąd podczas składania warstw obrazu")
-        raise
+        raise ValueError("Błąd podczas obróbki obrazu.")
 
     # Zamień przezroczystość na białe tło przed zapisem jako JPEG
     if watermarked.mode == 'RGBA':
@@ -158,7 +169,7 @@ def index():
             or_(Car.marka.like(search), Car.model.like(search))
         ).order_by(Car.id.desc()).all()
         if not cars:
-            flash(f'Brak wyników dla: "{q}"', 'warning')
+            flash(f'Brak wyników dla: \"{q}\"', 'warning')
     else:
         cars = Car.query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars)
@@ -199,11 +210,16 @@ def dodaj_ogloszenie():
 
                 filename = secure_filename(file.filename)
                 name_part, ext = os.path.splitext(filename)
-                unique_filename = str(uuid.uuid4())[:8] + "_" + name_part + ".jpg"
+                unique_filename = str(uuid.uuid4())[:8] + "_" + (name_part or 'img') + ".jpg"
                 save_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
 
                 processed_img.save(save_path, "JPEG", quality=90, optimize=True)
                 saved_images.append(url_for('static', filename='uploads/' + unique_filename))
+            except ValueError as ve:
+                # Bezpiecznie obsługujemy błędy związane z obrazem — nie zabijamy workera
+                logger.warning("Odrzucono plik z powodu błędu obrazu: %s -- %s", file.filename, ve)
+                flash(f'Plik {secure_filename(file.filename)} odrzucony: {ve}', 'warning')
+                continue
             except Exception:
                 logger.exception("Błąd przetwarzania obrazu")
                 flash('Wystąpił błąd podczas przetwarzania jednego ze zdjęć.', 'danger')
@@ -233,6 +249,13 @@ def dodaj_ogloszenie():
 
     flash('Ogłoszenie dodane pomyślnie!', 'success')
     return redirect(url_for('index'))
+
+@app.errorhandler(500)
+def internal_error(error):
+    # Zaloguj dodatkowo i pokaż prosty komunikat użytkownikowi
+    logger.exception("Internal server error: %s", error)
+    flash("Wystąpił błąd po stronie serwera. Spróbuj ponownie lub skontaktuj się z administratorem.", "danger")
+    return redirect(url_for('index')), 500
 
 @app.route('/privacy')
 def privacy():
