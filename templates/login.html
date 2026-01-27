@@ -44,8 +44,74 @@
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-    </style>
-</head>
+
+    <style>
+        :root {
+            --radom-red: #ce2b37;
+            --radom-dark: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcefe9; /* Bardzo jasny, ciepły szary */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- NAVIGACJA --- */
+        .navbar {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid var(--radom-red);
+        }
+
+        /* --- HERO SECTION (TŁO I NAPIS) --- */
+        .hero-section {
+            position: relative;
+            /* Zdjęcie tła (musi być w folderze static pod nazwą czerwiec_tlo.jpg) */
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Paralaksa */
+            background-color: #333; /* Kolor zapasowy */
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            overflow: hidden;
+            margin-bottom: 4rem;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        /* Przyciemnienie zdjęcia */
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
+            z-index: 1;
+        }
+
+        /* WIELKI NAPIS "CZERWIEC 76" */
+        .big-text-76 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            font-family: 'Anton', sans-serif;
+            font-size: 15vw; /* Skaluje się z oknem */
+            color: rgba(255, 255, 255, 0.07); /* Prawie przezroczysty */
+            white-space: nowrap;
+            z-index: 2;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 1rem;
+        }
+
 <body>
 
 <div class="container">
