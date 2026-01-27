@@ -81,8 +81,11 @@ def polityka():
 
 @app.route('/regulamin')
 def regulamin():
-    # Jeśli masz plik regulamin.html, zmień na render_template('regulamin.html')
-    return "Strona regulaminu w budowie..."
+    return render_template('regulamin.html')
+
+@app.route('/kontakt')
+def kontakt():
+    return render_template('kontakt.html')
 
 # --- PANEL UŻYTKOWNIKA (PROFIL) ---
 @app.route('/profil')
