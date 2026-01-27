@@ -1,297 +1,196 @@
 <!DOCTYPE html>
-<html lang="pl" data-bs-theme="light">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    
-
-<meta name="description" content="Najlepsza lokalna giełda samochodowa w Radomiu. Kupuj i sprzedawaj auta bezpiecznie i za darmo.">
-<meta name="keywords" content="giełda radom, samochody radom, sprzedaż aut radom, darmowe ogłoszenia motoryzacyjne">
-<link rel="canonical" href="https://gieldaradom.pl/">
-
-
- content="width=device-width, initial-scale=1.0">
-    <title>Giełda Radom - Nowoczesne Auta Lokalne</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giełda Radom - Czerwiec '76 Modern</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #0d6efd, #0a58ca);
-            --accent-color: #ff5722; /* Nowoczesny pomarańczowy akcent */
-            --bg-light: #f8f9fa;
-            --card-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
-            --card-hover-shadow: 0 20px 30px -10px rgba(0,0,0,0.15);
+            --primary-color: #ce2b37; /* Czerwień Radomska */
+            --dark-color: #212529;
         }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-light);
+            /* Tło nawiązujące do pomnika '76 (Betonowe płyty) */
+            background-color: #e0e0e0;
+            background-image: url('https://www.transparenttextures.com/patterns/concrete-wall.png'); 
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        /* Nowoczesny Navbar */
+
         .navbar {
-            background: rgba(33, 37, 41, 0.95) !important;
+            background: rgba(33, 37, 41, 0.95);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 3px solid var(--primary-color);
         }
-        /* Nowoczesny Header */
-        .modern-header {
-            background: rgb(33,37,41);
-            background: linear-gradient(180deg, rgba(33,37,41,1) 0%, rgba(52,58,64,1) 100%);
-            padding: 5rem 0;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
+
+        .hero-section {
+            /* Nowoczesny gradient + motyw historyczny */
+            background: linear-gradient(135deg, #2b2b2b 0%, #4a4a4a 100%);
+            color: white;
+            padding: 4rem 0;
+            border-radius: 0 0 50px 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
         }
-        /* Nowoczesne Karty */
-        .modern-card {
+        
+        .hero-section::before {
+            /* Symboliczne kamienie Czerwca w tle (jako kształt) */
+            content: "1976";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15rem;
+            font-weight: 900;
+            color: rgba(255,255,255,0.03);
+            pointer-events: none;
+        }
+
+        .car-card {
             border: none;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s ease;
+            border-radius: 15px;
             overflow: hidden;
             background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .modern-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--card-hover-shadow);
+
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
         }
-        .card-img-wrapper {
-            height: 220px;
-            overflow: hidden;
-            position: relative;
-            border-radius: 16px 16px 0 0;
-        }
-        .card-img-wrapper img {
-            transition: transform 0.5s ease;
-        }
-        .modern-card:hover .card-img-wrapper img {
-            transform: scale(1.05);
-        }
-        /* Nowoczesne Przyciski */
-        .btn-primary-gradient {
-            background: var(--primary-gradient);
+
+        .btn-radom {
+            background: linear-gradient(45deg, #ce2b37, #a31e28);
+            color: white;
             border: none;
+            border-radius: 50px;
+            padding: 8px 20px;
             font-weight: 600;
         }
-        .btn-primary-gradient:hover {
-           filter: brightness(110%);
-        }
-        /* Formularze */
-        .form-control-modern {
-            border: 2px solid #eee;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            transition: border-color 0.3s;
-        }
-        .form-control-modern:focus {
-            border-color: #0d6efd;
-            box-shadow: none;
-        }
-        .badge-modern {
-            background: rgba(255,255,255,0.9);
-            color: #212529;
-            font-weight: 700;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .btn-radom:hover { color: white; filter: brightness(1.1); }
+        
+        .badge-year {
+            background: rgba(33, 37, 41, 0.8);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-3">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-primary"></i> Giełda Radom</a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+
+            <div class="collapse navbar-collapse" id="nav">
                 <div class="ms-auto d-flex gap-2 align-items-center">
                     {% if current_user.is_authenticated %}
-                        <span class="text-white-50 me-2 small d-none d-lg-inline">Witaj, <strong>{{ current_user.username }}</strong></span>
-                        <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-4">Wyloguj</a>
+                        <a href="/profil" class="btn btn-outline-light rounded-pill px-4">
+                            <i class="bi bi-person-circle"></i> Mój Profil
+                        </a>
+                        <a href="/logout" class="btn btn-link text-white-50 text-decoration-none small">Wyloguj</a>
                     {% else %}
-                        <a href="/login" class="btn btn-link text-white text-decoration-none me-2">Logowanie</a>
-                        <a href="/register" class="btn btn-primary-gradient btn-sm rounded-pill px-4 shadow-sm">Rejestracja</a>
+                        <a href="/login" class="text-white text-decoration-none me-3 fw-bold">Logowanie</a>
+                        <a href="/register" class="btn btn-radom shadow-sm">Dołącz teraz</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <header class="modern-header text-white text-center">
-        <div class="container">
-            <h1 class="display-5 fw-bold mb-3">Znajdź swoje następne auto</h1>
-            <p class="lead text-white-50 mb-4">Lokalny rynek. Bezpieczne transakcje. Nowoczesne podejście.</p>
+    <header class="hero-section text-center">
+        <div class="container position-relative">
+            <h1 class="display-4 fw-bold">Znajdź auto z charakterem</h1>
+            <p class="lead opacity-75 mb-4">Lokalny rynek. Solidne oferty. Bezpieczne transakcje.</p>
             
-            <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6">
-                    <form action="/" method="GET" class="d-flex gap-2 bg-white p-2 rounded-pill shadow-lg">
-                        <input type="text" name="q" class="form-control border-0 rounded-pill ps-4 shadow-none" placeholder="Np. Audi A4, Passat..." value="{{ request.args.get('q', '') }}">
-                        <button type="submit" class="btn btn-primary-gradient rounded-pill px-4 py-2"><i class="bi bi-search"></i></button>
-                        {% if request.args.get('q') %}
-                            <a href="/" class="btn btn-light rounded-pill px-3 text-muted"><i class="bi bi-x-lg"></i></a>
-                        {% endif %}
-                    </form>
+            <form action="/" method="GET" class="row justify-content-center g-2">
+                <div class="col-md-6">
+                    <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
+                        <span class="input-group-text bg-white border-0 ps-4 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control border-0" placeholder="Wyszukaj markę lub model..." value="{{ search_query if search_query else '' }}">
+                        <button class="btn btn-radom px-5" type="submit">Szukaj</button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </header>
 
-    <div class="container my-5">
+    <div class="container mb-5">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} shadow-sm border-0 rounded-4 mb-4 d-flex align-items-center" role="alert">
-                        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                        <div>{{ message }}</div>
-                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-                    </div>
+                    <div class="alert alert-{{ category }} rounded-4 shadow-sm mb-4">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <div class="row g-4">
-            <div class="col-lg-4">
-                {% if current_user.is_authenticated %}
-                <div class="modern-card p-4 mb-4 bg-white">
-                    <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-plus-circle-fill"></i> Wystaw auto</h5>
-                    <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Zdjęcia (max 10)</label>
-                            <input type="file" name="zdjecia" class="form-control form-control-modern" accept="image/*" multiple required>
-                            <div class="form-text small text-muted"><i class="bi bi-shield-check"></i> Automatycznie dodajemy znak wodny "darmowa Giełda".</div>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><input type="text" name="marka" class="form-control form-control-modern" placeholder="Marka" required></div>
-                            <div class="col-6"><input type="text" name="model" class="form-control form-control-modern" placeholder="Model" required></div>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><input type="number" name="rok" class="form-control form-control-modern" placeholder="Rok" required></div>
-                            <div class="col-6"><input type="number" name="cena" class="form-control form-control-modern" placeholder="Cena (PLN)" required></div>
-                        </div>
-                        <div class="mb-3">
-                            <textarea name="opis" class="form-control form-control-modern" placeholder="Opis pojazdu..." rows="3" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary-gradient w-100 py-2 rounded-pill shadow-sm">Opublikuj ogłoszenie</button>
-                    </form>
-                </div>
-                {% else %}
-                <div class="modern-card p-5 text-center bg-white">
-                    <i class="bi bi-person-lock fs-1 text-muted mb-3 d-block"></i>
-                    <h4 class="fw-bold">Chcesz sprzedać auto?</h4>
-                    <p class="text-muted mb-4">Zaloguj się, aby dodawać darmowe ogłoszenia ze znakiem wodnym.</p>
-                    <a href="/login" class="btn btn-primary-gradient w-100 rounded-pill">Zaloguj się</a>
-                    <a href="/register" class="btn btn-link text-muted mt-2">Załóż konto</a>
-                </div>
-                {% endif %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold text-dark m-0">Najnowsze ogłoszenia</h3>
+            {% if current_user.is_authenticated %}
+                <a href="/profil" class="btn btn-dark rounded-pill px-4"><i class="bi bi-plus-lg"></i> Dodaj Ogłoszenie</a>
+            {% endif %}
+        </div>
 
-                <div class="modern-card p-3 text-center bg-light border mt-4">
-                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.65rem; letter-spacing: 1px;">Reklama</small>
-                    <a href="https://google.pl" target="_blank" class="d-block text-decoration-none mt-2">
-                        <span class="fw-bold fs-5" style="color: #4285F4;"><i class="bi bi-google"></i> Google Ads</span>
-                    </a>
-                 </div>
-            </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for car in cars %}
+            <div class="col">
+                <div class="card h-100 car-card">
+                    <!-- Zdjęcie -->
+                    <div class="position-relative" style="height: 220px;">
+                        <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
+                        <span class="position-absolute top-0 start-0 m-3 badge badge-year rounded-pill py-2 px-3 fw-normal">
+                            {{ car.rok }}
+                        </span>
+                        <span class="position-absolute bottom-0 end-0 m-3 badge bg-danger rounded-pill shadow">
+                            {{ car.cena|int }} PLN
+                        </span>
+                    </div>
 
-            <div class="col-lg-8">
-                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                    <h4 class="fw-bold m-0">Najnowsze oferty</h4>
-                    <span class="text-muted small">{{ cars|length }} wyników</span>
-                </div>
-                
-                <div class="row row-cols-1 row-cols-md-2 g-4">
-                    {% for car in cars %}
-                    <div class="col">
-                        <div class="card h-100 modern-card">
-                            <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
-                                <div class="card-img-wrapper bg-light">
-                                    <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="Auto">
-                                    <span class="badge badge-modern position-absolute top-0 start-0 m-3 py-2 px-3 rounded-pill">{{ car.rok }}</span>
-                                </div>
+                    <!-- Treść -->
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">{{ car.marka }} {{ car.model }}</h5>
+                        <p class="text-muted small text-truncate">{{ car.opis }}</p>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <!-- Przycisk Telefon -->
+                            <a href="tel:{{ car.telefon }}" class="btn btn-outline-dark btn-sm rounded-pill">
+                                <i class="bi bi-telephone-fill me-1"></i> {{ car.telefon }}
                             </a>
-                            <div class="card-body pt-4">
-                                <h5 class="card-title fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                                <h3 class="text-primary fw-bolder my-2" style="color: #0d6efd;">{{ car.cena|int }} PLN</h3>
-                                <p class="card-text small text-muted text-truncate">{{ car.opis }}</p>
-                            </div>
-                            <div class="card-footer bg-white border-0 pt-0 pb-4 px-4">
-                                <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-primary w-100 rounded-pill fw-bold">
-                                    Szczegóły i kontakt <i class="bi bi-arrow-right-short"></i>
-                                </a>
-                            </div>
+                            
+                            <!-- Przycisk CarVertical -->
+                            <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-warning btn-sm rounded-pill text-dark fw-bold" style="background-color: #ffc107; border:none;">
+                                <i class="bi bi-shield-check"></i> Sprawdź historię VIN
+                            </a>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="col-12 text-center py-5">
-                        <i class="bi bi-emoji-frown fs-1 text-muted mb-3 d-block"></i>
-                        <h4 class="fw-bold text-muted">Brak ogłoszeń</h4>
-                        <p class="text-muted">Spróbuj zmienić kryteria wyszukiwania.</p>
+                    
+                    <div class="card-footer bg-white border-0 pt-0 pb-3">
+                         <a href="/ogloszenie/{{ car.id }}" class="btn btn-link text-danger text-decoration-none fw-bold w-100">
+                             Zobacz szczegóły <i class="bi bi-arrow-right"></i>
+                         </a>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
+            {% else %}
+            <div class="col-12 py-5 text-center">
+                <h4 class="text-muted">Brak ogłoszeń spełniających kryteria.</h4>
+            </div>
+            {% endfor %}
         </div>
     </div>
-
-    <footer class="bg-dark text-white-50 mt-auto py-4 text-center">
-        <div class="container small">
-            <div class="mb-2">
-                <i class="bi bi-speedometer2 text-primary fs-4"></i>
-            </div>
-            &copy; 2024 Giełda Radom. Nowoczesna motoryzacja lokalna.
-        </div>
-    
-<footer class="bg-dark text-white-50 mt-auto py-5">
-    <div class="container">
-        <div class="row gy-4 align-items-center">
-            <div class="col-md-4 text-center text-md-start">
-                <a class="navbar-brand fw-bold text-white fs-4" href="/">
-                    <i class="bi bi-speedometer2 text-primary"></i> Giełda Radom
-                </a>
-                <p class="small mt-2">Największy lokalny rynek samochodowy w regionie. Kupuj i sprzedawaj bez prowizji.</p>
-            </div>
-
-            <div class="col-md-4 text-center">
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="/regulamin" class="text-white-50 text-decoration-none hover-primary">Regulamin</a>
-                    <span>|</span>
-                    <a href="/polityka-prywatnosci" class="text-white-50 text-decoration-none hover-primary">Polityka Prywatności</a>
-                </div>
-                <div class="mt-2">
-                    <a href="/kontakt" class="text-white-50 text-decoration-none hover-primary">Kontakt i pomoc</a>
-                </div>
-            </div>
-
-            <div class="col-md-4 text-center text-md-end">
-                <div class="d-flex justify-content-md-end justify-content-center gap-3 fs-5 mb-2">
-                    <a href="#" class="text-white-50"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-white-50"><i class="bi bi-instagram"></i></a>
-                </div>
-                <small class="d-block text-muted">Masz pytania? kontakt@gieldaradom.pl</small>
-            </div>
-        </div>
-
-        <hr class="my-4 border-secondary">
-
-        <div class="row">
-            <div class="col-12 text-center" style="font-size: 0.75rem;">
-                <p class="mb-1">© 2026 Giełda Radom. Wszelkie prawa zastrzeżone.</p>
-                <p class="text-muted mx-auto" style="max-width: 800px;">
-                    <strong>Informacja RODO:</strong> Administratorem Twoich danych osobowych jest Giełda Radom. Przetwarzamy Twoje dane wyłącznie w celu realizacji usług ogłoszeniowych i zapewnienia bezpieczeństwa transakcji. Masz prawo do wglądu, poprawiania oraz żądania usunięcia swoich danych. Więcej szczegółów znajdziesz w naszej <a href="/polityka-prywatnosci" class="text-primary-emphasis text-decoration-none">Polityce Prywatności</a>.
-                </p>
-            </div>
-        </div>
-    </div>
-</footer>
-
-<style>
-    /* Subtelny efekt najechania na linki w stopce */
-    .hover-primary:hover {
-        color: #0d6efd !important;
-        transition: color 0.2s ease-in-out;
-    }
-</style>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
