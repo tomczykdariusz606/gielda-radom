@@ -1,28 +1,26 @@
 import os
+import uuid
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-import uuid
-
-app = Flask(__name__)
 from flask_mail import Mail, Message
 
-# Dodaj to zaraz po app = Flask(__name__)
+app = Flask(__name__)
+
+# --- KONFIGURACJA POCZTY ---
 app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = '3331343Darek1983' # Wpisz tu swoje hasło
+app.config['MAIL_PASSWORD'] = '3331343Darek1983'  # Pamiętaj o ochronie tego hasła!
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
-
 mail = Mail(app)
 
+# --- KONFIGURACJA APLIKACJI ---
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
-
-# --- KONFIGURACJA ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
@@ -42,7 +40,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    cars = db.relationship('Car', backref='owner', lazy=True)
+    # Dodano cascade, aby usunięcie użytkownika usuwało jego auta
+    cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -86,7 +85,6 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car)
 
-# POPRAWIONE: Ta funkcja teraz prawidłowo ładuje Twój plik HTML
 @app.route('/polityka-prywatnosci')
 def polityka():
     return render_template('polityka.html')
@@ -94,33 +92,26 @@ def polityka():
 @app.route('/regulamin')
 def regulamin():
     return render_template('regulamin.html')
-@app.route('/kontakt', methods=['GET', 'POST'])
 
+@app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
     if request.method == 'POST':
         name = request.form.get('name')
         email_from = request.form.get('email')
         message_body = request.form.get('message')
-        
-        # Tworzenie maila
         msg = Message(
             subject=f"Nowa wiadomość od: {name}",
-            recipients=['dariusztom@go2.pl'], # Adres, na który ma przyjść mail
+            recipients=['dariusztom@go2.pl'],
             body=f"Nadawca: {name}\nE-mail: {email_from}\n\nTreść:\n{message_body}"
         )
-        
         try:
             mail.send(msg)
             flash('Wiadomość została wysłana pomyślnie!', 'success')
         except Exception as e:
-            print(f"Błąd wysyłki: {e}")
-            flash('Błąd podczas wysyłania wiadomości. Spróbuj później.', 'danger')
-            
+            flash('Błąd podczas wysyłania wiadomości.', 'danger')
         return redirect(url_for('kontakt'))
-    
     return render_template('kontakt.html')
 
-# --- PANEL UŻYTKOWNIKA (PROFIL) ---
 @app.route('/profil')
 @login_required
 def profil():
@@ -167,23 +158,28 @@ def dodaj_ogloszenie():
     opis = request.form['opis']
     files = request.files.getlist('zdjecia')
     saved_images = []
+    
     for file in files[:10]: 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            unique_filename = str(uuid.uuid4())[:8] + "_" + filename
+            unique_filename = f"{uuid.uuid4().hex[:8]}_{filename}"
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             saved_images.append(url_for('static', filename='uploads/' + unique_filename))
+    
     main_img = saved_images[0] if saved_images else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+    
     nowe_auto = Car(marka=marka, model=model, rok=int(rok), cena=float(cena),
                     opis=opis, telefon=telefon, img=main_img, user_id=current_user.id)
     db.session.add(nowe_auto)
     db.session.commit()
+    
     for img_path in saved_images:
         new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
         db.session.add(new_image)
     db.session.commit()
+    
     flash('Ogłoszenie dodane pomyślnie!', 'success')
-    return redirect(url_for('index'))
+    return redirect(url_for('profil'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -216,7 +212,23 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/usun_konto', methods=['POST'])
+@login_required
+def usun_konto():
+    try:
+        user = User.query.get(current_user.id)
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+            logout_user()
+            flash('Twoje konto zostało trwale usunięte.', 'success')
+        return redirect(url_for('index'))
+    except Exception as e:
+        db.session.rollback()
+        flash('Błąd podczas usuwania konta.', 'danger')
+        return redirect(url_for('profil'))
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
