@@ -70,15 +70,16 @@ def index():
         cars = Car.query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars, search_query=query)
 
-@app.route('/polityka-prywatnosci')
-def polityka():
-    return render_template('polityka.html')
-
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car)
+
+@app.route('/polityka-prywatnosci')
+def polityka():
+    return render_template('polityka.html')
+
 
 # --- PANEL UŻYTKOWNIKA (PROFIL) ---
 @app.route('/profil')
