@@ -114,8 +114,10 @@ def kontakt():
             print(f"Błąd wysyłki: {e}")
             flash('Błąd podczas wysyłania wiadomości. Spróbuj później.', 'danger')
 
-        return redirect(url_for('kontakt'))
-  return render_template('kontakt.html')
+        return 
+redirect(url_for('kontakt'))
+  return 
+render_template('kontakt.html')
 
     
 
