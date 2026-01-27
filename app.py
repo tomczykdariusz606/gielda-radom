@@ -92,8 +92,8 @@ def polityka():
 @app.route('/regulamin')
 def regulamin():
     return render_template('regulamin.html')
-@app.route('/kontakt', methods=['GET', 'POST'])
 
+@app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
     if request.method == 'POST':
         name = request.form.get('name')
@@ -103,7 +103,7 @@ def kontakt():
         # Tworzenie maila
         msg = Message(
             subject=f"Nowa wiadomość od: {name}",
-            recipients=['dariusztom@go2.pl'], # Adres, na który ma przyjść mail
+            recipients=['dariusztom@go2.pl'], 
             body=f"Nadawca: {name}\nE-mail: {email_from}\n\nTreść:\n{message_body}"
         )
 
@@ -114,10 +114,11 @@ def kontakt():
             print(f"Błąd wysyłki: {e}")
             flash('Błąd podczas wysyłania wiadomości. Spróbuj później.', 'danger')
 
-            return     
-   redirect(url_for('kontakt'))
+        return redirect(url_for('kontakt'))
 
-    # Ten return musi być na samym końcu, wyrównany do "if"
+    # Ten return obsługuje wyświetlenie strony (metoda GET)
+    return render_template('kontakt.html')
+
       
     
 
