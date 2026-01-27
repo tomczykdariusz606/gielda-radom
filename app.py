@@ -8,6 +8,18 @@ from werkzeug.utils import secure_filename
 import uuid
 
 app = Flask(__name__)
+from flask_mail import Mail, Message
+
+# Dodaj to zaraz po app = Flask(__name__)
+app.config['MAIL_SERVER'] = 'poczta.o2.pl'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
+app.config['MAIL_PASSWORD'] = '3331343Darek1983' # Wpisz tu swoje hasło
+app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
+
+mail = Mail(app)
+
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 
 # --- KONFIGURACJA ---
@@ -82,9 +94,30 @@ def polityka():
 @app.route('/regulamin')
 def regulamin():
     return render_template('regulamin.html')
+@app.route('/kontakt', methods=['GET', 'POST'])
 
-@app.route('/kontakt')
 def kontakt():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email_from = request.form.get('email')
+        message_body = request.form.get('message')
+        
+        # Tworzenie maila
+        msg = Message(
+            subject=f"Nowa wiadomość od: {name}",
+            recipients=['dariusztom@go2.pl], # Adres, na który ma przyjść mail
+            body=f"Nadawca: {name}\nE-mail: {email_from}\n\nTreść:\n{message_body}"
+        )
+        
+        try:
+            mail.send(msg)
+            flash('Wiadomość została wysłana pomyślnie!', 'success')
+        except Exception as e:
+            print(f"Błąd wysyłki: {e}")
+            flash('Błąd podczas wysyłania wiadomości. Spróbuj później.', 'danger')
+            
+        return redirect(url_for('kontakt'))
+    
     return render_template('kontakt.html')
 
 # --- PANEL UŻYTKOWNIKA (PROFIL) ---
