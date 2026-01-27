@@ -30,7 +30,6 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    # Relacja: użytkownik ma wiele aut
     cars = db.relationship('Car', backref='owner', lazy=True)
 
 class Car(db.Model):
@@ -40,7 +39,7 @@ class Car(db.Model):
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
     opis = db.Column(db.Text, nullable=False)
-    telefon = db.Column(db.String(20), nullable=False) # NOWE POLE
+    telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(20), default='Lokalne')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -70,18 +69,25 @@ def index():
         cars = Car.query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars, search_query=query)
 
-
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car)
 
+# POPRAWIONE: Ta funkcja teraz prawidłowo ładuje Twój plik HTML
+@app.route('/polityka-prywatnosci')
+def polityka():
+    return render_template('polityka.html')
+
+@app.route('/regulamin')
+def regulamin():
+    # Jeśli masz plik regulamin.html, zmień na render_template('regulamin.html')
+    return "Strona regulaminu w budowie..."
 
 # --- PANEL UŻYTKOWNIKA (PROFIL) ---
 @app.route('/profil')
 @login_required
 def profil():
-    # Pokaż tylko auta zalogowanego użytkownika
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
     return render_template('profil.html', cars=my_cars)
 
@@ -89,10 +95,8 @@ def profil():
 @login_required
 def delete_car(car_id):
     car = Car.query.get_or_404(car_id)
-    # Zabezpieczenie: czy to auto należy do zalogowanego?
     if car.user_id != current_user.id:
-        abort(403) # Błąd: Brak dostępu
-    
+        abort(403)
     db.session.delete(car)
     db.session.commit()
     flash('Ogłoszenie zostało usunięte.', 'success')
@@ -104,7 +108,6 @@ def edit_car(car_id):
     car = Car.query.get_or_404(car_id)
     if car.user_id != current_user.id:
         abort(403)
-        
     if request.method == 'POST':
         car.marka = request.form['marka']
         car.model = request.form['model']
@@ -112,29 +115,9 @@ def edit_car(car_id):
         car.cena = float(request.form['cena'])
         car.telefon = request.form['telefon']
         car.opis = request.form['opis']
-        
-        # Opcjonalnie: dodaj nowe zdjęcia (stare zostają)
-        files = request.files.getlist('zdjecia')
-        if files and files[0].filename != '':
-            # Jeśli wgrano nowe, można np. podmienić główne
-            # Tutaj prosta logika: dodajemy nowe do galerii
-            for file in files[:5]:
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    unique = str(uuid.uuid4())[:8] + "_" + filename
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique))
-                    new_path = url_for('static', filename='uploads/' + unique)
-                    # Zapisz jako dodatkowe zdjęcie
-                    new_img = CarImage(image_path=new_path, car_id=car.id)
-                    db.session.add(new_img)
-                    # Jeśli to pierwsze nowe, zaktualizuj też miniaturkę
-                    if files.index(file) == 0:
-                        car.img = new_path
-
         db.session.commit()
         flash('Zapisano zmiany!', 'success')
         return redirect(url_for('profil'))
-        
     return render_template('edytuj.html', car=car)
 
 @app.route('/dodaj', methods=['POST'])
@@ -144,37 +127,28 @@ def dodaj_ogloszenie():
     model = request.form['model']
     rok = request.form['rok']
     cena = request.form['cena']
-    telefon = request.form['telefon'] # Pobieramy telefon
+    telefon = request.form['telefon']
     opis = request.form['opis']
-    
     files = request.files.getlist('zdjecia')
     saved_images = []
-
     for file in files[:10]: 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             unique_filename = str(uuid.uuid4())[:8] + "_" + filename
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             saved_images.append(url_for('static', filename='uploads/' + unique_filename))
-
     main_img = saved_images[0] if saved_images else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-
-    nowe_auto = Car(
-        marka=marka, model=model, rok=int(rok), cena=float(cena),
-        opis=opis, telefon=telefon, img=main_img, user_id=current_user.id
-    )
+    nowe_auto = Car(marka=marka, model=model, rok=int(rok), cena=float(cena),
+                    opis=opis, telefon=telefon, img=main_img, user_id=current_user.id)
     db.session.add(nowe_auto)
     db.session.commit()
-
     for img_path in saved_images:
         new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
         db.session.add(new_image)
-    
     db.session.commit()
     flash('Ogłoszenie dodane pomyślnie!', 'success')
     return redirect(url_for('index'))
 
-# Authentykacja (Register/Login/Logout) bez zmian...
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -196,7 +170,7 @@ def login():
         user = User.query.filter_by(username=request.form['username']).first()
         if user and check_password_hash(user.password_hash, request.form['password']):
             login_user(user)
-            return redirect(url_for('profil')) # Po zalogowaniu idź do profilu
+            return redirect(url_for('profil'))
         flash('Błędne dane', 'danger')
     return render_template('login.html')
 
@@ -206,18 +180,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route('/import-otomoto', methods=['POST'])
-@login_required
-def import_otomoto():
-    return redirect(url_for('index'))
-
-# Strony statyczne
-@app.route('/regulamin')
-def regulamin(): return "Regulamin..."
-@app.route('/polityka-prywatnosci')
-def polityka(): return "Polityka..."
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
