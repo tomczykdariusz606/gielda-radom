@@ -76,10 +76,6 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car)
 
-@app.route('/polityka-prywatnosci')
-def polityka():
-    return render_template('polityka.html')
-
 
 # --- PANEL UŻYTKOWNIKA (PROFIL) ---
 @app.route('/profil')
