@@ -118,8 +118,7 @@ def kontakt():
    redirect(url_for('kontakt'))
 
     # Ten return musi być na samym końcu, wyrównany do "if"
-      return
- 
+      
     
 
 # --- ZARZĄDZANIE OGŁOSZENIAMI ---
