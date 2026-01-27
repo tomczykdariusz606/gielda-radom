@@ -4,99 +4,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mój Profil - Giełda Radom</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>body{background-color:#f8f9fa;}</style>
+
+    <style>
+        :root {
+            --radom-red: #ce2b37;
+            --radom-dark: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        /* Przyciemnienie tła */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.85) 100%);
+            z-index: 1;
+        }
+
+        .big-text-76 {
+            position: fixed; /* Fixed, żeby nie "pływał" przy przewijaniu listy */
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            font-family: 'Anton', sans-serif;
+            font-size: 18vw;
+            color: rgba(255, 255, 255, 0.03);
+            z-index: 2;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        /* --- NAVIGACJA --- */
+        .navbar {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid var(--radom-red);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- KARTY (Glassmorphism) --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 5;
+        }
+
+        .form-control-modern {
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-modern:focus {
+            border-color: var(--radom-red);
+            box-shadow: 0 0 0 3px rgba(206, 43, 55, 0.1);
+        }
+
+        /* --- PRZYCISKI --- */
+        .btn-radom {
+            background: linear-gradient(135deg, var(--radom-red), #a31f28);
+            border: none; color: white; border-radius: 50px;
+            padding: 10px 25px; font-weight: 700;
+        }
+        .btn-radom:hover { color: white; transform: scale(1.02); }
+
+        .list-group-item {
+            background: transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: background 0.2s;
+        }
+        .list-group-item:hover { background: rgba(0,0,0,0.02); }
+
+        .danger-zone {
+            border: 1px dashed rgba(206, 43, 55, 0.4);
+            background: rgba(206, 43, 55, 0.05);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark mb-4">
+
+    <div class="overlay"></div>
+    <div class="big-text-76">Czerwiec 76</div>
+
+    <nav class="navbar navbar-dark mb-5">
         <div class="container">
-            <a class="navbar-brand" href="/">Giełda Radom</a>
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-geo-alt-fill text-danger"></i> Giełda Radom
+            </a>
             <div class="d-flex gap-3 text-white align-items-center">
-                <span>Witaj, {{ current_user.username }}</span>
-                <a href="/logout" class="btn btn-sm btn-outline-light">Wyloguj</a>
+                <span class="small d-none d-sm-inline">Witaj, <b>{{ current_user.username }}</b></span>
+                <a href="/logout" class="btn btn-sm btn-outline-light rounded-pill px-3">Wyloguj</a>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <!-- FORMULARZ DODAWANIA -->
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm border-0 rounded-4">
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-3 text-primary">Nowe ogłoszenie</h5>
-                        <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                            
-                            <div class="mb-2 text-center p-3 bg-light rounded-3 border border-dashed">
-                                <i class="bi bi-camera fs-3 text-muted"></i>
-                                <input type="file" name="zdjecia" class="form-control mt-2 form-control-sm" multiple required>
-                                <small class="text-muted d-block mt-1">Max 10 zdjęć</small>
-                            </div>
+    <div class="container pb-5">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold mb-4" style="color: var(--radom-red);">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Nowe ogłoszenie
+                    </h5>
+                    <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3 text-center p-4 bg-light rounded-4 border border-dashed">
+                            <i class="bi bi-camera-fill fs-2 text-muted"></i>
+                            <input type="file" name="zdjecia" class="form-control mt-2 form-control-sm" multiple required>
+                            <small class="text-muted d-block mt-2">Pokaż swój pojazd (Max 10)</small>
+                        </div>
 
-                            <div class="row g-2 mb-2">
-                                <div class="col"><input type="text" name="marka" class="form-control" placeholder="Marka" required></div>
-                                <div class="col"><input type="text" name="model" class="form-control" placeholder="Model" required></div>
-                            </div>
-                            <div class="row g-2 mb-2">
-                                <div class="col"><input type="number" name="rok" class="form-control" placeholder="Rok" required></div>
-                                <div class="col"><input type="number" name="cena" class="form-control" placeholder="Cena (PLN)" required></div>
-                            </div>
-                            <div class="mb-3">
-                                <input type="tel" name="telefon" class="form-control" placeholder="Numer telefonu" required>
-                            </div>
-                            <div class="mb-3">
-                                <textarea name="opis" class="form-control" placeholder="Opis pojazdu..." rows="3" required></textarea>
-                            </div>
-                            <button class="btn btn-primary w-100 rounded-pill fw-bold">Wystaw Ogłoszenie</button>
-                        </form>
-                    </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col"><input type="text" name="marka" class="form-control form-control-modern" placeholder="Marka" required></div>
+                            <div class="col"><input type="text" name="model" class="form-control form-control-modern" placeholder="Model" required></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col"><input type="number" name="rok" class="form-control form-control-modern" placeholder="Rok" required></div>
+                            <div class="col"><input type="number" name="cena" class="form-control form-control-modern" placeholder="Cena" required></div>
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" name="telefon" class="form-control form-control-modern" placeholder="Twój numer telefonu" required>
+                        </div>
+                        <div class="mb-4">
+                            <textarea name="opis" class="form-control form-control-modern" placeholder="Opis stanu technicznego..." rows="3" required></textarea>
+                        </div>
+                        <button class="btn btn-radom w-100">Wystaw Ogłoszenie</button>
+                    </form>
+                </div>
+
+                <div class="glass-card p-4 mt-4 danger-zone">
+                    <h6 class="fw-bold text-danger mb-3">Strefa bezpieczeństwa</h6>
+                    <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA: Czy na pewno chcesz trwale usunąć swoje konto? Tego nie da się cofnąć!');">
+                        <button class="btn btn-link text-danger p-0 small text-decoration-none">
+                            <i class="bi bi-exclamation-triangle"></i> Usuń moje konto
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            <!-- LISTA MOICH OGŁOSZEŃ -->
-            <div class="col-md-8">
-                <h3 class="fw-bold mb-3">Moje Ogłoszenia ({{ cars|length }})</h3>
-                
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
+            <div class="col-lg-8">
+                <div class="glass-card p-4">
+                    <h3 class="fw-bold mb-4">Moje aktywne oferty <span class="badge bg-danger rounded-pill">{{ cars|length }}</span></h3>
 
-                <div class="list-group shadow-sm rounded-4 overflow-hidden">
-                    {% for car in cars %}
-                    <div class="list-group-item p-3 border-start-0 border-end-0">
-                        <div class="row align-items-center">
-                            <div class="col-auto">
-                                <img src="{{ car.img }}" class="rounded-3" width="80" height="60" style="object-fit:cover;">
-                            </div>
-                            <div class="col">
-                                <h6 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h6>
-                                <small class="text-muted">{{ car.cena }} PLN | {{ car.rok }} r.</small>
-                            </div>
-                            <div class="col-auto d-flex gap-2">
-                                <a href="/edytuj/{{ car.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                    <i class="bi bi-pencil"></i> Edytuj
-                                </a>
-                                
-                                <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno usunąć?');">
-                                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                        <i class="bi bi-trash"></i> Usuń
-                                    </button>
-                                </form>
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} py-2 rounded-3 small border-0 mb-3">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <div class="list-group list-group-flush">
+                        {% for car in cars %}
+                        <div class="list-group-item px-0 py-3">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <img src="{{ car.img }}" class="rounded-4 shadow-sm" width="100" height="75" style="object-fit:cover;">
+                                </div>
+                                <div class="col">
+                                    <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                                    <p class="text-muted mb-0 small">
+                                        <span class="me-3"><i class="bi bi-calendar-event me-1"></i>{{ car.rok }}</span>
+                                        <span><i class="bi bi-cash-stack me-1"></i>{{ car.cena }} PLN</span>
+                                    </p>
+                                </div>
+                                <div class="col-auto d-flex gap-2">
+                                    <a href="/edytuj/{{ car.id }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                        <i class="bi bi-pencil"></i> Edytuj
+                                    </a>
+                                    <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Usunąć to ogłoszenie?');">
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-inbox text-muted display-1"></i>
+                                <p class="text-muted mt-3">Nie masz jeszcze żadnych ogłoszeń.</p>
+                            </div>
+                        {% endfor %}
                     </div>
-                    {% else %}
-                        <div class="p-5 text-center text-muted">Brak aktywnych ogłoszeń.</div>
-                    {% endfor %}
                 </div>
             </div>
+
         </div>
     </div>
 </body>
 </html>
-
