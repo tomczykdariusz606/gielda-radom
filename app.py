@@ -119,7 +119,7 @@ def kontakt():
 
     # Ten return musi być na samym końcu, wyrównany do "if"
       return
- render_template('kontakt.html')
+ 
     
 
 # --- ZARZĄDZANIE OGŁOSZENIAMI ---
