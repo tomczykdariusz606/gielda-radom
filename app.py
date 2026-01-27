@@ -1,9 +1,11 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_ # <--- WAŻNY NOWY IMPORT
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
@@ -23,7 +25,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- MODELE BAZY DANYCH ---
+# --- MODELE ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
@@ -36,11 +38,9 @@ class Car(db.Model):
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
     opis = db.Column(db.Text, nullable=False)
-    # img to zdjęcie główne (okładka)
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(20), default='Lokalne')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # Relacja do dodatkowych zdjęć
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
 
 class CarImage(db.Model):
@@ -59,13 +59,23 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    cars = Car.query.order_by(Car.id.desc()).all()
-    return render_template('index.html', cars=cars)
+    # LOGIKA WYSZUKIWANIA
+    query = request.args.get('q')
+    
+    if query:
+        search = f"%{query}%"
+        # Szukamy w Marce LUB Modelu
+        cars = Car.query.filter(
+            or_(Car.marka.ilike(search), Car.model.ilike(search))
+        ).order_by(Car.id.desc()).all()
+    else:
+        cars = Car.query.order_by(Car.id.desc()).all()
+        
+    return render_template('index.html', cars=cars, search_query=query)
 
-# NOWY WIDOK SZCZEGÓŁÓW OGŁOSZENIA
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
-    car = Car.query.get_or_404(car_id) # Znajdź auto lub zwróć błąd 404
+    car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car)
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -111,35 +121,28 @@ def dodaj_ogloszenie():
     cena = request.form['cena']
     opis = request.form['opis']
     
-    # Obsługa zdjęć (MULTI UPLOAD)
-    files = request.files.getlist('zdjecia') # Pobiera listę plików
+    files = request.files.getlist('zdjecia')
     saved_images = []
 
-    # Zapisz max 10 zdjęć
     for file in files[:10]: 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            # Unikamy dublowania nazw plików dodając losowy prefix (opcjonalnie, tu prosto)
-            import uuid
             unique_filename = str(uuid.uuid4())[:8] + "_" + filename
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             saved_images.append(url_for('static', filename='uploads/' + unique_filename))
 
-    # Ustaw zdjęcie główne (pierwsze z listy lub domyślne)
     if saved_images:
         main_img = saved_images[0]
     else:
         main_img = 'https://placehold.co/600x400?text=Brak+Zdjecia'
 
-    # Tworzenie auta
     nowe_auto = Car(
         marka=marka, model=model, rok=int(rok), cena=float(cena),
         opis=opis, img=main_img, user_id=current_user.id
     )
     db.session.add(nowe_auto)
-    db.session.commit() # Musimy zapisać, żeby dostać ID auta
+    db.session.commit()
 
-    # Dodawanie reszty zdjęć do tabeli CarImage (wszystkie, włącznie z głównym)
     for img_path in saved_images:
         new_image = CarImage(image_path=img_path, car_id=nowe_auto.id)
         db.session.add(new_image)
@@ -152,20 +155,10 @@ def dodaj_ogloszenie():
 @app.route('/import-otomoto', methods=['POST'])
 @login_required
 def import_otomoto():
-    # ... (bez zmian - kod importu z poprzedniej wersji)
     return redirect(url_for('index'))
-
-
-@app.route('/polityka-prywatnosci')
-def polityka():
-    return render_template('polityka.html')
-
-@app.route('/regulamin')
-def regulamin():
-    return render_template('regulamin.html')
-
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+    # Nasłuchuje na wszystkich IP (0.0.0.0) - ważne dla serwera VPS
     app.run(host='0.0.0.0', port=5000, debug=True)
