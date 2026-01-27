@@ -105,7 +105,7 @@ def kontakt():
         # Tworzenie maila
         msg = Message(
             subject=f"Nowa wiadomość od: {name}",
-            recipients=['dariusztom@go2.pl], # Adres, na który ma przyjść mail
+            recipients=['dariusztom@go2.pl'], # Adres, na który ma przyjść mail
             body=f"Nadawca: {name}\nE-mail: {email_from}\n\nTreść:\n{message_body}"
         )
         
