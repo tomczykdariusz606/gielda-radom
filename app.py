@@ -84,24 +84,39 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car)
 
+# POPRAWIONE: Ta funkcja teraz prawidłowo ładuje Twój plik HTML
+@app.route('/polityka-prywatnosci')
+def polityka():
+    return render_template('polityka.html')
+
+@app.route('/regulamin')
+def regulamin():
+    return render_template('regulamin.html')
 @app.route('/kontakt', methods=['GET', 'POST'])
+
 def kontakt():
     if request.method == 'POST':
         name = request.form.get('name')
         email_from = request.form.get('email')
         message_body = request.form.get('message')
+
+        # Tworzenie maila
         msg = Message(
-            subject=f"Wiadomość od: {name}",
-            recipients=['dariusztom@go2.pl'],
+            subject=f"Nowa wiadomość od: {name}",
+            recipients=['dariusztom@go2.pl'], # Adres, na który ma przyjść mail
             body=f"Nadawca: {name}\nE-mail: {email_from}\n\nTreść:\n{message_body}"
         )
+
         try:
             mail.send(msg)
-            flash('Wiadomość wysłana!', 'success')
-        except:
-            flash('Błąd wysyłki.', 'danger')
+            flash('Wiadomość została wysłana pomyślnie!', 'success')
+        except Exception as e:
+            print(f"Błąd wysyłki: {e}")
+            flash('Błąd podczas wysyłania wiadomości. Spróbuj później.', 'danger')
+
         return redirect(url_for('kontakt'))
-    return render_template('kontakt.html')
+
+    
 
 # --- ZARZĄDZANIE OGŁOSZENIAMI ---
 
