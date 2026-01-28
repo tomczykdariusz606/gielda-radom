@@ -4,41 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resetowanie hasła - Giełda Radom</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Anton&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; display: flex; align-items: center; min-height: 100vh; }
-        .reset-card { max-width: 400px; width: 100%; margin: auto; border: none; }
-        .radom-header { background: linear-gradient(135deg, #ce2b37 0%, #a31f28 100%); color: white; }
-        .btn-radom { background-color: #ce2b37; border: none; color: white; font-weight: 600; }
-        .btn-radom:hover { background-color: #a31f28; color: white; }
+        :root {
+            --radom-red: #ce2b37;
+            --radom-dark: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%);
+            z-index: 1;
+        }
+
+        .big-text-76 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            font-family: 'Anton', sans-serif;
+            font-size: 18vw;
+            color: rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+            z-index: 2;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 1rem;
+        }
+
+        .reset-card {
+            position: relative;
+            z-index: 3;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .radom-header-mini {
+            color: var(--radom-red);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control-modern {
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .form-control-modern:focus {
+            background: white;
+            border-color: var(--radom-red);
+            box-shadow: 0 0 0 4px rgba(206, 43, 55, 0.1);
+            outline: none;
+        }
+
+        .btn-radom {
+            background: linear-gradient(135deg, var(--radom-red), #a31f28);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-weight: 700;
+            color: white;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-radom:hover {
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 10px 20px rgba(206, 43, 55, 0.3);
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card reset-card shadow-lg rounded-4 overflow-hidden">
-            <div class="radom-header p-4 text-center">
-                <h4 class="fw-bold mb-0">Resetuj hasło</h4>
-                <small class="opacity-75">Giełda Radom - Projekt Czerwiec '76</small>
+
+    <div class="overlay"></div>
+    <div class="big-text-76">Radom 76</div>
+
+    <div class="container d-flex justify-content-center">
+        <div class="reset-card text-center">
+            <div class="radom-header-mini">
+                <i class="bi bi-shield-lock-fill" style="font-size: 3rem;"></i>
+                <h3 class="fw-bold mt-2">Reset hasła</h3>
             </div>
-            <div class="card-body p-4">
-                <p class="text-muted small mb-4">Wprowadź swój adres e-mail, aby otrzymać link do zmiany hasła.</p>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Twój e-mail</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="bi bi-envelope text-danger"></i></span>
-                            <input type="email" name="email" class="form-control bg-light border-start-0 rounded-end-pill" placeholder="nazwa@poczta.pl" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-radom w-100 rounded-pill py-2 mb-3">Wyślij link</button>
-                    <div class="text-center">
-                        <a href="{{ url_for('login') }}" class="text-decoration-none small text-muted">Wróć do logowania</a>
-                    </div>
-                </form>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} py-2 small rounded-3 mb-3">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <p class="text-muted small mb-4">Wpisz e-mail powiązany z Twoim kontem. Wyślemy Ci instrukcję zmiany hasła.</p>
+
+            <form method="POST">
+                <div class="mb-4 text-start">
+                    <label class="form-label small fw-bold text-muted px-2">Twój adres e-mail</label>
+                    <input type="email" name="email" class="form-control form-control-modern" placeholder="np. jan@o2.pl" required>
+                </div>
+                
+                <button type="submit" class="btn btn-radom w-100 shadow-sm mb-3">Wyślij link do resetu</button>
+            </form>
+
+            <div class="mt-2">
+                <a href="{{ url_for('login') }}" class="text-decoration-none small fw-bold" style="color: var(--radom-red);">
+                    <i class="bi bi-arrow-left me-1"></i> Wróć do logowania
+                </a>
             </div>
         </div>
     </div>
+
 </body>
 </html>
