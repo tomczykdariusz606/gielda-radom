@@ -1,22 +1,22 @@
 import smtplib
-import ssl
 
-# Dane dla Gmail
+# Konfiguracja dla Gmail
 smtp_server = "smtp.gmail.com"
-port = 465  # Dla SSL
+port = 587  # Używamy portu 587 dla lepszej stabilności na VPS
 sender_email = "tomczykdariusz606@gmail.com"
-password = "ngldaqatnibxzvpy" # Tutaj wklej kod od Google
+password = "ngldaqatnibxzvpy" # Wklej kod bez spacji
 
 message = """Subject: Test Gielda Radom
 
-To jest wiadomosc testowa wyslana prosto z serwera Ubuntu."""
-
-context = ssl.create_default_context()
+To jest test wyslany z Gmaila przez port 587."""
 
 try:
-    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, sender_email, message)
-    print("Sukces! Mail zostal wyslany pomyslnie.")
+    # Tworzymy połączenie TLS
+    server = smtplib.SMTP(smtp_server, port)
+    server.starttls() 
+    server.login(sender_email, password)
+    server.sendmail(sender_email, sender_email, message)
+    server.quit()
+    print("Sukces! Mail z Gmaila wysłany pomyślnie.")
 except Exception as e:
-    print(f"Blad: {e}")
+    print(f"Błąd wysyłki: {e}")
