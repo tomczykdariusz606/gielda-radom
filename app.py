@@ -1,7 +1,7 @@
 import os
 import uuid
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -68,7 +68,7 @@ class CarImage(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- FUNKCJE POMOCNICZE (OBRAZY I RESET) ---
+# --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -92,6 +92,12 @@ def send_reset_email(user):
     msg = Message('Resetowanie hasła - Giełda Radom', recipients=[user.email])
     msg.body = f"Aby zresetować hasło, kliknij w poniższy link:\n{link}\n\nJeśli to nie Ty, zignoruj tę wiadomość."
     mail.send(msg)
+
+# --- OBSŁUGA FAVICON ---
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 # --- TRASY GŁÓWNE ---
 @app.route('/')
@@ -133,7 +139,7 @@ def kontakt():
         return redirect(url_for('kontakt'))
     return render_template('kontakt.html', now=datetime.utcnow())
 
-# --- ZARZĄDZANIE ---
+# --- ZARZĄDZANIE OGŁOSZENIAMI ---
 @app.route('/profil')
 @login_required
 def profil():
@@ -150,9 +156,7 @@ def dodaj_ogloszenie():
             opt_name = save_optimized_image(file)
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
-
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    
     nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
                     cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
                     img=main_img, user_id=current_user.id)
@@ -247,16 +251,19 @@ def reset_request():
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
     s = Serializer(app.secret_key)
-    try: email = s.loads(token, salt='reset-password', max_age=1800)
+    try: 
+        email = s.loads(token, salt='reset-password', max_age=1800)
     except:
-        flash('Token wygasł.', 'danger')
+        flash('Token wygasł lub jest nieprawidłowy.', 'danger')
         return redirect(url_for('reset_request'))
+    
     if request.method == 'POST':
         user = User.query.filter_by(email=email).first()
-        user.password_hash = generate_password_hash(request.form.get('password'))
-        db.session.commit()
-        flash('Hasło zmienione!', 'success')
-        return redirect(url_for('login'))
+        if user:
+            user.password_hash = generate_password_hash(request.form.get('password'))
+            db.session.commit()
+            flash('Twoje hasło zostało zmienione! Możesz się teraz zalogować.', 'success')
+            return redirect(url_for('login'))
     return render_template('reset_token.html', now=datetime.utcnow())
 
 # --- UŻYTKOWNICY ---
