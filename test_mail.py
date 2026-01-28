@@ -1,9 +1,7 @@
-import smtplib
-try:
-    server = smtplib.SMTP_SSL('poczta.o2.pl', 465)
-    server.login('dariusztom@go2.pl', '5WZR5F66GGH6WAEN')
-    server.sendmail('dariusztom@go2.pl', 'dariusztom@go2.pl', 'Temat: Test\n\nTo jest testowa wiadomosc.')
-    server.quit()
-    print("Mail wysłany pomyślnie!")
-except Exception as e:
-    print(f"Błąd: {e}")
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USERNAME'] = 'tomczykdariusz606@gmail.com'
+app.config['MAIL_PASSWORD'] = 'ngldaqat nibxzvpy'  # Ten sam co w teście
+app.config['MAIL_DEFAULT_SENDER'] = 'tomczykdariusz606@gmail.com'
