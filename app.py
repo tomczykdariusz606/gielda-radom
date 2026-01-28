@@ -41,7 +41,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)  # Dodane pole email
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
 
@@ -68,7 +68,7 @@ class CarImage(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- FUNKCJE POMOCNICZE ---
+# --- FUNKCJE POMOCNICZE (OBRAZY I RESET) ---
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -93,36 +93,6 @@ def send_reset_email(user):
     msg.body = f"Aby zresetować hasło, kliknij w poniższy link:\n{link}\n\nJeśli to nie Ty, zignoruj tę wiadomość."
     mail.send(msg)
 
-# --- TRASY RESETOWANIA HASŁA ---
-@app.route("/reset_password", methods=['GET', 'POST'])
-def reset_request():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            send_reset_email(user)
-            flash('Instrukcje zostały wysłane na Twój e-mail.', 'info')
-            return redirect(url_for('login'))
-        flash('Nie znaleziono konta z tym adresem e-mail.', 'warning')
-    return render_template('reset_request.html')
-
-@app.route("/reset_password/<token>", methods=['GET', 'POST'])
-def reset_token(token):
-    s = Serializer(app.secret_key)
-    try:
-        email = s.loads(token, salt='reset-password', max_age=1800)
-    except:
-        flash('Token wygasł lub jest nieprawidłowy.', 'danger')
-        return redirect(url_for('reset_request'))
-    
-    if request.method == 'POST':
-        user = User.query.filter_by(email=email).first()
-        user.password_hash = generate_password_hash(request.form.get('password'))
-        db.session.commit()
-        flash('Hasło zostało zaktualizowane!', 'success')
-        return redirect(url_for('login'))
-    return render_template('reset_token.html')
-
 # --- TRASY GŁÓWNE ---
 @app.route('/')
 def index():
@@ -141,6 +111,14 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car, now=datetime.utcnow())
 
+@app.route('/polityka-prywatnosci')
+def polityka():
+    return render_template('polityka.html', now=datetime.utcnow())
+
+@app.route('/regulamin')
+def regulamin():
+    return render_template('regulamin.html', now=datetime.utcnow())
+
 @app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
     if request.method == 'POST':
@@ -153,7 +131,7 @@ def kontakt():
         except:
             flash('Błąd wysyłki.', 'danger')
         return redirect(url_for('kontakt'))
-    return render_template('kontakt.html')
+    return render_template('kontakt.html', now=datetime.utcnow())
 
 # --- ZARZĄDZANIE ---
 @app.route('/profil')
@@ -166,7 +144,13 @@ def profil():
 @login_required
 def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
-    saved_paths = [url_for('static', filename='uploads/' + save_optimized_image(f)) for f in files[:10] if f and allowed_file(f.filename)]
+    saved_paths = []
+    for file in files[:10]:
+        if file and allowed_file(file.filename):
+            opt_name = save_optimized_image(file)
+            path = url_for('static', filename='uploads/' + opt_name)
+            saved_paths.append(path)
+
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     
     nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
@@ -177,7 +161,60 @@ def dodaj_ogloszenie():
     for path in saved_paths:
         db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
     db.session.commit()
+    flash('Ogłoszenie dodane!', 'success')
     return redirect(url_for('profil'))
+
+@app.route('/edytuj/<int:car_id>', methods=['GET', 'POST'])
+@login_required
+def edit_car(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car.user_id != current_user.id: abort(403)
+    if request.method == 'POST':
+        car.marka, car.model = request.form['marka'], request.form['model']
+        car.rok, car.cena = int(request.form['rok']), float(request.form['cena'])
+        car.telefon, car.opis = request.form['telefon'], request.form['opis']
+        files = request.files.getlist('zdjecia')
+        for file in files:
+            if file and allowed_file(file.filename) and len(car.images) < 10:
+                opt_name = save_optimized_image(file)
+                path = url_for('static', filename='uploads/' + opt_name)
+                db.session.add(CarImage(image_path=path, car_id=car.id))
+        db.session.commit()
+        flash('Zaktualizowano!', 'success')
+        return redirect(url_for('profil'))
+    return render_template('edytuj.html', car=car, now=datetime.utcnow())
+
+@app.route('/ustaw_glowne/<int:car_id>/<int:image_id>', methods=['POST'])
+@login_required
+def ustaw_glowne(car_id, image_id):
+    car = Car.query.get_or_404(car_id)
+    img_record = CarImage.query.get_or_404(image_id)
+    if car.user_id != current_user.id or img_record.car_id != car.id:
+        return jsonify({"success": False}), 403
+    car.img = img_record.image_path
+    db.session.commit()
+    return jsonify({"success": True})
+
+@app.route('/odswiez/<int:car_id>', methods=['POST'])
+@login_required
+def odswiez_ogloszenie(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car.user_id == current_user.id:
+        car.data_dodania = datetime.utcnow()
+        db.session.commit()
+        flash('Odświeżono na 30 dni!', 'success')
+    return redirect(url_for('profil'))
+
+@app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
+@login_required
+def usun_zdjecie(image_id):
+    img = CarImage.query.get_or_404(image_id)
+    if img.car.user_id != current_user.id: return jsonify({"success": False}), 403
+    fpath = os.path.join(app.config['UPLOAD_FOLDER'], img.image_path.split('/')[-1])
+    if os.path.exists(fpath): os.remove(fpath)
+    db.session.delete(img)
+    db.session.commit()
+    return jsonify({"success": True})
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
@@ -189,23 +226,54 @@ def delete_car(car_id):
             if os.path.exists(fpath): os.remove(fpath)
         db.session.delete(car)
         db.session.commit()
+        flash('Usunięto ogłoszenie.', 'success')
     return redirect(url_for('profil'))
+
+# --- RESET HASŁA ---
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            try:
+                send_reset_email(user)
+                flash('Instrukcje zostały wysłane.', 'success')
+            except: flash('Błąd poczty.', 'danger')
+        else: flash('Nie znaleziono e-maila w bazie.', 'warning')
+        return redirect(url_for('reset_request'))
+    return render_template('reset_request.html', now=datetime.utcnow())
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    s = Serializer(app.secret_key)
+    try: email = s.loads(token, salt='reset-password', max_age=1800)
+    except:
+        flash('Token wygasł.', 'danger')
+        return redirect(url_for('reset_request'))
+    if request.method == 'POST':
+        user = User.query.filter_by(email=email).first()
+        user.password_hash = generate_password_hash(request.form.get('password'))
+        db.session.commit()
+        flash('Hasło zmienione!', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', now=datetime.utcnow())
 
 # --- UŻYTKOWNICY ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        user = request.form['username']
         email = request.form['email']
-        if User.query.filter((User.username == username) | (User.email == email)).first():
-            flash('Użytkownik lub e-mail już istnieje!', 'danger')
+        if User.query.filter((User.username == user) | (User.email == email)).first():
+            flash('Użytkownik/Email istnieje!', 'danger')
             return redirect(url_for('register'))
-        new_user = User(username=username, email=email, password_hash=generate_password_hash(request.form['password']))
+        new_user = User(username=user, email=email, password_hash=generate_password_hash(request.form['password']))
         db.session.add(new_user)
         db.session.commit()
-        flash('Konto gotowe!', 'success')
+        flash('Zarejestrowano!', 'success')
         return redirect(url_for('login'))
-    return render_template('register.html')
+    return render_template('register.html', now=datetime.utcnow())
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -215,11 +283,25 @@ def login():
             login_user(user)
             return redirect(url_for('profil'))
         flash('Błąd logowania.', 'danger')
-    return render_template('login.html')
+    return render_template('login.html', now=datetime.utcnow())
 
 @app.route('/logout')
 def logout():
     logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/usun_konto', methods=['POST'])
+@login_required
+def usun_konto():
+    user = User.query.get(current_user.id)
+    for car in user.cars:
+        for img in car.images:
+            fpath = os.path.join(app.config['UPLOAD_FOLDER'], img.image_path.split('/')[-1])
+            if os.path.exists(fpath): os.remove(fpath)
+    db.session.delete(user)
+    db.session.commit()
+    logout_user()
+    flash('Konto usunięte.', 'info')
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
