@@ -1,22 +1,21 @@
 import smtplib
+import ssl
 
-# Konfiguracja dla Gmail
 smtp_server = "smtp.gmail.com"
-port = 587  # Używamy portu 587 dla lepszej stabilności na VPS
+port = 465
 sender_email = "tomczykdariusz606@gmail.com"
-password = "nujqhiivciduxddj" # Wklej kod bez spacji
+password = "nujqhiivciduxddj"  # Tutaj wklej ten 16-znakowy kod
 
 message = """Subject: Test Gielda Radom
 
-To jest test wyslany z Gmaila przez port 587."""
+To jest test z Gmaila na porcie 465."""
+
+context = ssl.create_default_context()
 
 try:
-    # Tworzymy połączenie TLS
-    server = smtplib.SMTP(smtp_server, port)
-    server.starttls() 
-    server.login(sender_email, password)
-    server.sendmail(sender_email, sender_email, message)
-    server.quit()
-    print("Sukces! Mail z Gmaila wysłany pomyślnie.")
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, sender_email, message)
+    print("Sukces! Mail wyslany.")
 except Exception as e:
-    print(f"Błąd wysyłki: {e}")
+    print(f"Blad: {e}")
