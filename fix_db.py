@@ -1,48 +1,47 @@
 import sqlite3
 import os
 
-def patch_database():
-    # Szukamy bazy w głównej ścieżce lub w folderze 'instance'
-    possible_paths = ['gielda.db', 'instance/gielda.db']
-    db_path = None
+def fix_everything():
+    # Znajdź wszystkie pliki .db w folderze i podfolderach
+    databases = []
+    for root, dirs, files in os.walk("."):
+        for file in files:
+            if file.endswith(".db"):
+                databases.append(os.path.join(root, file))
 
-    for path in possible_paths:
-        if os.path.exists(path):
-            db_path = path
-            break
-
-    if not db_path:
-        print("BŁĄD: Nie znaleziono pliku gielda.db! Upewnij się, że uruchamiasz skrypt w folderze projektu.")
+    if not databases:
+        print("Nie znaleziono żadnych plików bazy danych!")
         return
 
-    print(f"Znaleziono bazę: {db_path}")
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    try:
-        # Sprawdzamy czy tabela user w ogóle istnieje
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user'")
-        if not cursor.fetchone():
-            print("BŁĄD: Tabela 'user' nie istnieje w tej bazie danych!")
-            return
-
-        # 1. Próba dodania kolumny email
+    for db_path in databases:
+        print(f"\nSprawdzam bazę: {db_path}")
         try:
-            cursor.execute("ALTER TABLE user ADD COLUMN email VARCHAR(120)")
-            print("- Dodano kolumnę 'email'.")
-        except sqlite3.OperationalError:
-            print("- Kolumna 'email' już istnieje.")
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Sprawdź czy jest tabela user
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user'")
+            if not cursor.fetchone():
+                print(f"  - Pusta baza lub brak tabeli 'user'. Pomijam.")
+                continue
 
-        # 2. Uzupełnienie maili
-        cursor.execute("UPDATE user SET email = username || '@temp.pl' WHERE email IS NULL")
-        print(f"- Zaktualizowano brakujące adresy e-mail (ilość zmian: {conn.total_changes})")
+            print(f"  - Znaleziono tabelę 'user'. Próbuję dodać email...")
+            
+            # Dodaj kolumnę
+            try:
+                cursor.execute("ALTER TABLE user ADD COLUMN email VARCHAR(120)")
+                print("  - Kolumna 'email' dodana.")
+            except sqlite3.OperationalError:
+                print("  - Kolumna 'email' już istnieje.")
 
-        conn.commit()
-        print("AKTUALIZACJA ZAKOŃCZONA SUKCESEM!")
-    except Exception as e:
-        print(f"Wystąpił błąd: {e}")
-    finally:
-        conn.close()
+            # Uzupełnij dane
+            cursor.execute("UPDATE user SET email = username || '@temp.pl' WHERE email IS NULL")
+            conn.commit()
+            print(f"  - Sukces! Zaktualizowano bazę: {db_path}")
+            conn.close()
+            
+        except Exception as e:
+            print(f"  - Błąd przy tej bazie: {e}")
 
 if __name__ == "__main__":
-    patch_database()
+    fix_everything()
