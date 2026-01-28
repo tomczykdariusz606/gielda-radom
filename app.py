@@ -6,9 +6,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
 from PIL import Image
+from itsdangerous import URLSafeTimedSerializer as Serializer
 
 app = Flask(__name__)
 
@@ -41,6 +41,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)  # Dodane pole email
     password_hash = db.Column(db.String(200), nullable=False)
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
 
@@ -52,7 +53,7 @@ class Car(db.Model):
     cena = db.Column(db.Float, nullable=False)
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
-    img = db.Column(db.String(200), nullable=False) # Ścieżka do zdjęcia głównego
+    img = db.Column(db.String(200), nullable=False) 
     zrodlo = db.Column(db.String(20), default='Lokalne')
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -67,9 +68,8 @@ class CarImage(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- OPTYMALIZACJA ZDJĘĆ ---
+# --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
-    """Konwertuje zdjęcie na WebP i skaluje do HD, co wspiera pasek postępu."""
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
@@ -85,8 +85,45 @@ def save_optimized_image(file):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- TRASY GŁÓWNE ---
+def send_reset_email(user):
+    s = Serializer(app.secret_key)
+    token = s.dumps(user.email, salt='reset-password')
+    link = url_for('reset_token', token=token, _external=True)
+    msg = Message('Resetowanie hasła - Giełda Radom', recipients=[user.email])
+    msg.body = f"Aby zresetować hasło, kliknij w poniższy link:\n{link}\n\nJeśli to nie Ty, zignoruj tę wiadomość."
+    mail.send(msg)
 
+# --- TRASY RESETOWANIA HASŁA ---
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            send_reset_email(user)
+            flash('Instrukcje zostały wysłane na Twój e-mail.', 'info')
+            return redirect(url_for('login'))
+        flash('Nie znaleziono konta z tym adresem e-mail.', 'warning')
+    return render_template('reset_request.html')
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    s = Serializer(app.secret_key)
+    try:
+        email = s.loads(token, salt='reset-password', max_age=1800)
+    except:
+        flash('Token wygasł lub jest nieprawidłowy.', 'danger')
+        return redirect(url_for('reset_request'))
+    
+    if request.method == 'POST':
+        user = User.query.filter_by(email=email).first()
+        user.password_hash = generate_password_hash(request.form.get('password'))
+        db.session.commit()
+        flash('Hasło zostało zaktualizowane!', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html')
+
+# --- TRASY GŁÓWNE ---
 @app.route('/')
 def index():
     limit_daty = datetime.utcnow() - timedelta(days=30)
@@ -104,22 +141,12 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car, now=datetime.utcnow())
 
-@app.route('/polityka-prywatnosci')
-def polityka():
-    return render_template('polityka.html')
-
-@app.route('/regulamin')
-def regulamin():
-    return render_template('regulamin.html')
-
 @app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email_from = request.form.get('email')
-        message_body = request.form.get('message')
-        msg = Message(subject=f"Kontakt: {name}", recipients=['dariusztom@go2.pl'], 
-                      body=f"Od: {name}\nEmail: {email_from}\n\n{message_body}")
+        msg = Message(subject=f"Kontakt: {request.form.get('name')}", 
+                      recipients=['dariusztom@go2.pl'], 
+                      body=f"Od: {request.form.get('name')}\nEmail: {request.form.get('email')}\n\n{request.form.get('message')}")
         try:
             mail.send(msg)
             flash('Wiadomość wysłana!', 'success')
@@ -128,8 +155,7 @@ def kontakt():
         return redirect(url_for('kontakt'))
     return render_template('kontakt.html')
 
-# --- ZARZĄDZANIE OGŁOSZENIAMI ---
-
+# --- ZARZĄDZANIE ---
 @app.route('/profil')
 @login_required
 def profil():
@@ -140,120 +166,41 @@ def profil():
 @login_required
 def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
-    saved_paths = []
-    # Pasek postępu na froncie będzie widoczny, dopóki ta pętla się nie skończy
-    for file in files[:10]: 
-        if file and allowed_file(file.filename):
-            optimized_filename = save_optimized_image(file)
-            img_path = url_for('static', filename='uploads/' + optimized_filename)
-            saved_paths.append(img_path)
-
-    # Wybór pierwszego zdjęcia jako główne przy dodawaniu
+    saved_paths = [url_for('static', filename='uploads/' + save_optimized_image(f)) for f in files[:10] if f and allowed_file(f.filename)]
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-
-    nowe_auto = Car(
-        marka=request.form['marka'], model=request.form['model'],
-        rok=int(request.form['rok']), cena=float(request.form['cena']),
-        opis=request.form['opis'], telefon=request.form['telefon'],
-        img=main_img, data_dodania=datetime.utcnow(), user_id=current_user.id
-    )
+    
+    nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
+                    cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
+                    img=main_img, user_id=current_user.id)
     db.session.add(nowe_auto)
     db.session.commit()
-
     for path in saved_paths:
         db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
     db.session.commit()
-    flash('Ogłoszenie dodane pomyślnie!', 'success')
-    return redirect(url_for('profil'))
-
-@app.route('/ustaw_glowne/<int:car_id>/<int:image_id>', methods=['POST'])
-@login_required
-def ustaw_glowne(car_id, image_id):
-    """Pozwala wybrać, które zdjęcie ma być miniaturką na stronie głównej."""
-    car = Car.query.get_or_404(car_id)
-    img_record = CarImage.query.get_or_404(image_id)
-    if car.user_id != current_user.id or img_record.car_id != car.id:
-        return jsonify({"success": False, "message": "Brak uprawnień"}), 403
-    car.img = img_record.image_path
-    db.session.commit()
-    return jsonify({"success": True}), 200
-
-@app.route('/edytuj/<int:car_id>', methods=['GET', 'POST'])
-@login_required
-def edit_car(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id != current_user.id:
-        abort(403)
-    if request.method == 'POST':
-        car.marka, car.model = request.form['marka'], request.form['model']
-        car.rok, car.cena = int(request.form['rok']), float(request.form['cena'])
-        car.telefon, car.opis = request.form['telefon'], request.form['opis']
-        
-        files = request.files.getlist('zdjecia')
-        for file in files:
-            if file and allowed_file(file.filename) and len(car.images) < 10:
-                opt_name = save_optimized_image(file)
-                path = url_for('static', filename='uploads/' + opt_name)
-                db.session.add(CarImage(image_path=path, car_id=car.id))
-        db.session.commit()
-        flash('Ogłoszenie zaktualizowane!', 'success')
-        return redirect(url_for('profil'))
-    return render_template('edytuj.html', car=car)
-
-@app.route('/odswiez/<int:car_id>', methods=['POST'])
-@login_required
-def odswiez_ogloszenie(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id:
-        car.data_dodania = datetime.utcnow()
-        db.session.commit()
-        flash('Ogłoszenie odświeżone na 30 dni!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
 def delete_car(car_id):
     car = Car.query.get_or_404(car_id)
-    if car.user_id != current_user.id: abort(403)
-    for img_record in car.images:
-        fpath = os.path.join(app.config['UPLOAD_FOLDER'], img_record.image_path.split('/')[-1])
-        if os.path.exists(fpath): os.remove(fpath)
-    db.session.delete(car)
-    db.session.commit()
-    flash('Ogłoszenie usunięte.', 'success')
+    if car.user_id == current_user.id:
+        for img in car.images:
+            fpath = os.path.join(app.config['UPLOAD_FOLDER'], img.image_path.split('/')[-1])
+            if os.path.exists(fpath): os.remove(fpath)
+        db.session.delete(car)
+        db.session.commit()
     return redirect(url_for('profil'))
 
-@app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
-@login_required
-def usun_zdjecie(image_id):
-    img = CarImage.query.get_or_404(image_id)
-    car = img.car
-    if car.user_id != current_user.id: return jsonify({"success": False}), 403
-    
-    fpath = os.path.join(app.config['UPLOAD_FOLDER'], img.image_path.split('/')[-1])
-    if os.path.exists(fpath): os.remove(fpath)
-    
-    db.session.delete(img)
-    db.session.commit()
-
-    # Jeśli usunięto zdjęcie główne, przypisz pierwsze lepsze pozostałe
-    if car.img == img.image_path:
-        any_img = CarImage.query.filter_by(car_id=car.id).first()
-        car.img = any_img.image_path if any_img else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-        db.session.commit()
-    
-    return jsonify({"success": True}), 200
-
 # --- UŻYTKOWNICY ---
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        user = request.form['username']
-        if User.query.filter_by(username=user).first():
-            flash('Użytkownik istnieje!', 'danger')
+        username = request.form['username']
+        email = request.form['email']
+        if User.query.filter((User.username == username) | (User.email == email)).first():
+            flash('Użytkownik lub e-mail już istnieje!', 'danger')
             return redirect(url_for('register'))
-        new_user = User(username=user, password_hash=generate_password_hash(request.form['password']))
+        new_user = User(username=username, email=email, password_hash=generate_password_hash(request.form['password']))
         db.session.add(new_user)
         db.session.commit()
         flash('Konto gotowe!', 'success')
@@ -271,23 +218,8 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
-
-@app.route('/usun_konto', methods=['POST'])
-@login_required
-def usun_konto():
-    user = User.query.get(current_user.id)
-    for car in user.cars:
-        for img in car.images:
-            fpath = os.path.join(app.config['UPLOAD_FOLDER'], img.image_path.split('/')[-1])
-            if os.path.exists(fpath): os.remove(fpath)
-    db.session.delete(user)
-    db.session.commit()
-    logout_user()
-    flash('Twoje konto zostało całkowicie usunięte.', 'info')
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
