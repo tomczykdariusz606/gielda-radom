@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nowe hasło - Giełda Radom</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; display: flex; align-items: center; min-height: 100vh; }
+        .reset-card { max-width: 400px; width: 100%; margin: auto; border: none; }
+        .radom-header { background: linear-gradient(135deg, #ce2b37 0%, #a31f28 100%); color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card reset-card shadow-lg rounded-4 overflow-hidden">
+            <div class="radom-header p-4 text-center">
+                <h4 class="fw-bold mb-0">Nowe hasło</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Wprowadź nowe hasło</label>
+                        <input type="password" name="password" class="form-control rounded-pill bg-light" placeholder="Minimum 6 znaków" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-2">Zapisz i zaloguj</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
