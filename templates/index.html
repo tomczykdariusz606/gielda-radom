@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giełda Radom - Czerwiec '76 Edition</title>
-    
-    <!-- Bootstrap 5 CSS -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Ikony Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Czcionki Google: Inter (tekst) i Anton (duży napis historyczny) -->
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
@@ -22,28 +18,34 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fcefe9; /* Bardzo jasny, ciepły szary */
+            background-color: #fcefe9;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- NAVIGACJA --- */
+        /* --- ANIMACJA PULSOWANIA --- */
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(206, 43, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0); }
+        }
+        .animate-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
         .navbar {
             background: rgba(26, 26, 26, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 3px solid var(--radom-red);
         }
 
-        /* --- HERO SECTION (TŁO I NAPIS) --- */
         .hero-section {
             position: relative;
-            /* Zdjęcie tła (musi być w folderze static pod nazwą czerwiec_tlo.jpg) */
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover;
             background-position: center;
-            background-attachment: fixed; /* Paralaksa */
-            background-color: #333; /* Kolor zapasowy */
+            background-attachment: fixed;
             height: 500px;
             display: flex;
             align-items: center;
@@ -57,7 +59,6 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
-        /* Przyciemnienie zdjęcia */
         .hero-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -65,15 +66,13 @@
             z-index: 1;
         }
 
-        /* WIELKI NAPIS "CZERWIEC 76" */
         .big-text-76 {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%) rotate(-5deg);
             font-family: 'Anton', sans-serif;
-            font-size: 15vw; /* Skaluje się z oknem */
-            color: rgba(255, 255, 255, 0.07); /* Prawie przezroczysty */
+            font-size: 15vw;
+            color: rgba(255, 255, 255, 0.07);
             white-space: nowrap;
             z-index: 2;
             pointer-events: none;
@@ -81,7 +80,6 @@
             letter-spacing: 1rem;
         }
 
-        /* Treść nagłówka (wyszukiwarka) */
         .hero-content {
             position: relative;
             z-index: 3;
@@ -90,7 +88,6 @@
             padding: 0 15px;
         }
 
-        /* --- KARTY AUT (Nowoczesne) --- */
         .car-card {
             border: none;
             border-radius: 20px;
@@ -109,39 +106,33 @@
             background-color: var(--radom-red);
             font-weight: 800;
             font-size: 1.1rem;
-            box-shadow: 0 4px 10px rgba(206, 43, 55, 0.4);
+            z-index: 2;
         }
 
-        /* --- PRZYCISKI --- */
-        .btn-radom {
-            background-color: var(--radom-red);
-            color: white;
-            border: none;
-            font-weight: 600;
-        }
+        .btn-radom { background-color: var(--radom-red); color: white; border: none; font-weight: 600; }
         .btn-radom:hover { background-color: #a51d28; color: white; }
-
-        .btn-cv {
-            background-color: #ffc107;
-            color: #212529;
+        .btn-cv { background-color: #ffc107; color: #212529; font-weight: 700; border: none; }
+        
+        .time-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 3;
+            font-size: 0.75rem;
             font-weight: 700;
-            border: none;
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold fs-3" href="/">
                 <i class="bi bi-speedometer2 text-danger"></i> Giełda Radom
             </a>
-            
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="ms-auto d-flex gap-2 align-items-center">
                     {% if current_user.is_authenticated %}
@@ -158,15 +149,12 @@
         </div>
     </nav>
 
-    <!-- HERO HEADER Z TŁEM CZERWIEC 76 -->
     <header class="hero-section">
         <div class="hero-overlay"></div>
         <div class="big-text-76">CZERWIEC '76</div>
-        
         <div class="hero-content">
             <h1 class="display-4 fw-bold mb-2">Znajdź auto w Radomiu</h1>
             <p class="lead opacity-75 mb-4">Lokalny rynek. Solidna tradycja. Nowoczesne podejście.</p>
-            
             <form action="/" method="GET" class="position-relative">
                 <div class="input-group input-group-lg shadow-lg bg-white rounded-pill p-1">
                     <span class="input-group-text border-0 bg-transparent ms-2"><i class="bi bi-search text-danger"></i></span>
@@ -178,10 +166,7 @@
         </div>
     </header>
 
-    <!-- GŁÓWNA ZAWARTOŚĆ -->
     <div class="container mb-5">
-        
-        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -192,11 +177,10 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Nagłówek sekcji + Przycisk Dodawania -->
         <div class="d-flex justify-content-between align-items-end mb-4 px-2">
             <div>
                 <h3 class="fw-bold mb-0 text-dark">Dostępne Samochody</h3>
-                <small class="text-muted">Znaleziono: {{ cars|length }} ofert</small>
+                <small class="text-muted">Aktywne oferty: {{ cars|length }}</small>
             </div>
             {% if current_user.is_authenticated %}
                 <a href="/profil" class="btn btn-dark rounded-pill shadow-sm px-4">
@@ -205,19 +189,29 @@
             {% endif %}
         </div>
 
-        <!-- Lista aut (Grid) -->
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for car in cars %}
             <div class="col">
-                <div class="card h-100 car-card">
+                <div class="card h-100 car-card position-relative">
                     
-                    <!-- Obrazek + Cena -->
+                    {% set dni_od_dodania = (now - car.data_dodania).days %}
+                    {% set pozostalo_dni = 30 - dni_od_dodania %}
+
                     <div class="position-relative" style="height: 240px;">
-                        <!-- Link obrazka prowadzi do szczegółów -->
                         <a href="/ogloszenie/{{ car.id }}">
                             <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
                         </a>
-                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill backdrop-blur">
+                        
+                        <span class="badge time-badge rounded-pill shadow-sm {% if pozostalo_dni <= 3 %}bg-danger animate-pulse text-white{% else %}bg-white text-dark{% endif %}">
+                            <i class="bi bi-clock me-1"></i>
+                            {% if pozostalo_dni > 0 %}
+                                Jeszcze {{ pozostalo_dni }} dni
+                            {% else %}
+                                Ostatnie godziny!
+                            {% endif %}
+                        </span>
+
+                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill backdrop-blur" style="z-index: 2;">
                             {{ car.rok }} r.
                         </span>
                         <span class="position-absolute bottom-0 end-0 m-3 badge price-badge rounded-pill px-3 py-2">
@@ -225,8 +219,7 @@
                         </span>
                     </div>
 
-                    <!-- Treść karty -->
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title fw-bold mb-1">
                             <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark stretched-link">
                                 {{ car.marka }} {{ car.model }}
@@ -234,14 +227,10 @@
                         </h5>
                         <p class="card-text text-muted small text-truncate">{{ car.opis }}</p>
 
-                        <!-- Przyciski akcji (muszą być nad stretched-link, więc dajemy position-relative) -->
-                        <div class="d-grid gap-2 mt-3 position-relative" style="z-index: 2;">
-                            <!-- Telefon -->
+                        <div class="d-grid gap-2 mt-auto position-relative" style="z-index: 5;">
                             <a href="tel:{{ car.telefon }}" class="btn btn-outline-dark btn-sm rounded-pill fw-bold">
                                 <i class="bi bi-telephone-fill me-2"></i>{{ car.telefon }}
                             </a>
-                            
-                            <!-- CarVertical -->
                             <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-cv btn-sm rounded-pill">
                                 <i class="bi bi-shield-check me-2"></i>Sprawdź historię VIN
                             </a>
@@ -253,71 +242,47 @@
             <div class="col-12 text-center py-5">
                 <i class="bi bi-emoji-frown fs-1 text-muted mb-3 d-block"></i>
                 <h4 class="text-muted fw-bold">Brak ogłoszeń</h4>
-                <p class="text-muted">Nikt jeszcze nie dodał auta spełniającego kryteria.</p>
-                {% if current_user.is_authenticated %}
-                    <a href="/profil" class="btn btn-radom rounded-pill mt-2">Dodaj pierwsze ogłoszenie</a>
-                {% endif %}
+                <p class="text-muted">Spróbuj zmienić parametry wyszukiwania.</p>
             </div>
             {% endfor %}
         </div>
     </div>
 
-
-    
-<footer class="bg-dark text-white-50 mt-auto py-5">
-    <div class="container">
-        <div class="row gy-4 align-items-center">
-            <div class="col-md-4 text-center text-md-start">
-                <a class="navbar-brand fw-bold text-white fs-4" href="/">
-                    <i class="bi bi-speedometer2 text-primary"></i> Giełda Radom
-                </a>
-                <p class="small mt-2">Największy lokalny rynek samochodowy w regionie. Kupuj i sprzedawaj bez prowizji.</p>
+    <footer class="bg-dark text-white-50 mt-auto py-5">
+        <div class="container">
+            <div class="row gy-4 align-items-center">
+                <div class="col-md-4 text-center text-md-start">
+                    <a class="navbar-brand fw-bold text-white fs-4" href="/">
+                        <i class="bi bi-speedometer2 text-primary"></i> Giełda Radom
+                    </a>
+                    <p class="small mt-2">Lokalny rynek samochodowy. System 30-dniowych ogłoszeń dla Twojej wygody.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="/regulamin" class="text-white-50 text-decoration-none hover-primary">Regulamin</a>
+                        <span>|</span>
+                        <a href="/polityka-prywatnosci" class="text-white-50 text-decoration-none hover-primary">Polityka Prywatności</a>
+                    </div>
+                    <div class="mt-2">
+                        <a href="/kontakt" class="text-white-50 text-decoration-none hover-primary">Kontakt i pomoc</a>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center text-md-end">
+                    <small class="d-block text-muted">Masz pytania? dariusztom@go2.pl</small>
+                </div>
             </div>
-
-            <div class="col-md-4 text-center">
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="/regulamin" class="text-white-50 text-decoration-none hover-primary">Regulamin</a>
-                    <span>|</span>
-                    <a href="/polityka-prywatnosci" class="text-white-50 text-decoration-none hover-primary">Polityka Prywatności</a>
+            <hr class="my-4 border-secondary">
+            <div class="row">
+                <div class="col-12 text-center" style="font-size: 0.75rem;">
+                    <p class="mb-0">© 2026 Giełda Radom. Wszelkie prawa zastrzeżone.</p>
                 </div>
-                <div class="mt-2">
-                    <a href="/kontakt" class="text-white-50 text-decoration-none hover-primary">Kontakt i pomoc</a>
-                </div>
-            </div>
-
-            <div class="col-md-4 text-center text-md-end">
-                <div class="d-flex justify-content-md-end justify-content-center gap-3 fs-5 mb-2">
-                    <a href="#" class="text-white-50"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-white-50"><i class="bi bi-instagram"></i></a>
-                </div>
-                <small class="d-block text-muted">Masz pytania? dariusztom@go2.pl</small>
             </div>
         </div>
+    </footer>
 
-        <hr class="my-4 border-secondary">
-
-        <div class="row">
-            <div class="col-12 text-center" style="font-size: 0.75rem;">
-                <p class="mb-1">© 2026 Giełda Radom. Wszelkie prawa zastrzeżone.</p>
-                <p class="text-muted mx-auto" style="max-width: 800px;">
-                    <strong>Informacja RODO:</strong> Administratorem Twoich danych osobowych jest Giełda Radom. Przetwarzamy Twoje dane wyłącznie w celu realizacji usług ogłoszeniowych i zapewnienia bezpieczeństwa transakcji. Masz prawo do wglądu, poprawiania oraz żądania usunięcia swoich danych. Więcej szczegółów znajdziesz w naszej <a href="/polityka-prywatnosci" class="text-primary-emphasis text-decoration-none">Polityce Prywatności</a>.
-                </p>
-            </div>
-        </div>
-    </div>
-</footer>
-
-<style>
-    /* Subtelny efekt najechania na linki w stopce */
-    .hover-primary:hover {
-        color: #0d6efd !important;
-        transition: color 0.2s ease-in-out;
-    }
-
-    
-    <!-- Bootstrap JS -->
-  </style>  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .hover-primary:hover { color: #0d6efd !important; transition: color 0.2s; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
