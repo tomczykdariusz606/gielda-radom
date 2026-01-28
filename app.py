@@ -110,7 +110,8 @@ def index():
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
-    return render_template('details.html', car=car)
+    return render_template('details.html', car=car, now=datetime.utcnow())
+
 
 @app.route('/polityka-prywatnosci')
 def polityka():
