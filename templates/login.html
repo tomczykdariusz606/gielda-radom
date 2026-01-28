@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logowanie - Giełda Radom</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -23,7 +23,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Tło ze zdjęciem */
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover;
             background-position: center;
@@ -32,7 +31,6 @@
             overflow-x: hidden;
         }
 
-        /* Przyciemnienie tła (Overlay) */
         .overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -40,7 +38,6 @@
             z-index: 1;
         }
 
-        /* Wielki napis w tle */
         .big-text-76 {
             position: absolute;
             top: 50%;
@@ -48,7 +45,7 @@
             transform: translate(-50%, -50%) rotate(-5deg);
             font-family: 'Anton', sans-serif;
             font-size: 18vw;
-            color: rgba(255, 255, 255, 0.05); /* Bardzo delikatny, by nie zasłaniał formularza */
+            color: rgba(255, 255, 255, 0.05);
             white-space: nowrap;
             z-index: 2;
             pointer-events: none;
@@ -56,10 +53,9 @@
             letter-spacing: 1rem;
         }
 
-        /* Karta logowania (Glassmorphism) */
         .login-card {
             position: relative;
-            z-index: 3; /* Powyżej napisu i overlay */
+            z-index: 3;
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(15px);
             border-radius: 24px;
@@ -106,6 +102,18 @@
             color: var(--radom-red);
             font-size: 3rem;
         }
+
+        .link-radom {
+            color: var(--radom-red);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .link-radom:hover {
+            opacity: 0.8;
+            color: #a31f28;
+        }
     </style>
 </head>
 <body>
@@ -133,15 +141,20 @@
                 <div class="mb-3">
                     <input type="text" name="username" class="form-control form-control-modern" placeholder="Nazwa użytkownika" required>
                 </div>
-                <div class="mb-4">
+                <div class="mb-3">
                     <input type="password" name="password" class="form-control form-control-modern" placeholder="Hasło" required>
                 </div>
+                
+                <div class="text-end mb-4">
+                    <a href="{{ url_for('reset_request') }}" class="small text-muted text-decoration-none">Zapomniałeś hasła?</a>
+                </div>
+
                 <button type="submit" class="btn btn-radom w-100 shadow-sm">Zaloguj się</button>
             </form>
 
             <div class="mt-4 text-center">
                 <p class="text-muted small mb-1">Nie masz konta?</p>
-                <a href="/register" class="fw-bold text-decoration-none" style="color: var(--radom-red);">Załóż darmowe konto</a>
+                <a href="/register" class="link-radom">Załóż darmowe konto</a>
             </div>
         </div>
     </div>
