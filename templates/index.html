@@ -24,7 +24,6 @@
             flex-direction: column;
         }
 
-        /* ANIMACJA PULSOWANIA CZASU */
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(206, 43, 55, 0); }
@@ -32,14 +31,12 @@
         }
         .animate-pulse { animation: pulse-red 2s infinite; }
 
-        /* NAVBAR */
         .navbar {
             background: rgba(26, 26, 26, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 3px solid var(--radom-red);
         }
 
-        /* HERO SECTION */
         .hero-section {
             position: relative;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
@@ -88,7 +85,6 @@
             padding: 0 15px;
         }
 
-        /* KARTY */
         .car-card {
             border: none;
             border-radius: 20px;
@@ -103,14 +99,26 @@
         .btn-radom { background-color: var(--radom-red); color: white; border: none; font-weight: 600; }
         .btn-radom:hover { background-color: #a51d28; color: white; }
         .btn-cv { background-color: #ffc107; color: #212529; font-weight: 700; border: none; }
-        
+
         .time-badge {
             position: absolute; top: 15px; right: 15px; z-index: 3;
             font-size: 0.75rem; font-weight: 700;
         }
 
-        /* STOPKA */
+        /* Przycisk lupy */
+        .zoom-btn {
+            position: absolute; top: 15px; left: 15px; z-index: 10;
+            background: rgba(255, 255, 255, 0.8); width: 35px; height: 35px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: none; color: var(--radom-dark); transition: 0.2s;
+        }
+        .zoom-btn:hover { background: var(--radom-red); color: white; transform: scale(1.1); }
+
         .hover-primary:hover { color: #0d6efd !important; transition: color 0.2s ease-in-out; }
+
+        /* Modal Lightbox */
+        .modal-full-img { background: rgba(0, 0, 0, 0.9); }
+        #lightboxImage { max-height: 90vh; border-radius: 10px; border: 3px solid white; }
     </style>
 </head>
 <body>
@@ -143,11 +151,9 @@
     <header class="hero-section">
         <div class="hero-overlay"></div>
         <div class="big-text-76">CZERWIEC '76</div>
-
         <div class="hero-content">
             <h1 class="display-4 fw-bold mb-2">Znajdź auto w Radomiu</h1>
             <p class="lead opacity-75 mb-4">Lokalny rynek. Solidna tradycja. Nowoczesne podejście.</p>
-
             <form action="/" method="GET" class="position-relative">
                 <div class="input-group input-group-lg shadow-lg bg-white rounded-pill p-1">
                     <span class="input-group-text border-0 bg-transparent ms-2"><i class="bi bi-search text-danger"></i></span>
@@ -160,7 +166,6 @@
     </header>
 
     <div class="container mb-5">
-
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -187,31 +192,24 @@
             {% for car in cars %}
             <div class="col">
                 <div class="card h-100 car-card position-relative">
-
-                    {% if now is defined and now %}
-                        {% set dni_od_dodania = (now - car.data_dodania).days %}
-                        {% set pozostalo_dni = 30 - dni_od_dodania %}
-                    {% else %}
-                        {% set pozostalo_dni = 30 %} 
-                    {% endif %}
+                    {% set dni_od_dodania = (now - car.data_dodania).days %}
+                    {% set pozostalo_dni = 30 - dni_od_dodania %}
 
                     <div class="position-relative" style="height: 240px;">
+                        <button class="zoom-btn" onclick="openLightbox('{{ car.img }}')" title="Powiększ zdjęcie">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+
                         <a href="/ogloszenie/{{ car.id }}">
                             <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
                         </a>
-                        
-                        {% if now is defined %}
+
                         <span class="badge time-badge rounded-pill shadow-sm {% if pozostalo_dni <= 3 %}bg-danger animate-pulse text-white{% else %}bg-white text-dark{% endif %}">
                             <i class="bi bi-clock me-1"></i>
-                            {% if pozostalo_dni > 0 %}
-                                Jeszcze {{ pozostalo_dni }} dni
-                            {% else %}
-                                Ostatnie godziny!
-                            {% endif %}
+                            {% if pozostalo_dni > 0 %}Jeszcze {{ pozostalo_dni }} dni{% else %}Ostatnie godziny!{% endif %}
                         </span>
-                        {% endif %}
 
-                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill backdrop-blur" style="z-index: 2;">
+                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill backdrop-blur" style="z-index: 2; margin-left: 60px !important;">
                             {{ car.rok }} r.
                         </span>
                         <span class="position-absolute bottom-0 end-0 m-3 badge price-badge rounded-pill px-3 py-2">
@@ -291,6 +289,23 @@
         </div>
     </footer>
 
+    <div class="modal fade modal-full-img" id="lightboxModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0 text-center">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                    <img src="" id="lightboxImg" class="img-fluid shadow-lg">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function openLightbox(src) {
+            document.getElementById('lightboxImg').src = src;
+            new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+        }
+    </script>
 </body>
 </html>
