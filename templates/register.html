@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Załóż konto - Giełda Radom</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -23,7 +23,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* To samo tło co w logowaniu */
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover;
             background-position: center;
@@ -32,7 +31,6 @@
             overflow-x: hidden;
         }
 
-        /* Przyciemnienie tła */
         .overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -40,7 +38,6 @@
             z-index: 1;
         }
 
-        /* Wielki napis w tle */
         .big-text-76 {
             position: absolute;
             top: 50%;
@@ -56,7 +53,6 @@
             letter-spacing: 1rem;
         }
 
-        /* Karta rejestracji (Efekt szkła) */
         .register-card {
             position: relative;
             z-index: 3;
@@ -106,6 +102,16 @@
             color: var(--radom-red);
             font-size: 3rem;
         }
+
+        /* Styl dla labeli */
+        .form-label-small {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 0.4rem;
+            display: block;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -131,11 +137,21 @@
 
             <form method="POST">
                 <div class="mb-3">
+                    <label class="form-label-small">Nazwa użytkownika</label>
                     <input type="text" name="username" class="form-control form-control-modern" placeholder="Wymyśl login" required>
                 </div>
+                
+                <div class="mb-3">
+                    <label class="form-label-small">Adres e-mail</label>
+                    <input type="email" name="email" class="form-control form-control-modern" placeholder="twoj-email@o2.pl" required>
+                    <div class="small text-muted mt-1 text-start" style="font-size: 0.7rem;">Potrzebny do resetowania hasła.</div>
+                </div>
+
                 <div class="mb-4">
+                    <label class="form-label-small">Hasło</label>
                     <input type="password" name="password" class="form-control form-control-modern" placeholder="Wymyśl hasło" required>
                 </div>
+                
                 <button type="submit" class="btn btn-radom w-100 shadow-sm">Zarejestruj się</button>
             </form>
 
