@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edycja Ogłoszenia - Giełda Radom</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -18,6 +18,7 @@
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
+            background-color: #000;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover;
             background-position: center;
@@ -67,43 +68,57 @@
             box-shadow: 0 0 0 4px rgba(206, 43, 55, 0.1);
         }
 
+        /* Styl podglądu zdjęć */
         .img-preview-container {
             position: relative;
             display: inline-block;
-            margin: 5px;
+            margin: 8px;
+            transition: transform 0.2s;
+        }
+
+        .img-preview-container:hover {
+            transform: scale(1.05);
         }
 
         .img-preview {
-            width: 100px;
-            height: 75px;
+            width: 120px;
+            height: 90px;
             object-fit: cover;
-            border-radius: 10px;
-            border: 2px solid white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         .delete-img-btn {
             position: absolute;
-            top: -5px;
-            right: -5px;
+            top: -8px;
+            right: -8px;
             background: var(--radom-red);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 14px;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            z-index: 10;
         }
 
         .btn-radom {
             background: linear-gradient(135deg, var(--radom-red), #a31f28);
             border: none; color: white; border-radius: 50px;
-            padding: 12px 30px; font-weight: 700;
+            padding: 12px 40px; font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .btn-radom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(206, 43, 55, 0.4);
+            color: white;
         }
     </style>
 </head>
@@ -112,63 +127,74 @@
 <div class="overlay"></div>
 <div class="big-text-76">Czerwiec 76</div>
 
-<div class="container" style="max-width: 700px;">
+<div class="container" style="max-width: 800px;">
     <div class="glass-card p-4 p-md-5">
-        <div class="text-center mb-4">
+        <div class="text-center mb-5">
             <i class="bi bi-pencil-square fs-1 text-danger"></i>
             <h2 class="fw-bold">Edycja Ogłoszenia</h2>
-            <p class="text-muted small">Aktualizujesz: {{ car.marka }} {{ car.model }}</p>
+            <p class="text-muted small">Aktualizujesz ofertę: <strong>{{ car.marka }} {{ car.model }}</strong></p>
         </div>
 
         <form method="POST" enctype="multipart/form-data">
-            <div class="row g-3">
+            <div class="row g-4">
                 <div class="col-md-6">
-                    <label class="form-label fw-600 small">Marka</label>
+                    <label class="form-label fw-bold small text-uppercase">Marka</label>
                     <input type="text" name="marka" class="form-control form-control-modern" value="{{ car.marka }}" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-600 small">Model</label>
+                    <label class="form-label fw-bold small text-uppercase">Model</label>
                     <input type="text" name="model" class="form-control form-control-modern" value="{{ car.model }}" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-600 small">Cena (PLN)</label>
+                    <label class="form-label fw-bold small text-uppercase">Cena (PLN)</label>
                     <input type="number" name="cena" class="form-control form-control-modern" value="{{ car.cena|int }}" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-600 small">Rok produkcji</label>
+                    <label class="form-label fw-bold small text-uppercase">Rok produkcji</label>
                     <input type="number" name="rok" class="form-control form-control-modern" value="{{ car.rok }}" required>
                 </div>
                 <div class="col-12">
-                    <label class="form-label fw-600 small">Telefon do kontaktu</label>
+                    <label class="form-label fw-bold small text-uppercase">Telefon do kontaktu</label>
                     <input type="text" name="telefon" class="form-control form-control-modern" value="{{ car.telefon }}" required>
                 </div>
                 <div class="col-12">
-                    <label class="form-label fw-600 small">Opis pojazdu</label>
-                    <textarea name="opis" class="form-control form-control-modern" rows="4" required>{{ car.opis }}</textarea>
+                    <label class="form-label fw-bold small text-uppercase">Opis pojazdu</label>
+                    <textarea name="opis" class="form-control form-control-modern" rows="5" required>{{ car.opis }}</textarea>
                 </div>
 
                 <div class="col-12 mt-4">
-                    <label class="form-label fw-bold">Aktualne zdjęcia:</label>
-                    <div class="d-flex flex-wrap bg-light p-3 rounded-4">
-                        {% for img in car.images %}
-                        <div class="img-preview-container" id="img-{{ img.id }}">
-                            <img src="{{ img.image_path }}" class="img-preview">
-                            <button type="button" class="delete-img-btn" onclick="deletePhoto({{ img.id }})">
-                                <i class="bi bi-x"></i>
-                            </button>
-                        </div>
-                        {% endfor %}
+                    <label class="form-label fw-bold"><i class="bi bi-images me-2"></i>Zarządzaj zdjęciami:</label>
+                    <div class="d-flex flex-wrap bg-light p-3 rounded-4 border">
+                        {% if car.images %}
+                            {% for img in car.images %}
+                            <div class="img-preview-container" id="img-container-{{ img.id }}">
+                                <img src="{{ img.image_path }}" class="img-preview">
+                                <button type="button" class="delete-img-btn" onclick="deletePhoto({{ img.id }})" title="Usuń zdjęcie">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted small m-2">To ogłoszenie nie ma jeszcze zdjęć w galerii.</p>
+                        {% endif %}
                     </div>
                 </div>
 
-                <div class="col-12 border-top pt-3 mt-4">
-                    <label class="form-label fw-bold">Dodaj nowe zdjęcia</label>
-                    <input type="file" name="zdjecia" class="form-control form-control-modern" multiple>
+                <div class="col-12 border-top pt-4 mt-4">
+                    <label class="form-label fw-bold">Dodaj nowe zdjęcia (maks. 10 łącznie)</label>
+                    <div class="input-group">
+                        <input type="file" name="zdjecia" class="form-control form-control-modern" id="fileInput" multiple accept="image/*">
+                    </div>
+                    <div id="fileHelp" class="form-text">Zdjęcia zostaną automatycznie zoptymalizowane do formatu WebP.</div>
                 </div>
 
                 <div class="col-12 d-flex justify-content-between align-items-center mt-5">
-                    <a href="/profil" class="text-decoration-none text-muted fw-bold">Anuluj</a>
-                    <button type="submit" class="btn btn-radom px-5 shadow">Zapisz zmiany</button>
+                    <a href="/profil" class="btn btn-link text-decoration-none text-muted fw-bold">
+                        <i class="bi bi-arrow-left"></i> Anuluj
+                    </a>
+                    <button type="submit" class="btn btn-radom shadow">
+                        <i class="bi bi-check-lg me-2"></i>Zapisz zmiany
+                    </button>
                 </div>
             </div>
         </form>
@@ -177,15 +203,42 @@
 
 <script>
 function deletePhoto(photoId) {
-    if(confirm('Usunąć to zdjęcie trwale?')) {
-        fetch(`/usun_zdjecie/${photoId}`, { method: 'POST' })
-        .then(response => {
-            if(response.ok) {
-                document.getElementById(`img-${photoId}`).remove();
+    if(confirm('Czy na pewno chcesz trwale usunąć to zdjęcie z serwera?')) {
+        // Wywołujemy trasę w app.py, którą już masz przygotowaną
+        fetch(`/usun_zdjecie/${photoId}`, { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                // Usuwamy element z HTML bez przeładowania strony
+                const element = document.getElementById(`img-container-${photoId}`);
+                element.style.opacity = '0';
+                setTimeout(() => element.remove(), 300);
+            } else {
+                alert('Błąd: Nie udało się usunąć zdjęcia.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Wystąpił błąd komunikacji z serwerem.');
         });
     }
 }
+
+// Prosta walidacja liczby plików przed wysłaniem
+document.querySelector('form').onsubmit = function() {
+    const files = document.getElementById('fileInput').files;
+    const existingPhotos = document.querySelectorAll('.img-preview-container').length;
+    if (existingPhotos + files.length > 10) {
+        alert('Ogłoszenie może mieć maksymalnie 10 zdjęć. Usuń stare zdjęcia przed dodaniem nowych.');
+        return false;
+    }
+    return true;
+};
 </script>
 
 </body>
