@@ -4,7 +4,7 @@ import smtplib
 smtp_server = "smtp.gmail.com"
 port = 587  # Używamy portu 587 dla lepszej stabilności na VPS
 sender_email = "tomczykdariusz606@gmail.com"
-password = "ngldaqatnibxzvpy" # Wklej kod bez spacji
+password = "uhfwbopolkbvbglv" # Wklej kod bez spacji
 
 message = """Subject: Test Gielda Radom
 
