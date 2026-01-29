@@ -330,10 +330,18 @@ def sitemap():
         })
     return render_template('sitemap_xml.html', pages=pages), 200, {'Content-Type': 'application/xml'}
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+@app.route('/robots.txt')
+def robots():
+    lines = [
+        "User-agent: *",
+        "Disallow: /profil",      # Nie indeksuj panelu użytkownika
+        "Disallow: /edytuj/",    # Nie indeksuj stron edycji
+        "Disallow: /usun/",      # Nie indeksuj linków usuwania
+        "Disallow: /login",      # Nie indeksuj strony logowania
+        "Disallow: /register",   # Nie indeksuj rejestracji
+        f"Sitemap: {url_for('sitemap', _external=True)}"
+    ]
+    return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
 
 if __name__ == '__main__':
     with app.app_context():
