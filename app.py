@@ -310,6 +310,30 @@ def usun_konto():
     logout_user()
     flash('Konto usunięte.', 'info')
     return redirect(url_for('index'))
+# --- NOWA TRASA: SITEMAP DLA GOOGLE ---
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = []
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    # Strony statyczne
+    pages.append({'url': url_for('index', _external=True), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
+    pages.append({'url': url_for('regulamin', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    pages.append({'url': url_for('polityka', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    # Dynamiczne linki do aut
+    cars = Car.query.all()
+    for car in cars:
+        pages.append({
+            'url': url_for('car_details', car_id=car.id, _external=True),
+            'lastmod': car.data_dodania.strftime('%Y-%m-%d'),
+            'freq': 'weekly',
+            'priority': '0.8'
+        })
+    return render_template('sitemap_xml.html', pages=pages), 200, {'Content-Type': 'application/xml'}
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
 if __name__ == '__main__':
     with app.app_context():
