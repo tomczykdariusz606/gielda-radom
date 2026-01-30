@@ -50,7 +50,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
-
+    
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
@@ -63,7 +63,7 @@ class Car(db.Model):
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False) 
-    zrodlo = db.Column(db.String(100), default='Radom') # Zwiększono długość stringa
+    zrodlo = db.Column(db.String(100), default='Radom')
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
@@ -82,8 +82,7 @@ def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
+    if img.mode in ("RGBA", "P"): img = img.convert("RGB")
     if img.width > 1200:
         w_percent = (1200 / float(img.width))
         h_size = int((float(img.height) * float(w_percent)))
@@ -99,16 +98,10 @@ def send_reset_email(user):
     token = s.dumps(user.email, salt='reset-password')
     link = url_for('reset_token', token=token, _external=True)
     msg = Message('Resetowanie hasła - Giełda Radom', recipients=[user.email])
-    msg.body = f"Aby zresetować hasło, kliknij w poniższy link:\n{link}\n\nJeśli to nie Ty, zignoruj tę wiadomość."
+    msg.body = f"Aby zresetować hasło, kliknij w poniższy link:\n{link}"
     mail.send(msg)
 
-# --- TRASY ---
-
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
-
+# --- TRASY GŁÓWNE ---
 @app.route('/')
 def index():
     limit_daty = datetime.utcnow() - timedelta(days=30)
@@ -126,19 +119,18 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car, now=datetime.utcnow())
 
-@app.route('/kontakt', methods=['GET', 'POST'])
-def kontakt():
-    if request.method == 'POST':
-        msg = Message(subject=f"Kontakt: {request.form.get('name')}", 
-                      recipients=['dariusztom@go2.pl'], 
-                      body=f"Od: {request.form.get('name')}\nEmail: {request.form.get('email')}\n\n{request.form.get('message')}")
-        try:
-            mail.send(msg)
-            flash('Wiadomość wysłana!', 'success')
-        except:
-            flash('Błąd wysyłki.', 'danger')
-        return redirect(url_for('kontakt'))
-    return render_template('kontakt.html', now=datetime.utcnow())
+@app.route('/toggle_favorite/<int:car_id>')
+@login_required
+def toggle_favorite(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car in current_user.favorite_cars:
+        current_user.favorite_cars.remove(car)
+        flash('Usunięto z ulubionych', 'info')
+    else:
+        current_user.favorite_cars.append(car)
+        flash('Dodano do ulubionych!', 'success')
+    db.session.commit()
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/profil')
 @login_required
@@ -146,29 +138,6 @@ def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
     fav_cars = current_user.favorite_cars
     return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        user = request.form['username']
-        email = request.form['email']
-        miejscowosc = request.form.get('location', 'Radom')
-
-        if User.query.filter((User.username == user) | (User.email == email)).first():
-            flash('Użytkownik/Email istnieje!', 'danger')
-            return redirect(url_for('register'))
-
-        new_user = User(
-            username=user, 
-            email=email, 
-            lokalizacja=miejscowosc,
-            password_hash=generate_password_hash(request.form['password'])
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Zarejestrowano!', 'success')
-        return redirect(url_for('login'))
-    return render_template('register.html', now=datetime.utcnow())
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
@@ -182,20 +151,11 @@ def dodaj_ogloszenie():
             saved_paths.append(path)
 
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+    auto_lok = current_user.lokalizacja if current_user.lokalizacja else "Radom"
 
-    auto_lokalizacja = current_user.lokalizacja if current_user.lokalizacja else "Radom"
-    nowe_auto = Car(
-        marka=request.form['marka'], 
-        model=request.form['model'], 
-        rok=int(request.form['rok']), 
-        cena=float(request.form['cena']), 
-        opis=request.form['opis'], 
-        telefon=request.form['telefon'], 
-        img=main_img, 
-        zrodlo=auto_lokalizacja,
-        user_id=current_user.id
-    )
-
+    nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
+                    cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
+                    img=main_img, zrodlo=auto_lok, user_id=current_user.id)
     db.session.add(nowe_auto)
     db.session.commit()
     for path in saved_paths:
@@ -203,6 +163,23 @@ def dodaj_ogloszenie():
     db.session.commit()
     flash('Ogłoszenie dodane!', 'success')
     return redirect(url_for('profil'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        user = request.form['username']
+        email = request.form['email']
+        miejscowosc = request.form.get('location', 'Radom')
+        if User.query.filter((User.username == user) | (User.email == email)).first():
+            flash('Użytkownik/Email istnieje!', 'danger')
+            return redirect(url_for('register'))
+        new_user = User(username=user, email=email, lokalizacja=miejscowosc,
+                        password_hash=generate_password_hash(request.form['password']))
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Zarejestrowano!', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', now=datetime.utcnow())
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -219,21 +196,30 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-# --- POZOSTAŁE TRASY (BEZ ZMIAN) ---
+# --- SEO & NARZĘDZIA ---
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = []
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    pages.append({'url': url_for('index', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
+    pages.append({'url': url_for('regulamin', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    pages.append({'url': url_for('polityka', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    for car in Car.query.all():
+        pages.append({'url': url_for('car_details', car_id=car.id, _external=True, _scheme='https'), 
+                      'lastmod': car.data_dodania.strftime('%Y-%m-%d'), 'freq': 'weekly', 'priority': '0.8'})
+    return render_template('sitemap_xml.html', pages=pages), 200, {'Content-Type': 'application/xml'}
 
-@app.route('/toggle_favorite/<int:car_id>')
-@login_required
-def toggle_favorite(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car in current_user.favorite_cars:
-        current_user.favorite_cars.remove(car)
-        flash('Usunięto z ulubionych', 'info')
-    else:
-        current_user.favorite_cars.append(car)
-        flash('Dodano do ulubionych!', 'success')
-    db.session.commit()
-    return redirect(request.referrer or url_for('index'))
+@app.route('/robots.txt')
+def robots():
+    lines = ["User-agent: *", "Disallow: /profil", "Disallow: /login", "Disallow: /register",
+             f"Sitemap: {url_for('sitemap', _external=True, _scheme='https')}"]
+    return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
+
+# --- POZOSTAŁE FUNKCJE (EDYCJA, USUWANIE, RESET) ---
 @app.route('/edytuj/<int:car_id>', methods=['GET', 'POST'])
 @login_required
 def edit_car(car_id):
@@ -241,28 +227,15 @@ def edit_car(car_id):
     if car.user_id != current_user.id: abort(403)
     if request.method == 'POST':
         car.marka, car.model = request.form['marka'], request.form['model']
-        car.rok, car.cena = int(request.form['rok']), float(request.form['cena'])
-        car.telefon, car.opis = request.form['telefon'], request.form['opis']
-        files = request.files.getlist('zdjecia')
-        for file in files:
+        car.rok, car.cena, car.telefon, car.opis = int(request.form['rok']), float(request.form['cena']), request.form['telefon'], request.form['opis']
+        for file in request.files.getlist('zdjecia'):
             if file and allowed_file(file.filename) and len(car.images) < 10:
-                opt_name = save_optimized_image(file)
-                path = url_for('static', filename='uploads/' + opt_name)
+                path = url_for('static', filename='uploads/' + save_optimized_image(file))
                 db.session.add(CarImage(image_path=path, car_id=car.id))
         db.session.commit()
         flash('Zaktualizowano!', 'success')
         return redirect(url_for('profil'))
     return render_template('edytuj.html', car=car, now=datetime.utcnow())
-
-@app.route('/odswiez/<int:car_id>', methods=['POST'])
-@login_required
-def odswiez_ogloszenie(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id:
-        car.data_dodania = datetime.utcnow()
-        db.session.commit()
-        flash('Odświeżono na 30 dni!', 'success')
-    return redirect(url_for('profil'))
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
@@ -274,59 +247,15 @@ def delete_car(car_id):
             if os.path.exists(fpath): os.remove(fpath)
         db.session.delete(car)
         db.session.commit()
-        flash('Usunięto ogłoszenie.', 'success')
+        flash('Usunięto.', 'success')
     return redirect(url_for('profil'))
 
-@app.route("/reset_password", methods=['GET', 'POST'])
-def reset_request():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            try:
-                send_reset_email(user)
-                flash('Instrukcje zostały wysłane.', 'success')
-            except: flash('Błąd poczty.', 'danger')
-        else: flash('Nie znaleziono e-maila w bazie.', 'warning')
-        return redirect(url_for('reset_request'))
-    return render_template('reset_request.html', now=datetime.utcnow())
-
-@app.route("/reset_password/<token>", methods=['GET', 'POST'])
-def reset_token(token):
-    s = Serializer(app.secret_key)
-    try: 
-        email = s.loads(token, salt='reset-password', max_age=1800)
-    except:
-        flash('Token wygasł lub jest nieprawidłowy.', 'danger')
-        return redirect(url_for('reset_request'))
-    if request.method == 'POST':
-        user = User.query.filter_by(email=email).first()
-        if user:
-            user.password_hash = generate_password_hash(request.form.get('password'))
-            db.session.commit()
-            flash('Twoje hasło zostało zmienione!', 'success')
-            return redirect(url_for('login'))
-    return render_template('reset_token.html', now=datetime.utcnow())
-
 @app.route('/polityka-prywatnosci')
-def polityka():
-    return render_template('polityka.html', now=datetime.utcnow())
+def polityka(): return render_template('polityka.html', now=datetime.utcnow())
 
 @app.route('/regulamin')
-def regulamin():
-    return render_template('regulamin.html', now=datetime.utcnow())
-
-@app.route('/sitemap.xml')
-def sitemap():
-    pages = []
-    today = datetime.utcnow().strftime('%Y-%m-%d')
-    pages.append({'url': url_for('index', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
-    cars = Car.query.all()
-    for car in cars:
-        pages.append({'url': url_for('car_details', car_id=car.id, _external=True, _scheme='https'), 'lastmod': car.data_dodania.strftime('%Y-%m-%d'), 'freq': 'weekly', 'priority': '0.8'})
-    return render_template('sitemap_xml.html', pages=pages), 200, {'Content-Type': 'application/xml'}
+def regulamin(): return render_template('regulamin.html', now=datetime.utcnow())
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)
