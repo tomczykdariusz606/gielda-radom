@@ -29,6 +29,7 @@
             background-attachment: fixed;
             position: relative;
             overflow-x: hidden;
+            padding: 20px 0; /* Dodany margines dla wersji mobilnych */
         }
 
         .overlay {
@@ -63,7 +64,7 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             padding: 2.5rem;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px; /* Nieco poszerzony, by zmieścić Select */
         }
 
         .form-control-modern {
@@ -103,7 +104,6 @@
             font-size: 3rem;
         }
 
-        /* Styl dla labeli */
         .form-label-small {
             font-size: 0.85rem;
             font-weight: 600;
@@ -111,6 +111,16 @@
             margin-bottom: 0.4rem;
             display: block;
             text-align: left;
+        }
+
+        /* Stylizacja dla nowej listy wyboru */
+        select.form-control-modern {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 16px 12px;
         }
     </style>
 </head>
@@ -140,18 +150,50 @@
                     <label class="form-label-small">Nazwa użytkownika</label>
                     <input type="text" name="username" class="form-control form-control-modern" placeholder="Wymyśl login" required>
                 </div>
-                
+
                 <div class="mb-3">
                     <label class="form-label-small">Adres e-mail</label>
                     <input type="email" name="email" class="form-control form-control-modern" placeholder="twoj-email@o2.pl" required>
                     <div class="small text-muted mt-1 text-start" style="font-size: 0.7rem;">Potrzebny do resetowania hasła.</div>
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label-small text-danger"><i class="bi bi-geo-alt-fill me-1"></i>Twoja dzielnica / miejscowość</label>
+                    <select name="location" class="form-control form-control-modern" required>
+                        <option value="" disabled selected>Wybierz skąd jesteś...</option>
+                        <optgroup label="Radom - Dzielnice">
+                            <option value="Radom - Śródmieście">Śródmieście</option>
+                            <option value="Radom - Ustronie">Ustronie</option>
+                            <option value="Radom - Michałów">Michałów</option>
+                            <option value="Radom - XV-lecie">XV-lecie</option>
+                            <option value="Radom - Gołębiów">Gołębiów</option>
+                            <option value="Radom - Zamłynie">Zamłynie</option>
+                            <option value="Radom - Borki">Borki</option>
+                            <option value="Radom - Glinice">Glinice</option>
+                            <option value="Radom - Idalin">Idalin</option>
+                            <option value="Radom - Południe">Południe</option>
+                            <option value="Radom - Potkanów">Potkanów</option>
+                            <option value="Radom - Wośniki">Wośniki</option>
+                        </optgroup>
+                        <optgroup label="Okolice Radomia">
+                            <option value="Pionki">Pionki</option>
+                            <option value="Iłża">Iłża</option>
+                            <option value="Skaryszew">Skaryszew</option>
+                            <option value="Szydłowiec">Szydłowiec</option>
+                            <option value="Jedlińsk">Jedlińsk</option>
+                            <option value="Wierzbica">Wierzbica</option>
+                            <option value="Zwoleń">Zwoleń</option>
+                            <option value="Zakrzew">Zakrzew</option>
+                            <option value="Inna">Inna miejscowość</option>
+                        </optgroup>
+                    </select>
+                </div>
+
                 <div class="mb-4">
                     <label class="form-label-small">Hasło</label>
                     <input type="password" name="password" class="form-control form-control-modern" placeholder="Wymyśl hasło" required>
                 </div>
-                
+
                 <button type="submit" class="btn btn-radom w-100 shadow-sm">Zarejestruj się</button>
             </form>
 
