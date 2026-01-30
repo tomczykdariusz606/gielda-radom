@@ -298,7 +298,7 @@ def register():
     if request.method == 'POST':
         user = request.form['username']
         email = request.form['email']
-loc = request.form.get('location', 'Radom') 
+        loc = request.form.get('location', 'Radom') 
         if User.query.filter((User.username == user) | (User.email == email)).first():
             flash('Użytkownik/Email istnieje!', 'danger')
             return redirect(url_for('register'))
