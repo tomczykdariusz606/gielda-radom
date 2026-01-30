@@ -1,291 +1,182 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mój Profil - Giełda Radom</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Anton&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --radom-red: #ce2b37;
-            --radom-dark: #1a1a1a;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0; padding: 0; min-height: 100vh;
-            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
-            background-size: cover; background-position: center; background-attachment: fixed;
-            position: relative;
-        }
-
-        .overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.85) 100%);
-            z-index: 1;
-        }
-
-        .big-text-76 {
-            position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-5deg);
-            font-family: 'Anton', sans-serif; font-size: 18vw;
-            color: rgba(255, 255, 255, 0.03); z-index: 2;
-            pointer-events: none; text-transform: uppercase;
-        }
-
-        .navbar {
-            background: rgba(26, 26, 26, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 3px solid var(--radom-red);
-            position: relative; z-index: 10;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            position: relative; z-index: 5;
-        }
-
-        .form-control-modern {
-            background: #f8f9fa; border: 2px solid transparent;
-            border-radius: 10px; transition: all 0.3s ease;
-        }
-
-        .form-control-modern:focus {
-            border-color: var(--radom-red);
-            box-shadow: 0 0 0 3px rgba(206, 43, 55, 0.1);
-        }
-
-        .btn-radom {
-            background: linear-gradient(135deg, var(--radom-red), #a31f28);
-            border: none; color: white; border-radius: 50px;
-            padding: 10px 25px; font-weight: 700;
-            transition: transform 0.2s;
-        }
-        .btn-radom:hover { color: white; transform: scale(1.02); }
-
-        .profile-img-thumb {
-            object-fit: cover; cursor: zoom-in;
-            transition: transform 0.3s ease;
-            border: 2px solid white;
-        }
-        .profile-img-thumb:hover { transform: scale(1.08); }
-
-        .list-group-item {
-            background: transparent; border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .danger-zone {
-            border: 1px dashed rgba(206, 43, 55, 0.4);
-            background: rgba(206, 43, 55, 0.05);
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; }
-        }
-        .animate-pulse { animation: pulse 2s infinite ease-in-out; }
-
-        .modal-full-img { background: rgba(0, 0, 0, 0.95); }
-        #lightboxImage { max-height: 85vh; border-radius: 8px; border: 3px solid white; }
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
+        .profile-header { background: white; border-bottom: 1px solid #dee2e6; padding: 2rem 0; margin-bottom: 2rem; }
+        .car-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; overflow: hidden; }
+        .car-card:hover { transform: translateY(-5px); }
+        .btn-radom { background-color: var(--radom-red); color: white; border: none; }
+        .btn-radom:hover { background-color: #a51d28; color: white; }
+        .section-title { border-left: 5px solid var(--radom-red); padding-left: 15px; font-weight: 800; margin-bottom: 1.5rem; }
     </style>
 </head>
 <body>
 
-    <div class="overlay"></div>
-    <div class="big-text-76">Czerwiec 76</div>
-
-    <nav class="navbar navbar-dark mb-5">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
-                <i class="bi bi-geo-alt-fill text-danger"></i> Giełda Radom
-            </a>
-            <div class="d-flex gap-3 text-white align-items-center">
-                <span class="small d-none d-sm-inline">Witaj, <b>{{ current_user.username }}</b></span>
-                <a href="/logout" class="btn btn-sm btn-outline-light rounded-pill px-3">Wyloguj</a>
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-outline-light btn-sm rounded-pill px-3">Powrót do giełdy</a>
             </div>
         </div>
     </nav>
 
-    <div class="container pb-5">
-        <div class="row g-4">
-
-            <div class="col-lg-4">
-                <div class="glass-card p-4">
-                    <h5 class="fw-bold mb-4" style="color: var(--radom-red);">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Nowe ogłoszenie
-                    </h5>
-
-                    <form action="/dodaj" method="POST" enctype="multipart/form-data" id="add-car-form">
-                        <div class="mb-3 text-center p-4 bg-light rounded-4 border border-dashed">
-                            <i class="bi bi-camera-fill fs-2 text-muted"></i>
-                            <input type="file" name="zdjecia" class="form-control mt-2 form-control-sm" multiple required>
-                            <small class="text-muted d-block mt-2">Pierwsze zdjęcie będzie główne (Max 10)</small>
-
-                            <div id="add-progress" class="mt-3 d-none">
-                                <div class="progress" style="height: 10px;">
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: 100%"></div>
-                                </div>
-                                <small class="text-danger fw-bold mt-1 d-block">Wysyłanie i optymalizacja...</small>
-                            </div>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col"><input type="text" name="marka" class="form-control form-control-modern" placeholder="Marka" required></div>
-                            <div class="col"><input type="text" name="model" class="form-control form-control-modern" placeholder="Model" required></div>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col"><input type="number" name="rok" class="form-control form-control-modern" placeholder="Rok" required></div>
-                            <div class="col"><input type="number" name="cena" class="form-control form-control-modern" placeholder="Cena" required></div>
-                        </div>
-                        <div class="mb-3">
-                            <input type="tel" name="telefon" class="form-control form-control-modern" placeholder="Numer telefonu" required>
-                        </div>
-                        <div class="mb-4">
-                            <textarea name="opis" class="form-control form-control-modern" placeholder="Opis stanu..." rows="3" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-radom w-100 shadow" id="btn-submit-add">Wystaw na 30 dni</button>
-                    </form>
+    <div class="profile-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold mb-0">Witaj, {{ current_user.username }}!</h1>
+                    <p class="text-muted mb-0">Zarządzaj swoimi ogłoszeniami i ulubionymi autami.</p>
                 </div>
-
-                <div class="glass-card p-4 mt-4 danger-zone">
-                    <h6 class="fw-bold text-danger mb-3">Strefa bezpieczeństwa</h6>
-                    <form action="/usun_konto" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć konto?');">
-                        <button class="btn btn-link text-danger p-0 small text-decoration-none">
-                            <i class="bi bi-exclamation-triangle"></i> Usuń moje konto
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-lg-8">
-                <div class="glass-card p-4 mb-4">
-                    <h3 class="fw-bold mb-4">Twoje ogłoszenia <span class="badge bg-danger rounded-pill">{{ cars|length }}</span></h3>
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} py-2 small rounded-3 border-0 mb-3">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-
-                    <div class="list-group list-group-flush">
-                        {% for car in cars %}
-                        <div class="list-group-item px-0 py-3">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <img src="{{ url_for('static', filename='uploads/' + car.img) }}" 
-                                         class="rounded-4 shadow-sm profile-img-thumb" 
-                                         width="110" height="80" 
-                                         onclick="openLightbox('{{ url_for('static', filename='uploads/' + car.img) }}')"
-                                         title="Powiększ">
-                                </div>
-                                <div class="col">
-                                    <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                                    <p class="text-muted mb-2 small">
-                                        <span class="me-3"><i class="bi bi-calendar-event"></i> {{ car.rok }}</span>
-                                        <span><i class="bi bi-cash-stack"></i> {{ car.cena|int }} PLN</span>
-                                    </p>
-                                    {% set pozostalo = 30 - (now - car.data_dodania).days %}
-                                    <span class="badge {% if pozostalo <= 3 %}bg-danger animate-pulse{% else %}bg-light text-dark border{% endif %} rounded-pill small">
-                                        <i class="bi bi-clock"></i> {% if pozostalo > 0 %}Zostało: {{ pozostalo }} dni{% else %}Wygasa dziś{% endif %}
-                                    </span>
-                                </div>
-                                <div class="col-auto d-flex gap-2">
-                                    <form action="/odswiez/{{ car.id }}" method="POST">
-                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3" title="Odśwież czas">
-                                            <i class="bi bi-arrow-clockwise"></i>
-                                        </button>
-                                    </form>
-                                    <a href="/edytuj/{{ car.id }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Usunąć ogłoszenie?');">
-                                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <p class="text-muted small">Nie masz jeszcze żadnych wystawionych aut.</p>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="glass-card p-4">
-                    <h4 class="fw-bold mb-4"><i class="bi bi-heart-fill text-danger me-2"></i>Obserwowane</h4>
-                    <div class="list-group list-group-flush">
-                        {% for car in fav_cars %}
-                        <div class="list-group-item px-0 py-3">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <img src="{{ url_for('static', filename='uploads/' + car.img) }}" 
-                                         class="rounded-4 shadow-sm profile-img-thumb" 
-                                         width="90" height="65" 
-                                         onclick="openLightbox('{{ url_for('static', filename='uploads/' + car.img) }}')">
-                                </div>
-                                <div class="col">
-                                    <h6 class="fw-bold mb-0">
-                                        <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
-                                            {{ car.marka }} {{ car.model }}
-                                        </a>
-                                    </h6>
-                                    <small class="text-muted">{{ car.cena|int }} PLN | {{ car.rok }} r.</small>
-                                </div>
-                                <div class="col-auto">
-                                    <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="btn btn-sm btn-light rounded-pill border">
-                                        <i class="bi bi-heart-fill text-danger"></i> Usuń
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                            <div class="text-center py-4">
-                                <p class="text-muted small">Nie obserwujesz jeszcze żadnych ogłoszeń.</p>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div class="modal fade modal-full-img" id="lightboxModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content bg-transparent border-0">
-                <div class="modal-body p-0 text-center position-relative">
-                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
-                    <img src="" id="lightboxImage" class="img-fluid shadow-lg">
-                </div>
+                <button type="button" class="btn btn-radom rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#dodajModal">
+                    <i class="bi bi-plus-lg"></i> Dodaj nowe ogłoszenie
+                </button>
             </div>
         </div>
     </div>
+
+    <div class="container mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h3 class="section-title">Twoje Ogłoszenia</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+            {% for car in cars %}
+            <div class="col">
+                <div class="card h-100 car-card">
+                    <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ car.marka }}">
+                    <div class="card-body">
+                        <h5 class="fw-bold">{{ car.marka }} {{ car.model }}</h5>
+                        <p class="text-danger fw-bold mb-2">{{ car.cena|int }} PLN</p>
+                        <div class="d-grid gap-2">
+                            <div class="btn-group">
+                                <a href="/edytuj/{{ car.id }}" class="btn btn-outline-dark btn-sm">Edytuj</a>
+                                <form action="/odswiez/{{ car.id }}" method="POST" class="d-inline w-100">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">Odśwież</button>
+                                </form>
+                            </div>
+                            <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć to ogłoszenie?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100">Usuń ogłoszenie</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="text-center py-4 bg-white rounded-4 border">
+                    <p class="text-muted">Nie masz jeszcze żadnych ogłoszeń.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h3 class="section-title">Ulubione Ogłoszenia</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for fav in fav_cars %}
+            <div class="col">
+                <div class="card h-100 car-card shadow-sm border-0">
+                    <div class="position-relative">
+                        <img src="{{ fav.img }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ fav.marka }}">
+                        <a href="{{ url_for('toggle_favorite', car_id=fav.id) }}" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow">
+                            <i class="bi bi-heart-fill text-danger"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-1">{{ fav.marka }} {{ fav.model }}</h6>
+                        <p class="small text-muted mb-2">{{ fav.rok }} r. | {{ fav.cena|int }} PLN</p>
+                        <a href="/ogloszenie/{{ fav.id }}" class="btn btn-sm btn-outline-dark rounded-pill w-100">Zobacz ogłoszenie</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="text-center py-4 bg-white rounded-4 border">
+                    <p class="text-muted">Nie zapisałeś jeszcze żadnych ogłoszeń jako ulubione.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <hr class="my-5">
+        <div class="text-center">
+            <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA! Twoje konto i wszystkie ogłoszenia zostaną bezpowrotnie usunięte. Kontynuować?')">
+                <button type="submit" class="btn btn-link text-danger">Usuń konto użytkownika</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Dodaj nowe ogłoszenie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Marka</label>
+                                <input type="text" name="marka" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Model</label>
+                                <input type="text" name="model" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Rok produkcji</label>
+                                <input type="number" name="rok" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Cena (PLN)</label>
+                                <input type="number" name="cena" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Telefon kontaktowy</label>
+                                <input type="text" name="telefon" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Zdjęcia (maks. 10)</label>
+                                <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Opis ogłoszenia</label>
+                                <textarea name="opis" class="form-control" rows="4" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                        <button type="submit" class="btn btn-radom px-4">Opublikuj ogłoszenie</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white-50 mt-auto py-4">
+        <div class="container text-center">
+            <small>© 2026 Giełda Radom. Wszystkie dane są bezpieczne.</small>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function openLightbox(src) {
-            document.getElementById('lightboxImage').src = src;
-            new bootstrap.Modal(document.getElementById('lightboxModal')).show();
-        }
-
-        document.getElementById('add-car-form').addEventListener('submit', function() {
-            document.getElementById('add-progress').classList.remove('d-none');
-            const submitBtn = document.getElementById('btn-submit-add');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Wysyłanie...';
-        });
-    </script>
 </body>
 </html>
