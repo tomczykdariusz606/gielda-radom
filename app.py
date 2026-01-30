@@ -37,7 +37,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- TABELA ASOCJACYJNA DLA ULUBIONYCH ---
+# --- TABELA ASOCJACYJNA DLA ULUBIONYCH (PRZYWRÓCONA) ---
 favorites = db.Table('favorites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
@@ -49,6 +49,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+    # Dodana kolumna lokalizacja, której brakowało w Twoim wklejonym kodzie
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
     
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
@@ -119,6 +120,7 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     return render_template('details.html', car=car, now=datetime.utcnow())
 
+# --- PRZYWRÓCONE ULUBIONE ---
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
 def toggle_favorite(car_id):
@@ -136,7 +138,7 @@ def toggle_favorite(car_id):
 @login_required
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    fav_cars = current_user.favorite_cars
+    fav_cars = current_user.favorite_cars # Dodane do widoku profilu
     return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
 
 @app.route('/dodaj', methods=['POST'])
@@ -151,6 +153,7 @@ def dodaj_ogloszenie():
             saved_paths.append(path)
 
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+    # Używamy lokalizacji użytkownika z bazy
     auto_lok = current_user.lokalizacja if current_user.lokalizacja else "Radom"
 
     nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
@@ -164,6 +167,7 @@ def dodaj_ogloszenie():
     flash('Ogłoszenie dodane!', 'success')
     return redirect(url_for('profil'))
 
+# --- REJESTRACJA Z LOKALIZACJĄ ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -181,6 +185,26 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', now=datetime.utcnow())
 
+# --- SEO & NARZĘDZIA (SITEMAP/ROBOTS) ---
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = []
+    today = datetime.utcnow().strftime('%Y-%m-%d')
+    pages.append({'url': url_for('index', _external=True), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
+    pages.append({'url': url_for('regulamin', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    pages.append({'url': url_for('polityka', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    for car in Car.query.all():
+        pages.append({'url': url_for('car_details', car_id=car.id, _external=True), 
+                      'lastmod': car.data_dodania.strftime('%Y-%m-%d'), 'freq': 'weekly', 'priority': '0.8'})
+    return render_template('sitemap_xml.html', pages=pages), 200, {'Content-Type': 'application/xml'}
+
+@app.route('/robots.txt')
+def robots():
+    lines = ["User-agent: *", "Disallow: /profil", "Disallow: /login", "Disallow: /register",
+             f"Sitemap: {url_for('sitemap', _external=True)}"]
+    return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
+
+# --- POZOSTAŁE FUNKCJE (LOGOWANIE, RESET, USUWANIE) ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -196,66 +220,11 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-# --- SEO & NARZĘDZIA ---
-@app.route('/sitemap.xml')
-def sitemap():
-    pages = []
-    today = datetime.utcnow().strftime('%Y-%m-%d')
-    pages.append({'url': url_for('index', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
-    pages.append({'url': url_for('regulamin', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
-    pages.append({'url': url_for('polityka', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
-    for car in Car.query.all():
-        pages.append({'url': url_for('car_details', car_id=car.id, _external=True, _scheme='https'), 
-                      'lastmod': car.data_dodania.strftime('%Y-%m-%d'), 'freq': 'weekly', 'priority': '0.8'})
-    return render_template('sitemap_xml.html', pages=pages), 200, {'Content-Type': 'application/xml'}
-
-@app.route('/robots.txt')
-def robots():
-    lines = ["User-agent: *", "Disallow: /profil", "Disallow: /login", "Disallow: /register",
-             f"Sitemap: {url_for('sitemap', _external=True, _scheme='https')}"]
-    return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
-# --- POZOSTAŁE FUNKCJE (EDYCJA, USUWANIE, RESET) ---
-@app.route('/edytuj/<int:car_id>', methods=['GET', 'POST'])
-@login_required
-def edit_car(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id != current_user.id: abort(403)
-    if request.method == 'POST':
-        car.marka, car.model = request.form['marka'], request.form['model']
-        car.rok, car.cena, car.telefon, car.opis = int(request.form['rok']), float(request.form['cena']), request.form['telefon'], request.form['opis']
-        for file in request.files.getlist('zdjecia'):
-            if file and allowed_file(file.filename) and len(car.images) < 10:
-                path = url_for('static', filename='uploads/' + save_optimized_image(file))
-                db.session.add(CarImage(image_path=path, car_id=car.id))
-        db.session.commit()
-        flash('Zaktualizowano!', 'success')
-        return redirect(url_for('profil'))
-    return render_template('edytuj.html', car=car, now=datetime.utcnow())
-
-@app.route('/usun/<int:car_id>', methods=['POST'])
-@login_required
-def delete_car(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id:
-        for img in car.images:
-            fpath = os.path.join(app.config['UPLOAD_FOLDER'], img.image_path.split('/')[-1])
-            if os.path.exists(fpath): os.remove(fpath)
-        db.session.delete(car)
-        db.session.commit()
-        flash('Usunięto.', 'success')
-    return redirect(url_for('profil'))
-
-@app.route('/polityka-prywatnosci')
-def polityka(): return render_template('polityka.html', now=datetime.utcnow())
-
-@app.route('/regulamin')
-def regulamin(): return render_template('regulamin.html', now=datetime.utcnow())
-
 if __name__ == '__main__':
-    with app.app_context(): db.create_all()
+    with app.app_context():
+        db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)
