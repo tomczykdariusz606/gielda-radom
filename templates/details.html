@@ -122,7 +122,7 @@
 
             <div class="col-lg-4">
                 <div class="info-card p-4 sticky-top" style="top: 100px;">
-                    <div class="mb-2"><span class="badge bg-danger">Radom</span> <span class="text-muted small">ID: #{{ car.id }}</span></div>
+                    <div class="mb-2"><span class="badge bg-danger">{{ car.zrodlo }}</span> <span class="text-muted small">ID: #{{ car.id }}</span></div>
                     <h1 class="h2 fw-bold mb-1">{{ car.marka }} {{ car.model }}</h1>
                     <p class="text-muted fw-bold mb-4">Używane • {{ car.rok }} r.</p>
 
@@ -135,7 +135,7 @@
                         </div>
                         <div class="param-item">
                             <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Lokalizacja</div>
-                            <div class="fw-bold fs-5">Radom</div>
+                            <div class="fw-bold fs-5">{{ car.zrodlo }}</div>
                         </div>
                     </div>
 
