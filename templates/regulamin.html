@@ -1,20 +1,102 @@
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <title>Regulamin - Giełda Radom</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
+        .legal-container { background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 3rem; margin-top: 3rem; margin-bottom: 3rem; border: 1px solid #eee; }
+        
+        h1 { color: var(--radom-dark); font-weight: 800; margin-bottom: 2rem; border-left: 6px solid var(--radom-red); padding-left: 20px; }
+        h2 { color: var(--radom-red); font-weight: 700; font-size: 1.3rem; margin-top: 2rem; }
+        
+        .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
+        .footer-link { color: #bbb; text-decoration: none; transition: 0.2s; display: block; margin-bottom: 12px; }
+        .footer-link:hover { color: var(--radom-red); padding-left: 5px; }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container py-5">
-        <a href="/" class="btn btn-outline-secondary mb-4">← Powrót</a>
-        <div class="bg-white p-5 rounded shadow">
-            <h1>Regulamin serwisu Giełda Radom</h1>
-            <p>1. Serwis służy do publikacji bezpłatnych ogłoszeń motoryzacyjnych.</p>
-            <p>2. Zabrania się dodawania ogłoszeń o charakterze obraźliwym lub niezgodnym z prawem.</p>
-            <p>3. Administrator nie ponosi odpowiedzialności za treść ogłoszeń.</p>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-outline-light rounded-pill px-4 btn-sm">Powrót do strony głównej</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 legal-container">
+                <h1>Regulamin Serwisu</h1>
+                <p class="text-muted">Obowiązuje od 2026 roku dla wszystkich użytkowników Giełdy Radom.</p>
+                
+                <hr class="my-4">
+
+                <section>
+                    <h2>1. Postanowienia ogólne</h2>
+                    <p>Serwis <strong>Giełda Radom</strong> jest lokalną platformą ogłoszeniową dedykowaną mieszkańcom Radomia i okolic. Korzystanie z serwisu oznacza akceptację niniejszego regulaminu.</p>
+                </section>
+
+                <section>
+                    <h2>2. Zasady dodawania ogłoszeń</h2>
+                    <p>1. Serwis służy do publikacji bezpłatnych ogłoszeń motoryzacyjnych.</p>
+                    <p>2. Zabrania się dodawania ogłoszeń o charakterze obraźliwym, niezgodnym z polskim prawem lub wprowadzających w błąd co do stanu technicznego pojazdu.</p>
+                    <p>3. Każde ogłoszenie jest ważne przez 30 dni.</p>
+                </section>
+
+                <section>
+                    <h2>3. Odpowiedzialność</h2>
+                    <p>Administrator nie ponosi odpowiedzialności za treść ogłoszeń ani za wynik transakcji między użytkownikami. Wszystkie transakcje odbywają się bezpośrednio między kupującym a sprzedającym.</p>
+                </section>
+
+                <div class="mt-5 p-4 bg-light rounded-4 border text-center">
+                    <p class="mb-0 small">
+                        Pytania dotyczące regulaminu prosimy kierować na adres: <strong>dariusztom@go2.pl</strong>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
+
+    <footer class="footer-main">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-lg-4">
+                    <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
+                    <p class="small">Lokalny portal ogłoszeniowy. Wspieramy mieszkańców Radomia w handlu motoryzacyjnym bez prowizji. Tradycja Czerwca '76.</p>
+                    <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
+                </div>
+                <div class="col-lg-2">
+                    <h5 class="text-white small fw-bold mb-3 text-uppercase">Nawigacja</h5>
+                    <a href="/" class="footer-link">Giełda</a>
+                    <a href="/register" class="footer-link">Wystaw auto</a>
+                </div>
+                <div class="col-lg-3">
+                    <h5 class="text-white small fw-bold mb-3 text-uppercase">Informacje</h5>
+                    <a href="/regulamin" class="footer-link">Regulamin</a>
+                    <a href="/polityka-prywatnosci" class="footer-link">Prywatność</a>
+                    <a href="/kontakt" class="footer-link">Kontakt</a>
+                </div>
+                <div class="col-lg-3 text-md-end">
+                    <h5 class="text-white small fw-bold mb-3 text-uppercase">Radom 26-600</h5>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.3;">
+                </div>
+            </div>
+            <hr class="my-4 border-secondary opacity-25">
+            <p class="text-center small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </footer>
+
 </body>
 </html>
