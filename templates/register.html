@@ -29,7 +29,7 @@
             background-attachment: fixed;
             position: relative;
             overflow-x: hidden;
-            padding: 20px 0; /* Dodany margines dla wersji mobilnych */
+            padding: 20px 0;
         }
 
         .overlay {
@@ -64,19 +64,20 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             padding: 2.5rem;
             width: 100%;
-            max-width: 450px; /* Nieco poszerzony, by zmieścić Select */
+            max-width: 420px;
         }
 
-        .form-control-modern {
+        .form-control-modern, .form-select-modern {
             background: #f8f9fa;
             border: 2px solid transparent;
             border-radius: 12px;
             padding: 0.8rem 1rem;
             font-weight: 500;
             transition: all 0.3s ease;
+            width: 100%;
         }
 
-        .form-control-modern:focus {
+        .form-control-modern:focus, .form-select-modern:focus {
             background: white;
             border-color: var(--radom-red);
             box-shadow: 0 0 0 4px rgba(206, 43, 55, 0.1);
@@ -113,14 +114,10 @@
             text-align: left;
         }
 
-        /* Stylizacja dla nowej listy wyboru */
-        select.form-control-modern {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 16px 12px;
+        /* Ikona lokalizacji obok labela */
+        .loc-icon {
+            color: var(--radom-red);
+            margin-right: 4px;
         }
     </style>
 </head>
@@ -154,12 +151,11 @@
                 <div class="mb-3">
                     <label class="form-label-small">Adres e-mail</label>
                     <input type="email" name="email" class="form-control form-control-modern" placeholder="twoj-email@o2.pl" required>
-                    <div class="small text-muted mt-1 text-start" style="font-size: 0.7rem;">Potrzebny do resetowania hasła.</div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label-small text-danger"><i class="bi bi-geo-alt-fill me-1"></i>Twoja dzielnica / miejscowość</label>
-                    <select name="location" class="form-control form-control-modern" required>
+                <div class="mb-3 text-start">
+                    <label class="form-label-small"><i class="bi bi-geo-alt-fill loc-icon"></i>Dzielnica / Miejscowość</label>
+                    <select name="location" class="form-select-modern" required>
                         <option value="" disabled selected>Wybierz skąd jesteś...</option>
                         <optgroup label="Radom - Dzielnice">
                             <option value="Radom - Śródmieście">Śródmieście</option>
@@ -172,10 +168,8 @@
                             <option value="Radom - Glinice">Glinice</option>
                             <option value="Radom - Idalin">Idalin</option>
                             <option value="Radom - Południe">Południe</option>
-                            <option value="Radom - Potkanów">Potkanów</option>
-                            <option value="Radom - Wośniki">Wośniki</option>
                         </optgroup>
-                        <optgroup label="Okolice Radomia">
+                        <optgroup label="Okolice">
                             <option value="Pionki">Pionki</option>
                             <option value="Iłża">Iłża</option>
                             <option value="Skaryszew">Skaryszew</option>
@@ -183,8 +177,7 @@
                             <option value="Jedlińsk">Jedlińsk</option>
                             <option value="Wierzbica">Wierzbica</option>
                             <option value="Zwoleń">Zwoleń</option>
-                            <option value="Zakrzew">Zakrzew</option>
-                            <option value="Inna">Inna miejscowość</option>
+                            <option value="Inna">Inna...</option>
                         </optgroup>
                     </select>
                 </div>
