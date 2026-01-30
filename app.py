@@ -256,7 +256,7 @@ def reset_token(token):
     except:
         flash('Token wygasł lub jest nieprawidłowy.', 'danger')
         return redirect(url_for('reset_request'))
-    
+
     if request.method == 'POST':
         user = User.query.filter_by(email=email).first()
         if user:
