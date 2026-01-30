@@ -125,6 +125,15 @@
         }
         .zoom-btn:hover { background: var(--radom-red); color: white; transform: scale(1.1); }
 
+        /* Serce ulubionych */
+        .fav-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 10;
+            background: rgba(0, 0, 0, 0.4); width: 35px; height: 35px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: none; color: white; transition: 0.2s; backdrop-filter: blur(5px);
+        }
+        .fav-btn:hover { transform: scale(1.2); background: rgba(0, 0, 0, 0.6); }
+
         .hover-primary:hover { color: #0d6efd !important; transition: color 0.2s ease-in-out; }
 
         /* Modal Lightbox */
@@ -207,23 +216,33 @@
                     {% set pozostalo_dni = 30 - dni_od_dodania %}
 
                     <div class="position-relative" style="height: 240px;">
-                        <button class="zoom-btn" onclick="openLightbox('{{ car.img }}')" title="Powiększ zdjęcie">
+                        <button class="zoom-btn" onclick="openLightbox('{{ url_for('static', filename='uploads/' + car.img) }}')" title="Powiększ zdjęcie">
                             <i class="bi bi-zoom-in"></i>
                         </button>
 
-              <a href="/ogloszenie/{{ car.id }}">
-                            <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="fav-btn" title="Dodaj do ulubionych">
+                            <i class="bi {{ 'bi-heart-fill text-danger' if car in current_user.favorite_cars else 'bi-heart' }} fs-5"></i>
+                        </a>
+                        {% endif %}
+
+                        <a href="/ogloszenie/{{ car.id }}">
+                            <img src="{{ url_for('static', filename='uploads/' + car.img) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
                         </a>
 
-
-                        <span class="badge time-badge rounded-pill shadow-sm {% if pozostalo_dni <= 3 %}bg-danger animate-pulse text-white{% else %}bg-white text-dark{% endif %}">
+                        <span class="badge time-badge rounded-pill shadow-sm {% if pozostalo_dni <= 3 %}bg-danger animate-pulse text-white{% else %}bg-white text-dark{% endif %}" style="right: auto !important; left: 60px !important;">
                             <i class="bi bi-clock me-1"></i>
                             {% if pozostalo_dni > 0 %}Jeszcze {{ pozostalo_dni }} dni{% else %}Ostatnie godziny!{% endif %}
                         </span>
 
-                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill backdrop-blur" style="z-index: 2; margin-left: 60px !important;">
+                        <span class="position-absolute top-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill backdrop-blur" style="z-index: 2; margin-left: 60px !important; display: none;">
                             {{ car.rok }} r.
                         </span>
+                        
+                        <span class="position-absolute bottom-0 start-0 m-3 badge bg-dark bg-opacity-75 rounded-pill px-3 py-2">
+                            {{ car.rok }} r.
+                        </span>
+
                         <span class="position-absolute bottom-0 end-0 m-3 badge price-badge rounded-pill px-3 py-2">
                             {{ car.cena|int }} PLN
                         </span>
