@@ -3,92 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <title>Polityka Prywatności - Giełda Radom</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; line-height: 1.6; }
-        .legal-container { background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 3rem; margin-top: 3rem; margin-bottom: 3rem; }
-        h1 { color: #212529; font-weight: 700; margin-bottom: 2rem; }
-        h2 { color: #0d6efd; font-weight: 600; font-size: 1.25rem; margin-top: 1.5rem; }
-        .back-link { text-decoration: none; font-weight: 600; }
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        
+        /* Zmiana tła na spójne z index.html */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #fcefe9; 
+            line-height: 1.6; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
+        
+        .legal-container { 
+            background: white; 
+            border-radius: 24px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            padding: 3rem; 
+            margin-top: 3rem; 
+            margin-bottom: 3rem; 
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        h1 { color: var(--radom-dark); font-weight: 800; margin-bottom: 2rem; border-left: 6px solid var(--radom-red); padding-left: 20px; }
+        h2 { color: var(--radom-red); font-weight: 700; font-size: 1.3rem; margin-top: 2rem; }
+        
+        .back-link { text-decoration: none; font-weight: 600; color: var(--radom-red); transition: 0.2s; }
+        .back-link:hover { opacity: 0.8; }
+
+        /* STOPKA TWOJEGO PROJEKTU */
+        .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
+        .footer-heading { color: white; font-weight: 600; margin-bottom: 25px; text-transform: uppercase; font-size: 0.9rem; }
+        .footer-link { color: #bbb; text-decoration: none; transition: 0.2s; display: block; margin-bottom: 12px; }
+        .footer-link:hover { color: var(--radom-red); padding-left: 5px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-lg-10 legal-container">
-            <a href="/" class="back-link mb-4 d-inline-block">← Powrót do strony głównej</a>
-            
-            <h1>Polityka Prywatności i RODO</h1>
-            <p class="text-muted small">Ostatnia aktualizacja: 26 stycznia 2026 r.</p>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+            <div class="ms-auto">
+                <a href="/" class="btn btn-outline-light rounded-pill px-4 btn-sm">Powrót</a>
+            </div>
+        </div>
+    </nav>
 
-            <hr class="my-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 legal-container">
+                <a href="/" class="back-link mb-4 d-inline-block">← Wróć do giełdy</a>
 
-            <section>
-                <h2>1. Administrator Danych Osobowych</h2>
-                <p>Administratorem danych osobowych zbieranych za pośrednictwem serwisu <strong>Giełda Radom</strong> jest ADT Dariusz Tomczyk, z siedzibą w Radomiu, e-mail: dariusztom@go2.pl.</p>
-            </section>
+                <h1>Polityka Prywatności i RODO</h1>
+                <p class="text-muted small">Ostatnia aktualizacja: 2026 r.</p>
 
-            <section>
-                <h2>2. Zakres zbieranych danych</h2>
-                <p>Przetwarzamy dane, które dobrowolnie podajesz podczas rejestracji oraz dodawania ogłoszenia:</p>
-                <ul>
-                    <li>Nazwa użytkownika / Imię</li>
-                    <li>Adres e-mail (do logowania i powiadomień)</li>
-                    <li>Numer telefonu (wyświetlany w ogłoszeniu dla kupujących)</li>
-                    <li>Dane o pojeździe (marka, model, zdjęcia, opis)</li>
-                    <li>Adres IP (ze względów bezpieczeństwa)</li>
-                </ul>
-            </section>
+                <hr class="my-4">
 
-            <section>
-                <h2>3. Cel przetwarzania danych</h2>
-                <p>Twoje dane są przetwarzane w celu:</p>
-                <ul>
-                    <li>Świadczenia usługi publikacji ogłoszeń motoryzacyjnych.</li>
-                    <li>Umożliwienia kontaktu pomiędzy kupującym a sprzedającym.</li>
-                    <li>Zapewnienia bezpieczeństwa w serwisie i przeciwdziałania oszustwom.</li>
-                    <li>Marketingu własnego (np. informowanie o nowościach na Giełdzie Radom).</li>
-                </ul>
-            </section>
+                <section>
+                    <h2>1. Administrator Danych Osobowych</h2>
+                    <p>Administratorem Twoich danych jest <strong>ADT Dariusz Tomczyk</strong>, z siedzibą w Radomiu, e-mail: <strong>dariusztom@go2.pl</strong>.</p>
+                </section>
 
-            <section>
-                <h2>4. Pliki Cookies</h2>
-                <p>Serwis wykorzystuje pliki "cookies" (ciasteczka) w celu:</p>
-                <ul>
-                    <li>Utrzymania sesji zalogowanego użytkownika.</li>
-                    <li>Zapamiętywania Twoich preferencji wyszukiwania.</li>
-                    <li>Analizy ruchu na stronie (Google Analytics).</li>
-                </ul>
-                <p>Możesz w każdej chwili zmienić ustawienia cookies w swojej przeglądarce.</p>
-            </section>
+                <section>
+                    <h2>2. Zakres i cel zbieranych danych</h2>
+                    <p>Przetwarzamy dane niezbędne do wystawienia ogłoszenia i kontaktu:</p>
+                    <ul>
+                        <li>Nazwa użytkownika i adres e-mail.</li>
+                        <li>Numer telefonu (do kontaktu w sprawie auta).</li>
+                        <li>Dane o pojeździe oraz adres IP.</li>
+                    </ul>
+                </section>
 
-            <section>
-                <h2>5. Twoje Prawa</h2>
-                <p>Zgodnie z RODO, przysługuje Ci prawo do:</p>
-                <ul>
-                    <li>Wglądu w swoje dane oraz ich poprawiania.</li>
-                    <li>Żądania usunięcia danych ("prawo do bycia zapomnianym").</li>
-                    <li>Ograniczenia przetwarzania danych.</li>
-                    <li>Przenoszenia danych.</li>
-                </ul>
-                <p>Aby skorzystać z tych praw, napisz do nas na adres e-mail podany w punkcie 1.</p>
-            </section>
+                <section>
+                    <h2>3. Twoje Prawa</h2>
+                    <p>Masz prawo do wglądu, poprawiania oraz żądania usunięcia swoich danych z serwisu Giełda Radom w dowolnym momencie. W tym celu skontaktuj się z nami mailowo.</p>
+                </section>
 
-            <section>
-                <h2>6. Okres przechowywania danych</h2>
-                <p>Dane przechowywane są przez okres posiadania konta w serwisie lub do momentu wycofania zgody, a po tym czasie przez okres niezbędny do obrony przed roszczeniami (zgodnie z przepisami prawa).</p>
-            </section>
-
-            <div class="mt-5 p-4 bg-light rounded-4 border">
-                <p class="mb-0 small text-center">
-                    Korzystając z serwisu Giełda Radom, akceptujesz powyższe zasady. Dbamy o Twoją prywatność tak bardzo, jak o nasze własne silniki! 🚗
-                </p>
+                <div class="mt-5 p-4 bg-light rounded-4 border text-center">
+                    <p class="mb-0 small">
+                        Dbamy o Twoją prywatność. Korzystając z serwisu, akceptujesz zasady przetwarzania danych. 🚗
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+    <footer class="footer-main">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-lg-4">
+                    <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
+                    <p class="small">Największy radomski portal ogłoszeniowy. Wspieramy lokalny handel motoryzacyjny bez prowizji. Tradycja Czerwca '76.</p>
+                    <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
+                </div>
+                <div class="col-lg-2">
+                    <h5 class="footer-heading">Nawigacja</h5>
+                    <a href="/" class="footer-link">Giełda</a>
+                    <a href="/register" class="footer-link">Dodaj ogłoszenie</a>
+                </div>
+                <div class="col-lg-3">
+                    <h5 class="footer-heading">Informacje</h5>
+                    <a href="/regulamin" class="footer-link">Regulamin</a>
+                    <a href="/polityka-prywatnosci" class="footer-link">Prywatność</a>
+                    <a href="/kontakt" class="footer-link">Kontakt</a>
+                </div>
+                <div class="col-lg-3 text-md-end">
+                    <h5 class="footer-heading">Radom 26-600</h5>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.3;">
+                </div>
+            </div>
+            <hr class="my-4 border-secondary opacity-25">
+            <p class="text-center small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
