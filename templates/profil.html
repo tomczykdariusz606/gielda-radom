@@ -71,7 +71,6 @@
         }
         .btn-radom:hover { color: white; transform: scale(1.02); }
 
-        /* Styl miniaturki */
         .profile-img-thumb {
             object-fit: cover; cursor: zoom-in;
             transition: transform 0.3s ease;
@@ -93,7 +92,6 @@
         }
         .animate-pulse { animation: pulse 2s infinite ease-in-out; }
 
-        /* Lightbox Modal */
         .modal-full-img { background: rgba(0, 0, 0, 0.95); }
         #lightboxImage { max-height: 85vh; border-radius: 8px; border: 3px solid white; }
     </style>
@@ -123,13 +121,13 @@
                     <h5 class="fw-bold mb-4" style="color: var(--radom-red);">
                         <i class="bi bi-plus-circle-fill me-2"></i>Nowe ogłoszenie
                     </h5>
-                    
+
                     <form action="/dodaj" method="POST" enctype="multipart/form-data" id="add-car-form">
                         <div class="mb-3 text-center p-4 bg-light rounded-4 border border-dashed">
                             <i class="bi bi-camera-fill fs-2 text-muted"></i>
                             <input type="file" name="zdjecia" class="form-control mt-2 form-control-sm" multiple required>
                             <small class="text-muted d-block mt-2">Pierwsze zdjęcie będzie główne (Max 10)</small>
-                            
+
                             <div id="add-progress" class="mt-3 d-none">
                                 <div class="progress" style="height: 10px;">
                                     <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: 100%"></div>
@@ -167,8 +165,8 @@
             </div>
 
             <div class="col-lg-8">
-                <div class="glass-card p-4">
-                    <h3 class="fw-bold mb-4">Moje oferty <span class="badge bg-danger rounded-pill">{{ cars|length }}</span></h3>
+                <div class="glass-card p-4 mb-4">
+                    <h3 class="fw-bold mb-4">Twoje ogłoszenia <span class="badge bg-danger rounded-pill">{{ cars|length }}</span></h3>
 
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -183,10 +181,10 @@
                         <div class="list-group-item px-0 py-3">
                             <div class="row align-items-center">
                                 <div class="col-auto">
-                                    <img src="{{ car.img }}" 
+                                    <img src="{{ url_for('static', filename='uploads/' + car.img) }}" 
                                          class="rounded-4 shadow-sm profile-img-thumb" 
                                          width="110" height="80" 
-                                         onclick="openLightbox('{{ car.img }}')"
+                                         onclick="openLightbox('{{ url_for('static', filename='uploads/' + car.img) }}')"
                                          title="Powiększ">
                                 </div>
                                 <div class="col">
@@ -195,7 +193,6 @@
                                         <span class="me-3"><i class="bi bi-calendar-event"></i> {{ car.rok }}</span>
                                         <span><i class="bi bi-cash-stack"></i> {{ car.cena|int }} PLN</span>
                                     </p>
-
                                     {% set pozostalo = 30 - (now - car.data_dodania).days %}
                                     <span class="badge {% if pozostalo <= 3 %}bg-danger animate-pulse{% else %}bg-light text-dark border{% endif %} rounded-pill small">
                                         <i class="bi bi-clock"></i> {% if pozostalo > 0 %}Zostało: {{ pozostalo }} dni{% else %}Wygasa dziś{% endif %}
@@ -219,9 +216,43 @@
                             </div>
                         </div>
                         {% else %}
-                            <div class="text-center py-5">
-                                <i class="bi bi-inbox text-muted display-1"></i>
-                                <p class="text-muted mt-3">Brak ogłoszeń.</p>
+                            <div class="text-center py-4">
+                                <p class="text-muted small">Nie masz jeszcze żadnych wystawionych aut.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="glass-card p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-heart-fill text-danger me-2"></i>Obserwowane</h4>
+                    <div class="list-group list-group-flush">
+                        {% for car in fav_cars %}
+                        <div class="list-group-item px-0 py-3">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <img src="{{ url_for('static', filename='uploads/' + car.img) }}" 
+                                         class="rounded-4 shadow-sm profile-img-thumb" 
+                                         width="90" height="65" 
+                                         onclick="openLightbox('{{ url_for('static', filename='uploads/' + car.img) }}')">
+                                </div>
+                                <div class="col">
+                                    <h6 class="fw-bold mb-0">
+                                        <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none text-dark">
+                                            {{ car.marka }} {{ car.model }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">{{ car.cena|int }} PLN | {{ car.rok }} r.</small>
+                                </div>
+                                <div class="col-auto">
+                                    <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="btn btn-sm btn-light rounded-pill border">
+                                        <i class="bi bi-heart-fill text-danger"></i> Usuń
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted small">Nie obserwujesz jeszcze żadnych ogłoszeń.</p>
                             </div>
                         {% endfor %}
                     </div>
@@ -244,13 +275,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Obsługa Lightboxa
         function openLightbox(src) {
             document.getElementById('lightboxImage').src = src;
             new bootstrap.Modal(document.getElementById('lightboxModal')).show();
         }
 
-        // Obsługa paska postępu przy dodawaniu
         document.getElementById('add-car-form').addEventListener('submit', function() {
             document.getElementById('add-progress').classList.remove('d-none');
             const submitBtn = document.getElementById('btn-submit-add');
