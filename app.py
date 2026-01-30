@@ -183,7 +183,8 @@ def dodaj_ogloszenie():
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
                     cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
-                    img=main_img, user_id=current_user.id)
+                    img=main_img, zrodlo=current_user.lokalizacja,
+ user_id=current_user.id)
     db.session.add(nowe_auto)
     db.session.commit()
     for path in saved_paths:
