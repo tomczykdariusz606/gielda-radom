@@ -10,12 +10,6 @@
     <meta name="author" content="Giełda Radom">
     <meta name="robots" content="index, follow">
 
-    <meta property="og:title" content="Giełda Samochodowa Radom - Sprzedaj swoje auto">
-    <meta property="og:description" content="Lokalna giełda dla mieszkańców Radomia i okolic. Darmowe ogłoszenia bez prowizji.">
-    <meta property="og:image" content="{{ url_for('static', filename='favicon.ico', _external=True) }}">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:type" content="website">
-
     <meta name="geo.region" content="PL-MZ">
     <meta name="geo.placename" content="Radom">
     <meta name="geo.position" content="51.4027;21.1471">
@@ -29,9 +23,15 @@
         :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
         body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
         
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(206, 43, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0); }
+        }
+        .animate-pulse { animation: pulse-red 2s infinite; }
+
         .navbar { background: rgba(26, 26, 26, 0.95); backdrop-filter: blur(10px); border-bottom: 3px solid var(--radom-red); }
         
-        /* HERO SECTION */
         .hero-section {
             position: relative; background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover; background-position: center; background-attachment: fixed;
@@ -43,25 +43,18 @@
         .big-text-76 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-5deg); font-family: 'Anton', sans-serif; font-size: 15vw; color: rgba(255, 255, 255, 0.07); z-index: 2; pointer-events: none; letter-spacing: 1rem; }
         .hero-content { position: relative; z-index: 3; width: 100%; max-width: 800px; padding: 0 15px; }
 
-        /* CARDS */
-        .car-card { border: none; border-radius: 20px; background: white; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: 0 10px 20px rgba(0,0,0,0.05); overflow: hidden; }
-        .car-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .car-card { border: none; border-radius: 20px; background: white; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .car-card:hover { transform: translateY(-10px); }
         
         .price-badge { background-color: var(--radom-red); font-weight: 800; font-size: 1.1rem; z-index: 2; }
+        .time-badge { position: absolute; top: 15px; left: 65px; z-index: 10; font-size: 0.75rem; font-weight: 700; }
         .zoom-btn { position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(255, 255, 255, 0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: var(--radom-dark); }
-        .fav-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0, 0, 0, 0.4); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: white; backdrop-filter: blur(5px); transition: 0.2s; }
-        .fav-btn:hover { transform: scale(1.1); background: rgba(0,0,0,0.6); }
+        .fav-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0, 0, 0, 0.4); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: white; backdrop-filter: blur(5px); }
 
-        .btn-radom { background-color: var(--radom-red); color: white; border: none; font-weight: 600; }
-        .btn-cv { background-color: #ffc107; color: #212529; font-weight: 700; border: none; }
-
-        /* STOPKA */
         .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
-        .footer-brand { color: white; font-weight: 800; font-size: 1.5rem; margin-bottom: 20px; display: block; text-decoration: none; }
-        .footer-heading { color: white; font-weight: 600; margin-bottom: 25px; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+        .footer-heading { color: white; font-weight: 600; margin-bottom: 25px; text-transform: uppercase; font-size: 0.9rem; }
         .footer-link { color: #bbb; text-decoration: none; transition: 0.2s; display: block; margin-bottom: 12px; }
         .footer-link:hover { color: var(--radom-red); padding-left: 5px; }
-        .contact-info i { color: var(--radom-red); margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -72,9 +65,10 @@
             <div class="ms-auto d-flex align-items-center gap-3">
                 {% if current_user.is_authenticated %}
                     <a href="/profil" class="btn btn-outline-light rounded-pill px-4">Mój Profil</a>
+                    <a href="/logout" class="btn btn-link text-white-50 text-decoration-none small">Wyloguj</a>
                 {% else %}
                     <a href="/login" class="text-white text-decoration-none fw-bold">Logowanie</a>
-                    <a href="/register" class="btn btn-radom rounded-pill px-4">Dołącz</a>
+                    <a href="/register" class="btn btn-danger rounded-pill px-4" style="background-color: var(--radom-red);">Dołącz</a>
                 {% endif %}
             </div>
         </div>
@@ -85,12 +79,12 @@
         <div class="big-text-76">CZERWIEC '76</div>
         <div class="hero-content">
             <h1 class="display-4 fw-bold mb-2">Giełda Samochodowa Radom</h1>
-            <p class="lead opacity-75 mb-4">Lokalny patriotyzm, najlepsze okazje motoryzacyjne.</p>
+            <p class="lead opacity-75 mb-4">Lokalne ogłoszenia. Tradycja i nowoczesność.</p>
             <form action="/" method="GET">
                 <div class="input-group input-group-lg shadow-lg bg-white rounded-pill p-1">
                     <span class="input-group-text border-0 bg-transparent ms-2"><i class="bi bi-search text-danger"></i></span>
-                    <input type="text" name="q" class="form-control border-0 bg-transparent shadow-none" placeholder="Szukaj marki lub modelu..." value="{{ search_query or '' }}">
-                    <button class="btn btn-radom rounded-pill px-5" type="submit">Szukaj</button>
+                    <input type="text" name="q" class="form-control border-0 bg-transparent shadow-none" placeholder="Szukaj auta..." value="{{ search_query or '' }}">
+                    <button class="btn btn-danger rounded-pill px-5" style="background-color: var(--radom-red);" type="submit">Szukaj</button>
                 </div>
             </form>
         </div>
@@ -101,6 +95,9 @@
             {% for car in cars %}
             <div class="col">
                 <div class="card h-100 car-card">
+                    {% set dni_od_dodania = (now - car.data_dodania).days %}
+                    {% set pozostalo_dni = 30 - dni_od_dodania %}
+
                     <div class="position-relative" style="height: 240px;">
                         <button class="zoom-btn" onclick="openLightbox('{{ car.img }}')"><i class="bi bi-zoom-in"></i></button>
                         
@@ -110,8 +107,13 @@
                         </a>
                         {% endif %}
 
+                        <span class="badge time-badge rounded-pill shadow-sm {% if pozostalo_dni <= 3 %}bg-danger animate-pulse text-white{% else %}bg-white text-dark{% endif %}">
+                            <i class="bi bi-clock me-1"></i>
+                            {% if pozostalo_dni > 0 %}Jeszcze {{ pozostalo_dni }} dni{% else %}Ostatnie godziny!{% endif %}
+                        </span>
+
                         <a href="/ogloszenie/{{ car.id }}">
-                            <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }} {{ car.model }}">
+                            <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
                         </a>
 
                         <span class="position-absolute bottom-0 end-0 m-3 badge price-badge rounded-pill px-3 py-2">
@@ -134,44 +136,31 @@
     <footer class="footer-main">
         <div class="container">
             <div class="row gy-4">
-                <div class="col-lg-4 col-md-6">
-                    <a href="/" class="footer-brand"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-                    <p class="small pe-lg-5">Największy radomski portal ogłoszeniowy. Wspieramy lokalny handel motoryzacyjny od lat. Bezpiecznie, szybko i za darmo.</p>
-                    <div class="contact-info mt-4">
-                        <p class="small mb-2"><i class="bi bi-envelope-at"></i> dariusztom@go2.pl</p>
-                        <p class="small mb-2"><i class="bi bi-geo-alt"></i> Radom, woj. mazowieckie</p>
-                    </div>
+                <div class="col-lg-4">
+                    <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
+                    <p class="small">Lokalny portal ogłoszeniowy z radomskim charakterem. Sprzedawaj i kupuj bez pośredników.</p>
+                    <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
                 </div>
-                <div class="col-lg-2 col-md-6">
+                <div class="col-lg-2">
                     <h5 class="footer-heading">Nawigacja</h5>
                     <a href="/" class="footer-link">Strona Główna</a>
                     <a href="/register" class="footer-link">Dodaj Ogłoszenie</a>
-                    <a href="/login" class="footer-link">Logowanie</a>
                 </div>
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-3">
                     <h5 class="footer-heading">Informacje</h5>
-                    <a href="/regulamin" class="footer-link">Regulamin Serwisu</a>
+                    <a href="/regulamin" class="footer-link">Regulamin</a>
                     <a href="/polityka-prywatnosci" class="footer-link">Polityka Prywatności</a>
-                    <a href="/kontakt" class="footer-link">Kontakt z nami</a>
+                    <a href="/kontakt" class="footer-link">Kontakt</a>
                 </div>
-                <div class="col-lg-3 col-md-6 text-md-end">
-                    <h5 class="footer-heading">Śledź nas</h5>
-                    <div class="d-flex justify-content-md-end gap-3 fs-4">
-                        <a href="#" class="text-white-50 hover-primary"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="text-white-50 hover-primary"><i class="bi bi-instagram"></i></a>
-                    </div>
-                    <p class="mt-4 small text-muted">26-600 Radom<br>Polska</p>
+                <div class="col-lg-3 text-md-end">
+                    <h5 class="footer-heading">Lokalizacja</h5>
+                    <p class="small">Radom, woj. mazowieckie</p>
+                    <p class="small">Polska</p>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.3;">
                 </div>
             </div>
             <hr class="my-4 border-secondary opacity-25">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.5;">
-                </div>
-            </div>
+            <p class="text-center small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
         </div>
     </footer>
 
