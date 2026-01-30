@@ -49,6 +49,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+    lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     # Dodana relacja do ulubionych
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
@@ -297,10 +298,12 @@ def register():
     if request.method == 'POST':
         user = request.form['username']
         email = request.form['email']
+loc = request.form.get('location', 'Radom') 
         if User.query.filter((User.username == user) | (User.email == email)).first():
             flash('Użytkownik/Email istnieje!', 'danger')
             return redirect(url_for('register'))
-        new_user = User(username=user, email=email, password_hash=generate_password_hash(request.form['password']))
+        new_user = User(username=user, email=email,
+lokalizacja=loc,  password_hash=generate_password_hash(request.form['password']))
         db.session.add(new_user)
         db.session.commit()
         flash('Zarejestrowano!', 'success')
