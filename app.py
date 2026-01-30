@@ -37,6 +37,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# --- TABELA ASOCJACYJNA DLA ULUBIONYCH (NOWOŚĆ) ---
+favorites = db.Table('favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
+)
+
 # --- MODELE ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +50,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
+    # Dodana relacja do ulubionych
+    favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -139,12 +147,28 @@ def kontakt():
         return redirect(url_for('kontakt'))
     return render_template('kontakt.html', now=datetime.utcnow())
 
+# --- NOWA TRASA: OBSŁUGA ULUBIONYCH ---
+@app.route('/toggle_favorite/<int:car_id>')
+@login_required
+def toggle_favorite(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car in current_user.favorite_cars:
+        current_user.favorite_cars.remove(car)
+        flash('Usunięto z ulubionych', 'info')
+    else:
+        current_user.favorite_cars.append(car)
+        flash('Dodano do ulubionych!', 'success')
+    db.session.commit()
+    return redirect(request.referrer or url_for('index'))
+
 # --- ZARZĄDZANIE OGŁOSZENIAMI ---
 @app.route('/profil')
 @login_required
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    return render_template('profil.html', cars=my_cars, now=datetime.utcnow())
+    # Przekazujemy również fav_cars do profilu
+    fav_cars = current_user.favorite_cars
+    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
@@ -154,8 +178,10 @@ def dodaj_ogloszenie():
     for file in files[:10]:
         if file and allowed_file(file.filename):
             opt_name = save_optimized_image(file)
+            # PRZYWRÓCONO: Pełna ścieżka do bazy
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
+    
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
                     cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
@@ -181,6 +207,7 @@ def edit_car(car_id):
         for file in files:
             if file and allowed_file(file.filename) and len(car.images) < 10:
                 opt_name = save_optimized_image(file)
+                # PRZYWRÓCONO: Pełna ścieżka
                 path = url_for('static', filename='uploads/' + opt_name)
                 db.session.add(CarImage(image_path=path, car_id=car.id))
         db.session.commit()
@@ -310,20 +337,19 @@ def usun_konto():
     logout_user()
     flash('Konto usunięte.', 'info')
     return redirect(url_for('index'))
-# --- NOWA TRASA: SITEMAP DLA GOOGLE ---
+
+# --- SITEMAP DLA GOOGLE (NAPRAWA HTTPS) ---
 @app.route('/sitemap.xml')
 def sitemap():
     pages = []
     today = datetime.utcnow().strftime('%Y-%m-%d')
-    # Strony statyczne
-    pages.append({'url': url_for('index', _external=True), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
-    pages.append({'url': url_for('regulamin', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
-    pages.append({'url': url_for('polityka', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
-    # Dynamiczne linki do aut
+    pages.append({'url': url_for('index', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
+    pages.append({'url': url_for('regulamin', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
+    pages.append({'url': url_for('polityka', _external=True, _scheme='https'), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
     cars = Car.query.all()
     for car in cars:
         pages.append({
-            'url': url_for('car_details', car_id=car.id, _external=True),
+            'url': url_for('car_details', car_id=car.id, _external=True, _scheme='https'),
             'lastmod': car.data_dodania.strftime('%Y-%m-%d'),
             'freq': 'weekly',
             'priority': '0.8'
@@ -334,12 +360,12 @@ def sitemap():
 def robots():
     lines = [
         "User-agent: *",
-        "Disallow: /profil",      # Nie indeksuj panelu użytkownika
-        "Disallow: /edytuj/",    # Nie indeksuj stron edycji
-        "Disallow: /usun/",      # Nie indeksuj linków usuwania
-        "Disallow: /login",      # Nie indeksuj strony logowania
-        "Disallow: /register",   # Nie indeksuj rejestracji
-        f"Sitemap: {url_for('sitemap', _external=True)}"
+        "Disallow: /profil",
+        "Disallow: /edytuj/",
+        "Disallow: /usun/",
+        "Disallow: /login",
+        "Disallow: /register",
+        f"Sitemap: {url_for('sitemap', _external=True, _scheme='https')}"
     ]
     return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
 
