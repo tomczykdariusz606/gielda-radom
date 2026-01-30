@@ -37,6 +37,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# --- DODANA TABELA ASOCJACYJNA DLA ULUBIONYCH ---
+favorites = db.Table('favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
+)
+
 # --- MODELE ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +50,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
+    # Dodana relacja do ulubionych
+    favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -139,12 +147,28 @@ def kontakt():
         return redirect(url_for('kontakt'))
     return render_template('kontakt.html', now=datetime.utcnow())
 
+# --- DODANA FUNKCJA: OBSŁUGA ULUBIONYCH ---
+@app.route('/toggle_favorite/<int:car_id>')
+@login_required
+def toggle_favorite(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car in current_user.favorite_cars:
+        current_user.favorite_cars.remove(car)
+        flash('Usunięto z ulubionych', 'info')
+    else:
+        current_user.favorite_cars.append(car)
+        flash('Dodano do ulubionych!', 'success')
+    db.session.commit()
+    return redirect(request.referrer or url_for('index'))
+
 # --- ZARZĄDZANIE OGŁOSZENIAMI ---
 @app.route('/profil')
 @login_required
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    return render_template('profil.html', cars=my_cars, now=datetime.utcnow())
+    # Przekazanie ulubionych do profilu
+    fav_cars = current_user.favorite_cars
+    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
@@ -310,16 +334,15 @@ def usun_konto():
     logout_user()
     flash('Konto usunięte.', 'info')
     return redirect(url_for('index'))
-# --- NOWA TRASA: SITEMAP DLA GOOGLE ---
+
+# --- SITEMAP I ROBOTS ---
 @app.route('/sitemap.xml')
 def sitemap():
     pages = []
     today = datetime.utcnow().strftime('%Y-%m-%d')
-    # Strony statyczne
     pages.append({'url': url_for('index', _external=True), 'lastmod': today, 'freq': 'daily', 'priority': '1.0'})
     pages.append({'url': url_for('regulamin', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
     pages.append({'url': url_for('polityka', _external=True), 'lastmod': today, 'freq': 'monthly', 'priority': '0.3'})
-    # Dynamiczne linki do aut
     cars = Car.query.all()
     for car in cars:
         pages.append({
@@ -334,11 +357,11 @@ def sitemap():
 def robots():
     lines = [
         "User-agent: *",
-        "Disallow: /profil",      # Nie indeksuj panelu użytkownika
-        "Disallow: /edytuj/",    # Nie indeksuj stron edycji
-        "Disallow: /usun/",      # Nie indeksuj linków usuwania
-        "Disallow: /login",      # Nie indeksuj strony logowania
-        "Disallow: /register",   # Nie indeksuj rejestracji
+        "Disallow: /profil",
+        "Disallow: /edytuj/",
+        "Disallow: /usun/",
+        "Disallow: /login",
+        "Disallow: /register",
         f"Sitemap: {url_for('sitemap', _external=True)}"
     ]
     return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
