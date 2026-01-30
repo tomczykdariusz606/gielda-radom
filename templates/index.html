@@ -211,9 +211,10 @@
                             <i class="bi bi-zoom-in"></i>
                         </button>
 
-                        <a href="/ogloszenie/{{ car.id }}">
-    <img src="{{ url_for('static', filename='uploads/' + car.img) }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
-</a>
+              <a href="/ogloszenie/{{ car.id }}">
+                            <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
+                        </a>
+
 
                         <span class="badge time-badge rounded-pill shadow-sm {% if pozostalo_dni <= 3 %}bg-danger animate-pulse text-white{% else %}bg-white text-dark{% endif %}">
                             <i class="bi bi-clock me-1"></i>
