@@ -7,15 +7,74 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; min-height: 100vh; display: flex; flex-direction: column; }
+        :root { 
+            --radom-red: #ce2b37; 
+            --radom-dark: #1a1a1a;
+            --btn-edit: #0d6efd;
+            --btn-refresh: #198754;
+            --btn-delete: #dc3545;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; min-height: 100vh; display: flex; flex-direction: column; }
         .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-        .profile-header { background: white; border-bottom: 1px solid #dee2e6; padding: 2rem 0; margin-bottom: 2rem; }
-        .car-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; overflow: hidden; }
-        .car-card:hover { transform: translateY(-5px); }
-        .btn-radom { background-color: var(--radom-red); color: white; border: none; }
-        .btn-radom:hover { background-color: #a51d28; color: white; }
-        .section-title { border-left: 5px solid var(--radom-red); padding-left: 15px; font-weight: 800; margin-bottom: 1.5rem; }
+        
+        .profile-header { 
+            background: white; 
+            border-bottom: 1px solid #e0e0e0; 
+            padding: 2.5rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .car-card { 
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            transition: all 0.3s ease; 
+            background: white;
+            overflow: hidden;
+        }
+        .car-card:hover { transform: translateY(-8px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+
+        /* Stylizacja przycisków */
+        .btn-action { 
+            font-weight: 600; 
+            border-radius: 8px; 
+            padding: 8px 16px; 
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        
+        .btn-edit-prof { color: var(--btn-edit); border: 1.5px solid var(--btn-edit); background: transparent; }
+        .btn-edit-prof:hover { background: var(--btn-edit); color: white; }
+
+        .btn-refresh-prof { color: var(--btn-refresh); border: 1.5px solid var(--btn-refresh); background: transparent; }
+        .btn-refresh-prof:hover { background: var(--btn-refresh); color: white; }
+
+        .btn-delete-prof { color: var(--btn-delete); border: 1.5px solid var(--btn-delete); background: transparent; }
+        .btn-delete-prof:hover { background: var(--btn-delete); color: white; }
+
+        .btn-radom-main { 
+            background: var(--radom-red); 
+            color: white; 
+            border: none; 
+            box-shadow: 0 4px 12px rgba(206, 43, 55, 0.3);
+        }
+        .btn-radom-main:hover { background: #a51d28; color: white; transform: scale(1.02); }
+
+        .section-title { 
+            border-left: 6px solid var(--radom-red); 
+            padding-left: 15px; 
+            font-weight: 800; 
+            color: var(--radom-dark);
+            margin-bottom: 1.5rem;
+        }
+
+        .fav-badge {
+            position: absolute; top: 10px; right: 10px;
+            background: white; border-radius: 50%; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -24,21 +83,23 @@
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
             <div class="ms-auto">
-                <a href="/" class="btn btn-outline-light btn-sm rounded-pill px-3">Powrót do giełdy</a>
+                <a href="/" class="btn btn-outline-light btn-sm rounded-pill px-4">Powrót do serwisu</a>
             </div>
         </div>
     </nav>
 
     <div class="profile-header">
         <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="fw-bold mb-0">Witaj, {{ current_user.username }}!</h1>
-                    <p class="text-muted mb-0">Zarządzaj swoimi ogłoszeniami i ulubionymi autami.</p>
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h1 class="fw-bold mb-1">Panel Użytkownika: {{ current_user.username }}</h1>
+                    <p class="text-muted mb-md-0">Zarządzaj swoją aktywnością na giełdzie.</p>
                 </div>
-                <button type="button" class="btn btn-radom rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#dodajModal">
-                    <i class="bi bi-plus-lg"></i> Dodaj nowe ogłoszenie
-                </button>
+                <div class="col-md-5 text-md-end">
+                    <button type="button" class="btn btn-radom-main btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#dodajModal">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Dodaj auto
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -47,124 +108,129 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4" role="alert">
-                        {{ message }}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i> {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <h3 class="section-title">Twoje Ogłoszenia</h3>
+        <h3 class="section-title">Twoje aktywne ogłoszenia</h3>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for car in cars %}
             <div class="col">
                 <div class="card h-100 car-card">
-                    <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ car.marka }}">
-                    <div class="card-body">
-                        <h5 class="fw-bold">{{ car.marka }} {{ car.model }}</h5>
-                        <p class="text-danger fw-bold mb-2">{{ car.cena|int }} PLN</p>
-                        <div class="d-grid gap-2">
-                            <div class="btn-group">
-                                <a href="/edytuj/{{ car.id }}" class="btn btn-outline-dark btn-sm">Edytuj</a>
-                                <form action="/odswiez/{{ car.id }}" method="POST" class="d-inline w-100">
-                                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">Odśwież</button>
+                    <img src="{{ car.img }}" class="card-img-top" style="height: 220px; object-fit: cover;" alt="{{ car.marka }}">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                        <p class="text-muted small mb-3"><i class="bi bi-calendar3 me-1"></i> {{ car.rok }} r.</p>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex gap-2 mb-2">
+                                <a href="/edytuj/{{ car.id }}" class="btn btn-action btn-edit-prof flex-grow-1">
+                                    <i class="bi bi-pencil-square me-1"></i> Edytuj
+                                </a>
+                                <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
+                                    <button type="submit" class="btn btn-action btn-refresh-prof w-100">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Odśwież
+                                    </button>
                                 </form>
                             </div>
-                            <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć to ogłoszenie?')">
-                                <button type="submit" class="btn btn-outline-danger btn-sm w-100">Usuń ogłoszenie</button>
+                            <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('To ogłoszenie zostanie trwale usunięte. Kontynuować?')">
+                                <button type="submit" class="btn btn-action btn-delete-prof w-100">
+                                    <i class="bi bi-trash3 me-1"></i> Usuń ofertę
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12">
-                <div class="text-center py-4 bg-white rounded-4 border">
-                    <p class="text-muted">Nie masz jeszcze żadnych ogłoszeń.</p>
-                </div>
+            <div class="col-12 text-center py-5 bg-white rounded-4 border">
+                <i class="bi bi-car-front fs-1 text-light mb-3"></i>
+                <p class="text-muted">Nie masz jeszcze żadnych ogłoszeń. Kliknij "Dodaj auto", aby zacząć sprzedaż.</p>
             </div>
             {% endfor %}
         </div>
 
-        <h3 class="section-title">Ulubione Ogłoszenia</h3>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <h3 class="section-title">Obserwowane ogłoszenia</h3>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
             {% for fav in fav_cars %}
             <div class="col">
-                <div class="card h-100 car-card shadow-sm border-0">
+                <div class="card h-100 car-card border-0 shadow-sm">
                     <div class="position-relative">
-                        <img src="{{ fav.img }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ fav.marka }}">
-                        <a href="{{ url_for('toggle_favorite', car_id=fav.id) }}" class="btn btn-light btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow">
+                        <img src="{{ fav.img }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ fav.marka }}">
+                        <a href="{{ url_for('toggle_favorite', car_id=fav.id) }}" class="fav-badge text-decoration-none">
                             <i class="bi bi-heart-fill text-danger"></i>
                         </a>
                     </div>
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-1">{{ fav.marka }} {{ fav.model }}</h6>
-                        <p class="small text-muted mb-2">{{ fav.rok }} r. | {{ fav.cena|int }} PLN</p>
-                        <a href="/ogloszenie/{{ fav.id }}" class="btn btn-sm btn-outline-dark rounded-pill w-100">Zobacz ogłoszenie</a>
+                    <div class="card-body p-3">
+                        <h6 class="fw-bold mb-1 text-truncate">{{ fav.marka }} {{ fav.model }}</h6>
+                        <p class="small text-danger fw-bold mb-2">{{ fav.cena|int }} PLN</p>
+                        <a href="/ogloszenie/{{ fav.id }}" class="btn btn-sm btn-dark rounded-pill w-100">Szczegóły</a>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12">
-                <div class="text-center py-4 bg-white rounded-4 border">
-                    <p class="text-muted">Nie zapisałeś jeszcze żadnych ogłoszeń jako ulubione.</p>
-                </div>
+            <div class="col-12 text-center py-4">
+                <p class="text-muted small">Brak obserwowanych aut.</p>
             </div>
             {% endfor %}
         </div>
 
-        <hr class="my-5">
-        <div class="text-center">
-            <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA! Twoje konto i wszystkie ogłoszenia zostaną bezpowrotnie usunięte. Kontynuować?')">
-                <button type="submit" class="btn btn-link text-danger">Usuń konto użytkownika</button>
+        <div class="mt-5 pt-5 border-top">
+            <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA: Usunięcie konta jest nieodwracalne.')" class="text-center">
+                <button type="submit" class="btn btn-sm btn-link text-muted text-decoration-none">
+                    <i class="bi bi-person-x me-1"></i> Usuń moje konto użytkownika
+                </button>
             </form>
         </div>
     </div>
 
     <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Dodaj nowe ogłoszenie</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Nowe ogłoszenie</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Marka</label>
-                                <input type="text" name="marka" class="form-control" required>
+                                <label class="form-label small fw-bold">Marka</label>
+                                <input type="text" name="marka" class="form-control" placeholder="np. BMW" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Model</label>
-                                <input type="text" name="model" class="form-control" required>
+                                <label class="form-label small fw-bold">Model</label>
+                                <input type="text" name="model" class="form-control" placeholder="np. Seria 3" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Rok produkcji</label>
-                                <input type="number" name="rok" class="form-control" required>
+                                <label class="form-label small fw-bold">Rok produkcji</label>
+                                <input type="number" name="rok" class="form-control" placeholder="2020" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Cena (PLN)</label>
-                                <input type="number" name="cena" class="form-control" required>
+                                <label class="form-label small fw-bold">Cena (PLN)</label>
+                                <input type="number" name="cena" class="form-control" placeholder="45000" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Telefon kontaktowy</label>
-                                <input type="text" name="telefon" class="form-control" required>
+                                <label class="form-label small fw-bold">Telefon</label>
+                                <input type="text" name="telefon" class="form-control" placeholder="500 600 700" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Zdjęcia (maks. 10)</label>
+                                <label class="form-label small fw-bold">Zdjęcia (możesz wybrać kilka)</label>
                                 <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Opis ogłoszenia</label>
-                                <textarea name="opis" class="form-control" rows="4" required></textarea>
+                                <label class="form-label small fw-bold">Opis pojazdu</label>
+                                <textarea name="opis" class="form-control" rows="4" placeholder="Opisz stan techniczny, wyposażenie..." required></textarea>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                        <button type="submit" class="btn btn-radom px-4">Opublikuj ogłoszenie</button>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
+                        <button type="submit" class="btn btn-radom-main rounded-pill px-4">Opublikuj teraz</button>
                     </div>
                 </form>
             </div>
@@ -173,7 +239,7 @@
 
     <footer class="bg-dark text-white-50 mt-auto py-4">
         <div class="container text-center">
-            <small>© 2026 Giełda Radom. Wszystkie dane są bezpieczne.</small>
+            <small>© 2026 Giełda Radom. Panel administracyjny sprzedawcy.</small>
         </div>
     </footer>
 
