@@ -49,8 +49,10 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+    # NOWA KOLUMNA:
+    lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
+    
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    # Dodana relacja do ulubionych
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
 class Car(db.Model):
@@ -170,6 +172,32 @@ def profil():
     fav_cars = current_user.favorite_cars
     return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        user = request.form['username']
+        email = request.form['email']
+        # Pobieramy miejscowość z Twojego selecta w register.html
+        miejscowosc = request.form.get('location', 'Radom')
+
+        if User.query.filter((User.username == user) | (User.email == email)).first():
+            flash('Użytkownik/Email istnieje!', 'danger')
+            return redirect(url_for('register'))
+        
+        # Tworzymy użytkownika z przypisaną lokalizacją
+        new_user = User(
+            username=user, 
+            email=email, 
+            lokalizacja=miejscowosc,
+            password_hash=generate_password_hash(request.form['password'])
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Zarejestrowano!', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', now=datetime.utcnow())
+
+# --- ZAKTUALIZOWANE DODAWANIE OGŁOSZENIA ---
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
@@ -178,20 +206,31 @@ def dodaj_ogloszenie():
     for file in files[:10]:
         if file and allowed_file(file.filename):
             opt_name = save_optimized_image(file)
-            # PRZYWRÓCONO: Pełna ścieżka do bazy
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
-    
+
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
-                    cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
-                    img=main_img, user_id=current_user.id)
+    
+    # AUTOMAT: Pobieramy lokalizację przypisaną do konta aktualnego użytkownika
+    auto_lokalizacja = current_user.lokalizacja if current_user.lokalizacja else "Radom"
+    nowe_auto = Car(
+        marka=request.form['marka'], 
+        model=request.form['model'], 
+        rok=int(request.form['rok']), 
+        cena=float(request.form['cena']), 
+        opis=request.form['opis'], 
+        telefon=request.form['telefon'], 
+        img=main_img, 
+        zrodlo=auto_lokalizacja, # <--- Tutaj trafia lokalizacja z konta
+        user_id=current_user.id
+    )
+    
     db.session.add(nowe_auto)
     db.session.commit()
     for path in saved_paths:
         db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
     db.session.commit()
-    flash('Ogłoszenie dodane!', 'success')
+    flash('Ogłoszenie dodane!',
     return redirect(url_for('profil'))
 
 @app.route('/edytuj/<int:car_id>', methods=['GET', 'POST'])
