@@ -3,7 +3,7 @@ import uuid
 import zipfile
 import io
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -11,6 +11,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from PIL import Image
 from itsdangerous import URLSafeTimedSerializer as Serializer
+# Import biblioteki do "rozmytego" wyszukiwania (literówki)
+from thefuzz import process 
 
 app = Flask(__name__)
 
@@ -103,7 +105,7 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# --- NOWOŚĆ: GENERATOR OPISÓW AI ---
+# --- GENERATOR OPISÓW AI ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
 def generate_ai_description():
@@ -112,8 +114,7 @@ def generate_ai_description():
     model = data.get('model', '')
     rok = data.get('rok', '')
     paliwo = data.get('paliwo', '')
-    
-    # Symulacja generatora Gemini 3.0 Flash
+
     prompt_result = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę przy niskim spalaniu. Samochód zadbany, regularnie serwisowany, idealny na trasy po Radomiu i okolicach. Komfortowe wnętrze i pewne prowadzenie. Zapraszam na jazdę próbną!"
     return jsonify({"description": prompt_result})
 
@@ -133,25 +134,97 @@ def save_optimized_image(file):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- TRASY ---
+# --- TRASY APLIKACJI ---
+
 @app.route('/')
 def index():
-    limit_daty = datetime.utcnow() - timedelta(days=30)
-    base_query = Car.query.filter(Car.data_dodania >= limit_daty)
-    marka = request.args.get('marka', '').strip()
-    model = request.args.get('model', '').strip()
+    # Pobieranie parametrów wyszukiwania
+    query_text = request.args.get('q', '').strip()  # Jedno pole "Inteligentne szukanie"
+    skrzynia = request.args.get('skrzynia', '')
+    paliwo = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
-    if marka: base_query = base_query.filter(Car.marka.ilike(f"%{marka}%"))
-    if model: base_query = base_query.filter(Car.model.ilike(f"%{model}%"))
-    if cena_max: base_query = base_query.filter(Car.cena <= cena_max)
+
+    # 1. Pobieramy wszystkie auta (lub base query)
+    # Wersja produkcyjna: przy dużej bazie używa się SQL LIKE, ale dla Fuzzy Search w Pythonie pobieramy wszystko
+    all_cars_query = Car.query
+
+    # 2. Inteligentne filtrowanie (Literówki / Fuzzy Search)
+    if query_text:
+        # Pobieramy wszystkie auta, żeby sprawdzić dopasowanie nazw
+        all_cars = Car.query.all()
+        
+        # Tworzymy słownik { "Marka Model": id }
+        choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
+        
+        # Biblioteka thefuzz szuka najlepszych dopasowań (wynik > 55%)
+        # To pozwala znaleźć "Wolkswagn" jako "Volkswagen"
+        matches = process.extract(query_text, choices.keys(), limit=50)
+        
+        # Wyciągamy ID pasujących aut
+        matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
+        
+        # Filtrujemy zapytanie SQL po tych ID
+        base_query = Car.query.filter(Car.id.in_(matched_ids))
+    else:
+        # Jeśli brak tekstu, bierzemy wszystkie
+        base_query = Car.query
+
+    # 3. Dodatkowe filtry techniczne
+    if skrzynia:
+        base_query = base_query.filter(Car.skrzynia == skrzynia)
+    if paliwo:
+        base_query = base_query.filter(Car.paliwo == paliwo)
+    if cena_max:
+        base_query = base_query.filter(Car.cena <= cena_max)
+
+    # Sortowanie: najnowsze na górze
     cars = base_query.order_by(Car.id.desc()).all()
+    
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
+
+@app.route('/kontakt')
+def kontakt():
+    return render_template('kontakt.html')
+
+@app.route('/polityka-prywatnosci')
+def rodo():
+    return render_template('polityka.html')
+
+@app.route('/regulamin')
+def regulamin():
+    return render_template('regulamin.html')
+
+# --- SEO: SITEMAP & ROBOTS ---
+@app.route('/sitemap.xml')
+def sitemap():
+    base_url = "https://gieldaradom.pl"
+    cars = Car.query.all()
+    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += f'  <url><loc>{base_url}/</loc><priority>1.0</priority></url>\n'
+    for car in cars:
+        xml += f'  <url><loc>{base_url}/ogloszenie/{car.id}</loc><priority>0.8</priority></url>\n'
+    xml += f'</urlset>'
+    return Response(xml, mimetype='application/xml')
+
+@app.route('/robots.txt')
+def robots():
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /login",
+        "Disallow: /register",
+        "Disallow: /profil",
+        "Sitemap: https://gieldaradom.pl/sitemap.xml"
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+# --- CRUD I UŻYTKOWNIK ---
+
 @app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
-    
-    # Bezpieczeństwo: tylko właściciel może edytować swoje auto
     if car.user_id != current_user.id:
         flash('Nie masz uprawnień do edycji tego ogłoszenia.', 'danger')
         return redirect(url_for('profil'))
@@ -163,7 +236,10 @@ def edytuj(id):
         car.cena = request.form.get('cena')
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
-        
+        # Dodajemy edycję nowych pól jeśli są w formularzu
+        if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
+        if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
+
         db.session.commit()
         flash('Ogłoszenie zostało pomyślnie zaktualizowane!', 'success')
         return redirect(url_for('profil'))
@@ -188,6 +264,7 @@ def dodaj_ogloszenie():
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+    
     nowe_auto = Car(
         marka=request.form['marka'], model=request.form['model'],
         rok=int(request.form['rok']), cena=float(request.form['cena']),
@@ -254,14 +331,6 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index'))
-@app.route('/polityka-prywatnosci')
-def rodo():
-    return render_template('polityka.html')
-
-@app.route('/regulamin')
-def regulamin():
-    return render_template('regulamin.html')
-
 
 @app.route('/admin/full-backup')
 @login_required
