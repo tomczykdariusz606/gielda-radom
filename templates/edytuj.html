@@ -163,6 +163,43 @@
                     <input type="number" name="rok" class="form-control form-control-modern" value="{{ car.rok }}" required>
                 </div>
                 <div class="col-12">
+<div class="col-md-6">
+    <label class="form-label fw-bold small text-uppercase">Skrzynia biegów</label>
+    <select name="skrzynia" class="form-select form-control-modern">
+        <option value="Manualna" {% if car.skrzynia == 'Manualna' %}selected{% endif %}>Manualna</option>
+        <option value="Automatyczna" {% if car.skrzynia == 'Automatyczna' %}selected{% endif %}>Automatyczna</option>
+    </select>
+</div>
+
+<div class="col-md-6">
+    <label class="form-label fw-bold small text-uppercase">Paliwo</label>
+    <select name="paliwo" class="form-select form-control-modern">
+        <option value="Benzyna" {% if car.paliwo == 'Benzyna' %}selected{% endif %}>Benzyna</option>
+        <option value="Diesel" {% if car.paliwo == 'Diesel' %}selected{% endif %}>Diesel</option>
+        <option value="LPG" {% if car.paliwo == 'LPG' %}selected{% endif %}>Benzyna + LPG</option>
+        <option value="Hybryda" {% if car.paliwo == 'Hybryda' %}selected{% endif %}>Hybryda</option>
+        <option value="Elektryczny" {% if car.paliwo == 'Elektryczny' %}selected{% endif %}>Elektryczny</option>
+    </select>
+</div>
+
+<div class="col-md-6">
+    <label class="form-label fw-bold small text-uppercase">Typ nadwozia</label>
+    <select name="nadwozie" class="form-select form-control-modern">
+        <option value="Sedan" {% if car.nadwozie == 'Sedan' %}selected{% endif %}>Sedan</option>
+        <option value="Kombi" {% if car.nadwozie == 'Kombi' %}selected{% endif %}>Kombi</option>
+        <option value="Hatchback" {% if car.nadwozie == 'Hatchback' %}selected{% endif %}>Hatchback</option>
+        <option value="SUV" {% if car.nadwozie == 'SUV' %}selected{% endif %}>SUV</option>
+        <option value="Coupe" {% if car.nadwozie == 'Coupe' %}selected{% endif %}>Coupe</option>
+    </select>
+</div>
+
+<div class="col-md-6">
+    <label class="form-label fw-bold small text-uppercase">Pojemność silnika</label>
+    <input type="text" name="pojemnosc" class="form-control form-control-modern" 
+           value="{{ car.pojemnosc or '' }}" placeholder="np. 1.9 TDI lub 1984 cm3">
+</div>
+
+
                     <label class="form-label fw-bold small text-uppercase">Telefon do kontaktu</label>
                     <input type="text" name="telefon" class="form-control form-control-modern" value="{{ car.telefon }}" required>
                 </div>
