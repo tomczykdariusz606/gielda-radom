@@ -252,13 +252,46 @@
                 <form action="/dodaj" method="POST" enctype="multipart/form-data">
                     <div class="modal-body p-4">
                         <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label small fw-bold">Marka</label><input type="text" name="marka" class="form-control" required></div>
-                            <div class="col-md-6"><label class="form-label small fw-bold">Model</label><input type="text" name="model" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Rok produkcji</label><input type="number" name="rok" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Cena (PLN)</label><input type="number" name="cena" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label small fw-bold">Marka</label><input type="text" name="marka" class="form-control" required placeholder="np. BMW"></div>
+                            <div class="col-md-6"><label class="form-label small fw-bold">Model</label><input type="text" name="model" class="form-control" required placeholder="np. Seria 3"></div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Rodzaj paliwa</label>
+                                <select name="paliwo" class="form-select" required>
+                                    <option value="Benzyna">Benzyna</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="LPG">LPG</option>
+                                    <option value="Hybryda">Hybryda</option>
+                                    <option value="Elektryczny">Elektryczny</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Skrzynia biegów</label>
+                                <select name="skrzynia" class="form-select" required>
+                                    <option value="Manualna">Manualna</option>
+                                    <option value="Automatyczna">Automatyczna</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Nadwozie</label>
+                                <select name="nadwozie" class="form-select">
+                                    <option value="Sedan">Sedan</option>
+                                    <option value="Kombi">Kombi</option>
+                                    <option value="Hatchback">Hatchback</option>
+                                    <option value="SUV">SUV</option>
+                                    <option value="Coupe">Coupe</option>
+                                    <option value="Inne">Inne</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4"><label class="form-label small fw-bold">Rok produkcji</label><input type="number" name="rok" class="form-control" required placeholder="2015"></div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">Pojemność silnika</label><input type="text" name="pojemnosc" class="form-control" placeholder="np. 2.0 TDI"></div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">Cena (PLN)</label><input type="number" name="cena" class="form-control" required placeholder="Kwota"></div>
+                            
+                            <div class="col-md-12"><label class="form-label small fw-bold">Telefon kontaktowy</label><input type="text" name="telefon" class="form-control" required placeholder="Numer telefonu"></div>
+                            
                             <div class="col-12"><label class="form-label small fw-bold">Wybierz zdjęcia (maks. 10)</label><input type="file" name="zdjecia" class="form-control" multiple accept="image/*"></div>
-                            <div class="col-12"><label class="form-label small fw-bold">Opis pojazdu</label><textarea name="opis" class="form-control" rows="4" required></textarea></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Opis pojazdu</label><textarea name="opis" class="form-control" rows="4" required placeholder="Opisz stan techniczny, wyposażenie itp."></textarea></div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4">
