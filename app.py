@@ -146,6 +146,29 @@ def index():
     if cena_max: base_query = base_query.filter(Car.cena <= cena_max)
     cars = base_query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
+@app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edytuj(id):
+    car = Car.query.get_or_404(id)
+    
+    # Bezpieczeństwo: tylko właściciel może edytować swoje auto
+    if car.user_id != current_user.id:
+        flash('Nie masz uprawnień do edycji tego ogłoszenia.', 'danger')
+        return redirect(url_for('profil'))
+
+    if request.method == 'POST':
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.rok = request.form.get('rok')
+        car.cena = request.form.get('cena')
+        car.telefon = request.form.get('telefon')
+        car.opis = request.form.get('opis')
+        
+        db.session.commit()
+        flash('Ogłoszenie zostało pomyślnie zaktualizowane!', 'success')
+        return redirect(url_for('profil'))
+
+    return render_template('edytuj.html', car=car)
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
