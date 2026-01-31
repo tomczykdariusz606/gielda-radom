@@ -40,7 +40,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- DODANA TABELA ASOCJACYJNA DLA ULUBIONYCH ---
+# --- TABELA ULUBIONYCH ---
 favorites = db.Table('favorites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
@@ -54,7 +54,6 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    # Dodana relacja do ulubionych
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
 class Car(db.Model):
@@ -69,6 +68,14 @@ class Car(db.Model):
     zrodlo = db.Column(db.String(20), default='Lokalne')
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # NOWE POLA
+    skrzynia = db.Column(db.String(20))
+    paliwo = db.Column(db.String(20))
+    nadwozie = db.Column(db.String(30))
+    pojemnosc = db.Column(db.String(20))
+    wyswietlenia = db.Column(db.Integer, default=0)
+
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
 
 class CarImage(db.Model):
@@ -85,8 +92,7 @@ def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
+    if img.mode in ("RGBA", "P"): img = img.convert("RGB")
     if img.width > 1200:
         w_percent = (1200 / float(img.width))
         h_size = int((float(img.height) * float(w_percent)))
@@ -111,22 +117,54 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-# --- TRASY GŁÓWNE ---
+# --- TRASA GŁÓWNA Z ROZBUDOWANYM WYSZUKIWARKIEM ---
 @app.route('/')
 def index():
     limit_daty = datetime.utcnow() - timedelta(days=30)
-    query = request.args.get('q')
     base_query = Car.query.filter(Car.data_dodania >= limit_daty)
-    if query:
-        search = f"%{query}%"
-        cars = base_query.filter(or_(Car.marka.ilike(search), Car.model.ilike(search))).order_by(Car.id.desc()).all()
-    else:
-        cars = base_query.order_by(Car.id.desc()).all()
-    return render_template('index.html', cars=cars, search_query=query, now=datetime.utcnow())
+
+    # 1. Pobieranie parametrów z URL (formularza wyszukiwania)
+    marka = request.args.get('marka')
+    model = request.args.get('model')
+    paliwo = request.args.get('paliwo')
+    skrzynia = request.args.get('skrzynia')
+    nadwozie = request.args.get('nadwozie')
+    
+    rok_min = request.args.get('rok_min', type=int)
+    rok_max = request.args.get('rok_max', type=int)
+    cena_min = request.args.get('cena_min', type=float)
+    cena_max = request.args.get('cena_max', type=float)
+
+    # 2. Inteligentne filtrowanie (dodajemy warunek tylko gdy użytkownik coś wpisał)
+    if marka:
+        base_query = base_query.filter(Car.marka.ilike(f"%{marka}%"))
+    if model:
+        base_query = base_query.filter(Car.model.ilike(f"%{model}%"))
+    if paliwo and paliwo != "":
+        base_query = base_query.filter(Car.paliwo == paliwo)
+    if skrzynia and skrzynia != "":
+        base_query = base_query.filter(Car.skrzynia == skrzynia)
+    if nadwozie and nadwozie != "":
+        base_query = base_query.filter(Car.nadwozie == nadwozie)
+    
+    if rok_min:
+        base_query = base_query.filter(Car.rok >= rok_min)
+    if rok_max:
+        base_query = base_query.filter(Car.rok <= rok_max)
+    if cena_min:
+        base_query = base_query.filter(Car.cena >= cena_min)
+    if cena_max:
+        base_query = base_query.filter(Car.cena <= cena_max)
+
+    cars = base_query.order_by(Car.id.desc()).all()
+    
+    return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
+    car.wyswietlenia = (car.wyswietlenia or 0) + 1
+    db.session.commit()
     return render_template('details.html', car=car, now=datetime.utcnow())
 
 @app.route('/polityka-prywatnosci')
@@ -151,7 +189,6 @@ def kontakt():
         return redirect(url_for('kontakt'))
     return render_template('kontakt.html', now=datetime.utcnow())
 
-# --- DODANA FUNKCJA: OBSŁUGA ULUBIONYCH ---
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
 def toggle_favorite(car_id):
@@ -165,12 +202,10 @@ def toggle_favorite(car_id):
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
 
-# --- ZARZĄDZANIE OGŁOSZENIAMI ---
 @app.route('/profil')
 @login_required
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    # Przekazanie ulubionych do profilu
     fav_cars = current_user.favorite_cars
     return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
 
@@ -185,10 +220,22 @@ def dodaj_ogloszenie():
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    nowe_auto = Car(marka=request.form['marka'], model=request.form['model'], rok=int(request.form['rok']), 
-                    cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'], 
-                    img=main_img, zrodlo=current_user.lokalizacja,
- user_id=current_user.id)
+    
+    nowe_auto = Car(
+        marka=request.form['marka'], 
+        model=request.form['model'], 
+        rok=int(request.form['rok']), 
+        cena=float(request.form['cena']), 
+        opis=request.form['opis'], 
+        telefon=request.form['telefon'],
+        skrzynia=request.form.get('skrzynia'),
+        paliwo=request.form.get('paliwo'),
+        nadwozie=request.form.get('nadwozie'),
+        pojemnosc=request.form.get('pojemnosc'),
+        img=main_img, 
+        zrodlo=current_user.lokalizacja,
+        user_id=current_user.id
+    )
     db.session.add(nowe_auto)
     db.session.commit()
     for path in saved_paths:
@@ -203,9 +250,18 @@ def edit_car(car_id):
     car = Car.query.get_or_404(car_id)
     if car.user_id != current_user.id: abort(403)
     if request.method == 'POST':
-        car.marka, car.model = request.form['marka'], request.form['model']
-        car.rok, car.cena = int(request.form['rok']), float(request.form['cena'])
-        car.telefon, car.opis = request.form['telefon'], request.form['opis']
+        car.marka = request.form['marka']
+        car.model = request.form['model']
+        car.rok = int(request.form['rok'])
+        car.cena = float(request.form['cena'])
+        car.telefon = request.form['telefon']
+        car.opis = request.form['opis']
+        
+        car.skrzynia = request.form.get('skrzynia')
+        car.paliwo = request.form.get('paliwo')
+        car.nadwozie = request.form.get('nadwozie')
+        car.pojemnosc = request.form.get('pojemnosc')
+
         files = request.files.getlist('zdjecia')
         for file in files:
             if file and allowed_file(file.filename) and len(car.images) < 10:
@@ -262,7 +318,6 @@ def delete_car(car_id):
         flash('Usunięto ogłoszenie.', 'success')
     return redirect(url_for('profil'))
 
-# --- RESET HASŁA ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if request.method == 'POST':
@@ -295,7 +350,6 @@ def reset_token(token):
             return redirect(url_for('login'))
     return render_template('reset_token.html', now=datetime.utcnow())
 
-# --- UŻYTKOWNICY ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -342,7 +396,6 @@ def usun_konto():
     flash('Konto usunięte.', 'info')
     return redirect(url_for('index'))
 
-# --- SITEMAP I ROBOTS ---
 @app.route('/sitemap.xml')
 def sitemap():
     pages = []
@@ -372,12 +425,11 @@ def robots():
         f"Sitemap: {url_for('sitemap', _external=True)}"
     ]
     return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
-# --- TRASY ADMINISTRACYJNE I BACKUP ---
+
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
-    if current_user.id != 1:
-        abort(403)
+    if current_user.id != 1: abort(403)
     try:
         instance_path = os.path.join(app.root_path, 'instance')
         return send_from_directory(directory=instance_path, path='gielda.db', as_attachment=True,
@@ -388,23 +440,15 @@ def backup_db():
 @app.route('/admin/full-backup')
 @login_required
 def full_backup():
-    if current_user.id != 1:
-        abort(403)
-    
+    if current_user.id != 1: abort(403)
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        # Pakowanie bazy
         db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
-        if os.path.exists(db_path):
-            zf.write(db_path, arcname='gielda.db')
-        
-        # Pakowanie zdjęć
+        if os.path.exists(db_path): zf.write(db_path, arcname='gielda.db')
         upload_path = app.config['UPLOAD_FOLDER']
         for root, dirs, files in os.walk(upload_path):
             for file in files:
-                file_path = os.path.join(root, file)
-                zf.write(file_path, arcname=os.path.join('static/uploads', file))
-    
+                zf.write(os.path.join(root, file), arcname=os.path.join('static/uploads', file))
     memory_file.seek(0)
     return send_file(memory_file, mimetype='application/zip', as_attachment=True,
                      download_name=f"PELNY_BACKUP_{datetime.now().strftime('%Y%m%d')}.zip")
