@@ -1,7 +1,10 @@
 import os
 import uuid
+import zipfile
+import io
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, send_from_directory, send_file
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory
+  jsonify, 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -369,6 +372,42 @@ def robots():
         f"Sitemap: {url_for('sitemap', _external=True)}"
     ]
     return "\n".join(lines), 200, {'Content-Type': 'text/plain'}
+# --- TRASY ADMINISTRACYJNE I BACKUP ---
+@app.route('/admin/backup-db')
+@login_required
+def backup_db():
+    if current_user.id != 1:
+        abort(403)
+    try:
+        instance_path = os.path.join(app.root_path, 'instance')
+        return send_from_directory(directory=instance_path, path='gielda.db', as_attachment=True,
+                                 download_name=f"backup_gielda_{datetime.now().strftime('%Y%m%d_%H%M')}.db")
+    except Exception as e:
+        return f"Błąd: {str(e)}", 500
+
+@app.route('/admin/full-backup')
+@login_required
+def full_backup():
+    if current_user.id != 1:
+        abort(403)
+    
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Pakowanie bazy
+        db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
+        if os.path.exists(db_path):
+            zf.write(db_path, arcname='gielda.db')
+        
+        # Pakowanie zdjęć
+        upload_path = app.config['UPLOAD_FOLDER']
+        for root, dirs, files in os.walk(upload_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zf.write(file_path, arcname=os.path.join('static/uploads', file))
+    
+    memory_file.seek(0)
+    return send_file(memory_file, mimetype='application/zip', as_attachment=True,
+                     download_name=f"PELNY_BACKUP_{datetime.now().strftime('%Y%m%d')}.zip")
 
 if __name__ == '__main__':
     with app.app_context():
