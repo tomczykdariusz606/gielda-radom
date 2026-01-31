@@ -1,181 +1,154 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Panel Kierowcy - Giełda Radom AI</title>
+    <title>Panel Managera - Giełda Radom AI</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --radom-red: #ce2b37; 
-            --radom-dark: #1a1a1a;
-            --gemini-ai: linear-gradient(135deg, #1a73e8 0%, #9b72f3 100%);
-        }
-        body { font-family: 'Inter', sans-serif; background: #f8f9fa; }
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; --ai-grad: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); }
+        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
         
-        /* KONSOLA ZARZĄDZANIA - STATYSTYKI */
-        .ai-console {
-            background: var(--gemini-ai);
-            border-radius: 24px;
-            color: white;
-            padding: 30px;
-            margin-bottom: 40px;
-            box-shadow: 0 15px 30px rgba(26, 115, 232, 0.2);
-            position: relative;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        /* MOJE OGŁOSZENIA */
-        .car-card-manage {
-            background: white;
-            border-radius: 20px;
-            border: none;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: 0.3s;
-        }
-        .car-card-manage:hover { transform: translateY(-5px); }
+        /* KONSOLA AI */
+        .ai-console-header { background: var(--ai-grad); color: white; border-radius: 25px; padding: 40px; margin-top: 20px; box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2); }
+        .stat-card { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 15px; padding: 20px; backdrop-filter: blur(10px); }
         
-        .section-title { 
-            font-weight: 800; 
-            border-left: 6px solid var(--radom-red); 
-            padding-left: 15px;
-            margin-bottom: 25px;
-        }
-
-        .btn-action { border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
+        /* ZARZĄDZANIE */
+        .car-manage-card { border: none; border-radius: 20px; transition: 0.3s; background: white; overflow: hidden; }
+        .car-manage-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .section-title { border-left: 5px solid var(--radom-red); padding-left: 15px; font-weight: 800; color: var(--radom-dark); margin: 40px 0 25px; }
+        
+        .btn-podbij { background: #198754; color: white; border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
+        .btn-usun { border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-            <div class="ms-auto text-white small">
-                Zalogowany jako: <strong>{{ current_user.username }}</strong>
-            </div>
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom <span class="badge bg-primary ms-2" style="font-size: 0.6rem;">AI POWERED</span></a>
+            <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill">Wyloguj</a>
         </div>
     </nav>
 
-    <div class="container pb-5">
-        
-        <div class="ai-console">
+    <div class="container">
+        <div class="ai-console-header mb-5">
             <div class="row align-items-center">
-                <div class="col-md-7">
-                    <h2 class="fw-bold mb-1">Konsola Zarządzania AI</h2>
-                    <p class="opacity-75 mb-4">Analizujemy Twoje ogłoszenia w czasie rzeczywistym.</p>
-                    <div class="d-flex gap-3">
-                        <div class="stat-box">
-                            <small class="d-block opacity-75">Aktywne auta</small>
-                            <span class="fs-4 fw-bold">{{ cars|length }}</span>
+                <div class="col-lg-7">
+                    <h1 class="fw-800 mb-2">Witaj, {{ current_user.username }}!</h1>
+                    <p class="opacity-75 mb-4">Twój profil jest monitorowany przez model Gemini 3.0 Flash. Optymalizuj sprzedaż dzięki danym.</p>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-4">
+                            <div class="stat-card">
+                                <small class="d-block opacity-75">Moje auta</small>
+                                <span class="fs-3 fw-bold">{{ cars|length }}</span>
+                            </div>
                         </div>
-                        <div class="stat-box">
-                            <small class="d-block opacity-75">Łączne wyświetlenia</small>
-                            <span class="fs-4 fw-bold">{{ cars|sum(attribute='wyswietlenia') }}</span>
-                        </div>
-                        <div class="stat-box">
-                            <small class="d-block opacity-75">Ulubione przez innych</small>
-                            <span class="fs-4 fw-bold">{{ fav_cars|length }}</span>
+                        <div class="col-6 col-md-4">
+                            <div class="stat-card">
+                                <small class="d-block opacity-75">Wyświetlenia</small>
+                                <span class="fs-3 fw-bold">{{ cars|sum(attribute='wyswietlenia') }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-5 text-md-end mt-4 mt-md-0">
-                    <button class="btn btn-light btn-lg rounded-pill fw-bold px-4 shadow" data-bs-toggle="modal" data-bs-target="#dodajModal">
-                        <i class="bi bi-plus-circle-fill text-danger me-2"></i>Dodaj Ogłoszenie
+                <div class="col-lg-5 text-lg-end mt-4 mt-lg-0">
+                    <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#dodajModal">
+                        <i class="bi bi-plus-lg me-2"></i>Dodaj nowe auto
                     </button>
                 </div>
             </div>
         </div>
 
-        <h3 class="section-title">Twoje Ogłoszenia</h3>
-        <div class="row g-4 mb-5">
+        <h3 class="section-title">Aktywne Ogłoszenia</h3>
+        <div class="row g-4">
             {% for car in cars %}
             <div class="col-md-6 col-lg-4">
-                <div class="card car-card-manage">
-                    <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
-                        <span class="badge bg-dark position-absolute bottom-0 end-0 m-2 opacity-75">
-                            <i class="bi bi-eye me-1"></i> {{ car.wyswietlenia }}
-                        </span>
-                    </div>
+                <div class="card car-manage-card h-100 shadow-sm">
+                    <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                     <div class="card-body">
-                        <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                        <p class="text-danger fw-bold mb-3">{{ car.cena|int }} PLN</p>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-eye"></i> {{ car.wyswietlenia }}</span>
+                        </div>
+                        <p class="text-danger fw-bold fs-5 mb-4">{{ car.cena|int }} PLN</p>
                         
                         <div class="d-flex gap-2">
                             <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button class="btn btn-outline-success btn-action w-100">Podbij</button>
+                                <button type="submit" class="btn btn-podbij w-100">PODBIJ</button>
                             </form>
                             <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button class="btn btn-outline-danger btn-action w-100" onclick="return confirm('Na pewno?')">Usuń</button>
+                                <button type="submit" class="btn btn-outline-danger btn-usun w-100" onclick="return confirm('Trwale usunąć?')">USUŃ</button>
                             </form>
                         </div>
-                    </div>
-                    <div class="card-footer bg-transparent border-0 text-center pb-3">
-                        <span class="text-muted" style="font-size: 0.7rem;">Status: Aktywne przez 30 dni</span>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-center py-5 bg-white rounded-4 border border-dashed">
-                <i class="bi bi-car-front fs-1 text-muted"></i>
-                <p class="mt-2">Nie masz jeszcze żadnych ogłoszeń.</p>
+            <div class="col-12 text-center py-5 bg-white rounded-5 border border-dashed">
+                <p class="text-muted mb-0">Nie masz jeszcze żadnych wystawionych aut na Giełdzie Radom.</p>
             </div>
             {% endfor %}
         </div>
 
-        <h3 class="section-title">Auta, które obserwujesz</h3>
-        <div class="row g-3">
+        <h3 class="section-title">Obserwowane okazje</h3>
+        <div class="row g-3 mb-5">
             {% for fav in fav_cars %}
-            <div class="col-md-4 col-lg-3">
-                <div class="card h-100 rounded-4 border-0 shadow-sm p-2">
-                    <img src="{{ fav.img }}" class="rounded-3 mb-2" style="height: 100px; object-fit: cover;">
-                    <div class="px-2">
-                        <h6 class="fw-bold mb-0 small">{{ fav.marka }} {{ fav.model }}</h6>
-                        <p class="text-danger small fw-bold mb-2">{{ fav.cena|int }} PLN</p>
-                        <div class="d-flex gap-2">
-                            <a href="/ogloszenie/{{ fav.id }}" class="btn btn-dark btn-sm rounded-pill flex-grow-1" style="font-size: 0.65rem;">Zobacz</a>
-                            <a href="/toggle_favorite/{{ fav.id }}" class="btn btn-outline-danger btn-sm rounded-circle"><i class="bi bi-heart-break"></i></a>
-                        </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 p-2 h-100 text-center">
+                    <img src="{{ fav.img }}" class="rounded-3 mb-2" style="height: 120px; object-fit: cover;">
+                    <h6 class="fw-bold mb-1 small">{{ fav.marka }} {{ fav.model }}</h6>
+                    <p class="text-danger small fw-bold mb-2">{{ fav.cena|int }} PLN</p>
+                    <div class="d-flex gap-1">
+                        <a href="/ogloszenie/{{ fav.id }}" class="btn btn-dark btn-sm rounded-pill w-100" style="font-size: 0.7rem;">Pokaż</a>
+                        <a href="/toggle_favorite/{{ fav.id }}" class="btn btn-outline-danger btn-sm rounded-circle"><i class="bi bi-heart-fill"></i></a>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-center py-4 bg-white rounded-4">
-                <p class="text-muted small mb-0">Nie obserwujesz jeszcze żadnych aut.</p>
+            <div class="col-12">
+                <p class="text-muted small">Nie obserwujesz obecnie żadnych samochodów.</p>
             </div>
             {% endfor %}
         </div>
 
         {% if current_user.id == 1 %}
-        <div class="admin-zone mt-5 p-4 bg-white rounded-4 shadow-sm border border-danger">
-            <h5 class="fw-bold text-danger"><i class="bi bi-shield-lock-fill"></i> Panel Administratora</h5>
-            <div class="d-flex gap-2 mt-3">
-                <a href="/admin/backup-db" class="btn btn-dark btn-sm rounded-pill">Kopia Bazy (.db)</a>
-                <a href="/admin/full-backup" class="btn btn-outline-danger btn-sm rounded-pill">Pełny Backup Serwera</a>
+        <div class="bg-dark text-white p-4 rounded-4 mt-5 d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-shield-check"></i> System Admin Console</h5>
+                <small class="opacity-50">Zarządzaj bazą danych giełdy</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/admin/backup-db" class="btn btn-outline-light btn-sm rounded-pill px-3">Baza .db</a>
+                <a href="/admin/full-backup" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">PEŁNY BACKUP ZIP</a>
             </div>
         </div>
         {% endif %}
-
     </div>
 
-    <footer class="bg-dark text-white-50 py-4 mt-5">
-        <div class="container text-center">
-            <div class="small mb-2">
-                <a href="#" class="text-white-50 mx-2">Regulamin</a> | 
-                <a href="#" class="text-white-50 mx-2">RODO</a> | 
-                <a href="#" class="text-white-50 mx-2">Kontakt</a>
+    <footer class="bg-dark text-white-50 pt-5 pb-4 mt-5 border-top border-secondary">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-md-4">
+                    <h6 class="text-white fw-bold mb-3">Giełda Radom AI</h6>
+                    <p class="small">Lokalna platforma ogłoszeniowa wykorzystująca sztuczną inteligencję do optymalizacji sprzedaży aut w regionie radomskim.</p>
+                </div>
+                <div class="col-md-4 text-md-center">
+                    <h6 class="text-white fw-bold mb-3">Pomoc i RODO</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Polityka Prywatności</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Regulamin Serwisu</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Kontakt i Wsparcie</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <h6 class="text-white fw-bold mb-3">SEO Radom</h6>
+                    <p class="small">Najczęściej szukane: BMW Radom, Audi Radom, Tanie auta Mazowieckie, Giełda Samochodowa.</p>
+                </div>
             </div>
-            <p class="mb-0" style="font-size: 0.7rem;">© 2026 Giełda Radom AI. Powered by Gemini Flash 3.0. Najlepsza lokalna giełda w Polsce.</p>
+            <hr class="my-4 border-secondary">
+            <p class="text-center small mb-0">© 2026 Giełda Radom. Powered by Gemini AI. Wszystkie prawa zastrzeżone.</p>
         </div>
     </footer>
 
