@@ -55,13 +55,15 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
+    
+    # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
-    # Metody resetowania hasła
-    def get_reset_token(self, expires_sec=1800):
+    # Metody resetowania hasła (Logic AI)
+    def get_reset_token(self):
         s = Serializer(app.config['SECRET_KEY'])
-        # Generujemy token (nowoczesne Serializery zwracają string)
+        # Generujemy bezpieczny token przypisany do ID użytkownika
         return s.dumps({'user_id': self.id})
 
     @staticmethod
@@ -72,6 +74,7 @@ class User(UserMixin, db.Model):
         except:
             return None
         return User.query.get(user_id)
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
