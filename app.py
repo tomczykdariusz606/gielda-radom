@@ -48,7 +48,22 @@ favorites = db.Table('favorites',
 )
 
 # --- MODELE ---
-class User(UserMixin, db.Model):
+    # To dodaj wewnątrz class User(UserMixin, db.Model):
+    
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(app.config['SECRET_KEY'])
+        # Generujemy token
+        return s.dumps({'user_id': self.id}).encode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -358,6 +373,58 @@ def toggle_favorite(car_id):
     else: current_user.favorite_cars.append(car)
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
+def send_reset_email(user):
+    token = user.get_reset_token()
+    # Dekodujemy token, bo w Python 3 jest w bytes, a potrzebujemy stringa w URL
+    token_str = token.decode('utf-8')
+    msg = Message('Reset Hasła - Giełda Radom',
+                  recipients=[user.email])
+    msg.body = f'''Aby zresetować hasło, kliknij w poniższy link:
+{url_for('reset_token', token=token_str, _external=True)}
+
+Jeśli to nie Ty wysłałeś to żądanie, zignoruj tę wiadomość.
+'''
+    mail.send(msg)
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if user:
+            send_reset_email(user)
+            flash('Wysłano email z instrukcją resetowania hasła.', 'info')
+            return redirect(url_for('login'))
+        else:
+            flash('Nie znaleziono konta z takim adresem email.', 'danger')
+    return render_template('reset_request.html')
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('To nieprawidłowy lub wygasły token.', 'warning')
+        return redirect(url_for('reset_request'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Hasła muszą być identyczne.', 'danger')
+        else:
+            hashed_password = generate_password_hash(password)
+            user.password_hash = hashed_password
+            db.session.commit()
+            flash('Twoje hasło zostało zaktualizowane! Możesz się zalogować.', 'success')
+            return redirect(url_for('login'))
+            
+    return render_template('reset_token.html')
+
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
