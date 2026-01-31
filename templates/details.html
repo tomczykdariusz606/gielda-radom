@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="description" content="Sprawdź ogłoszenie: {{ car.marka }} {{ car.model }} z {{ car.rok }} roku. Lokalna Giełda Samochodowa Radom.">
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -18,6 +18,7 @@
             --radom-dark: #1a1a1a;
             --mubi-blue: #0056b3;
             --cv-yellow: #ffda00;
+            --gemini-blue: #4285f4;
         }
         body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -45,7 +46,7 @@
         .price-tag { color: var(--radom-red); font-size: 3rem; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
         .param-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .param-item { background: #f8f9fa; border-radius: 18px; padding: 15px; border: 1px solid #eee; }
-        
+
         /* Stopka */
         .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 30px; margin-top: auto; border-top: 4px solid var(--radom-red); }
         .footer-link { color: #bbb; text-decoration: none; display: block; margin-bottom: 12px; transition: 0.2s; }
@@ -55,6 +56,19 @@
         .service-box { border-radius: 20px; padding: 22px; margin-bottom: 18px; transition: 0.3s; position: relative; overflow: hidden; }
         .box-cv { background: #fff9db; border: 1px solid #ffe066; }
         .box-mubi { background: #f0f7ff; border: 1px solid #cfe2ff; }
+
+        /* NOWA SEKACJA: GEMINI AI */
+        .box-gemini { 
+            background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%); 
+            border: 1px solid #d2e3fc; 
+            box-shadow: 0 10px 20px rgba(66, 133, 244, 0.05);
+        }
+        .gemini-sparkle {
+            background: linear-gradient(90deg, #4285f4, #9b72f3, #d96570);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
 
         .custom-scrollbar::-webkit-scrollbar { height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--radom-red); border-radius: 10px; }
@@ -100,7 +114,7 @@
                         <div class="swiper-pagination"></div>
                     </div>
                 </div>
-                
+
                 <div class="gallery-thumbs-wrapper">
                     <div class="d-flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                         <img src="{{ car.img }}" class="thumb-img active-thumb" data-index="0">
@@ -113,7 +127,27 @@
                 </div>
 
                 <div class="info-card p-4 p-md-5">
-                    <h3 class="fw-bold mb-4 border-bottom pb-3"><i class="bi bi-info-circle text-danger me-2"></i>Opis pojazdu</h3>
+                    <h3 class="fw-bold mb-4 border-bottom pb-3"><i class="bi bi-list-stars text-danger me-2"></i>Dane techniczne</h3>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Paliwo</div>
+                            <div class="fw-bold">{{ car.paliwo or 'Nie podano' }}</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Skrzynia</div>
+                            <div class="fw-bold">{{ car.skrzynia or 'Nie podano' }}</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Nadwozie</div>
+                            <div class="fw-bold">{{ car.nadwozie or 'Nie podano' }}</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Silnik</div>
+                            <div class="fw-bold">{{ car.pojemnosc or 'Nie podano' }}</div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="fw-bold mb-4 border-bottom pb-3 mt-4"><i class="bi bi-info-circle text-danger me-2"></i>Opis pojazdu</h3>
                     <div class="fs-5 text-dark" style="white-space: pre-line; line-height: 1.8;">
                         {{ car.opis }}
                     </div>
@@ -127,6 +161,31 @@
                     <p class="text-muted fw-bold mb-4">Używane • {{ car.rok }} r.</p>
 
                     <div class="price-tag mb-4">{{ car.cena|int }} <span class="fs-4">PLN</span></div>
+
+                    {% set analysis = get_market_valuation(car) %}
+                    <div class="service-box box-gemini">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small fw-800 text-uppercase gemini-sparkle">Gemini AI Market Insight</span>
+                            <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+                        </div>
+                        
+                        <div class="position-relative mb-2" style="height: 6px; background: #e0e8f5; border-radius: 10px;">
+                            <div class="position-absolute shadow-sm" style="left: {{ analysis.pos }}%; top: -5px; width: 16px; height: 16px; background: {{ analysis.color }}; border: 3px solid white; border-radius: 50%; z-index: 5; transition: 1s ease-in-out;"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3" style="font-size: 0.6rem; font-weight: 700; color: #7a869a;">
+                            <span>OKAZJA</span>
+                            <span>ŚREDNIA PL</span>
+                            <span>DROGO</span>
+                        </div>
+                        
+                        <div class="bg-white p-2 rounded-3 border-0 shadow-sm text-center">
+                            <span class="small fw-bold" style="color: {{ analysis.color }};">
+                                <i class="bi bi-stars me-1"></i> {{ analysis.status }}
+                            </span>
+                            <div class="text-muted" style="font-size: 0.65rem;">Cena w Polsce odbiega o {{ analysis.diff }}% od średniej</div>
+                        </div>
+                        <p class="text-center mt-2 mb-0" style="font-size: 0.55rem; opacity: 0.6;">Powered by Google Gemini Pro Engine 2026</p>
+                    </div>
 
                     <div class="param-grid mb-4">
                         <div class="param-item">
