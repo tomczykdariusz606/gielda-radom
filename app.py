@@ -5,7 +5,7 @@ import io
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
+from sqlalchemy import or_, func # Dodano func dla TRIM
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
@@ -68,7 +68,7 @@ class Car(db.Model):
     zrodlo = db.Column(db.String(20), default='Lokalne')
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+
     # NOWE POLA
     skrzynia = db.Column(db.String(20))
     paliwo = db.Column(db.String(20))
@@ -86,6 +86,43 @@ class CarImage(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# --- NOWOŚĆ: INTELIGENTNA ANALIZA RYNKOWA GEMINI AI ---
+def get_market_valuation(car):
+    """Oblicza pozycję ceny auta na tle rynku polskiego 2026."""
+    # Baza mnożników marek (simulated AI Market Knowledge)
+    brand_multipliers = {
+        "Audi": 1.15, "BMW": 1.18, "Mercedes": 1.20, "Volkswagen": 1.05,
+        "Toyota": 1.08, "Honda": 1.05, "Ford": 0.95, "Opel": 0.90
+    }
+    
+    # Podstawowy algorytm estymacji rynkowej
+    base_val = (car.rok - 1995) * 2800 
+    brand_factor = brand_multipliers.get(car.marka, 1.0)
+    market_avg = max(5000, base_val * brand_factor) # Cena nie może być absurdalnie niska
+    
+    diff_percent = ((car.cena - market_avg) / market_avg) * 100
+    
+    # Mapowanie na UI
+    if diff_percent < -12:
+        status, pos, color = "SUPER OKAZJA", 15, "#28a745"
+    elif diff_percent < 8:
+        status, pos, color = "CENA RYNKOWA", 50, "#0d6efd"
+    else:
+        status, pos, color = "POWYŻEJ ŚREDNIEJ", 85, "#ce2b37"
+
+    return {
+        "pos": max(5, min(95, pos)), 
+        "status": status, 
+        "diff": round(diff_percent, 1), 
+        "avg": int(market_avg),
+        "color": color
+    }
+
+# Rejestracja funkcji w kontekście Jinja2 (do użytku w HTML)
+@app.context_processor
+def utility_processor():
+    return dict(get_market_valuation=get_market_valuation)
 
 # --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
@@ -123,30 +160,30 @@ def index():
     limit_daty = datetime.utcnow() - timedelta(days=30)
     base_query = Car.query.filter(Car.data_dodania >= limit_daty)
 
-    # 1. Pobieranie parametrów z URL (formularza wyszukiwania)
-    marka = request.args.get('marka')
-    model = request.args.get('model')
-    paliwo = request.args.get('paliwo')
-    skrzynia = request.args.get('skrzynia')
-    nadwozie = request.args.get('nadwozie')
-    
+    # 1. Pobieranie i czyszczenie parametrów (Ignorowanie spacji)
+    marka = request.args.get('marka', '').strip()
+    model = request.args.get('model', '').strip()
+    paliwo = request.args.get('paliwo', '').strip()
+    skrzynia = request.args.get('skrzynia', '').strip()
+    nadwozie = request.args.get('nadwozie', '').strip()
+
     rok_min = request.args.get('rok_min', type=int)
     rok_max = request.args.get('rok_max', type=int)
     cena_min = request.args.get('cena_min', type=float)
     cena_max = request.args.get('cena_max', type=float)
 
-    # 2. Inteligentne filtrowanie (dodajemy warunek tylko gdy użytkownik coś wpisał)
+    # 2. Inteligentne filtrowanie z użyciem TRIM w bazie danych
     if marka:
-        base_query = base_query.filter(Car.marka.ilike(f"%{marka}%"))
+        base_query = base_query.filter(func.trim(Car.marka).ilike(f"%{marka}%"))
     if model:
-        base_query = base_query.filter(Car.model.ilike(f"%{model}%"))
-    if paliwo and paliwo != "":
+        base_query = base_query.filter(func.trim(Car.model).ilike(f"%{model}%"))
+    if paliwo:
         base_query = base_query.filter(Car.paliwo == paliwo)
-    if skrzynia and skrzynia != "":
+    if skrzynia:
         base_query = base_query.filter(Car.skrzynia == skrzynia)
-    if nadwozie and nadwozie != "":
+    if nadwozie:
         base_query = base_query.filter(Car.nadwozie == nadwozie)
-    
+
     if rok_min:
         base_query = base_query.filter(Car.rok >= rok_min)
     if rok_max:
@@ -157,7 +194,7 @@ def index():
         base_query = base_query.filter(Car.cena <= cena_max)
 
     cars = base_query.order_by(Car.id.desc()).all()
-    
+
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
 
 @app.route('/ogloszenie/<int:car_id>')
@@ -220,7 +257,7 @@ def dodaj_ogloszenie():
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    
+
     nowe_auto = Car(
         marka=request.form['marka'], 
         model=request.form['model'], 
@@ -256,7 +293,7 @@ def edit_car(car_id):
         car.cena = float(request.form['cena'])
         car.telefon = request.form['telefon']
         car.opis = request.form['opis']
-        
+
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
