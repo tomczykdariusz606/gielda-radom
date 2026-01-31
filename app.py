@@ -2,12 +2,8 @@ import os
 import uuid
 import zipfile
 import io
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
 from datetime import datetime, timedelta
-from flask_sqlalchemy import SQLAlchemy
-
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
-from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -15,6 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from PIL import Image
 from itsdangerous import URLSafeTimedSerializer as Serializer
+
 
 app = Flask(__name__)
 
