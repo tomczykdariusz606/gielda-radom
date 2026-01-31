@@ -38,24 +38,31 @@
         .navbar { background: rgba(26, 26, 26, 0.95); backdrop-filter: blur(10px); border-bottom: 3px solid var(--radom-red); }
 
         /* HERO SECTION - Zmiana tła na radom_hero.png */
+            .hero-section {
+        position: relative; 
+        background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
+        background-size: cover; 
+        background-position: center; 
+        background-attachment: scroll; /* To naprawia błąd na iPhone */
+        height: 550px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        text-align: center; 
+        color: white; 
+        overflow: hidden; 
+        margin-bottom: 4rem;
+        border-bottom-left-radius: 50px; 
+        border-bottom-right-radius: 50px; 
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    @media (min-width: 1024px) {
         .hero-section {
-            position: relative; 
-            background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
-            background-size: cover; 
-            background-position: center; 
-            background-attachment: fixed;
-            height: 550px; /* Nieco wyższy dla lepszego efektu */
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            text-align: center; 
-            color: white; 
-            overflow: hidden; 
-            margin-bottom: 4rem;
-            border-bottom-left-radius: 50px; 
-            border-bottom-right-radius: 50px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            background-attachment: fixed; /* Fixed zostaje tylko na komputerach */
         }
+    }
+
         .hero-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8)); z-index: 1; }
         
         /* Tekst w tle zachowany i dopasowany do nowego zdjęcia */
