@@ -23,7 +23,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    
+
     <style>
         :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
         body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
@@ -37,39 +37,54 @@
 
         .navbar { background: rgba(26, 26, 26, 0.95); backdrop-filter: blur(10px); border-bottom: 3px solid var(--radom-red); }
 
-        /* HERO SECTION - Zmiana tła na radom_hero.png */
-            .hero-section {
-        position: relative; 
-        background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
-        background-size: cover; 
-        background-position: center; 
-        background-attachment: scroll; /* To naprawia błąd na iPhone */
-        height: 550px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        text-align: center; 
-        color: white; 
-        overflow: hidden; 
-        margin-bottom: 4rem;
-        border-bottom-left-radius: 50px; 
-        border-bottom-right-radius: 50px; 
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-
-    @media (min-width: 1024px) {
         .hero-section {
-            background-attachment: fixed; /* Fixed zostaje tylko na komputerach */
+            position: relative; 
+            background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: scroll;
+            height: 450px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            text-align: center; 
+            color: white; 
+            overflow: hidden; 
+            margin-bottom: 2rem;
+            border-bottom-left-radius: 50px; 
+            border-bottom-right-radius: 50px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
-    }
+
+        @media (min-width: 1024px) { .hero-section { background-attachment: fixed; } }
 
         .hero-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8)); z-index: 1; }
-        
-        /* Tekst w tle zachowany i dopasowany do nowego zdjęcia */
+
         .big-text-76 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-5deg); font-family: 'Anton', sans-serif; font-size: 15vw; color: rgba(255, 255, 255, 0.08); z-index: 2; pointer-events: none; letter-spacing: 1rem; text-transform: uppercase; }
-        
+
         .hero-content { position: relative; z-index: 3; width: 100%; max-width: 800px; padding: 0 15px; }
         .hero-content h1 { font-family: 'Anton', sans-serif; letter-spacing: 2px; text-shadow: 2px 2px 15px rgba(0,0,0,0.6); }
+
+        /* NOWY STYL DLA FILTRÓW */
+        .filter-card {
+            background: white;
+            border-radius: 25px;
+            margin-top: -60px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 1px solid #eee;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--radom-red);
+            box-shadow: none;
+        }
 
         .car-card { border: none; border-radius: 20px; background: white; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.05); overflow: hidden; }
         .car-card:hover { transform: translateY(-10px); }
@@ -79,7 +94,6 @@
         .zoom-btn { position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(255, 255, 255, 0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: var(--radom-dark); }
         .fav-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0, 0, 0, 0.4); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: white; backdrop-filter: blur(5px); }
 
-        /* STOPKA */
         .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
         .footer-brand { color: white; font-weight: 800; font-size: 1.5rem; margin-bottom: 20px; display: block; text-decoration: none; }
         .footer-heading { color: white; font-weight: 600; margin-bottom: 25px; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
@@ -111,15 +125,66 @@
         <div class="hero-content">
             <h1 class="display-3 fw-bold mb-2">Giełda Samochodowa Radom</h1>
             <p class="lead fw-bold mb-4 opacity-75">Lokalny patriotyzm, najlepsze okazje motoryzacyjne.</p>
-            <form action="/" method="GET">
-                <div class="input-group input-group-lg shadow-lg bg-white rounded-pill p-1">
-                    <span class="input-group-text border-0 bg-transparent ms-2"><i class="bi bi-search text-danger"></i></span>
-                    <input type="text" name="q" class="form-control border-0 bg-transparent shadow-none" placeholder="Szukaj auta w Radomiu..." value="{{ search_query or '' }}">
-                    <button class="btn btn-danger rounded-pill px-5" style="background-color: var(--radom-red);" type="submit">Szukaj</button>
+        </div>
+    </header>
+
+    <div class="container mb-5">
+        <div class="card filter-card p-4">
+            <form action="/" method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="small fw-bold mb-1"><i class="bi bi-car-front text-danger me-1"></i>Marka</label>
+                    <input type="text" name="marka" class="form-control" placeholder="Np. Audi" value="{{ request.args.get('marka', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold mb-1"><i class="bi bi-info-circle text-danger me-1"></i>Model</label>
+                    <input type="text" name="model" class="form-control" placeholder="Np. A4" value="{{ request.args.get('model', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold mb-1"><i class="bi bi-fuel-pump text-danger me-1"></i>Paliwo</label>
+                    <select name="paliwo" class="form-select">
+                        <option value="">Wszystkie</option>
+                        <option value="Benzyna" {% if request.args.get('paliwo') == 'Benzyna' %}selected{% endif %}>Benzyna</option>
+                        <option value="Diesel" {% if request.args.get('paliwo') == 'Diesel' %}selected{% endif %}>Diesel</option>
+                        <option value="LPG" {% if request.args.get('paliwo') == 'LPG' %}selected{% endif %}>LPG</option>
+                        <option value="Hybryda" {% if request.args.get('paliwo') == 'Hybryda' %}selected{% endif %}>Hybryda</option>
+                        <option value="Elektryczny" {% if request.args.get('paliwo') == 'Elektryczny' %}selected{% endif %}>Elektryczny</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold mb-1"><i class="bi bi-gear-wide-connected text-danger me-1"></i>Skrzynia</label>
+                    <select name="skrzynia" class="form-select">
+                        <option value="">Wszystkie</option>
+                        <option value="Manualna" {% if request.args.get('skrzynia') == 'Manualna' %}selected{% endif %}>Manualna</option>
+                        <option value="Automatyczna" {% if request.args.get('skrzynia') == 'Automatyczna' %}selected{% endif %}>Automatyczna</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2 col-6">
+                    <label class="small fw-bold mb-1">Rok od</label>
+                    <input type="number" name="rok_min" class="form-control" placeholder="2010" value="{{ request.args.get('rok_min', '') }}">
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="small fw-bold mb-1">Rok do</label>
+                    <input type="number" name="rok_max" class="form-control" placeholder="2024" value="{{ request.args.get('rok_max', '') }}">
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="small fw-bold mb-1">Cena od</label>
+                    <input type="number" name="cena_min" class="form-control" placeholder="PLN" value="{{ request.args.get('cena_min', '') }}">
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="small fw-bold mb-1">Cena do</label>
+                    <input type="number" name="cena_max" class="form-control" placeholder="PLN" value="{{ request.args.get('cena_max', '') }}">
+                </div>
+
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow-sm" style="background-color: var(--radom-red);">
+                        <i class="bi bi-search me-2"></i>Szukaj Okazji
+                    </button>
+                    <a href="/" class="btn btn-outline-secondary rounded-pill py-2 px-3" title="Wyczyść"><i class="bi bi-x-lg"></i></a>
                 </div>
             </form>
         </div>
-    </header>
+    </div>
 
     <div class="container mb-5">
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
@@ -153,7 +218,14 @@
                     </div>
 
                     <div class="card-body">
-                        <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
+                        </div>
+                        <div class="mb-2">
+                            <span class="badge bg-light text-dark border small">{{ car.rok }} r.</span>
+                            {% if car.paliwo %}<span class="badge bg-light text-dark border small">{{ car.paliwo }}</span>{% endif %}
+                            {% if car.skrzynia %}<span class="badge bg-light text-dark border small">{{ car.skrzynia }}</span>{% endif %}
+                        </div>
                         <p class="text-muted small text-truncate mb-3">{{ car.opis }}</p>
 
                         <div class="d-grid" id="phone-container-{{ car.id }}">
@@ -163,6 +235,13 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-search display-1 text-muted opacity-25"></i>
+                <h3 class="mt-3">Nie znaleźliśmy pasujących aut</h3>
+                <p class="text-muted">Spróbuj zmienić parametry wyszukiwania.</p>
+                <a href="/" class="btn btn-danger rounded-pill px-4">Pokaż wszystkie</a>
             </div>
             {% endfor %}
         </div>
