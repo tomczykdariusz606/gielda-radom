@@ -9,110 +9,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
-        :root {
-            --radom-red: #ce2b37;
-            --glass: rgba(255, 255, 255, 0.9);
-        }
-
+        :root { --radom-red: #ce2b37; --glass: rgba(255, 255, 255, 0.9); }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
+            background-size: cover; background-position: center;
+            height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
         }
-
-        /* Warstwa przyciemniająca tło */
-        .overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%);
-            z-index: 1;
-        }
-
-        /* Wielki napis w tle - Twój znak rozpoznawczy */
-        .bg-text {
-            position: absolute;
-            font-family: 'Anton', sans-serif;
-            font-size: 20vw;
-            color: rgba(255, 255, 255, 0.05);
-            white-space: nowrap;
-            z-index: 0;
-            user-select: none;
-            transform: rotate(-10deg);
-        }
-
-        .login-container {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 420px;
-            padding: 20px;
-        }
-
-        .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 45px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
-
-        .logo-area i {
-            font-size: 3rem;
-            color: var(--radom-red);
-            filter: drop-shadow(0 0 10px rgba(206, 43, 55, 0.3));
-        }
-
-        .form-control-modern {
-            background: rgba(0, 0, 0, 0.05);
-            border: 2px solid transparent;
-            border-radius: 15px;
-            padding: 12px 20px;
-            transition: all 0.3s;
-        }
-
-        .form-control-modern:focus {
-            background: white;
-            border-color: var(--radom-red);
-            box-shadow: 0 0 20px rgba(206, 43, 55, 0.1);
-            outline: none;
-        }
-
-        .btn-radom {
-            background: var(--radom-red);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 14px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            width: 100%;
-        }
-
-        .btn-radom:hover {
-            background: #a51d28;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(206, 43, 55, 0.4);
-        }
-
-        .alert-modern {
-            background: rgba(206, 43, 55, 0.1);
-            border-left: 4px solid var(--radom-red);
-            color: var(--radom-red);
-            border-radius: 10px;
-            font-weight: 600;
-        }
+        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%); z-index: 1; }
+        .bg-text { position: absolute; font-family: 'Anton', sans-serif; font-size: 20vw; color: rgba(255, 255, 255, 0.05); white-space: nowrap; z-index: 0; user-select: none; transform: rotate(-10deg); }
+        .login-container { position: relative; z-index: 10; width: 100%; max-width: 420px; padding: 20px; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(15px); border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.2); padding: 45px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .logo-area i { font-size: 3rem; color: var(--radom-red); filter: drop-shadow(0 0 10px rgba(206, 43, 55, 0.3)); }
+        .form-control-modern { background: rgba(0, 0, 0, 0.05); border: 2px solid transparent; border-radius: 15px; padding: 12px 20px; transition: all 0.3s; }
+        .form-control-modern:focus { background: white; border-color: var(--radom-red); box-shadow: 0 0 20px rgba(206, 43, 55, 0.1); outline: none; }
+        .btn-radom { background: var(--radom-red); color: white; border: none; border-radius: 15px; padding: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; width: 100%; }
+        .btn-radom:hover { background: #a51d28; transform: translateY(-3px); }
+        .alert-modern { background: rgba(206, 43, 55, 0.1); border-left: 4px solid var(--radom-red); color: var(--radom-red); border-radius: 10px; font-weight: 600; }
+        .forgot-link { text-decoration: none; font-size: 0.8rem; color: #666; font-weight: 600; transition: 0.3s; }
+        .forgot-link:hover { color: var(--radom-red); }
     </style>
 </head>
 <body>
@@ -131,7 +48,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-modern mb-4 shadow-sm animate__animated animate__shakeX">
+                    <div class="alert alert-modern mb-4 shadow-sm">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ message }}
                     </div>
                 {% endfor %}
@@ -141,13 +58,14 @@
         <form method="POST">
             <div class="mb-3">
                 <label class="form-label small fw-bold text-muted ms-2 text-uppercase">Login</label>
-                <div class="input-group">
-                    <input type="text" name="username" class="form-control form-control-modern" placeholder="Twój identyfikator" required>
-                </div>
+                <input type="text" name="username" class="form-control form-control-modern" placeholder="Twój identyfikator" required>
             </div>
-            
+
             <div class="mb-4">
-                <label class="form-label small fw-bold text-muted ms-2 text-uppercase">Hasło</label>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label small fw-bold text-muted ms-2 text-uppercase mb-0">Hasło</label>
+                    <a href="{{ url_for('reset_request') }}" class="forgot-link">Zapomniałeś hasła?</a>
+                </div>
                 <input type="password" name="password" class="form-control form-control-modern" placeholder="••••••••" required>
             </div>
 
