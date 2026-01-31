@@ -254,6 +254,14 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+@app.route('/polityka-prywatnosci')
+def rodo():
+    return render_template('rodo.html')
+
+@app.route('/regulamin')
+def regulamin():
+    return render_template('regulamin.html')
+
 
 @app.route('/admin/full-backup')
 @login_required
