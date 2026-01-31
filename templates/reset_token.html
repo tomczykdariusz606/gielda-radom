@@ -3,31 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nowe hasło - Giełda Radom</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Nowe Hasło - Giełda Radom</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Anton&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; display: flex; align-items: center; min-height: 100vh; }
-        .reset-card { max-width: 400px; width: 100%; margin: auto; border: none; }
-        .radom-header { background: linear-gradient(135deg, #ce2b37 0%, #a31f28 100%); color: white; }
+        :root { --radom-red: #ce2b37; --glass: rgba(255, 255, 255, 0.9); }
+        body {
+            font-family: 'Inter', sans-serif; background-color: #000;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover; background-position: center; height: 100vh; margin: 0;
+            display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
+        }
+        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%); z-index: 1; }
+        .bg-text { position: absolute; font-family: 'Anton', sans-serif; font-size: 20vw; color: rgba(255, 255, 255, 0.05); white-space: nowrap; z-index: 0; transform: rotate(-10deg); }
+        .login-container { position: relative; z-index: 10; width: 100%; max-width: 420px; padding: 20px; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(15px); border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.2); padding: 45px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .form-control-modern { background: rgba(0, 0, 0, 0.05); border: 2px solid transparent; border-radius: 15px; padding: 12px 20px; transition: all 0.3s; }
+        .form-control-modern:focus { background: white; border-color: var(--radom-red); outline: none; }
+        .btn-radom { background: var(--radom-red); color: white; border: none; border-radius: 15px; padding: 14px; font-weight: 800; text-transform: uppercase; width: 100%; }
+        .btn-radom:hover { background: #a51d28; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card reset-card shadow-lg rounded-4 overflow-hidden">
-            <div class="radom-header p-4 text-center">
-                <h4 class="fw-bold mb-0">Nowe hasło</h4>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST">
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold">Wprowadź nowe hasło</label>
-                        <input type="password" name="password" class="form-control rounded-pill bg-light" placeholder="Minimum 6 znaków" required>
-                    </div>
-                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-2">Zapisz i zaloguj</button>
-                </form>
-            </div>
+<div class="overlay"></div>
+<div class="bg-text">NOWE HASŁO</div>
+
+<div class="login-container">
+    <div class="glass-card">
+        <div class="text-center mb-4">
+            <i class="bi bi-shield-lock-fill text-danger" style="font-size: 2.5rem;"></i>
+            <h3 class="fw-800 mt-2">Ustaw Hasło</h3>
+            <p class="text-muted small">Wprowadź nowe hasło do swojego konta.</p>
         </div>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted ms-2 text-uppercase">Nowe Hasło</label>
+                <input type="password" name="password" class="form-control form-control-modern" placeholder="••••••••" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-muted ms-2 text-uppercase">Potwierdź Hasło</label>
+                <input type="password" name="confirm_password" class="form-control form-control-modern" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-radom shadow">Zapisz zmianę</button>
+        </form>
     </div>
+</div>
 </body>
 </html>
