@@ -1,288 +1,184 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Giełda Samochodowa Radom - Darmowe Ogłoszenia Motoryzacyjne</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Giełda Samochodowa Radom - Najlepsze Okazje AI</title>
+    <meta name="description" content="Lokalna giełda samochodowa w Radomiu wspomagana przez AI. Znajdź tanie auta używane, sprawdź wycenę rynkową i dodaj ogłoszenie za darmo.">
+    <meta name="keywords" content="giełda radom, samochody radom, używane auta radom, czerwiec 76, komis radom, ceny samochodów ai">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://gieldaradom.pl/">
 
-    <meta name="description" content="Najlepsza lokalna giełda samochodowa w Radomiu. Kupuj i sprzedawaj auta, motocykle i części. Dodaj ogłoszenie za darmo na Giełda Radom!">
-    <meta name="keywords" content="giełda samochodowa radom, giełda radom, samochody używane radom, tanie auta radom, sprzedaż samochodów radom, auto giełda radom, czerwiec 76 radom, komis radom">
-
-    <meta property="og:title" content="Giełda Samochodowa Radom">
-    <meta property="og:description" content="Szybka sprzedaż i bezpieczny zakup auta w Twojej okolicy.">
-    <meta property="og:image" content="{{ url_for('static', filename='favicon.ico', _external=True) }}">
-    <meta property="og:type" content="website">
-
-    <meta name="geo.region" content="PL-MZ">
-    <meta name="geo.placename" content="Radom">
-    <meta name="geo.position" content="51.4027;21.1471">
-    <meta name="ICBM" content="51.4027, 21.1471">
-
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; --gemini-blue: #1a73e8; }
-        body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
-
-        @keyframes pulse-red {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(206, 43, 55, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0); }
-        }
-        .animate-pulse { animation: pulse-red 2s infinite; }
-
-        .navbar { background: rgba(26, 26, 26, 0.95); backdrop-filter: blur(10px); border-bottom: 3px solid var(--radom-red); }
-
-        .hero-section {
-            position: relative; 
-            background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
-            background-size: cover; 
-            background-position: center; 
-            height: 400px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            text-align: center; 
-            color: white; 
-            overflow: hidden; 
-            margin-bottom: 1rem;
-            border-bottom-left-radius: 50px; 
-            border-bottom-right-radius: 50px; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: var(--radom-dark); }
+        
+        /* Hero Section z klimatem Czerwiec 76 */
+        .hero-bg {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover; background-position: center;
+            color: white; padding: 100px 0; position: relative;
         }
 
-        .hero-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8)); z-index: 1; }
-        .big-text-76 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-5deg); font-family: 'Anton', sans-serif; font-size: 15vw; color: rgba(255, 255, 255, 0.08); z-index: 2; pointer-events: none; letter-spacing: 1rem; text-transform: uppercase; }
-        .hero-content { position: relative; z-index: 3; width: 100%; max-width: 800px; padding: 0 15px; }
-        .hero-content h1 { font-family: 'Anton', sans-serif; letter-spacing: 2px; }
+        .search-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-top: -50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            z-index: 10; position: relative;
+        }
 
-        .filter-card { background: white; border-radius: 25px; margin-top: -60px; position: relative; z-index: 10; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: none; }
+        .btn-radom { background: var(--radom-red); color: white; border: none; border-radius: 50px; font-weight: 700; padding: 12px 25px; }
+        .btn-radom:hover { background: #a51d28; color: white; transform: translateY(-2px); transition: 0.3s; }
         
-        /* GEMINI AI STYLES */
-        .gemini-ai-banner { transition: 0.3s; border: 1px solid rgba(255,255,255,0.2); }
-        .gemini-text-gradient { background: linear-gradient(90deg, #fff, #a1c4fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .pulse-dot { width: 10px; height: 10px; background: #34a853; border-radius: 50%; display: inline-block; animation: pulse-green 2s infinite; }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(52, 168, 83, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0); } }
-
-        .car-card { border: none; border-radius: 20px; background: white; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.05); overflow: hidden; }
-        .car-card:hover { transform: translateY(-10px); }
-        .price-badge { background-color: var(--radom-red); font-weight: 800; font-size: 1.1rem; z-index: 2; }
-        .ai-status-badge { position: absolute; top: 15px; right: 60px; z-index: 10; font-weight: 700; border: 2px solid white; }
+        .car-card { border: none; border-radius: 15px; overflow: hidden; transition: 0.3s; background: white; height: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .car-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
         
-        .zoom-btn { position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(255, 255, 255, 0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; }
-        .fav-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0, 0, 0, 0.4); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: white; backdrop-filter: blur(5px); }
-
-        .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
-        .footer-brand { color: white; font-weight: 800; font-size: 1.5rem; text-decoration: none; }
+        footer { background: var(--radom-dark); color: #888; padding: 60px 0 30px; }
+        footer h5 { color: white; font-weight: 800; margin-bottom: 20px; }
+        footer a { color: #888; text-decoration: none; transition: 0.3s; }
+        footer a:hover { color: var(--radom-red); }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-            <div class="ms-auto d-flex align-items-center gap-3">
-                {% if current_user.is_authenticated %}
-                    <a href="/profil" class="btn btn-outline-light rounded-pill px-4 btn-sm">Mój Profil</a>
-                    <a href="/logout" class="btn btn-link text-white-50 text-decoration-none small">Wyloguj</a>
-                {% else %}
-                    <a href="/login" class="text-white text-decoration-none fw-bold small">Logowanie</a>
-                    <a href="/register" class="btn btn-danger rounded-pill px-4 btn-sm" style="background-color: var(--radom-red);">Dołącz</a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-
-    <header class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="big-text-76">CZERWIEC '76</div>
-        <div class="hero-content">
-            <h1 class="display-3 fw-bold mb-2 text-uppercase">Giełda Radom</h1>
-            <p class="lead fw-bold mb-4 opacity-75">Najlepsza w regionie. Wspierana przez Gemini AI.</p>
-        </div>
-    </header>
-
-    <div class="container mb-4">
-        <div class="card filter-card p-4 border-0">
-            <form action="/" method="GET" class="row g-3">
-                <div class="col-md-3">
-                    <label class="small fw-bold mb-1"><i class="bi bi-car-front text-danger me-1"></i>Marka</label>
-                    <input type="text" name="marka" class="form-control rounded-pill" placeholder="Np. Audi" value="{{ request.args.get('marka', '') }}">
-                </div>
-                <div class="col-md-3">
-                    <label class="small fw-bold mb-1"><i class="bi bi-info-circle text-danger me-1"></i>Model</label>
-                    <input type="text" name="model" class="form-control rounded-pill" placeholder="Np. A4" value="{{ request.args.get('model', '') }}">
-                </div>
-                <div class="col-md-3 col-6">
-                    <label class="small fw-bold mb-1">Cena od</label>
-                    <input type="number" name="cena_min" class="form-control rounded-pill" placeholder="PLN" value="{{ request.args.get('cena_min', '') }}">
-                </div>
-                <div class="col-md-3 col-6">
-                    <label class="small fw-bold mb-1">Cena do</label>
-                    <input type="number" name="cena_max" class="form-control rounded-pill" placeholder="PLN" value="{{ request.args.get('cena_max', '') }}">
-                </div>
-                <div class="col-md-12 d-flex gap-2 justify-content-center mt-3">
-                    <button type="submit" class="btn btn-danger rounded-pill px-5 fw-bold shadow-sm" style="background-color: var(--radom-red);">
-                        <i class="bi bi-search me-2"></i>Szukaj ofert
-                    </button>
-                    <button type="button" onclick="filterOkazje()" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
-                        <i class="bi bi-stars"></i> Tylko Okazje AI
-                    </button>
-                    <a href="/" class="btn btn-light rounded-circle p-2 shadow-sm" title="Wyczyść"><i class="bi bi-x-lg"></i></a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="container mb-5">
-        <div class="gemini-ai-banner p-4 rounded-5 shadow-lg position-relative overflow-hidden" 
-             style="background: linear-gradient(135deg, #041e49 0%, #1a73e8 100%); color: white;">
-            <div class="row align-items-center position-relative" style="z-index: 2;">
-                <div class="col-lg-8">
-                    <div class="d-flex align-items-center mb-2">
-                        <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304731bc214c3d6b.svg" width="30" class="me-2" alt="Gemini">
-                        <h5 class="fw-bold mb-0 gemini-text-gradient">Gemini AI Market Insights</h5>
-                    </div>
-                    <p class="mb-0 opacity-90">
-                        Znalazłam <span class="badge bg-success rounded-pill px-3">{{ cars|length }} aktywnych ofert</span> w Radomiu. 
-                        Wiele z nich posiada cenę poniżej średniej krajowej dla rocznika 2026.
-                    </p>
-                </div>
-                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                    <div class="small fw-bold"><span class="pulse-dot me-2"></span>Analiza danych LIVE: {{ now.strftime('%H:%M') }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container mb-5">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            {% for car in cars %}
-            {% set market = get_market_valuation(car) %}
-            <div class="col car-item" data-status="{{ market.status }}">
-                <div class="card h-100 car-card">
-                    <div class="position-relative" style="height: 240px;">
-                        <button class="zoom-btn shadow-sm" onclick="openLightbox('{{ car.img }}')"><i class="bi bi-zoom-in"></i></button>
-                        
-                        {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="fav-btn shadow-sm">
-                            <i class="bi {{ 'bi-heart-fill text-danger' if car in current_user.favorite_cars else 'bi-heart' }}"></i>
-                        </a>
-                        {% endif %}
-
-                        <span class="badge ai-status-badge rounded-pill shadow-sm" style="background: {{ market.color }};">
-                            <i class="bi bi-robot me-1"></i> {{ market.status }}
-                        </span>
-
-                        <a href="/ogloszenie/{{ car.id }}">
-                            <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ car.marka }}">
-                        </a>
-
-                        <span class="position-absolute bottom-0 end-0 m-3 badge price-badge rounded-pill px-3 py-2 shadow">
-                            {{ car.cena|int }} PLN
-                        </span>
-                    </div>
-
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
-                            <span class="badge bg-light text-dark border small">{{ car.rok }} r.</span>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="text-muted">Pozycja ceny:</span>
-                                <span class="fw-bold" style="color: {{ market.color }}">{{ market.diff }}% względem średniej</span>
-                            </div>
-                            <div class="progress" style="height: 6px; border-radius: 10px; background: #eee;">
-                                <div class="progress-bar" style="width: {{ market.pos }}%; background: {{ market.color }};"></div>
-                            </div>
-                        </div>
-
-                        <div class="d-grid" id="phone-container-{{ car.id }}">
-                            <button onclick="revealPhone('{{ car.id }}', '{{ car.telefon }}')" class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow-sm" style="background-color: var(--radom-red);">
-                                <i class="bi bi-telephone-outbound me-2"></i>Pokaż numer
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-cpu-fill text-danger"></i> GIEŁDA RADOM <span class="text-danger">AI</span></a>
+        <div class="ms-auto">
+            {% if current_user.is_authenticated %}
+                <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill px-3">Mój Panel</a>
             {% else %}
-            <div class="col-12 text-center py-5">
-                <i class="bi bi-search display-1 text-muted opacity-25"></i>
-                <h3 class="mt-3">Brak pasujących aut</h3>
-                <a href="/" class="btn btn-danger rounded-pill px-4 mt-2">Pokaż wszystko</a>
-            </div>
-            {% endfor %}
+                <a href="/login" class="btn btn-radom btn-sm">Zaloguj się</a>
+            {% endif %}
         </div>
     </div>
+</nav>
 
-    <footer class="footer-main">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-lg-4">
-                    <a href="/" class="footer-brand"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-                    <p class="small mt-3">Lokalny lider ogłoszeń wspierany technologią Gemini AI. Sprzedawaj szybciej, kupuj mądrzej.</p>
+<section class="hero-bg text-center">
+    <div class="container">
+        <h1 class="display-3 fw-800" style="font-family: 'Anton';">RADOM 76 - GIEŁDA JUTRA</h1>
+        <p class="lead">Największa baza samochodów w regionie z analizą cen Gemini 3.0</p>
+    </div>
+</section>
+
+<div class="container">
+    <div class="search-card p-4">
+        <form method="GET" action="/" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Marka / Model</label>
+                <input type="text" name="marka" class="form-control" placeholder="Np. BMW" value="{{ request.args.get('marka', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Skrzynia</label>
+                <select name="skrzynia" class="form-select">
+                    <option value="">Wszystkie</option>
+                    <option value="Manualna">Manualna</option>
+                    <option value="Automatyczna">Automatyczna</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Nadwozie</label>
+                <select name="nadwozie" class="form-select">
+                    <option value="">Wszystkie</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="Kombi">Kombi</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Hatchback">Hatchback</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Cena do (PLN)</label>
+                <input type="number" name="cena_max" class="form-control" placeholder="Np. 50000">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-radom w-100">SZUKAJ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<main class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-800">Najnowsze ogłoszenia</h2>
+        <span class="badge bg-dark rounded-pill">{{ cars|length }} ofert w Twojej okolicy</span>
+    </div>
+
+    <div class="row g-4">
+        {% for car in cars %}
+        <div class="col-md-4">
+            <div class="car-card">
+                <div style="position: relative;">
+                    <img src="{{ car.img }}" class="w-100" style="height: 220px; object-fit: cover;" alt="{{ car.marka }} {{ car.model }}">
+                    {% set val = get_market_valuation(car) %}
+                    <span class="badge" style="position: absolute; top: 15px; left: 15px; background: {{ val.color }};">
+                        {{ val.status }}
+                    </span>
                 </div>
-                <div class="col-lg-2">
-                    <h6 class="text-white fw-bold mb-3">MENU</h6>
-                    <a href="/" class="footer-link small d-block mb-2 text-decoration-none">Strona Główna</a>
-                    <a href="/register" class="footer-link small d-block mb-2 text-decoration-none">Dołącz do nas</a>
-                </div>
-                <div class="col-lg-3">
-                    <h6 class="text-white fw-bold mb-3">INFO</h6>
-                    <a href="/regulamin" class="footer-link small d-block mb-2 text-decoration-none">Regulamin</a>
-                    <a href="/kontakt" class="footer-link small d-block mb-2 text-decoration-none">Kontakt</a>
-                </div>
-                <div class="col-lg-3 text-lg-end">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" style="height: 25px; opacity: 0.5;">
-                    <p class="small mt-2">© 2026 Giełda Radom & Gemini AI</p>
+                <div class="p-3">
+                    <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
+                    <p class="text-muted small mb-2"><i class="bi bi-calendar3"></i> {{ car.rok }} | <i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fs-4 fw-800 text-danger">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</span>
+                        <a href="/ogloszenie/{{ car.id }}" class="btn btn-dark btn-sm rounded-pill px-3">Szczegóły</a>
+                    </div>
                 </div>
             </div>
         </div>
-    </footer>
+        {% endfor %}
+    </div>
+</main>
 
-    <div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content bg-transparent border-0">
-                <div class="modal-body p-0 text-center">
-                    <img src="" id="lightboxImg" class="img-fluid rounded-4 shadow-lg">
+<footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5>GIEŁDA RADOM AI</h5>
+                <p class="small">Lokalny projekt stworzony z pasji do motoryzacji i nowoczesnych technologii. Wspieramy radomski rynek wtórny od 2024 roku.</p>
+                <div class="fs-4">
+                    <i class="bi bi-facebook me-2"></i>
+                    <i class="bi bi-instagram me-2"></i>
                 </div>
+            </div>
+            <div class="col-md-2 mb-4">
+                <h5>Serwis</h5>
+                <ul class="list-unstyled small">
+                    <li><a href="/">Strona Główna</a></li>
+                    <li><a href="/login">Moje Konto</a></li>
+                    <li><a href="/dodaj">Dodaj Ogłoszenie</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h5>Bezpieczeństwo</h5>
+                <ul class="list-unstyled small">
+                    <li><a href="/rodo">Polityka Prywatności (RODO)</a></li>
+                    <li><a href="/regulamin">Regulamin serwisu</a></li>
+                    <li><a href="/kontakt">Pomoc i Kontakt</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h5>Kontakt</h5>
+                <p class="small mb-1"><i class="bi bi-geo-alt-fill text-danger"></i> ul. Czerwiec '76, Radom</p>
+                <p class="small mb-1"><i class="bi bi-envelope-fill text-danger"></i> dariusztom@go2.pl</p>
+            </div>
+        </div>
+        <hr class="mt-4 border-secondary">
+        <div class="row pt-2">
+            <div class="col-md-6 small">
+                &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone.
+            </div>
+            <div class="col-md-6 text-md-end small">
+                Napędzane przez <span class="text-white fw-bold">Gemini 3.0 Flash AI</span>
             </div>
         </div>
     </div>
+</footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // TWOJA FUNKCJA ODKRYWANIA NUMERU (Zachowana)
-        function revealPhone(carId, phoneNumber) {
-            const container = document.getElementById('phone-container-' + carId);
-            container.innerHTML = `
-                <a href="tel:${phoneNumber}" class="btn btn-outline-dark w-100 rounded-pill fw-bold py-2 animate-pulse">
-                    <i class="bi bi-telephone-fill me-2 text-danger"></i>${phoneNumber}
-                </a>
-            `;
-        }
-
-        // TWOJA FUNKCJA LIGHTBOX (Zachowana)
-        function openLightbox(src) {
-            document.getElementById('lightboxImg').src = src;
-            new bootstrap.Modal(document.getElementById('lightboxModal')).show();
-        }
-
-        // NOWA FUNKCJA FILTROWANIA AI
-        function filterOkazje() {
-            const items = document.querySelectorAll('.car-item');
-            items.forEach(item => {
-                const status = item.getAttribute('data-status');
-                if (status === 'POWYŻEJ ŚREDNIEJ') {
-                    item.style.display = (item.style.display === 'none') ? 'block' : 'none';
-                }
-            });
-        }
-    </script>
 </body>
 </html>
