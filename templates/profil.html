@@ -1,160 +1,186 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Mój Panel - Giełda Radom</title>
+    <title>Panel Kierowcy - Giełda Radom AI</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; --gemini-grad: linear-gradient(135deg, #4285f4 0%, #9b72f3 100%); }
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; min-height: 100vh; }
-        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-        .ai-stat-card { background: var(--gemini-grad); border-radius: 20px; color: white; padding: 25px; box-shadow: 0 10px 20px rgba(66, 133, 244, 0.2); }
-        .car-card { border: none; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; background: white; }
-        .section-title { border-left: 5px solid var(--radom-red); padding-left: 15px; font-weight: 800; margin: 2rem 0; }
-        .btn-radom { background: var(--radom-red); color: white; border-radius: 50px; font-weight: 700; padding: 12px 30px; border: none; }
-        .ai-sparkle { color: #fff; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
-        .ai-sparkle:hover { background: rgba(255,255,255,0.4); }
+        :root { 
+            --radom-red: #ce2b37; 
+            --radom-dark: #1a1a1a;
+            --gemini-ai: linear-gradient(135deg, #1a73e8 0%, #9b72f3 100%);
+        }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; }
+        
+        /* KONSOLA ZARZĄDZANIA - STATYSTYKI */
+        .ai-console {
+            background: var(--gemini-ai);
+            border-radius: 24px;
+            color: white;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 30px rgba(26, 115, 232, 0.2);
+            position: relative;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* MOJE OGŁOSZENIA */
+        .car-card-manage {
+            background: white;
+            border-radius: 20px;
+            border: none;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .car-card-manage:hover { transform: translateY(-5px); }
+        
+        .section-title { 
+            font-weight: 800; 
+            border-left: 6px solid var(--radom-red); 
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn-action { border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-            <div class="ms-auto">
-                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">Wyloguj</a>
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+            <div class="ms-auto text-white small">
+                Zalogowany jako: <strong>{{ current_user.username }}</strong>
             </div>
         </div>
     </nav>
 
-    <div class="container py-5">
-        <div class="row g-4 mb-5">
-            <div class="col-lg-8">
-                <h1 class="fw-800">Cześć, {{ current_user.username }}! 👋</h1>
-                <p class="text-muted">Twoje centrum dowodzenia zintegrowane z Gemini AI.</p>
-            </div>
-            <div class="col-lg-4">
-                <div class="ai-stat-card text-center">
-                    <div class="small fw-bold text-uppercase opacity-75 mb-2">Popularność Twoich Ogłoszeń</div>
-                    <div class="display-5 fw-bold">{{ cars|sum(attribute='wyswietlenia') }}</div>
-                    <div class="small mt-2"><i class="bi bi-robot"></i> System Powered by AI</div>
+    <div class="container pb-5">
+        
+        <div class="ai-console">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h2 class="fw-bold mb-1">Konsola Zarządzania AI</h2>
+                    <p class="opacity-75 mb-4">Analizujemy Twoje ogłoszenia w czasie rzeczywistym.</p>
+                    <div class="d-flex gap-3">
+                        <div class="stat-box">
+                            <small class="d-block opacity-75">Aktywne auta</small>
+                            <span class="fs-4 fw-bold">{{ cars|length }}</span>
+                        </div>
+                        <div class="stat-box">
+                            <small class="d-block opacity-75">Łączne wyświetlenia</small>
+                            <span class="fs-4 fw-bold">{{ cars|sum(attribute='wyswietlenia') }}</span>
+                        </div>
+                        <div class="stat-box">
+                            <small class="d-block opacity-75">Ulubione przez innych</small>
+                            <span class="fs-4 fw-bold">{{ fav_cars|length }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 text-md-end mt-4 mt-md-0">
+                    <button class="btn btn-light btn-lg rounded-pill fw-bold px-4 shadow" data-bs-toggle="modal" data-bs-target="#dodajModal">
+                        <i class="bi bi-plus-circle-fill text-danger me-2"></i>Dodaj Ogłoszenie
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="section-title my-0">Moje samochody</h3>
-            <button class="btn btn-radom shadow-lg" data-bs-toggle="modal" data-bs-target="#dodajModal">
-                <i class="bi bi-plus-lg me-2"></i>Dodaj auto
-            </button>
-        </div>
-
-        <div class="row g-4">
+        <h3 class="section-title">Twoje Ogłoszenia</h3>
+        <div class="row g-4 mb-5">
             {% for car in cars %}
             <div class="col-md-6 col-lg-4">
-                <div class="card car-card overflow-hidden h-100">
+                <div class="card car-card-manage">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;">
-                        <span class="badge bg-dark position-absolute top-0 end-0 m-3 opacity-75">
+                        <img src="{{ car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                        <span class="badge bg-dark position-absolute bottom-0 end-0 m-2 opacity-75">
                             <i class="bi bi-eye me-1"></i> {{ car.wyswietlenia }}
                         </span>
                     </div>
-                    <div class="card-body d-flex flex-column">
+                    <div class="card-body">
                         <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                        <p class="text-danger fw-800 mb-4">{{ car.cena|int }} PLN</p>
+                        <p class="text-danger fw-bold mb-3">{{ car.cena|int }} PLN</p>
                         
-                        <div class="mt-auto">
-                            <div class="d-flex gap-2">
-                                <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
-                                    <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold">Podbij</button>
-                                </form>
-                                <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1">
-                                    <button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold">Usuń</button>
-                                </form>
-                            </div>
+                        <div class="d-flex gap-2">
+                            <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
+                                <button class="btn btn-outline-success btn-action w-100">Podbij</button>
+                            </form>
+                            <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1">
+                                <button class="btn btn-outline-danger btn-action w-100" onclick="return confirm('Na pewno?')">Usuń</button>
+                            </form>
                         </div>
                     </div>
-                    <div class="card-footer bg-light border-0 py-2 text-center">
-                        <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-cpu text-primary"></i> Gemini AI Verified</small>
+                    <div class="card-footer bg-transparent border-0 text-center pb-3">
+                        <span class="text-muted" style="font-size: 0.7rem;">Status: Aktywne przez 30 dni</span>
                     </div>
                 </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5 bg-white rounded-4 border border-dashed">
+                <i class="bi bi-car-front fs-1 text-muted"></i>
+                <p class="mt-2">Nie masz jeszcze żadnych ogłoszeń.</p>
             </div>
             {% endfor %}
         </div>
-    </div>
 
-    <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header bg-dark text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Nowe ogłoszenie</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="carForm" action="/dodaj" method="POST" enctype="multipart/form-data">
-                    <div class="modal-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label small fw-bold">Marka</label><input type="text" id="aiMarka" name="marka" class="form-control" required></div>
-                            <div class="col-md-6"><label class="form-label small fw-bold">Model</label><input type="text" id="aiModel" name="model" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Rok</label><input type="number" id="aiRok" name="rok" class="form-control" required></div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Paliwo</label>
-                                <select id="aiPaliwo" name="paliwo" class="form-select">
-                                    <option>Benzyna</option><option>Diesel</option><option>LPG</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Cena</label><input type="number" name="cena" class="form-control" required></div>
-                            
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label small fw-bold mb-0">Opis pojazdu</label>
-                                    <span class="ai-sparkle bg-primary text-white" onclick="generateDescription()">
-                                        <i class="bi bi-stars"></i> Generuj opis przez AI
-                                    </span>
-                                </div>
-                                <textarea id="aiOpis" name="opis" class="form-control" rows="5" required placeholder="Napisz coś o aucie lub użyj Gemini..."></textarea>
-                            </div>
-
-                            <div class="col-md-12"><label class="form-label small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
-                            <div class="col-12"><label class="form-label small fw-bold">Zdjęcia (maks. 10)</label><input type="file" name="zdjecia" class="form-control" multiple accept="image/*"></div>
+        <h3 class="section-title">Auta, które obserwujesz</h3>
+        <div class="row g-3">
+            {% for fav in fav_cars %}
+            <div class="col-md-4 col-lg-3">
+                <div class="card h-100 rounded-4 border-0 shadow-sm p-2">
+                    <img src="{{ fav.img }}" class="rounded-3 mb-2" style="height: 100px; object-fit: cover;">
+                    <div class="px-2">
+                        <h6 class="fw-bold mb-0 small">{{ fav.marka }} {{ fav.model }}</h6>
+                        <p class="text-danger small fw-bold mb-2">{{ fav.cena|int }} PLN</p>
+                        <div class="d-flex gap-2">
+                            <a href="/ogloszenie/{{ fav.id }}" class="btn btn-dark btn-sm rounded-pill flex-grow-1" style="font-size: 0.65rem;">Zobacz</a>
+                            <a href="/toggle_favorite/{{ fav.id }}" class="btn btn-outline-danger btn-sm rounded-circle"><i class="bi bi-heart-break"></i></a>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4">
-                        <button type="submit" class="btn btn-radom w-100 shadow">Opublikuj na Giełdzie Radom</button>
-                    </div>
-                </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-4 bg-white rounded-4">
+                <p class="text-muted small mb-0">Nie obserwujesz jeszcze żadnych aut.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if current_user.id == 1 %}
+        <div class="admin-zone mt-5 p-4 bg-white rounded-4 shadow-sm border border-danger">
+            <h5 class="fw-bold text-danger"><i class="bi bi-shield-lock-fill"></i> Panel Administratora</h5>
+            <div class="d-flex gap-2 mt-3">
+                <a href="/admin/backup-db" class="btn btn-dark btn-sm rounded-pill">Kopia Bazy (.db)</a>
+                <a href="/admin/full-backup" class="btn btn-outline-danger btn-sm rounded-pill">Pełny Backup Serwera</a>
             </div>
         </div>
+        {% endif %}
+
     </div>
 
-    <script>
-        async function generateDescription() {
-            const btn = document.querySelector('.ai-sparkle');
-            const marka = document.getElementById('aiMarka').value;
-            const model = document.getElementById('aiModel').value;
-            const rok = document.getElementById('aiRok').value;
-            const paliwo = document.getElementById('aiPaliwo').value;
+    <footer class="bg-dark text-white-50 py-4 mt-5">
+        <div class="container text-center">
+            <div class="small mb-2">
+                <a href="#" class="text-white-50 mx-2">Regulamin</a> | 
+                <a href="#" class="text-white-50 mx-2">RODO</a> | 
+                <a href="#" class="text-white-50 mx-2">Kontakt</a>
+            </div>
+            <p class="mb-0" style="font-size: 0.7rem;">© 2026 Giełda Radom AI. Powered by Gemini Flash 3.0. Najlepsza lokalna giełda w Polsce.</p>
+        </div>
+    </footer>
 
-            if(!marka || !model) { alert("Wpisz najpierw markę i model!"); return; }
+    {% include 'modal_dodaj.html' %}
 
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gemini myśli...';
-            
-            try {
-                const response = await fetch('/api/generate-description', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({marka, model, rok, paliwo})
-                });
-                const data = await response.json();
-                document.getElementById('aiOpis').value = data.description;
-            } catch (e) {
-                alert("Błąd połączenia z Gemini AI.");
-            }
-            btn.innerHTML = '<i class="bi bi-stars"></i> Generuj opis przez AI';
-        }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
