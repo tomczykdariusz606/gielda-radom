@@ -154,14 +154,49 @@
                     <label class="form-label fw-bold small text-uppercase">Model</label>
                     <input type="text" name="model" class="form-control form-control-modern" value="{{ car.model }}" required>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-bold small text-uppercase">Cena (PLN)</label>
-                    <input type="number" name="cena" class="form-control form-control-modern" value="{{ car.cena|int }}" required>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small text-uppercase">Paliwo</label>
+                    <select name="paliwo" class="form-select form-control-modern">
+                        <option value="Benzyna" {% if car.paliwo == 'Benzyna' %}selected{% endif %}>Benzyna</option>
+                        <option value="Diesel" {% if car.paliwo == 'Diesel' %}selected{% endif %}>Diesel</option>
+                        <option value="LPG" {% if car.paliwo == 'LPG' %}selected{% endif %}>LPG</option>
+                        <option value="Hybryda" {% if car.paliwo == 'Hybryda' %}selected{% endif %}>Hybryda</option>
+                        <option value="Elektryczny" {% if car.paliwo == 'Elektryczny' %}selected{% endif %}>Elektryczny</option>
+                    </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small text-uppercase">Skrzynia</label>
+                    <select name="skrzynia" class="form-select form-control-modern">
+                        <option value="Manualna" {% if car.skrzynia == 'Manualna' %}selected{% endif %}>Manualna</option>
+                        <option value="Automatyczna" {% if car.skrzynia == 'Automatyczna' %}selected{% endif %}>Automatyczna</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small text-uppercase">Nadwozie</label>
+                    <select name="nadwozie" class="form-select form-control-modern">
+                        <option value="Sedan" {% if car.nadwozie == 'Sedan' %}selected{% endif %}>Sedan</option>
+                        <option value="Kombi" {% if car.nadwozie == 'Kombi' %}selected{% endif %}>Kombi</option>
+                        <option value="Hatchback" {% if car.nadwozie == 'Hatchback' %}selected{% endif %}>Hatchback</option>
+                        <option value="SUV" {% if car.nadwozie == 'SUV' %}selected{% endif %}>SUV</option>
+                        <option value="Coupe" {% if car.nadwozie == 'Coupe' %}selected{% endif %}>Coupe</option>
+                        <option value="Inne" {% if car.nadwozie == 'Inne' %}selected{% endif %}>Inne</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
                     <label class="form-label fw-bold small text-uppercase">Rok produkcji</label>
                     <input type="number" name="rok" class="form-control form-control-modern" value="{{ car.rok }}" required>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small text-uppercase">Pojemność silnika</label>
+                    <input type="text" name="pojemnosc" class="form-control form-control-modern" value="{{ car.pojemnosc or '' }}" placeholder="np. 2.0 TDI">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small text-uppercase">Cena (PLN)</label>
+                    <input type="number" name="cena" class="form-control form-control-modern" value="{{ car.cena|int }}" required>
+                </div>
+
                 <div class="col-12">
                     <label class="form-label fw-bold small text-uppercase">Telefon do kontaktu</label>
                     <input type="text" name="telefon" class="form-control form-control-modern" value="{{ car.telefon }}" required>
@@ -181,6 +216,7 @@
                                 <button type="button" class="delete-img-btn" onclick="deletePhoto({{ img.id }})" title="Usuń zdjęcie">
                                     <i class="bi bi-x"></i>
                                 </button>
+                                <button type="button" class="btn btn-dark btn-sm w-100 mt-1" style="font-size: 10px;" onclick="setMainImage({{ car.id }}, {{ img.id }})">Główne</button>
                             </div>
                             {% endfor %}
                         {% else %}
@@ -213,37 +249,34 @@
 <script>
 function deletePhoto(photoId) {
     if(confirm('Czy na pewno chcesz trwale usunąć to zdjęcie z serwera?')) {
-        // Wywołujemy trasę w app.py, którą już masz przygotowaną
         fetch(`/usun_zdjecie/${photoId}`, { 
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         })
         .then(response => response.json())
         .then(data => {
             if(data.success) {
-                // Usuwamy element z HTML bez przeładowania strony
                 const element = document.getElementById(`img-container-${photoId}`);
                 element.style.opacity = '0';
                 setTimeout(() => element.remove(), 300);
             } else {
                 alert('Błąd: Nie udało się usunąć zdjęcia.');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Wystąpił błąd komunikacji z serwerem.');
         });
     }
 }
 
-// Prosta walidacja liczby plików przed wysłaniem
+function setMainImage(carId, imgId) {
+    fetch(`/ustaw_glowne/${carId}/${imgId}`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => { if(data.success) location.reload(); });
+}
+
 document.querySelector('form').onsubmit = function() {
     const files = document.getElementById('fileInput').files;
     const existingPhotos = document.querySelectorAll('.img-preview-container').length;
     if (existingPhotos + files.length > 10) {
-        alert('Ogłoszenie może mieć maksymalnie 10 zdjęć. Usuń stare zdjęcia przed dodaniem nowych.');
+        alert('Ogłoszenie może mieć maksymalnie 10 zdjęć.');
         return false;
     }
     return true;
