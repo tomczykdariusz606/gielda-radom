@@ -48,7 +48,8 @@ favorites = db.Table('favorites',
 )
 
 # --- MODELE ---
-    # To dodaj wewnątrz class class User(UserMixin, db.Model):
+
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -57,11 +58,10 @@ favorites = db.Table('favorites',
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
-    # Metody resetowania hasła wewnątrz klasy User
+    # Metody resetowania hasła
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'])
-        # dumps zwraca string w nowszych wersjach itsdangerous, 
-        # więc .encode('utf-8') jest bezpieczne dla kompatybilności
+        # Generujemy token (nowoczesne Serializery zwracają string)
         return s.dumps({'user_id': self.id})
 
     @staticmethod
@@ -72,7 +72,6 @@ favorites = db.Table('favorites',
         except:
             return None
         return User.query.get(user_id)
-
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
