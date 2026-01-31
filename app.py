@@ -256,7 +256,7 @@ def logout():
     return redirect(url_for('index'))
 @app.route('/polityka-prywatnosci')
 def rodo():
-    return render_template('rodo.html')
+    return render_template('polityka.html')
 
 @app.route('/regulamin')
 def regulamin():
