@@ -1,158 +1,280 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Panel Managera - Giełda Radom AI</title>
+    <title>Mój Panel - Giełda Radom</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; --ai-grad: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); }
-        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
-        
-        /* KONSOLA AI */
-        .ai-console-header { background: var(--ai-grad); color: white; border-radius: 25px; padding: 40px; margin-top: 20px; box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2); }
-        .stat-card { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 15px; padding: 20px; backdrop-filter: blur(10px); }
-        
-        /* ZARZĄDZANIE */
-        .car-manage-card { border: none; border-radius: 20px; transition: 0.3s; background: white; overflow: hidden; }
-        .car-manage-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        .section-title { border-left: 5px solid var(--radom-red); padding-left: 15px; font-weight: 800; color: var(--radom-dark); margin: 40px 0 25px; }
-        
-        .btn-podbij { background: #198754; color: white; border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
-        .btn-usun { border-radius: 50px; font-weight: 600; font-size: 0.8rem; }
+        :root { 
+            --radom-red: #ce2b37; 
+            --radom-dark: #1a1a1a;
+            --btn-edit: #0d6efd;
+            --btn-refresh: #198754;
+            --btn-delete: #dc3545;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* NAVBAR */
+        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); padding: 15px 0; }
+        .nav-link-custom { color: rgba(255,255,255,0.8); text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .nav-link-custom:hover { color: white; }
+
+        /* NAGŁÓWEK */
+        .profile-header { 
+            background: white; 
+            border-bottom: 1px solid #e0e0e0; 
+            padding: 3rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        /* KARTY */
+        .car-card { 
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            transition: all 0.3s ease; 
+            background: white;
+            overflow: hidden;
+            height: 100%;
+        }
+        .car-card:hover { transform: translateY(-8px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+
+        /* PRZYCISKI AKCJI */
+        .btn-action { 
+            font-weight: 600; 
+            border-radius: 10px; 
+            padding: 10px 15px; 
+            transition: 0.2s;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-edit-prof { color: var(--btn-edit); border: 2px solid var(--btn-edit); background: transparent; }
+        .btn-edit-prof:hover { background: var(--btn-edit); color: white; }
+
+        .btn-refresh-prof { color: var(--btn-refresh); border: 2px solid var(--btn-refresh); background: transparent; }
+        .btn-refresh-prof:hover { background: var(--btn-refresh); color: white; }
+
+        .btn-delete-prof { color: var(--btn-delete); border: 2px solid var(--btn-delete); background: transparent; }
+        .btn-delete-prof:hover { background: var(--btn-delete); color: white; }
+
+        .btn-radom-main { 
+            background: var(--radom-red); 
+            color: white; 
+            border: none; 
+            box-shadow: 0 4px 12px rgba(206, 43, 55, 0.3);
+            font-weight: 700;
+        }
+        .btn-radom-main:hover { background: #a51d28; color: white; transform: translateY(-2px); }
+
+        .section-title { 
+            border-left: 6px solid var(--radom-red); 
+            padding-left: 15px; 
+            font-weight: 800; 
+            color: var(--radom-dark);
+            margin: 3rem 0 1.5rem;
+        }
+
+        .fav-remove-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: white; border-radius: 50%; width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            color: var(--radom-red);
+            border: none;
+            z-index: 10;
+            transition: 0.2s;
+        }
+        .fav-remove-btn:hover { transform: scale(1.1); background: var(--radom-red); color: white; }
+
+        /* PANEL ADMINA STYL */
+        .admin-card {
+            border: 2px dashed var(--radom-red);
+            background: #fffafa;
+            border-radius: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom <span class="badge bg-primary ms-2" style="font-size: 0.6rem;">AI POWERED</span></a>
-            <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill">Wyloguj</a>
+            <a class="navbar-brand fw-bold fs-3" href="/">
+                <i class="bi bi-speedometer2 text-danger"></i> Giełda Radom
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-4">
+                <a href="/" class="nav-link-custom"><i class="bi bi-house-door me-1"></i> Giełda</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                    <i class="bi bi-box-arrow-right me-1"></i> Wyloguj
+                </a>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="ai-console-header mb-5">
+    <div class="profile-header">
+        <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-7">
-                    <h1 class="fw-800 mb-2">Witaj, {{ current_user.username }}!</h1>
-                    <p class="opacity-75 mb-4">Twój profil jest monitorowany przez model Gemini 3.0 Flash. Optymalizuj sprzedaż dzięki danym.</p>
-                    <div class="row g-3">
-                        <div class="col-6 col-md-4">
-                            <div class="stat-card">
-                                <small class="d-block opacity-75">Moje auta</small>
-                                <span class="fs-3 fw-bold">{{ cars|length }}</span>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-4">
-                            <div class="stat-card">
-                                <small class="d-block opacity-75">Wyświetlenia</small>
-                                <span class="fs-3 fw-bold">{{ cars|sum(attribute='wyswietlenia') }}</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-md-7">
+                    <h1 class="fw-bold mb-1">Witaj, {{ current_user.username }}!</h1>
+                    <p class="text-muted mb-0">Zarządzaj swoimi ogłoszeniami i obserwowanymi autami.</p>
                 </div>
-                <div class="col-lg-5 text-lg-end mt-4 mt-lg-0">
-                    <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#dodajModal">
-                        <i class="bi bi-plus-lg me-2"></i>Dodaj nowe auto
+                <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                    <button type="button" class="btn btn-radom-main btn-lg rounded-pill px-5 py-3" data-bs-toggle="modal" data-bs-target="#dodajModal">
+                        <i class="bi bi-plus-lg me-2"></i>Dodaj nowe ogłoszenie
                     </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <h3 class="section-title">Aktywne Ogłoszenia</h3>
-        <div class="row g-4">
+    <div class="container mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h3 class="section-title">Moje ogłoszenia</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for car in cars %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card car-manage-card h-100 shadow-sm">
-                    <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;">
-                    <div class="card-body">
+            <div class="col">
+                <div class="card car-card">
+                    <img src="{{ car.img }}" class="card-img-top" style="height: 230px; object-fit: cover;" alt="{{ car.marka }}">
+                    <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-eye"></i> {{ car.wyswietlenia }}</span>
+                            <span class="badge bg-light text-dark border">{{ car.rok }} r.</span>
                         </div>
-                        <p class="text-danger fw-bold fs-5 mb-4">{{ car.cena|int }} PLN</p>
-                        
-                        <div class="d-flex gap-2">
-                            <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button type="submit" class="btn btn-podbij w-100">PODBIJ</button>
-                            </form>
-                            <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button type="submit" class="btn btn-outline-danger btn-usun w-100" onclick="return confirm('Trwale usunąć?')">USUŃ</button>
+                        <p class="text-danger fw-bold fs-4 mb-4">{{ car.cena|int }} PLN</p>
+
+                        <div class="mt-auto d-flex flex-column gap-2">
+                            <div class="d-flex gap-2">
+                                <a href="/edytuj/{{ car.id }}" class="btn btn-action btn-edit-prof flex-grow-1">
+                                    <i class="bi bi-pencil-square"></i> Edytuj
+                                </a>
+                                <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
+                                    <button type="submit" class="btn btn-action btn-refresh-prof w-100">
+                                        <i class="bi bi-arrow-repeat"></i> Odśwież
+                                    </button>
+                                </form>
+                            </div>
+                            <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz trwale usunąć to ogłoszenie?')">
+                                <button type="submit" class="btn btn-action btn-delete-prof w-100">
+                                    <i class="bi bi-trash3"></i> Usuń ogłoszenie
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-center py-5 bg-white rounded-5 border border-dashed">
-                <p class="text-muted mb-0">Nie masz jeszcze żadnych wystawionych aut na Giełdzie Radom.</p>
+            <div class="col-12 text-center py-5 bg-white rounded-4 border">
+                <i class="bi bi-plus-circle text-muted mb-3 fs-1 d-block"></i>
+                <p class="text-muted">Nie masz jeszcze żadnych wystawionych aut.</p>
             </div>
             {% endfor %}
         </div>
 
-        <h3 class="section-title">Obserwowane okazje</h3>
-        <div class="row g-3 mb-5">
+        <h3 class="section-title">Ulubione i obserwowane</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
             {% for fav in fav_cars %}
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm rounded-4 p-2 h-100 text-center">
-                    <img src="{{ fav.img }}" class="rounded-3 mb-2" style="height: 120px; object-fit: cover;">
-                    <h6 class="fw-bold mb-1 small">{{ fav.marka }} {{ fav.model }}</h6>
-                    <p class="text-danger small fw-bold mb-2">{{ fav.cena|int }} PLN</p>
-                    <div class="d-flex gap-1">
-                        <a href="/ogloszenie/{{ fav.id }}" class="btn btn-dark btn-sm rounded-pill w-100" style="font-size: 0.7rem;">Pokaż</a>
-                        <a href="/toggle_favorite/{{ fav.id }}" class="btn btn-outline-danger btn-sm rounded-circle"><i class="bi bi-heart-fill"></i></a>
+            <div class="col">
+                <div class="card car-card border-0 shadow-sm">
+                    <div class="position-relative">
+                        <img src="{{ fav.img }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="{{ fav.marka }}">
+                        <a href="{{ url_for('toggle_favorite', car_id=fav.id) }}" class="fav-remove-btn" title="Usuń z ulubionych">
+                            <i class="bi bi-heart-fill"></i>
+                        </a>
+                    </div>
+                    <div class="card-body p-3">
+                        <h6 class="fw-bold mb-1 text-truncate">{{ fav.marka }} {{ fav.model }}</h6>
+                        <p class="text-danger small fw-bold mb-3">{{ fav.cena|int }} PLN</p>
+                        <a href="/ogloszenie/{{ fav.id }}" class="btn btn-sm btn-dark rounded-pill w-100">Pokaż auto</a>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12">
-                <p class="text-muted small">Nie obserwujesz obecnie żadnych samochodów.</p>
+            <div class="col-12 text-center py-4 bg-white rounded-4 border mb-3">
+                <p class="text-muted small">Tu pojawią się auta, które polubisz na giełdzie.</p>
             </div>
             {% endfor %}
         </div>
 
         {% if current_user.id == 1 %}
-        <div class="bg-dark text-white p-4 rounded-4 mt-5 d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-shield-check"></i> System Admin Console</h5>
-                <small class="opacity-50">Zarządzaj bazą danych giełdy</small>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="/admin/backup-db" class="btn btn-outline-light btn-sm rounded-pill px-3">Baza .db</a>
-                <a href="/admin/full-backup" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold">PEŁNY BACKUP ZIP</a>
+        <div class="admin-card p-4 p-md-5 mb-5 shadow-sm">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h4 class="fw-extrabold text-dark mb-1"><i class="bi bi-shield-lock-fill text-danger me-2"></i>Panel Administratora</h4>
+                    <p class="text-muted small mb-4 mb-lg-0">Zarządzaj bezpieczeństwem danych i kopiami zapasowymi serwera.</p>
+                </div>
+                <div class="col-lg-6">
+                    <div class="d-grid d-md-flex gap-3 justify-content-lg-end">
+                        <a href="{{ url_for('backup_db') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small">
+                            <i class="bi bi-database-down me-2"></i>Baza (.db)
+                        </a>
+                        <a href="{{ url_for('full_backup') }}" class="btn btn-radom-main rounded-pill px-4 py-2 fw-bold small">
+                            <i class="bi bi-file-zip-fill me-2"></i>Pełny Backup (ZIP)
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         {% endif %}
+
+        <div class="mt-5 pt-3 border-top text-center">
+            <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA: Usunięcie konta spowoduje skasowanie wszystkich Twoich ogłoszeń!')">
+                <button type="submit" class="btn btn-link text-muted text-decoration-none small">
+                    <i class="bi bi-person-x me-1"></i> Usuń konto użytkownika
+                </button>
+            </form>
+        </div>
     </div>
 
-    <footer class="bg-dark text-white-50 pt-5 pb-4 mt-5 border-top border-secondary">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-md-4">
-                    <h6 class="text-white fw-bold mb-3">Giełda Radom AI</h6>
-                    <p class="small">Lokalna platforma ogłoszeniowa wykorzystująca sztuczną inteligencję do optymalizacji sprzedaży aut w regionie radomskim.</p>
+    <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Nowe ogłoszenie</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="col-md-4 text-md-center">
-                    <h6 class="text-white fw-bold mb-3">Pomoc i RODO</h6>
-                    <ul class="list-unstyled small">
-                        <li><a href="#" class="text-white-50 text-decoration-none">Polityka Prywatności</a></li>
-                        <li><a href="#" class="text-white-50 text-decoration-none">Regulamin Serwisu</a></li>
-                        <li><a href="#" class="text-white-50 text-decoration-none">Kontakt i Wsparcie</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <h6 class="text-white fw-bold mb-3">SEO Radom</h6>
-                    <p class="small">Najczęściej szukane: BMW Radom, Audi Radom, Tanie auta Mazowieckie, Giełda Samochodowa.</p>
-                </div>
+                <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label small fw-bold">Marka</label><input type="text" name="marka" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label small fw-bold">Model</label><input type="text" name="model" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">Rok produkcji</label><input type="number" name="rok" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">Cena (PLN)</label><input type="number" name="cena" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Wybierz zdjęcia (maks. 10)</label><input type="file" name="zdjecia" class="form-control" multiple accept="image/*"></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Opis pojazdu</label><textarea name="opis" class="form-control" rows="4" required></textarea></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
+                        <button type="submit" class="btn btn-radom-main rounded-pill px-5">Opublikuj ogłoszenie</button>
+                    </div>
+                </form>
             </div>
-            <hr class="my-4 border-secondary">
-            <p class="text-center small mb-0">© 2026 Giełda Radom. Powered by Gemini AI. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white-50 mt-auto py-4 border-top border-secondary">
+        <div class="container text-center">
+            <small>© 2026 Giełda Radom. Twoje ogłoszenia są widoczne przez 30 dni.</small>
         </div>
     </footer>
-
-    {% include 'modal_dodaj.html' %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
