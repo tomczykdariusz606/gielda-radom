@@ -189,37 +189,36 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # 1. Kompresja zdjęcia w locie (żeby nie zapchać 4GB RAMu)
-        img = Image.open(file)
-        # Konwersja na RGB (usuwa kanał przezroczystości, który psuje AI)
-        img = img.convert('RGB')
-        img.thumbnail((1024, 1024)) # Zmniejszamy wymiary do HD
+        # Odczytujemy surowe dane i zamieniamy na tekst Base64
+        # To omija wszystkie błędy biblioteki Pillow/PIL
+        image_data = base64.b64encode(file.read()).decode('utf-8')
         
-        # 2. Zamiana na format, który Gemini kocha
-        buffered = io.BytesIO()
-        img.save(buffered, format="JPEG", quality=85)
-        img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        # Przygotowujemy prompt i dane dla Gemini 1.5 Flash
+        content = [
+            {
+                "parts": [
+                    {"text": "Zidentyfikuj markę, model i rok auta na zdjęciu. Wynik zwróć WYŁĄCZNIE jako czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
+                    {"inline_data": {"mime_type": file.content_type or "image/jpeg", "data": image_data}}
+                ]
+            }
+        ]
 
-        # 3. Prompt i wysyłka
-        prompt = "Podaj markę, model i rok auta. Zwróć WYŁĄCZNIE JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
-        
-        response = vision_model.generate_content([
-            prompt,
-            {"mime_type": "image/jpeg", "data": img_str}
-        ])
-        
+        # Wywołanie modelu
+        response = vision_model.generate_content(content)
         res_text = response.text.strip()
-        print(f"DEBUG AI SUCCESS: {res_text}") # To zobaczysz w logach
+        
+        # Logujemy wynik, żebyś widział go w tail -f gielda.log
+        print(f"DEBUG AI SUCCESS: {res_text}")
 
         import re
         json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
         if json_match:
             return jsonify(json.loads(json_match.group()))
         
-        return jsonify({"error": "Błąd formatu AI"}), 500
+        return jsonify({"error": "Błąd formatu odpowiedzi AI"}), 500
 
     except Exception as e:
-        # To nam powie DOKŁADNIE co boli serwer
+        # Ten błąd powie nam dokładnie, co blokuje Google
         print(f"!!! KRYTYCZNY BLAD: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
