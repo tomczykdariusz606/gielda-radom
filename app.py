@@ -179,7 +179,6 @@ def allowed_file(filename):
 genai.configure(api_key="AIzaSyAXH_NcQK2qUYV7EKhBZKc8Ban4nFdWs4g")
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
-# --- NOWA TRASA: ANALIZA ZDJĘCIA AUTA ---
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
@@ -188,31 +187,34 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        img = Image.open(file)
-        # Bardzo sztywny prompt, żeby AI nie "gadało" za dużo
-        prompt = "Identify the car brand, model, and year from this image. Return ONLY a raw JSON object like this: {\"marka\": \"Brand\", \"model\": \"Model\", \"rok\": 2020}. No extra text or formatting."
+        # Odczytujemy obraz i upewniamy się, że jest w RGB (Gemini nie lubi RGBA/PNG z przezroczystością)
+        img = Image.open(file).convert('RGB')
+        
+        # Bardzo rygorystyczny prompt
+        prompt = "Identify: brand, model, year. Return ONLY raw JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
 
         response = vision_model.generate_content([prompt, img])
         res_text = response.text.strip()
         
-        # LOGOWANIE DO PLIKU (pomoże nam sprawdzić co psuje kod)
-        print(f"DEBUG AI RESPONSE: {res_text}")
+        # LOGOWANIE - to pozwoli Ci zobaczyć w tail -f gielda.log co dokładnie widzi Python
+        print(f"RAW AI RESP: {res_text}")
 
-        # Czyścimy odpowiedź z ewentualnych znaczników ```json ... ```
+        # Czyścimy śmieci typu ```json ... ``` z odpowiedzi
         import re
-        json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        # Szukamy wszystkiego co jest między klamrami { }
+        match = re.search(r'\{.*\}', res_text, re.DOTALL)
         
-        if json_match:
-            clean_json = json_match.group()
-            data = json.loads(clean_json)
+        if match:
+            json_str = match.group()
+            data = json.loads(json_str)
             return jsonify(data)
         
-        return jsonify({"error": "AI nie zwróciło poprawnego formatu JSON"}), 500
+        return jsonify({"error": "Nie udało się wyodrębnić danych z odpowiedzi AI"}), 500
 
     except Exception as e:
-        # To wypisze nam konkretny błąd w Twoim terminalu/logach
-        print(f"BŁĄD KRYTYCZNY ANALIZY: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        print(f"CRITICAL ERROR IN ANALYZE: {str(e)}")
+        return jsonify({"error": "Błąd przetwarzania obrazu"}), 500
+
 # --- TRASY APLIKACJI ---
 
 @app.route('/')
