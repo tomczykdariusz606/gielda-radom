@@ -3,7 +3,7 @@ import uuid
 import zipfile
 import io
 import sekrety  # Import Twojego bezpiecznego pliku
-import google.generativeai as genai  # Dodany brakujący import AI
+import google.generativeai as genai  
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -13,7 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from PIL import Image
 from itsdangerous import URLSafeTimedSerializer as Serializer
-# Import biblioteki do "rozmytego" wyszukiwania (literówki)
+# Import biblioteki do "rozmytego" wyszukiwania
 from thefuzz import process 
 
 app = Flask(__name__)
@@ -28,7 +28,7 @@ app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
 # --- KONFIGURACJA APLIKACJI ---
-app.secret_key = sekrety.SECRET_KEY # Używamy klucza z pliku sekrety
+app.secret_key = sekrety.SECRET_KEY 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
@@ -44,7 +44,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # --- KONFIGURACJA GEMINI AI ---
-genai.configure(api_key=sekrety.GEMINI_KEY)  # Pobierane z sekrety.py
+genai.configure(api_key=sekrety.GEMINI_KEY)
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- TABELA ULUBIONYCH ---
@@ -53,7 +53,7 @@ favorites = db.Table('favorites',
     db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
 )
 
-# --- MODELE ---
+# --- MODELE (Poprawione duplikaty) ---
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -66,28 +66,18 @@ class User(UserMixin, db.Model):
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
-    # Metody resetowania hasła (Logic AI)
     def get_reset_token(self):
         s = Serializer(app.config['SECRET_KEY'])
-        # Generujemy bezpieczny token przypisany do ID użytkownika
         return s.dumps({'user_id': self.id})
 
     @staticmethod
     def verify_reset_token(token):
         s = Serializer(app.config['SECRET_KEY'])
         try:
-            user_id = s.loads(token)['user_id']
+            data = s.loads(token)
+            return User.query.get(data['user_id'])
         except:
             return None
-        return User.query.get(user_id)
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-    lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
-    cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -137,6 +127,7 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
+# --- GENERATOR OPISÓW AI (Z ANALIZĄ ZDJĘĆ) ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
 def generate_ai_description():
@@ -144,28 +135,23 @@ def generate_ai_description():
     marka = data.get('marka', 'nieznana')
     model = data.get('model', 'nieznany')
     img_filename = data.get('current_img') 
-    
-    # Prompt dopasowany do Giełdy Radom
-    prompt = f"Stwórz profesjonalne ogłoszenie sprzedaży samochodu {marka} {model} na portal Giełda Radom. " \
-             f"Jeśli widzisz zdjęcie, opisz stan wizualny, kolor i charakterystyczne cechy. " \
-             f"Dodaj zachętę do kontaktu telefonicznego i oględzin w Radomiu."
+
+    prompt = f"Stwórz profesjonalne ogłoszenie sprzedaży {marka} {model} na portal Giełda Radom. Jeśli widzisz zdjęcie, opisz kolor i detale. Zachęć do kontaktu."
 
     try:
         if img_filename:
-            # Szukamy zdjęcia w folderze upload
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_filename.split('/')[-1])
+            # Poprawiona ścieżka do pliku
+            clean_name = img_filename.split('/')[-1]
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], clean_name)
             if os.path.exists(img_path):
                 img_data = Image.open(img_path)
                 response = vision_model.generate_content([prompt, img_data])
                 return jsonify({"description": response.text})
         
-        # Jeśli brak zdjęcia lub pliku, używamy tylko tekstu
         response = vision_model.generate_content(prompt)
         return jsonify({"description": response.text})
-        
     except Exception as e:
-        return jsonify({"description": f"AI chwilowo zajęte. Auto: {marka} {model}. Zapraszam do kontaktu!"})
-
+        return jsonify({"description": f"Na sprzedaż {marka} {model} w świetnym stanie. Zapraszam do Radomia na oględziny!"})
 
 # --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
@@ -187,63 +173,36 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    # Pobieranie parametrów wyszukiwania
-    query_text = request.args.get('q', '').strip()  # Jedno pole "Inteligentne szukanie"
+    query_text = request.args.get('q', '').strip()
     skrzynia = request.args.get('skrzynia', '')
     paliwo = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
 
-    # 1. Pobieramy wszystkie auta (lub base query)
-    # Wersja produkcyjna: przy dużej bazie używa się SQL LIKE, ale dla Fuzzy Search w Pythonie pobieramy wszystko
-    all_cars_query = Car.query
-
-    # 2. Inteligentne filtrowanie (Literówki / Fuzzy Search)
     if query_text:
-        # Pobieramy wszystkie auta, żeby sprawdzić dopasowanie nazw
         all_cars = Car.query.all()
-
-        # Tworzymy słownik { "Marka Model": id }
         choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
-
-        # Biblioteka thefuzz szuka najlepszych dopasowań (wynik > 55%)
-        # To pozwala znaleźć "Wolkswagn" jako "Volkswagen"
         matches = process.extract(query_text, choices.keys(), limit=50)
-
-        # Wyciągamy ID pasujących aut
         matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
-
-        # Filtrujemy zapytanie SQL po tych ID
         base_query = Car.query.filter(Car.id.in_(matched_ids))
     else:
-        # Jeśli brak tekstu, bierzemy wszystkie
         base_query = Car.query
 
-    # 3. Dodatkowe filtry techniczne
-    if skrzynia:
-        base_query = base_query.filter(Car.skrzynia == skrzynia)
-    if paliwo:
-        base_query = base_query.filter(Car.paliwo == paliwo)
-    if cena_max:
-        base_query = base_query.filter(Car.cena <= cena_max)
+    if skrzynia: base_query = base_query.filter(Car.skrzynia == skrzynia)
+    if paliwo: base_query = base_query.filter(Car.paliwo == paliwo)
+    if cena_max: base_query = base_query.filter(Car.cena <= cena_max)
 
-    # Sortowanie: najnowsze na górze
     cars = base_query.order_by(Car.id.desc()).all()
-
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
 
 @app.route('/kontakt')
-def kontakt():
-    return render_template('kontakt.html')
+def kontakt(): return render_template('kontakt.html')
 
 @app.route('/polityka-prywatnosci')
-def rodo():
-    return render_template('polityka.html')
+def rodo(): return render_template('polityka.html')
 
 @app.route('/regulamin')
-def regulamin():
-    return render_template('regulamin.html')
+def regulamin(): return render_template('regulamin.html')
 
-# --- SEO: SITEMAP & ROBOTS ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = "https://gieldaradom.pl"
@@ -257,25 +216,15 @@ def sitemap():
 
 @app.route('/robots.txt')
 def robots():
-    lines = [
-        "User-agent: *",
-        "Allow: /",
-        "Disallow: /admin/",
-        "Disallow: /login",
-        "Disallow: /register",
-        "Disallow: /profil",
-        "Sitemap: https://gieldaradom.pl/sitemap.xml"
-    ]
+    lines = ["User-agent: *", "Allow: /", "Disallow: /admin/", "Sitemap: https://gieldaradom.pl/sitemap.xml"]
     return Response("\n".join(lines), mimetype="text/plain")
-
-# --- CRUD I UŻYTKOWNIK ---
 
 @app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
     if car.user_id != current_user.id:
-        flash('Nie masz uprawnień do edycji tego ogłoszenia.', 'danger')
+        flash('Brak uprawnień.', 'danger')
         return redirect(url_for('profil'))
 
     if request.method == 'POST':
@@ -285,14 +234,9 @@ def edytuj(id):
         car.cena = request.form.get('cena')
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
-        # Dodajemy edycję nowych pól jeśli są w formularzu
-        if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
-        if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
-
         db.session.commit()
-        flash('Ogłoszenie zostało pomyślnie zaktualizowane!', 'success')
+        flash('Zaktualizowano!', 'success')
         return redirect(url_for('profil'))
-
     return render_template('edytuj.html', car=car)
 
 @app.route('/ogloszenie/<int:car_id>')
@@ -312,6 +256,7 @@ def dodaj_ogloszenie():
             opt_name = save_optimized_image(file)
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
+    
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
 
     nowe_auto = Car(
@@ -327,25 +272,14 @@ def dodaj_ogloszenie():
     for path in saved_paths:
         db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
     db.session.commit()
-    flash('Ogłoszenie dodane!', 'success')
+    flash('Dodano!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/profil')
 @login_required
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    fav_cars = current_user.favorite_cars
-    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
-
-@app.route('/odswiez/<int:car_id>', methods=['POST'])
-@login_required
-def refresh_car(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id:
-        car.data_dodania = datetime.utcnow()
-        db.session.commit()
-        flash('Ogłoszenie odświeżone!', 'success')
-    return redirect(url_for('profil'))
+    return render_template('profil.html', cars=my_cars, fav_cars=current_user.favorite_cars, now=datetime.utcnow())
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
@@ -354,7 +288,6 @@ def delete_car(car_id):
     if car.user_id == current_user.id:
         db.session.delete(car)
         db.session.commit()
-        flash('Usunięto ogłoszenie.', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -392,13 +325,6 @@ def full_backup():
     memory_file.seek(0)
     return send_file(memory_file, mimetype='application/zip', as_attachment=True, download_name="backup.zip")
 
-@app.route('/admin/backup-db')
-@login_required
-def backup_db():
-    if current_user.id != 1: abort(403)
-    db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
-    return send_file(db_path, as_attachment=True)
-
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
 def toggle_favorite(car_id):
@@ -407,59 +333,32 @@ def toggle_favorite(car_id):
     else: current_user.favorite_cars.append(car)
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
+
 def send_reset_email(user):
     token = user.get_reset_token()
-    # Dekodujemy token, bo w Python 3 jest w bytes, a potrzebujemy stringa w URL
-    token_str = token.decode('utf-8')
-    msg = Message('Reset Hasła - Giełda Radom',
-                  recipients=[user.email])
-    msg.body = f'''Aby zresetować hasło, kliknij w poniższy link:
-{url_for('reset_token', token=token_str, _external=True)}
-
-Jeśli to nie Ty wysłałeś to żądanie, zignoruj tę wiadomość.
-'''
+    msg = Message('Reset Hasła - Giełda Radom', recipients=[user.email])
+    msg.body = f"Link do resetu: {url_for('reset_token', token=token, _external=True)}"
     mail.send(msg)
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            send_reset_email(user)
-            flash('Wysłano email z instrukcją resetowania hasła.', 'info')
-            return redirect(url_for('login'))
-        else:
-            flash('Nie znaleziono konta z takim adresem email.', 'danger')
+        user = User.query.filter_by(email=request.form.get('email')).first()
+        if user: send_reset_email(user)
+        flash('Email wysłany.', 'info')
     return render_template('reset_request.html')
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     user = User.verify_reset_token(token)
-    if user is None:
-        flash('To nieprawidłowy lub wygasły token.', 'warning')
-        return redirect(url_for('reset_request'))
-
+    if not user: return redirect(url_for('reset_request'))
     if request.method == 'POST':
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-
-        if password != confirm_password:
-            flash('Hasła muszą być identyczne.', 'danger')
-        else:
-            hashed_password = generate_password_hash(password)
-            user.password_hash = hashed_password
-            db.session.commit()
-            flash('Twoje hasło zostało zaktualizowane! Możesz się zalogować.', 'success')
-            return redirect(url_for('login'))
-
+        user.password_hash = generate_password_hash(request.form.get('password'))
+        db.session.commit()
+        return redirect(url_for('login'))
     return render_template('reset_token.html')
 
-
 if __name__ == '__main__':
-    with app.app_context(): db.create_all()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=5000)
