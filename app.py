@@ -192,23 +192,26 @@ def analyze_car():
     file = request.files['image']
     try:
         img = Image.open(file)
-        if img.mode in ("RGBA", "P"): img = img.convert("RGB")
+        if img.mode in ("RGBA", "P"): 
+            img = img.convert("RGB")
         img.thumbnail((800, 800))
 
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=70)
         img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-        # Bardziej precyzyjny prompt
-        prompt = "Przeanalizuj zdjęcie i podaj markę, model i rok produkcji auta. Zwróć tylko czysty JSON bez żadnego formatowania markdown, np: {\"marka\": \"Audi\", \"model\": \"A4\", \"rok\": 2015}"
+        # Bardziej precyzyjny prompt dla stabilniejszego JSONa
+        prompt = "Przeanalizuj zdjęcie i podaj markę, model i rok produkcji auta. Zwróć tylko czysty JSON: {\"marka\": \"Audi\", \"model\": \"A4\", \"rok\": 2015}"
 
         response = vision_model.generate_content([
             prompt,
             {"mime_type": "image/jpeg", "data": img_b64}
         ])
 
-                res_text = response.text.strip()
-        # Wyciągamy JSON nawet jeśli AI dodało komentarze
+        # Kluczowa poprawka wcięć (linia 210 i dalej)
+        res_text = response.text.strip()
+        
+        # Wyciągamy JSON nawet jeśli AI dodało komentarze lub markdown
         match = re.search(r'\{.*\}', res_text, re.DOTALL)
         if match:
             try:
@@ -217,9 +220,15 @@ def analyze_car():
                 return jsonify(result)
             except Exception as e:
                 # Jeśli JSON jest błędny, zwróć surowy tekst do debugowania
-                return jsonify({"error": "Błąd JSON", "raw": res_text}), 500
-        
-        return jsonify({"error": "Brak danych JSON w odpowiedzi AI"}), 500
+                return jsonify({"error": "Błąd dekodowania JSON", "raw": res_text}), 500
+
+        return jsonify({"error": "AI nie zwróciło poprawnego JSON-a", "text": res_text}), 500
+
+    except Exception as e:
+        # Rejestrowanie błędu w gielda.log dla Ciebie
+        print(f"CRITICAL ERROR in analyze_car: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 
 
