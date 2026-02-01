@@ -184,45 +184,39 @@ vision_model = genai.GenerativeModel('gemini-1.5-flash')
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
+    """Analizuje zdjęcie przez Gemini AI z kompresją w locie"""
     if 'image' not in request.files:
         return jsonify({"error": "Brak zdjęcia"}), 400
-
+    
     file = request.files['image']
     try:
-        # Odczytujemy surowe bajty i zamieniamy na tekst Base64
-        # To omija wszystkie problemy z biblioteką Pillow/PIL na serwerze
-        img_bytes = file.read()
-        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+        # Kompresja do RAM przed wysyłką do AI (żeby nie było błędu 500)
+        img = Image.open(file)
+        if img.mode in ("RGBA", "P"): img = img.convert("RGB")
+        img.thumbnail((800, 800))
         
-        # Przygotowujemy dane dla Gemini w formacie inline_data
-        content = [
-            {
-                "parts": [
-                    {"text": "Zidentyfikuj markę, model i rok auta na zdjęciu. Wynik zwróć WYŁĄCZNIE jako czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
-                    {"inline_data": {"mime_type": file.content_type or "image/jpeg", "data": img_b64}}
-                ]
-            }
-        ]
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=70)
+        img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-        # Wywołanie modelu
+        content = [{
+            "parts": [
+                {"text": "Podaj markę, model i rok auta. Zwróć WYŁĄCZNIE JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
+                {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
+            ]
+        }]
+
         response = vision_model.generate_content(content)
         res_text = response.text.strip()
         
-        # Logujemy to, co faktycznie przyszło z Google (sprawdzisz w tail -f gielda.log)
-        print(f"DEBUG AI SUCCESS: {res_text}")
-
-        # Wyciągamy JSON
-        import re
+        # Wyciąganie JSON z odpowiedzi AI
         json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
-        
         if json_match:
             return jsonify(json.loads(json_match.group()))
-        
         return jsonify({"error": "AI nie zwróciło JSON"}), 500
 
     except Exception as e:
-        # Ten log powie nam dokładnie, co boli serwer
-        print(f"!!! KRYTYCZNY BLAD ANALIZY: {str(e)}")
+        print(f"BŁĄD AI: {e}")
         return jsonify({"error": str(e)}), 500
 
 
