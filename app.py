@@ -57,7 +57,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
-    
+
     # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
@@ -65,7 +65,6 @@ class User(UserMixin, db.Model):
     # Metody resetowania hasła (Logic AI)
     def get_reset_token(self):
         s = Serializer(app.config['SECRET_KEY'])
-        # Generujemy bezpieczny token przypisany do ID użytkownika
         return s.dumps({'user_id': self.id})
 
     @staticmethod
@@ -76,14 +75,6 @@ class User(UserMixin, db.Model):
         except:
             return None
         return User.query.get(user_id)
-
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-    lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
-    cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -161,6 +152,7 @@ def save_optimized_image(file):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # --- KONFIGURACJA GEMINI AI ---
 genai.configure(api_key="AIzaSyAXH_NcQK2qUYV7EKhBZKc8Ban4nFdWs4g")
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
@@ -171,33 +163,31 @@ vision_model = genai.GenerativeModel('gemini-1.5-flash')
 def analyze_car():
     if 'image' not in request.files:
         return jsonify({"error": "Nie przesłano zdjęcia"}), 400
-    
+
     file = request.files['image']
     if file.filename == '':
         return jsonify({"error": "Pusty plik"}), 400
 
-        try:
+    try:
         img = Image.open(file)
-        # Prompt zoptymalizowany pod rozpoznawanie wizualne
         prompt = """
         Działaj jako ekspert giełdy samochodowej w Radomiu.
         Zidentyfikuj markę, model i przybliżony rok produkcji auta na zdjęciu.
         Zwróć wynik WYŁĄCZNIE w formacie JSON:
         {"marka": "Marka", "model": "Model", "rok": 2018}
         """
-        
+
         response = vision_model.generate_content([prompt, img])
         res_text = response.text
-        
-        # Logika wycinania czystego JSON-a
+
         if "```json" in res_text:
             res_text = res_text.split("```json")[1].split("```")[0]
         elif "```" in res_text:
             res_text = res_text.split("```")[1].split("```")[0]
-            
+
         data = json.loads(res_text.strip())
         return jsonify(data)
-        
+
     except Exception as e:
         print(f"Błąd Vision AI: {e}")
         return jsonify({"error": "Błąd podczas analizy obrazu"}), 500
@@ -206,48 +196,25 @@ def analyze_car():
 
 @app.route('/')
 def index():
-    # Pobieranie parametrów wyszukiwania
-    query_text = request.args.get('q', '').strip()  # Jedno pole "Inteligentne szukanie"
+    query_text = request.args.get('q', '').strip()
     skrzynia = request.args.get('skrzynia', '')
     paliwo = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
 
-    # 1. Pobieramy wszystkie auta (lub base query)
-    # Wersja produkcyjna: przy dużej bazie używa się SQL LIKE, ale dla Fuzzy Search w Pythonie pobieramy wszystko
-    all_cars_query = Car.query
-
-    # 2. Inteligentne filtrowanie (Literówki / Fuzzy Search)
     if query_text:
-        # Pobieramy wszystkie auta, żeby sprawdzić dopasowanie nazw
         all_cars = Car.query.all()
-        
-        # Tworzymy słownik { "Marka Model": id }
         choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
-        
-        # Biblioteka thefuzz szuka najlepszych dopasowań (wynik > 55%)
-        # To pozwala znaleźć "Wolkswagn" jako "Volkswagen"
         matches = process.extract(query_text, choices.keys(), limit=50)
-        
-        # Wyciągamy ID pasujących aut
         matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
-        
-        # Filtrujemy zapytanie SQL po tych ID
         base_query = Car.query.filter(Car.id.in_(matched_ids))
     else:
-        # Jeśli brak tekstu, bierzemy wszystkie
         base_query = Car.query
 
-    # 3. Dodatkowe filtry techniczne
-    if skrzynia:
-        base_query = base_query.filter(Car.skrzynia == skrzynia)
-    if paliwo:
-        base_query = base_query.filter(Car.paliwo == paliwo)
-    if cena_max:
-        base_query = base_query.filter(Car.cena <= cena_max)
+    if skrzynia: base_query = base_query.filter(Car.skrzynia == skrzynia)
+    if paliwo: base_query = base_query.filter(Car.paliwo == paliwo)
+    if cena_max: base_query = base_query.filter(Car.cena <= cena_max)
 
-    # Sortowanie: najnowsze na górze
     cars = base_query.order_by(Car.id.desc()).all()
-    
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
 
 @app.route('/kontakt')
@@ -262,7 +229,6 @@ def rodo():
 def regulamin():
     return render_template('regulamin.html')
 
-# --- SEO: SITEMAP & ROBOTS ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = "https://gieldaradom.pl"
@@ -287,8 +253,6 @@ def robots():
     ]
     return Response("\n".join(lines), mimetype="text/plain")
 
-# --- CRUD I UŻYTKOWNIK ---
-
 @app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edytuj(id):
@@ -304,14 +268,11 @@ def edytuj(id):
         car.cena = request.form.get('cena')
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
-        # Dodajemy edycję nowych pól jeśli są w formularzu
         if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
         if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
-
         db.session.commit()
         flash('Ogłoszenie zostało pomyślnie zaktualizowane!', 'success')
         return redirect(url_for('profil'))
-
     return render_template('edytuj.html', car=car)
 
 @app.route('/ogloszenie/<int:car_id>')
@@ -332,7 +293,7 @@ def dodaj_ogloszenie():
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    
+
     nowe_auto = Car(
         marka=request.form['marka'], model=request.form['model'],
         rok=int(request.form['rok']), cena=float(request.form['cena']),
@@ -426,14 +387,12 @@ def toggle_favorite(car_id):
     else: current_user.favorite_cars.append(car)
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
+
 def send_reset_email(user):
     token = user.get_reset_token()
-    # Dekodujemy token, bo w Python 3 jest w bytes, a potrzebujemy stringa w URL
-    token_str = token.decode('utf-8')
-    msg = Message('Reset Hasła - Giełda Radom',
-                  recipients=[user.email])
+    msg = Message('Reset Hasła - Giełda Radom', recipients=[user.email])
     msg.body = f'''Aby zresetować hasło, kliknij w poniższy link:
-{url_for('reset_token', token=token_str, _external=True)}
+{url_for('reset_token', token=token, _external=True)}
 
 Jeśli to nie Ty wysłałeś to żądanie, zignoruj tę wiadomość.
 '''
@@ -441,43 +400,33 @@ Jeśli to nie Ty wysłałeś to żądanie, zignoruj tę wiadomość.
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
+    if current_user.is_authenticated: return redirect(url_for('index'))
     if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=request.form.get('email')).first()
         if user:
             send_reset_email(user)
             flash('Wysłano email z instrukcją resetowania hasła.', 'info')
             return redirect(url_for('login'))
-        else:
-            flash('Nie znaleziono konta z takim adresem email.', 'danger')
+        flash('Nie znaleziono konta z takim adresem email.', 'danger')
     return render_template('reset_request.html')
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
+    if current_user.is_authenticated: return redirect(url_for('index'))
     user = User.verify_reset_token(token)
     if user is None:
         flash('To nieprawidłowy lub wygasły token.', 'warning')
         return redirect(url_for('reset_request'))
-    
     if request.method == 'POST':
         password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        if password != confirm_password:
+        if password != request.form.get('confirm_password'):
             flash('Hasła muszą być identyczne.', 'danger')
         else:
-            hashed_password = generate_password_hash(password)
-            user.password_hash = hashed_password
+            user.password_hash = generate_password_hash(password)
             db.session.commit()
-            flash('Twoje hasło zostało zaktualizowane! Możesz się zalogować.', 'success')
+            flash('Twoje hasło zostało zaktualizowane!', 'success')
             return redirect(url_for('login'))
-            
     return render_template('reset_token.html')
-
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
