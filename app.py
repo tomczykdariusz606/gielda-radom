@@ -189,16 +189,17 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # Odczytujemy surowe dane i zamieniamy na tekst Base64
-        # To omija wszystkie błędy biblioteki Pillow/PIL
-        image_data = base64.b64encode(file.read()).decode('utf-8')
+        # Odczytujemy zdjęcie jako czyste bajty i zamieniamy na tekst Base64
+        # Dzięki temu serwer nie musi w ogóle "otwierać" obrazka
+        img_bytes = file.read()
+        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
         
-        # Przygotowujemy prompt i dane dla Gemini 1.5 Flash
+        # Przygotowanie zapytania dla modelu Gemini 1.5 Flash
         content = [
             {
                 "parts": [
-                    {"text": "Zidentyfikuj markę, model i rok auta na zdjęciu. Wynik zwróć WYŁĄCZNIE jako czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
-                    {"inline_data": {"mime_type": file.content_type or "image/jpeg", "data": image_data}}
+                    {"text": "Zidentyfikuj auto na zdjęciu. Podaj markę, model i rok produkcji. Wynik zwróć WYŁĄCZNIE jako JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
+                    {"inline_data": {"mime_type": file.content_type or "image/jpeg", "data": img_b64}}
                 ]
             }
         ]
@@ -207,19 +208,19 @@ def analyze_car():
         response = vision_model.generate_content(content)
         res_text = response.text.strip()
         
-        # Logujemy wynik, żebyś widział go w tail -f gielda.log
-        print(f"DEBUG AI SUCCESS: {res_text}")
+        # Logowanie dla Ciebie w terminalu
+        print(f"--- AI OTRZYMAŁO DANE ---")
+        print(res_text)
 
         import re
         json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
         if json_match:
             return jsonify(json.loads(json_match.group()))
         
-        return jsonify({"error": "Błąd formatu odpowiedzi AI"}), 500
+        return jsonify({"error": "AI nie zwróciło poprawnego formatu"}), 500
 
     except Exception as e:
-        # Ten błąd powie nam dokładnie, co blokuje Google
-        print(f"!!! KRYTYCZNY BLAD: {str(e)}")
+        print(f"!!! POWAŻNY BŁĄD: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
