@@ -207,19 +207,20 @@ def analyze_car():
             {"mime_type": "image/jpeg", "data": img_b64}
         ])
 
-        res_text = response.text.strip()
-        
-        # Próba wyciągnięcia JSONa jeśli AI dodało jakieś komentarze lub ```json
+                res_text = response.text.strip()
+        # Wyciągamy JSON nawet jeśli AI dodało komentarze
         match = re.search(r'\{.*\}', res_text, re.DOTALL)
         if match:
-            json_data = json.loads(match.group())
-            return jsonify(json_data)
+            try:
+                # Próbujemy załadować JSON
+                result = json.loads(match.group())
+                return jsonify(result)
+            except Exception as e:
+                # Jeśli JSON jest błędny, zwróć surowy tekst do debugowania
+                return jsonify({"error": "Błąd JSON", "raw": res_text}), 500
         
-        return jsonify({"error": "AI nie zwróciło poprawnego formatu danych"}), 500
+        return jsonify({"error": "Brak danych JSON w odpowiedzi AI"}), 500
 
-    except Exception as e:
-        print(f"Błąd analizy obrazu: {e}") # Logowanie błędu w konsoli
-        return jsonify({"error": str(e)}), 500
 
 
 # --- TRASY APLIKACJI ---
