@@ -2,6 +2,8 @@ import os
 import uuid
 import zipfile
 import io
+import sekrety  # Import Twojego bezpiecznego pliku
+import google.generativeai as genai  # Dodany brakujący import AI
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -21,12 +23,12 @@ app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = '5WZR5F66GGH6WAEN' 
+app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
 # --- KONFIGURACJA APLIKACJI ---
-app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
+app.secret_key = sekrety.SECRET_KEY # Używamy klucza z pliku sekrety
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
@@ -40,6 +42,10 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# --- KONFIGURACJA GEMINI AI ---
+genai.configure(api_key=sekrety.GEMINI_KEY)  # Pobierane z sekrety.py
+vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- TABELA ULUBIONYCH ---
 favorites = db.Table('favorites',
