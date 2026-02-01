@@ -26,16 +26,14 @@ app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
-# --- KONFIGURACJA APLIKACJI ---
-app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# --- KONFIGURACJA APLIKACJI app.secret_key = sekrety.SECRET_KEY app.config['SQLALCHEMY_DATABA SE_URI'] = 'sqlite:///gielda.db'
+app.config['SQLALCHEMY TRACK_MODIFICATIONS'] =
+False
+UPLOAD_FOLDER = 'static/uploads' ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+app.config['UPLOAD_FOLDER'] =
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+UPLOAD_FOLDER
+if not os.path.exists(UPLOAD_FOLDER): os.makedirs(UPLOAD_FOLDER)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
