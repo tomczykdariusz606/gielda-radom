@@ -19,14 +19,29 @@
         :root { --radom-red: #ce2b37; --radom-dark: #0f0f0f; }
         body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: var(--radom-dark); overflow-x: hidden; }
         
-        /* HERO SECTION */
-        .hero-ai {
-            height: 600px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9)), url("{{ url_for('static', filename='radom_hero.png') }}");
-            background-size: cover; background-position: center; background-attachment: fixed;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; color: white; border-bottom: 5px solid var(--radom-red);
-        }
+        /* HERO SECTION - POPRAWKA DLA IPHONE */
+.hero-ai {
+    height: 600px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9)), 
+                url("{{ url_for('static', filename='radom_hero.png') }}");
+    background-size: cover; 
+    background-position: center; 
+    /* Usunięto background-attachment: fixed, który psuje widok na iPhone */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    position: relative; 
+    color: white; 
+    border-bottom: 5px solid var(--radom-red);
+}
+
+/* Opcjonalnie: Dodaj ten trik, jeśli chcesz zachować efekt "paralaksy" na komputerach, ale wyłączyć go na telefonach */
+@media (min-width: 1025px) {
+    .hero-ai {
+        background-attachment: fixed;
+    }
+}
+
 
         .bg-76 {
             position: absolute; font-family: 'Anton'; font-size: 18vw;
