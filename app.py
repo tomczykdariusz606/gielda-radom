@@ -2,6 +2,7 @@ import os
 import uuid
 import zipfile
 import io
+import sekrety
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -21,7 +22,7 @@ app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = '5WZR5F66GGH6WAEN' 
+app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
