@@ -162,35 +162,29 @@ vision_model = genai.GenerativeModel('gemini-1.5-flash')
 @login_required
 def analyze_car():
     if 'image' not in request.files:
-        return jsonify({"error": "Nie przesłano zdjęcia"}), 400
+        return jsonify({"error": "Brak zdjęcia"}), 400
 
     file = request.files['image']
-    if file.filename == '':
-        return jsonify({"error": "Pusty plik"}), 400
-
     try:
         img = Image.open(file)
-        prompt = """
-        Działaj jako ekspert giełdy samochodowej w Radomiu.
-        Zidentyfikuj markę, model i przybliżony rok produkcji auta na zdjęciu.
-        Zwróć wynik WYŁĄCZNIE w formacie JSON:
-        {"marka": "Marka", "model": "Model", "rok": 2018}
-        """
-
+        prompt = "Zidentyfikuj markę, model i rok auta. Wynik tylko JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
+        
         response = vision_model.generate_content([prompt, img])
         res_text = response.text
 
-        if "```json" in res_text:
-            res_text = res_text.split("```json")[1].split("```")[0]
-        elif "```" in res_text:
-            res_text = res_text.split("```")[1].split("```")[0]
-
-        data = json.loads(res_text.strip())
-        return jsonify(data)
+        # Bezpieczne wyciąganie JSON
+        import re
+        json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group())
+            return jsonify(data)
+        
+        return jsonify({"error": "AI nie zwróciło poprawnego formatu"}), 500
 
     except Exception as e:
-        print(f"Błąd Vision AI: {e}")
-        return jsonify({"error": "Błąd podczas analizy obrazu"}), 500
+        print(f"BŁĄD KRYTYCZNY AI: {str(e)}")
+        return jsonify({"error": "Wystąpił błąd serwera"}), 500
+
 
 # --- TRASY APLIKACJI ---
 
