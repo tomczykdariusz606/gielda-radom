@@ -180,7 +180,7 @@ def allowed_file(filename):
 
 # --- KONFIGURACJA 
 # TWOJA NOWA KONFIGURACJA API
-genai.configure(api_key=AIzaSyDTfcNh7h_2IeIuz63wBRh7Sv71qTJmDPs")
+genai.configure(api_key=AIzaSyB_ifmGgueG1le8154xjCSMNi12fGFZdnc")
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
 @app.route('/api/analyze-car', methods=['POST'])
