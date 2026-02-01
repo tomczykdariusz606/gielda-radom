@@ -187,27 +187,26 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # Odczytujemy surowe bajty (najbezpieczniej dla Twojego Ubuntu)
-        img_data = file.read()
+        # 1. Otwieramy i kompresujemy zdjęcie (zmniejsza 10MB do ~200KB)
+        img = Image.open(file).convert('RGB')
+        img.thumbnail((800, 800)) # Zmniejszamy wymiary dla szybkości
         
-        # Przygotowanie danych dla modelu Gemini 1.5 Flash
-        contents = [
-            {
-                "parts": [
-                    {"text": "Zidentyfikuj auto na zdjęciu. Podaj markę, model i rok produkcji. Wynik zwróć WYŁĄCZNIE jako czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
-                    {"inline_data": {"mime_type": file.content_type, "data": img_data}}
-                ]
-            }
-        ]
-
-        # Wywołanie modelu
-        response = vision_model.generate_content(contents)
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='JPEG', quality=70) # Kompresja
+        img_bytes = img_byte_arr.getvalue()
+        
+        # 2. Wysyłamy do Gemini
+        image_part = {
+            "mime_type": "image/jpeg",
+            "data": img_bytes
+        }
+        
+        prompt = "Podaj markę, model i rok auta. Zwróć tylko czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
+        
+        response = vision_model.generate_content([prompt, image_part])
         res_text = response.text.strip()
         
-        # LOGOWANIE DLA CIEBIE (zobaczysz to w tail -f gielda.log)
-        print(f"--- AI RESPONSE START ---")
-        print(res_text)
-        print(f"--- AI RESPONSE END ---")
+        print(f"DEBUG AI SUCCESS: {res_text}")
 
         import re
         json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
@@ -217,7 +216,6 @@ def analyze_car():
         return jsonify({"error": "AI nie zwróciło JSON"}), 500
 
     except Exception as e:
-        # To wypisze nam konkretną przyczynę błędu 500
         print(f"!!! POWAŻNY BŁĄD ANALIZY: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
