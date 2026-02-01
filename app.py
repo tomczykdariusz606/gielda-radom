@@ -191,8 +191,6 @@ else:
     print("BŁĄD: Brak klucza API w zmiennych środowiskowych!")
 genai.configure(api_key=GEMINI_KEY)
 
-vision_model = genai.GenerativeModel('gemini-1.5-flash')
-
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
