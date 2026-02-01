@@ -387,6 +387,39 @@
     </footer>
 
     <script>
+// Dodaj to do swojego skryptu w profilu
+document.querySelector('input[name="zdjecia"]').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Zmieniamy tekst w badge'u na "Skanowanie..."
+    const aiBadge = document.querySelector('.ai-badge');
+    const originalText = aiBadge.innerHTML;
+    aiBadge.innerHTML = '<i class="bi bi-camera"></i> Gemini skanuje auto...';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await fetch('/api/analyze-car', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.marka) {
+            document.getElementById('aiMarka').value = data.marka;
+            document.getElementById('aiModel').value = data.model;
+            document.getElementById('aiRok').value = data.rok;
+            aiBadge.innerHTML = '<i class="bi bi-check-lg"></i> Auto rozpoznane!';
+            setTimeout(() => { aiBadge.innerHTML = originalText; }, 3000);
+        }
+    } catch (err) {
+        console.error("Błąd AI:", err);
+        aiBadge.innerHTML = originalText;
+    }
+});
+
         async function generateAIDesc() {
             const marka = document.getElementById('aiMarka').value;
             const model = document.getElementById('aiModel').value;
