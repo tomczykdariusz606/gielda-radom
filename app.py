@@ -187,35 +187,32 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # Odczytujemy surowe bajty zdjęcia
-        img_bytes = file.read()
+        # Czytamy surowe bajty prosto z formularza
+        img_data = file.read()
         
-        # Przygotowujemy strukturę, którą Gemini zawsze rozumie
-        image_parts = [
-            {
-                "mime_type": file.content_type,
-                "data": img_bytes
-            }
-        ]
+        # Tworzymy strukturę danych bez użycia biblioteki Pillow
+        image_part = {
+            "mime_type": file.content_type or "image/jpeg",
+            "data": img_data
+        }
         
-        prompt = "Identify: car brand, model, and year. Return ONLY raw JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
+        prompt = "Zidentyfikuj markę, model i rok auta. Wynik tylko JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
 
-        # Wywołanie modelu z surowymi danymi
-        response = vision_model.generate_content([prompt, image_parts[0]])
+        # Przesyłamy surowe bajty do Gemini
+        response = vision_model.generate_content([prompt, image_part])
         res_text = response.text.strip()
         
-        # Logujemy odpowiedź, żebyś widział ją w gielda.log
-        print(f"AI Response: {res_text}")
+        print(f"DEBUG AI RESP: {res_text}")
 
         import re
-        match = re.search(r'\{.*\}', res_text, re.DOTALL)
-        if match:
-            return jsonify(json.loads(match.group()))
+        json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        if json_match:
+            return jsonify(json.loads(json_match.group()))
         
-        return jsonify({"error": "Niepoprawny format odpowiedzi AI"}), 500
+        return jsonify({"error": "AI nie zwróciło JSON"}), 500
 
     except Exception as e:
-        print(f"Błąd analizy: {str(e)}")
+        print(f"BLAD KRYTYCZNY: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # --- TRASY APLIKACJI ---
