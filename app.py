@@ -7,6 +7,7 @@ from PIL import Image
 import io
 import google.generativeai as genai
 import json
+load_dotenv() # Wywołaj to od razu pod importami
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -26,9 +27,10 @@ app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = '5WZR5F66GGH6WAEN' 
-app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
-mail = Mail(app)
+# ZAMIEŃ TO:
+# app.config['MAIL_PASSWORD'] = '5WZR5F66GGH6WAEN' 
+# NA TO:
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
 
 # --- KONFIGURACJA APLIKACJI ---
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
@@ -178,9 +180,16 @@ def save_optimized_image(file):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- KONFIGURACJA 
-# TWOJA NOWA KONFIGURACJA API
-genai.configure(api_key="AIzaSyB_ifmGgueG1le8154xjCSMNi12fGFZdnc")
+# --- KONFIGURACJA GEMINI ---
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+
+if GEMINI_KEY:
+    genai.configure(api_key=GEMINI_KEY)
+    vision_model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    # To ostrzeżenie pojawi się w logach, jeśli zapomnisz o pliku .env
+    print("BŁĄD: Brak klucza API w zmiennych środowiskowych!")
+
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
 @app.route('/api/analyze-car', methods=['POST'])
