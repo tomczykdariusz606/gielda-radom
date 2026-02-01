@@ -187,36 +187,36 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # 1. Odczytujemy surowe dane i typ pliku
-        image_data = file.read()
-        mime_type = file.content_type  # np. image/jpeg
-
-        # 2. Przygotowujemy dane dla Gemini w formacie słownikowym
-        image_part = {
-            "mime_type": mime_type,
-            "data": image_data
-        }
+        # Odczytujemy surowe bajty zdjęcia
+        img_bytes = file.read()
         
-        prompt = "Identify: brand, model, year. Return ONLY raw JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
+        # Przygotowujemy strukturę, którą Gemini zawsze rozumie
+        image_parts = [
+            {
+                "mime_type": file.content_type,
+                "data": img_bytes
+            }
+        ]
+        
+        prompt = "Identify: car brand, model, and year. Return ONLY raw JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
 
-        # 3. Przekazujemy jako listę części
-        response = vision_model.generate_content([prompt, image_part])
+        # Wywołanie modelu z surowymi danymi
+        response = vision_model.generate_content([prompt, image_parts[0]])
         res_text = response.text.strip()
         
-        print(f"DEBUG AI: {res_text}")
+        # Logujemy odpowiedź, żebyś widział ją w gielda.log
+        print(f"AI Response: {res_text}")
 
         import re
         match = re.search(r'\{.*\}', res_text, re.DOTALL)
         if match:
             return jsonify(json.loads(match.group()))
         
-        return jsonify({"error": "Błąd formatu AI"}), 500
+        return jsonify({"error": "Niepoprawny format odpowiedzi AI"}), 500
 
     except Exception as e:
-        print(f"FATAL ERROR: {str(e)}")
-        # Jeśli wyrzuci błąd 'image-unsupported', będziemy wiedzieć na 100%
+        print(f"Błąd analizy: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 
 # --- TRASY APLIKACJI ---
 
