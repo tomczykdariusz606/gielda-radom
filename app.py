@@ -187,32 +187,37 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # Czytamy surowe bajty prosto z formularza
+        # Odczytujemy surowe bajty zdjęcia (najbezpieczniejsza metoda)
         img_data = file.read()
         
-        # Tworzymy strukturę danych bez użycia biblioteki Pillow
+        # Przygotowujemy dane dla Gemini Vision
         image_part = {
             "mime_type": file.content_type or "image/jpeg",
             "data": img_data
         }
         
-        prompt = "Zidentyfikuj markę, model i rok auta. Wynik tylko JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
+        # Bardzo konkretny prompt, żeby AI nie zwracało zbędnego tekstu
+        prompt = "Identify car: brand, model, year. Return ONLY raw JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
 
-        # Przesyłamy surowe bajty do Gemini
+        # Wywołanie modelu
         response = vision_model.generate_content([prompt, image_part])
         res_text = response.text.strip()
         
-        print(f"DEBUG AI RESP: {res_text}")
+        # Logujemy to, co faktycznie przyszło z Google (sprawdzisz to w tail -f gielda.log)
+        print(f"DEBUG AI SUCCESS: {res_text}")
 
+        # Wyciągamy JSON (na wypadek gdyby AI dodało np. ```json)
         import re
         json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        
         if json_match:
             return jsonify(json.loads(json_match.group()))
         
-        return jsonify({"error": "AI nie zwróciło JSON"}), 500
+        return jsonify({"error": "AI zwróciło nieprawidłowy format"}), 500
 
     except Exception as e:
-        print(f"BLAD KRYTYCZNY: {str(e)}")
+        # Ten błąd wypisze nam dokładnie, co jest nie tak w gielda.log
+        print(f"KRYTYCZNY BLAD ANALIZY: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # --- TRASY APLIKACJI ---
