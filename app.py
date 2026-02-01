@@ -137,18 +137,35 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# --- GENERATOR OPISÓW AI ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
 def generate_ai_description():
     data = request.json
-    marka = data.get('marka', '')
-    model = data.get('model', '')
-    rok = data.get('rok', '')
-    paliwo = data.get('paliwo', '')
+    marka = data.get('marka', 'nieznana')
+    model = data.get('model', 'nieznany')
+    img_filename = data.get('current_img') 
+    
+    # Prompt dopasowany do Giełdy Radom
+    prompt = f"Stwórz profesjonalne ogłoszenie sprzedaży samochodu {marka} {model} na portal Giełda Radom. " \
+             f"Jeśli widzisz zdjęcie, opisz stan wizualny, kolor i charakterystyczne cechy. " \
+             f"Dodaj zachętę do kontaktu telefonicznego i oględzin w Radomiu."
 
-    prompt_result = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę przy niskim spalaniu. Samochód zadbany, regularnie serwisowany, idealny na trasy po Radomiu i okolicach. Komfortowe wnętrze i pewne prowadzenie. Zapraszam na jazdę próbną!"
-    return jsonify({"description": prompt_result})
+    try:
+        if img_filename:
+            # Szukamy zdjęcia w folderze upload
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_filename.split('/')[-1])
+            if os.path.exists(img_path):
+                img_data = Image.open(img_path)
+                response = vision_model.generate_content([prompt, img_data])
+                return jsonify({"description": response.text})
+        
+        # Jeśli brak zdjęcia lub pliku, używamy tylko tekstu
+        response = vision_model.generate_content(prompt)
+        return jsonify({"description": response.text})
+        
+    except Exception as e:
+        return jsonify({"description": f"AI chwilowo zajęte. Auto: {marka} {model}. Zapraszam do kontaktu!"})
+
 
 # --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
