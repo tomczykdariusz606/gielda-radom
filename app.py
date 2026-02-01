@@ -176,18 +176,20 @@ def analyze_car():
     if file.filename == '':
         return jsonify({"error": "Pusty plik"}), 400
 
-    try:
+        try:
         img = Image.open(file)
         # Prompt zoptymalizowany pod rozpoznawanie wizualne
         prompt = """
-        Działaj jako ekspert giełdy samochodowej w Radomiu. 
+        Działaj jako ekspert giełdy samochodowej w Radomiu.
         Zidentyfikuj markę, model i przybliżony rok produkcji auta na zdjęciu.
         Zwróć wynik WYŁĄCZNIE w formacie JSON:
         {"marka": "Marka", "model": "Model", "rok": 2018}
         """
+        
         response = vision_model.generate_content([prompt, img])
-                # Poprawna wersja czyszczenia odpowiedzi
         res_text = response.text
+        
+        # Logika wycinania czystego JSON-a
         if "```json" in res_text:
             res_text = res_text.split("```json")[1].split("```")[0]
         elif "```" in res_text:
@@ -195,7 +197,7 @@ def analyze_car():
             
         data = json.loads(res_text.strip())
         return jsonify(data)
-
+        
     except Exception as e:
         print(f"Błąd Vision AI: {e}")
         return jsonify({"error": "Błąd podczas analizy obrazu"}), 500
