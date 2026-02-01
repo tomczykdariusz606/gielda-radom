@@ -2,18 +2,10 @@ import os
 import uuid
 import zipfile
 import io
-import sekrety
+import sekrety  # Import Twojego bezpiecznego pliku
+import google.generativeai as genai  # Dodany brakujący import AI
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_, func
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mail import Mail, Message
-from PIL import Image
-from itsdangerous import URLSafeTimedSerializer as Serializer
-# Import biblioteki do "rozmytego" wyszukiwania (literówki)
-from thefuzz import process 
+# ... (reszta Twoich importów Flask)
 
 app = Flask(__name__)
 
@@ -22,25 +14,19 @@ app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
+app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD  # Pobierane z sekrety.py
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
---- KONFIGURACJA GEMINI AI ---
+# --- KONFIGURACJA GEMINI AI ---
+genai.configure(api_key=sekrety.GEMINI_KEY)  # Pobierane z sekrety.py
+vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
-genai.configure(api_key=sekre
+# --- KONFIGURACJA APLIKACJI ---
+app.secret_key = sekrety.SECRET_KEY  # Przeniesione do sekrety.py dla bezpieczeństwa
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
+# ... (reszta kodu bazy danych)
 
-ty.GEMINI_KEY) # Pobierane z
-
-sekrety.py
-
-vision_model = genai.GenerativeMode l('gemini-1.5-flash')
-
-# --- KONFIGURACJA APLIKACJI --- app.secret_key = sekrety. SECRET_KEY # Przeniesione do sekrety.py dla bezpieczeństwa
-
-app.config['SQLALCHEMY_DATABA
-
-SE_URI'] = 'sqlite:///gielda.db
 app.config['SQLALCHEMY TRACK_MODIFICATIONS'] =
 False
 UPLOAD_FOLDER = 'static/uploads' ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
