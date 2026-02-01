@@ -3,11 +3,19 @@ import uuid
 import zipfile
 import base64
 import re
-from PIL import Image
 import io
-import google.generativeai as genai
 import json
-load_dotenv() # Wywołaj to od razu pod importami
+from datetime import datetime, timedelta
+
+# Importy zewnętrzne
+from PIL import Image
+import google.generativeai as genai
+from dotenv import load_dotenv  # 1. Najpierw importujemy
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
+
+# Inicjalizacja zmiennych środowiskowych
+load_dotenv()  # 2. Potem wywołujemy (teraz os.getenv będzie widzieć klucze z .env)
+
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
