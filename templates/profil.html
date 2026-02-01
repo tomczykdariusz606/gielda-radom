@@ -386,16 +386,16 @@
         </div>
     </footer>
 
-    <script>
-<script>
-// Obsługa rozpoznawania auta ze zdjęcia
+  <script>
+// 1. Obsługa rozpoznawania auta ze zdjęcia przez Gemini Vision AI
 document.querySelector('input[name="zdjecia"]').addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Zmieniamy tekst w badge'u na górze strony, żeby dać znać, że AI pracuje
     const aiBadge = document.querySelector('.ai-badge');
     const originalText = aiBadge.innerHTML;
-    aiBadge.innerHTML = '<i class="bi bi-camera"></i> Gemini skanuje auto...';
+    aiBadge.innerHTML = '<i class="bi bi-camera-fill"></i> Gemini skanuje auto...';
 
     const formData = new FormData();
     formData.append('image', file);
@@ -407,17 +407,17 @@ document.querySelector('input[name="zdjecia"]').addEventListener('change', async
         });
         const data = await response.json();
 
-        // TU WKLEJAMY ZAKTUALIZOWANY FRAGMENT:
+        // Jeśli AI zwróciło dane, wypełniamy formularz
         if (data.marka) {
             document.getElementById('aiMarka').value = data.marka;
             document.getElementById('aiModel').value = data.model;
             document.getElementById('aiRok').value = data.rok;
-            
+
             // Automatyczne ustawianie paliwa (jeśli AI wykryje)
             if (data.paliwo && document.getElementById('aiPaliwo')) {
                 document.getElementById('aiPaliwo').value = data.paliwo;
             }
-            
+
             aiBadge.innerHTML = '<i class="bi bi-check-lg"></i> Auto rozpoznane!';
             setTimeout(() => { aiBadge.innerHTML = originalText; }, 3000);
         }
@@ -427,33 +427,36 @@ document.querySelector('input[name="zdjecia"]').addEventListener('change', async
     }
 });
 
-// Funkcja generowania opisu (pozostaje bez zmian)
+// 2. Funkcja generowania profesjonalnego opisu AI
+async function generateAIDesc() {
+    const marka = document.getElementById('aiMarka').value;
+    const model = document.getElementById('aiModel').value;
+    const rok = document.getElementById('aiRok').value;
+    const paliwo = document.getElementById('aiPaliwo').value;
+    const btn = document.querySelector('.ai-sparkle-btn');
 
-        async function generateAIDesc() {
-            const marka = document.getElementById('aiMarka').value;
-            const model = document.getElementById('aiModel').value;
-            const rok = document.getElementById('aiRok').value;
-            const paliwo = document.getElementById('aiPaliwo').value;
-            const btn = document.querySelector('.ai-sparkle-btn');
+    if(!marka || !model) { 
+        alert("Podaj markę i model (lub wrzuć zdjęcie), aby AI mogło stworzyć opis!"); 
+        return; 
+    }
 
-            if(!marka || !model) { alert("Podaj markę i model, aby AI mogło stworzyć opis!"); return; }
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gemini pracuje...';
 
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Gemini pracuje...';
+    try {
+        const response = await fetch('/api/generate-description', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({marka, model, rok, paliwo})
+        });
+        const data = await response.json();
+        document.getElementById('aiOpis').value = data.description;
+    } catch (e) {
+        alert("Błąd połączenia z serwerem AI.");
+    }
+    btn.innerHTML = '<i class="bi bi-stars"></i> Generuj opis AI';
+}
+</script>
 
-            try {
-                const response = await fetch('/api/generate-description', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({marka, model, rok, paliwo})
-                });
-                const data = await response.json();
-                document.getElementById('aiOpis').value = data.description;
-            } catch (e) {
-                alert("Błąd połączenia z serwerem AI.");
-            }
-            btn.innerHTML = '<i class="bi bi-stars"></i> Generuj opis AI';
-        }
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
