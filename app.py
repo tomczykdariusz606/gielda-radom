@@ -166,6 +166,35 @@ def save_optimized_image(file):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+@app.route('/api/generate-description', methods=['POST'])
+@login_required
+def generate_ai_description():
+    data = request.json
+    marka = data.get('marka', 'nieznana')
+    model = data.get('model', 'nieznany')
+    
+    # Próba pobrania zdjęcia z folderu static/uploads
+    # (W wersji rozwojowej wysyłamy ostatnie wgrane zdjęcie)
+    img_filename = data.get('current_img') 
+    
+    prompt = f"Jesteś profesjonalnym sprzedawcą aut w Radomiu. Napisz chwytliwy opis na giełdę dla: {marka} {model}. " \
+             f"Skup się na zaletach, używaj języka korzyści, zaproś na jazdę próbną. Opis ma być krótki i konkretny."
+
+    try:
+        # Jeśli mamy plik obrazu, używamy modelu Vision
+        if img_filename and os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], img_filename)):
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_filename)
+            sample_file = Image.open(img_path)
+            # Wywołanie modelu Gemini 1.5 Flash ze zdjęciem
+            response = vision_model.generate_content([prompt, sample_file])
+        else:
+            # Jeśli brak zdjęcia, generujemy sam tekst
+            response = vision_model.generate_content(prompt)
+            
+        return jsonify({"description": response.text})
+    except Exception as e:
+        return jsonify({"description": f"Błąd AI: {str(e)}. Na sprzedaż {marka} {model} w dobrym stanie!"})
+
 
 # --- TRASY APLIKACJI ---
 
