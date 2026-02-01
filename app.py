@@ -186,9 +186,16 @@ def analyze_car():
         {"marka": "Marka", "model": "Model", "rok": 2018}
         """
         response = vision_model.generate_content([prompt, img])
-        raw_text = response.text.replace('```json', '').replace('```', '').strip()
-        data = json.loads(raw_text)
+                # Poprawna wersja czyszczenia odpowiedzi
+        res_text = response.text
+        if "```json" in res_text:
+            res_text = res_text.split("```json")[1].split("```")[0]
+        elif "```" in res_text:
+            res_text = res_text.split("```")[1].split("```")[0]
+            
+        data = json.loads(res_text.strip())
         return jsonify(data)
+
     except Exception as e:
         print(f"Błąd Vision AI: {e}")
         return jsonify({"error": "Błąd podczas analizy obrazu"}), 500
