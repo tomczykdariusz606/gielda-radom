@@ -2,7 +2,7 @@ import os
 import uuid
 import zipfile
 import io
-import sekrety
+
 import google.generativeai as genai
 
 from datetime import datetime, timedelta
