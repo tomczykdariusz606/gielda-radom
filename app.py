@@ -1,6 +1,7 @@
 import os
 import uuid
 import zipfile
+import base64
 import io
 import google.generativeai as genai
 import json
@@ -187,36 +188,35 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # 1. Otwieramy i kompresujemy zdjęcie (zmniejsza 10MB do ~200KB)
-        img = Image.open(file).convert('RGB')
-        img.thumbnail((800, 800)) # Zmniejszamy wymiary dla szybkości
+        # Odczytujemy zdjęcie i zamieniamy na Base64
+        img_data = file.read()
+        img_base64 = base64.b64encode(img_data).decode('utf-8')
         
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='JPEG', quality=70) # Kompresja
-        img_bytes = img_byte_arr.getvalue()
-        
-        # 2. Wysyłamy do Gemini
-        image_part = {
-            "mime_type": "image/jpeg",
-            "data": img_bytes
-        }
-        
-        prompt = "Podaj markę, model i rok auta. Zwróć tylko czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
-        
-        response = vision_model.generate_content([prompt, image_part])
+        # Przygotowujemy dane w formacie, który Gemini zawsze akceptuje
+        content = [
+            {
+                "parts": [
+                    {"text": "Podaj markę, model i rok auta ze zdjęcia. Odpowiedź tylko w JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
+                    {"inline_data": {"mime_type": file.content_type or "image/jpeg", "data": img_base64}}
+                ]
+            }
+        ]
+
+        # Wywołanie generowania
+        response = vision_model.generate_content(content)
         res_text = response.text.strip()
         
-        print(f"DEBUG AI SUCCESS: {res_text}")
+        print(f"DEBUG AI RESP: {res_text}")
 
         import re
-        json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
-        if json_match:
-            return jsonify(json.loads(json_match.group()))
+        match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        if match:
+            return jsonify(json.loads(match.group()))
         
-        return jsonify({"error": "AI nie zwróciło JSON"}), 500
+        return jsonify({"error": "Błąd formatu danych AI"}), 500
 
     except Exception as e:
-        print(f"!!! POWAŻNY BŁĄD ANALIZY: {str(e)}")
+        print(f"BŁĄD KRYTYCZNY ANALIZY: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
