@@ -2,6 +2,8 @@ import os
 import uuid
 import zipfile
 import io
+import google.generativeai as genai
+import json
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -159,6 +161,37 @@ def save_optimized_image(file):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+# --- KONFIGURACJA GEMINI AI ---
+genai.configure(api_key="AIzaSyAXH_NcQK2qUYV7EKhBZKc8Ban4nFdWs4g")
+vision_model = genai.GenerativeModel('gemini-1.5-flash')
+
+# --- NOWA TRASA: ANALIZA ZDJĘCIA AUTA ---
+@app.route('/api/analyze-car', methods=['POST'])
+@login_required
+def analyze_car():
+    if 'image' not in request.files:
+        return jsonify({"error": "Nie przesłano zdjęcia"}), 400
+    
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({"error": "Pusty plik"}), 400
+
+    try:
+        img = Image.open(file)
+        # Prompt zoptymalizowany pod rozpoznawanie wizualne
+        prompt = """
+        Działaj jako ekspert giełdy samochodowej w Radomiu. 
+        Zidentyfikuj markę, model i przybliżony rok produkcji auta na zdjęciu.
+        Zwróć wynik WYŁĄCZNIE w formacie JSON:
+        {"marka": "Marka", "model": "Model", "rok": 2018}
+        """
+        response = vision_model.generate_content([prompt, img])
+        raw_text = response.text.replace('```json', '').replace('```', '').strip()
+        data = json.loads(raw_text)
+        return jsonify(data)
+    except Exception as e:
+        print(f"Błąd Vision AI: {e}")
+        return jsonify({"error": "Błąd podczas analizy obrazu"}), 500
 
 # --- TRASY APLIKACJI ---
 
