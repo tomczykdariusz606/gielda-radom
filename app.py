@@ -189,6 +189,7 @@ if GEMINI_KEY:
 else:
     # To ostrzeżenie pojawi się w logach, jeśli zapomnisz o pliku .env
     print("BŁĄD: Brak klucza API w zmiennych środowiskowych!")
+genai.configure(api_key=GEMINI_KEY)
 
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
