@@ -189,25 +189,30 @@ def analyze_car():
     file = request.files['image']
     try:
         img = Image.open(file)
-        prompt = "Zidentyfikuj markę, model i rok auta. Wynik tylko JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
-        
-        response = vision_model.generate_content([prompt, img])
-        res_text = response.text
+        # Bardzo sztywny prompt, żeby AI nie "gadało" za dużo
+        prompt = "Identify the car brand, model, and year from this image. Return ONLY a raw JSON object like this: {\"marka\": \"Brand\", \"model\": \"Model\", \"rok\": 2020}. No extra text or formatting."
 
-        # Bezpieczne wyciąganie JSON
+        response = vision_model.generate_content([prompt, img])
+        res_text = response.text.strip()
+        
+        # LOGOWANIE DO PLIKU (pomoże nam sprawdzić co psuje kod)
+        print(f"DEBUG AI RESPONSE: {res_text}")
+
+        # Czyścimy odpowiedź z ewentualnych znaczników ```json ... ```
         import re
         json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        
         if json_match:
-            data = json.loads(json_match.group())
+            clean_json = json_match.group()
+            data = json.loads(clean_json)
             return jsonify(data)
         
-        return jsonify({"error": "AI nie zwróciło poprawnego formatu"}), 500
+        return jsonify({"error": "AI nie zwróciło poprawnego formatu JSON"}), 500
 
     except Exception as e:
-        print(f"BŁĄD KRYTYCZNY AI: {str(e)}")
-        return jsonify({"error": "Wystąpił błąd serwera"}), 500
-
-
+        # To wypisze nam konkretny błąd w Twoim terminalu/logach
+        print(f"BŁĄD KRYTYCZNY ANALIZY: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 # --- TRASY APLIKACJI ---
 
 @app.route('/')
