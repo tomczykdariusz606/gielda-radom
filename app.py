@@ -26,7 +26,21 @@ app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
-# --- KONFIGURACJA APLIKACJI app.secret_key = sekrety.SECRET_KEY app.config['SQLALCHEMY_DATABA SE_URI'] = 'sqlite:///gielda.db'
+--- KONFIGURACJA GEMINI AI ---
+
+genai.configure(api_key=sekre
+
+ty.GEMINI_KEY) # Pobierane z
+
+sekrety.py
+
+vision_model = genai.GenerativeMode l('gemini-1.5-flash')
+
+# --- KONFIGURACJA APLIKACJI --- app.secret_key = sekrety. SECRET_KEY # Przeniesione do sekrety.py dla bezpieczeństwa
+
+app.config['SQLALCHEMY_DATABA
+
+SE_URI'] = 'sqlite:///gielda.db
 app.config['SQLALCHEMY TRACK_MODIFICATIONS'] =
 False
 UPLOAD_FOLDER = 'static/uploads' ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
