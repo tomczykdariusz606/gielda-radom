@@ -2,6 +2,7 @@ import os
 import uuid
 import zipfile
 import base64
+import re
 from PIL import Image
 import io
 import google.generativeai as genai
@@ -187,33 +188,39 @@ vision_model = genai.GenerativeModel('gemini-1.5-flash')
 def analyze_car():
     if 'image' not in request.files:
         return jsonify({"error": "Brak zdjęcia"}), 400
-    
+
     file = request.files['image']
     try:
-        # Szybka kompresja dla AI
         img = Image.open(file)
         if img.mode in ("RGBA", "P"): img = img.convert("RGB")
         img.thumbnail((800, 800))
-        
+
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=70)
         img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-        prompt = "Podaj markę, model i rok auta. Zwróć WYŁĄCZNIE czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
-        
+        # Bardziej precyzyjny prompt
+        prompt = "Przeanalizuj zdjęcie i podaj markę, model i rok produkcji auta. Zwróć tylko czysty JSON bez żadnego formatowania markdown, np: {\"marka\": \"Audi\", \"model\": \"A4\", \"rok\": 2015}"
+
         response = vision_model.generate_content([
             prompt,
             {"mime_type": "image/jpeg", "data": img_b64}
         ])
-        
+
         res_text = response.text.strip()
+        
+        # Próba wyciągnięcia JSONa jeśli AI dodało jakieś komentarze lub ```json
         match = re.search(r'\{.*\}', res_text, re.DOTALL)
         if match:
-            return jsonify(json.loads(match.group()))
-        return jsonify({"error": "Błąd AI"}), 500
+            json_data = json.loads(match.group())
+            return jsonify(json_data)
+        
+        return jsonify({"error": "AI nie zwróciło poprawnego formatu danych"}), 500
 
     except Exception as e:
+        print(f"Błąd analizy obrazu: {e}") # Logowanie błędu w konsoli
         return jsonify({"error": str(e)}), 500
+
 
 # --- TRASY APLIKACJI ---
 
