@@ -185,12 +185,13 @@ GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
+    # Wykorzystujemy model 1.5 Flash do analizy zdjęć i opisów
     vision_model = genai.GenerativeModel('gemini-1.5-flash')
+    print("Konfiguracja AI: Klucz wczytany poprawnie.")
 else:
     # To ostrzeżenie pojawi się w logach, jeśli zapomnisz o pliku .env
-    print("BŁĄD: Brak klucza API w zmiennych środowiskowych!")
-genai.configure(api_key=GEMINI_KEY)
-
+    print("BŁĄD: Brak klucza API w zmiennych środowiskowych! AI nie będzie działać.")
+    vision_model = None  # Zapobiega błędom braku definicji w dalszej części kodu
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
