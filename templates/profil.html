@@ -387,12 +387,12 @@
     </footer>
 
     <script>
-// Dodaj to do swojego skryptu w profilu
+<script>
+// Obsługa rozpoznawania auta ze zdjęcia
 document.querySelector('input[name="zdjecia"]').addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Zmieniamy tekst w badge'u na "Skanowanie..."
     const aiBadge = document.querySelector('.ai-badge');
     const originalText = aiBadge.innerHTML;
     aiBadge.innerHTML = '<i class="bi bi-camera"></i> Gemini skanuje auto...';
@@ -407,10 +407,17 @@ document.querySelector('input[name="zdjecia"]').addEventListener('change', async
         });
         const data = await response.json();
 
+        // TU WKLEJAMY ZAKTUALIZOWANY FRAGMENT:
         if (data.marka) {
             document.getElementById('aiMarka').value = data.marka;
             document.getElementById('aiModel').value = data.model;
             document.getElementById('aiRok').value = data.rok;
+            
+            // Automatyczne ustawianie paliwa (jeśli AI wykryje)
+            if (data.paliwo && document.getElementById('aiPaliwo')) {
+                document.getElementById('aiPaliwo').value = data.paliwo;
+            }
+            
             aiBadge.innerHTML = '<i class="bi bi-check-lg"></i> Auto rozpoznane!';
             setTimeout(() => { aiBadge.innerHTML = originalText; }, 3000);
         }
@@ -419,6 +426,8 @@ document.querySelector('input[name="zdjecia"]').addEventListener('change', async
         aiBadge.innerHTML = originalText;
     }
 });
+
+// Funkcja generowania opisu (pozostaje bez zmian)
 
         async function generateAIDesc() {
             const marka = document.getElementById('aiMarka').value;
