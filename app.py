@@ -187,33 +187,36 @@ def analyze_car():
 
     file = request.files['image']
     try:
-        # Odczytujemy obraz i upewniamy się, że jest w RGB (Gemini nie lubi RGBA/PNG z przezroczystością)
-        img = Image.open(file).convert('RGB')
+        # 1. Odczytujemy surowe dane i typ pliku
+        image_data = file.read()
+        mime_type = file.content_type  # np. image/jpeg
+
+        # 2. Przygotowujemy dane dla Gemini w formacie słownikowym
+        image_part = {
+            "mime_type": mime_type,
+            "data": image_data
+        }
         
-        # Bardzo rygorystyczny prompt
         prompt = "Identify: brand, model, year. Return ONLY raw JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
 
-        response = vision_model.generate_content([prompt, img])
+        # 3. Przekazujemy jako listę części
+        response = vision_model.generate_content([prompt, image_part])
         res_text = response.text.strip()
         
-        # LOGOWANIE - to pozwoli Ci zobaczyć w tail -f gielda.log co dokładnie widzi Python
-        print(f"RAW AI RESP: {res_text}")
+        print(f"DEBUG AI: {res_text}")
 
-        # Czyścimy śmieci typu ```json ... ``` z odpowiedzi
         import re
-        # Szukamy wszystkiego co jest między klamrami { }
         match = re.search(r'\{.*\}', res_text, re.DOTALL)
-        
         if match:
-            json_str = match.group()
-            data = json.loads(json_str)
-            return jsonify(data)
+            return jsonify(json.loads(match.group()))
         
-        return jsonify({"error": "Nie udało się wyodrębnić danych z odpowiedzi AI"}), 500
+        return jsonify({"error": "Błąd formatu AI"}), 500
 
     except Exception as e:
-        print(f"CRITICAL ERROR IN ANALYZE: {str(e)}")
-        return jsonify({"error": "Błąd przetwarzania obrazu"}), 500
+        print(f"FATAL ERROR: {str(e)}")
+        # Jeśli wyrzuci błąd 'image-unsupported', będziemy wiedzieć na 100%
+        return jsonify({"error": str(e)}), 500
+
 
 # --- TRASY APLIKACJI ---
 
