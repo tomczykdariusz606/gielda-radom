@@ -177,20 +177,20 @@ def save_optimized_image(file):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- KONFIGURACJA GEMINI AI ---
-genai.configure(api_key="AIzaSyAXH_NcQK2qUYV7EKhBZKc8Ban4nFdWs4g")
+# --- KONFIGURACJA 
+# TWOJA NOWA KONFIGURACJA API
+genai.configure(api_key="AIzaSyBaRKcopMZPYOoy9PksAGVWIUkhcZIUA5A")
 vision_model = genai.GenerativeModel('gemini-1.5-flash')
 
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
-    """Analizuje zdjęcie przez Gemini AI z kompresją w locie"""
     if 'image' not in request.files:
         return jsonify({"error": "Brak zdjęcia"}), 400
     
     file = request.files['image']
     try:
-        # Kompresja do RAM przed wysyłką do AI (żeby nie było błędu 500)
+        # Szybka kompresja dla AI
         img = Image.open(file)
         if img.mode in ("RGBA", "P"): img = img.convert("RGB")
         img.thumbnail((800, 800))
@@ -199,26 +199,21 @@ def analyze_car():
         img.save(buffer, format="JPEG", quality=70)
         img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-        content = [{
-            "parts": [
-                {"text": "Podaj markę, model i rok auta. Zwróć WYŁĄCZNIE JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
-                {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
-            ]
-        }]
-
-        response = vision_model.generate_content(content)
-        res_text = response.text.strip()
+        prompt = "Podaj markę, model i rok auta. Zwróć WYŁĄCZNIE czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"
         
-        # Wyciąganie JSON z odpowiedzi AI
-        json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
-        if json_match:
-            return jsonify(json.loads(json_match.group()))
-        return jsonify({"error": "AI nie zwróciło JSON"}), 500
+        response = vision_model.generate_content([
+            prompt,
+            {"mime_type": "image/jpeg", "data": img_b64}
+        ])
+        
+        res_text = response.text.strip()
+        match = re.search(r'\{.*\}', res_text, re.DOTALL)
+        if match:
+            return jsonify(json.loads(match.group()))
+        return jsonify({"error": "Błąd AI"}), 500
 
     except Exception as e:
-        print(f"BŁĄD AI: {e}")
         return jsonify({"error": str(e)}), 500
-
 
 # --- TRASY APLIKACJI ---
 
