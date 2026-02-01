@@ -124,7 +124,7 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# --- GENERATOR OPISÓW AI ---
+# --- INTELIGENTNY GENERATOR OPISÓW GEMINI AI ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
 def generate_ai_description():
@@ -134,8 +134,30 @@ def generate_ai_description():
     rok = data.get('rok', '')
     paliwo = data.get('paliwo', '')
 
-    prompt_result = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę przy niskim spalaniu. Samochód zadbany, regularnie serwisowany, idealny na trasy po Radomiu i okolicach. Komfortowe wnętrze i pewne prowadzenie. Zapraszam na jazdę próbną!"
-    return jsonify({"description": prompt_result})
+    # Tworzymy zaawansowany prompt dla AI
+    prompt = f"""
+    Działaj jako profesjonalny sprzedawca samochodów na giełdzie w Radomiu. 
+    Napisz atrakcyjne, unikalne ogłoszenie sprzedażowe dla auta: {marka} {model}, rok {rok}, silnik {paliwo}.
+    
+    Wymagania dotyczące opisu:
+    1. Użyj języka korzyści (zachęć do zakupu).
+    2. Wspomnij, że auto idealnie nadaje się na trasy w okolicach Radomia.
+    3. Dodaj informacje o komforcie i oszczędności (jeśli pasują do modelu).
+    4. Styl powinien być profesjonalny, ale przyjazny.
+    5. Nie używaj hashtagów. 
+    6. Opis powinien mieć około 4-5 zdań.
+    """
+
+    try:
+        # Wywołujemy model tekstowy Gemini
+        response = vision_model.generate_content(prompt)
+        ai_text = response.text.strip()
+        return jsonify({"description": ai_text})
+    except Exception as e:
+        print(f"Błąd generowania opisu: {e}")
+        # Rezerwowy opis na wypadek błędu API
+        fallback = f"Na sprzedaż {marka} {model} ({rok} r.). Auto zadbane, gotowe do jazdy. Zapraszam do kontaktu!"
+        return jsonify({"description": fallback})
 
 # --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
