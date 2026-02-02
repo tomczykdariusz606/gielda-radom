@@ -5,12 +5,12 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mail import Mail
+from flask_mail import Mail, Message
 from PIL import Image
 
 app = Flask(__name__)
 
-# --- KONFIGURACJA ---
+# --- KONFIGURACJA (Nie zmieniać kolejności) ---
 app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
@@ -23,6 +23,7 @@ model_ai = genai.GenerativeModel('gemini-1.5-flash')
 
 app.secret_key = 'sekretny_klucz_gieldy_radom_2026'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/gielda.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -30,7 +31,7 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# --- MODELE ---
+# --- MODELE BAZY DANYCH (Pełne) ---
 favorites = db.Table('favorites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
@@ -67,7 +68,7 @@ class Car(db.Model):
 @login_manager.user_loader
 def load_user(user_id): return User.query.get(int(user_id))
 
-# --- TRASY ---
+# --- GŁÓWNE TRASY ---
 
 @app.route('/')
 def index():
@@ -102,7 +103,12 @@ def toggle_favorite(car_id):
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj():
-    f = request.files.getlist('zdjecia')[0]
+    files = request.files.getlist('zdjecia')
+    if not files or not files[0]:
+        flash("Musisz dodać zdjęcie!", "danger")
+        return redirect(url_for('profil'))
+    
+    f = files[0]
     fname = f"{uuid.uuid4().hex}.webp"
     f.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
     
@@ -111,17 +117,72 @@ def dodaj():
         cena=float(request.form['cena']), opis=request.form['opis'], telefon=request.form['telefon'],
         przebieg=int(request.form.get('przebieg', 0)), user_id=current_user.id,
         img=url_for('static', filename='uploads/' + fname),
-        paliwo=request.form.get('paliwo'), skrzynia=request.form.get('skrzynia')
+        paliwo=request.form.get('paliwo'), skrzynia=request.form.get('skrzynia'),
+        nadwozie=request.form.get('nadwozie'), pojemnosc=request.form.get('pojemnosc')
     )
-    db.session.add(nowe); db.session.commit()
+    db.session.add(nowe)
+    db.session.commit()
+    flash("Dodano ogłoszenie!", "success")
     return redirect(url_for('profil'))
+
+@app.route('/usun/<int:car_id>', methods=['POST'])
+@login_required
+def delete_car(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car.user_id == current_user.id or current_user.id == 1:
+        db.session.delete(car)
+        db.session.commit()
+    return redirect(url_for('profil'))
+
+# --- ADMIN / BACKUP ---
+@app.route('/admin/full-backup')
+@login_required
+def full_backup():
+    if current_user.id != 1: return "Brak uprawnień", 403
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w') as zf:
+        for root, dirs, files in os.walk('.'):
+            for file in files:
+                zf.write(os.path.join(root, file))
+    memory_file.seek(0)
+    return send_file(memory_file, download_name='backup.zip', as_attachment=True)
+
+@app.route('/admin/backup-db')
+@login_required
+def backup_db():
+    if current_user.id != 1: return "Brak uprawnień", 403
+    return send_file('instance/gielda.db', as_attachment=True)
 
 # --- API AI ---
 @app.route('/api/analyze-car', methods=['POST'])
-def analyze():
+def analyze_car_api():
+    if 'image' not in request.files: return jsonify({"error": "Brak zdjęcia"}), 400
     img = Image.open(request.files['image'])
-    res = model_ai.generate_content(["Podaj Markę, Model i Rok auta. Format JSON: {\"marka\":\"...\",\"model\":\"...\",\"rok\":2020}", img])
-    return res.text
+    prompt = "Rozpoznaj auto: Marka, Model, Rok. Zwróć JSON: {\"marka\":\"...\",\"model\":\"...\",\"rok\":2020,\"full_label\":\"...\"}"
+    response = model_ai.generate_content([prompt, img])
+    return response.text.replace('```json', '').replace('```', '').strip()
+
+@app.route('/api/generate-description', methods=['POST'])
+def generate_desc():
+    data = request.json
+    prompt = f"Napisz ogłoszenie: {data['marka']} {data['model']}, {data['rok']}r."
+    res = model_ai.generate_content(prompt)
+    return jsonify({"description": res.text})
+
+# --- LOGOWANIE ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user = User.query.filter_by(email=request.form['email']).first()
+        if user and check_password_hash(user.password_hash, request.form['password']):
+            login_user(user)
+            return redirect(url_for('profil'))
+    return render_template('login.html', now=datetime.utcnow())
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
