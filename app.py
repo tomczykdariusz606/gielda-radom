@@ -242,6 +242,7 @@ def edytuj(id):
         car.model = request.form.get('model')
         car.rok = request.form.get('rok')
         car.cena = request.form.get('cena')
+        car.przebieg = request.form.get('przebieg')
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
         car.skrzynia = request.form.get('skrzynia')
