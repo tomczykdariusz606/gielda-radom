@@ -13,153 +13,166 @@
     <style>
         :root { 
             --radom-red: #ce2b37; 
-            --accent: #4285f4;
-            --glass: rgba(255, 255, 255, 0.85);
+            --dark-surface: #0f1113;
+            --glass-white: rgba(255, 255, 255, 0.05);
         }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f1113; color: white; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--dark-surface); color: white; overflow-x: hidden; }
 
-        /* HERO SECTION */
-        .hero-bg {
+        /* HERO SECTION NA ŚWIATOWYM POZIOMIE */
+        .hero-section {
             position: relative;
-            height: 60vh;
-            background: linear-gradient(rgba(15,17,19,0.2), #0f1113), url('{{ car.img }}');
+            min-height: 50vh;
+            background: linear-gradient(0deg, var(--dark-surface) 0%, rgba(15,17,19,0.4) 100%), 
+                        url('/static/czerwiec_tlo.jpg');
             background-size: cover;
             background-position: center;
             display: flex;
-            align-items: flex-end;
-            padding-bottom: 50px;
+            align-items: center;
+            padding: 80px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        .glass-header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
+        .hero-glass {
+            background: rgba(15, 17, 19, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 30px;
-            width: 100%;
+            border-radius: 32px;
+            padding: 40px;
         }
 
-        /* GALERIA PREMIUM */
+        /* GALERIA Z POWIĘKSZENIEM */
         .main-gallery-img {
             width: 100%;
-            height: 550px;
+            height: 600px;
             object-fit: cover;
-            border-radius: 30px;
-            cursor: zoom-in;
-            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .main-gallery-img:hover { transform: scale(1.02); }
+        .main-gallery-img:hover { transform: scale(1.01); filter: brightness(1.1); }
 
         .thumb-nav {
             display: flex;
             gap: 12px;
+            padding: 20px 0;
             overflow-x: auto;
-            padding: 15px 0;
             scrollbar-width: none;
         }
-        .thumb-nav::-webkit-scrollbar { display: none; }
         .thumb-item {
-            width: 100px;
-            height: 70px;
-            border-radius: 12px;
+            width: 120px;
+            height: 85px;
+            border-radius: 16px;
             object-fit: cover;
             cursor: pointer;
-            opacity: 0.6;
+            opacity: 0.5;
             transition: 0.3s;
             border: 2px solid transparent;
         }
-        .thumb-item.active { opacity: 1; border-color: var(--radom-red); }
+        .thumb-item.active { opacity: 1; border-color: var(--radom-red); transform: translateY(-5px); }
 
-        /* SPECYFIKACJA */
+        /* PARAMETRY - SPECYFIKACJA */
         .spec-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 16px;
         }
         .spec-card {
-            background: #1a1d21;
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid #2d3238;
-        }
-        .spec-val { font-size: 1.25rem; font-weight: 800; display: block; }
-        .spec-label { color: #8e959f; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* AI PRICE ANALYZER */
-        .ai-panel {
-            background: linear-gradient(135deg, rgba(66,133,244,0.1) 0%, rgba(155,114,243,0.1) 100%);
-            border: 1px solid rgba(155,114,243,0.3);
-            border-radius: 20px;
-            padding: 20px;
-        }
-
-        .btn-call {
-            background: var(--radom-red);
-            font-size: 1.2rem;
-            font-weight: 700;
-            border-radius: 18px;
-            padding: 18px;
+            background: rgba(255,255,255,0.03);
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
             transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(206, 43, 55, 0.3);
         }
+        .spec-card:hover { background: rgba(255,255,255,0.06); border-color: var(--radom-red); }
+        .spec-label { color: #8e959f; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+        .spec-val { font-size: 1.3rem; font-weight: 800; display: block; margin-top: 4px; color: #fff; }
 
-        /* MOBILE STICKY CONTACT */
+        /* PANEL KONTATKOWY */
+        .contact-box {
+            background: white;
+            color: black;
+            border-radius: 32px;
+            padding: 32px;
+            position: sticky;
+            top: 100px;
+        }
+        .price-text { font-size: 2.5rem; font-weight: 900; color: var(--radom-red); letter-spacing: -1px; }
+
+        .btn-premium-call {
+            background: var(--radom-red);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            width: 100%;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 15px 30px rgba(206, 43, 55, 0.4);
+        }
+        .btn-premium-call:hover { transform: translateY(-5px); background: #a51d28; color: white; }
+
         @media (max-width: 768px) {
-            .mobile-sticky {
-                position: fixed;
-                bottom: 20px;
-                left: 20px;
-                right: 20px;
-                z-index: 1000;
-            }
+            .main-gallery-img { height: 350px; }
+            .hero-section { padding: 40px 0; }
         }
     </style>
 </head>
 <body>
 
-    <div class="hero-bg">
+    <header class="hero-section">
         <div class="container">
-            <div class="glass-header shadow-lg">
+            <div class="hero-glass shadow-2xl">
                 <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <span class="badge bg-danger mb-2">NOWOŚĆ</span>
-                        <h1 class="display-4 fw-800 mb-0">{{ car.marka }} {{ car.model }}</h1>
-                        <p class="fs-5 opacity-75 mb-0"><i class="bi bi-geo-alt"></i> Radom, Mazowieckie</p>
+                    <div class="col-lg-7">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/" class="text-white opacity-50 text-decoration-none">Giełda</a></li>
+                                <li class="breadcrumb-item active text-white" aria-current="page">{{ car.marka }}</li>
+                            </ol>
+                        </nav>
+                        <h1 class="display-3 fw-800 mb-2">{{ car.marka }} {{ car.model }}</h1>
+                        <div class="d-flex flex-wrap gap-3 align-items-center">
+                            <span class="badge bg-danger px-3 py-2 rounded-pill">TOP OFERTA</span>
+                            <span class="opacity-75 fs-5"><i class="bi bi-geo-alt-fill text-danger"></i> Radom, {{ current_user.lokalizacja if current_user.lokalizacja else 'Polska' }}</span>
+                        </div>
                     </div>
-                    <div class="col-md-4 text-md-end">
-                        <div class="h1 fw-800 text-white mb-0">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
-                        <p class="text-success fw-bold mb-0 small"><i class="bi bi-graph-down"></i> Cena poniżej rynkowej</p>
+                    <div class="col-lg-5 text-lg-end mt-4 mt-lg-0">
+                        <div class="price-hero text-white h1 fw-900 mb-0" id="priceDisplay">
+                            {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} <small class="fs-4">PLN</small>
+                        </div>
+                        <p class="text-success mb-0 fw-bold"><i class="bi bi-shield-check"></i> Gwarancja ceny Radom AI</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <div class="container py-5">
+    <main class="container py-5">
         <div class="row g-5">
-            <div class="col-lg-8" id="gallery-container">
-                <div class="pswp-gallery" id="my-gallery">
-                    <a href="{{ car.img }}" 
-                       data-pswp-width="1200" 
-                       data-pswp-height="800" 
-                       target="_blank">
-                        <img src="{{ car.img }}" id="mainHeroImg" class="main-gallery-img shadow-lg mb-3" alt="Foto">
+            <div class="col-lg-8">
+                <div class="pswp-gallery" id="car-gallery">
+                    <a href="{{ car.img }}" data-pswp-width="1600" data-pswp-height="1000" target="_blank">
+                        <img src="{{ car.img }}" id="mainActiveImg" class="main-gallery-img shadow-lg" alt="Główne zdjęcie {{ car.marka }}">
                     </a>
 
                     <div class="thumb-nav">
-                        <img src="{{ car.img }}" class="thumb-item active" onclick="changeImg('{{ car.img }}', this)">
+                        <img src="{{ car.img }}" class="thumb-item active" onclick="updatePreview('{{ car.img }}', this)">
                         {% for image in car.images %}
-                        <a href="{{ image.image_path }}" data-pswp-width="1200" data-pswp-height="800" class="d-none"></a>
-                        <img src="{{ image.image_path }}" class="thumb-item" onclick="changeImg('{{ image.image_path }}', this)">
+                        <a href="{{ image.image_path }}" data-pswp-width="1600" data-pswp-height="1000" class="d-none"></a>
+                        <img src="{{ image.image_path }}" class="thumb-item" onclick="updatePreview('{{ image.image_path }}', this)">
                         {% endfor %}
                     </div>
                 </div>
 
                 <div class="mt-5">
-                    <h4 class="fw-bold mb-4">Informacje o pojazdzie</h4>
-                    <p class="fs-5 opacity-75" style="line-height: 1.8; white-space: pre-line;">
-                        {{ car.opis }}
-                    </p>
+                    <h3 class="fw-800 mb-4">Opis od właściciela</h3>
+                    <p class="fs-5 opacity-75" style="line-height: 1.8; white-space: pre-line;">{{ car.opis }}</p>
                 </div>
             </div>
 
@@ -170,53 +183,60 @@
                         <span class="spec-val">{{ car.przebieg }} km</span>
                     </div>
                     <div class="spec-card">
-                        <span class="spec-label">Rok</span>
+                        <span class="spec-label">Rok produkcji</span>
                         <span class="spec-val">{{ car.rok }}</span>
                     </div>
                     <div class="spec-card">
-                        <span class="spec-label">Paliwo</span>
-                        <span class="spec-val">{{ car.paliwo }}</span>
+                        <span class="spec-label">Skrzynia biegów</span>
+                        <span class="spec-val text-danger">{{ car.skrzynia }}</span>
                     </div>
                     <div class="spec-card">
-                        <span class="spec-label">Silnik</span>
-                        <span class="spec-val">{{ car.pojemnosc }}</span>
+                        <span class="spec-label">Rodzaj paliwa</span>
+                        <span class="spec-val">{{ car.paliwo }}</span>
                     </div>
                 </div>
 
-                <div class="ai-panel mb-4">
-                    <h6 class="fw-bold"><i class="bi bi-stars"></i> Gemini AI Insights</h6>
-                    <p class="small opacity-75 mb-0">Samochód w tej konfiguracji z przebiegiem {{ car.przebieg }} km trzyma wartość o 15% lepiej niż średnia rynkowa.</p>
-                </div>
-
-                <div class="card bg-dark border-secondary p-3 mb-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <img src="https://mubi.pl/images/mubi-logo.svg" height="20" class="mb-2" alt="Mubi">
-                            <p class="small mb-0 text-muted">Ubezpiecz od 399 zł</p>
-                        </div>
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
-
-                <div class="mobile-sticky">
-                    <a href="tel:{{ car.telefon }}" class="btn btn-call btn-danger w-100 mb-3">
-                        <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ TERAZ
+                <div class="contact-box shadow-xl mb-4">
+                    <div class="text-muted small fw-bold text-uppercase mb-2">Cena Brutto</div>
+                    <div class="price-text mb-4">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
+                    
+                    <a href="tel:{{ car.telefon }}" class="btn-premium-call">
+                        <i class="bi bi-telephone-fill"></i> ZADZWOŃ TERAZ
                     </a>
+                    
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-dark text-white rounded-circle p-2">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">Sprzedawca prywatny</div>
+                                <div class="small text-muted">{{ car.zrodlo }} (Radom)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-primary bg-opacity-10 border-primary border-opacity-25 p-4 rounded-4">
+                    <h6 class="text-primary fw-800 mb-2"><i class="bi bi-stars"></i> ANALIZA GEMINI AI</h6>
+                    <p class="small text-white opacity-75 mb-0">
+                        Ten {{ car.marka }} z rocznika {{ car.rok }} posiada rzadko spotykaną konfigurację ({{ car.pojemnosc }}). Sugerowany czas sprzedaży: 4 dni.
+                    </p>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <footer class="py-5 mt-5 border-top border-secondary">
+    <footer class="py-5 border-top border-white border-opacity-10 mt-5">
         <div class="container text-center text-muted">
-            <p>© 2026 Giełda Radom AI. Radom's Number One Marketplace.</p>
+            <p>© 2026 Giełda Radom. Premium Automotive Marketplace.</p>
         </div>
     </footer>
 
     <script type="module">
         import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
         const lightbox = new PhotoSwipeLightbox({
-            gallery: '#my-gallery',
+            gallery: '#car-gallery',
             children: 'a',
             pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js')
         });
@@ -224,10 +244,12 @@
     </script>
 
     <script>
-        function changeImg(src, el) {
-            document.getElementById('mainHeroImg').src = src;
-            document.getElementById('mainHeroImg').parentElement.href = src;
-            document.querySelectorAll('.thumb-item').forEach(i => i.classList.remove('active'));
+        function updatePreview(src, el) {
+            const mainImg = document.getElementById('mainActiveImg');
+            mainImg.src = src;
+            mainImg.parentElement.href = src;
+            
+            document.querySelectorAll('.thumb-item').forEach(item => item.classList.remove('active'));
             el.classList.add('active');
         }
     </script>
