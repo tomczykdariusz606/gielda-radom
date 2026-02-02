@@ -4,8 +4,8 @@ import zipfile
 import io
 import sekrety
 import sqlite3
-
-import google.generativeai as genai
+import json
+import google.generativeai as genai
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
