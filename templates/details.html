@@ -7,50 +7,158 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root { --radom-red: #ce2b37; }
-        .car-img { border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; object-fit: cover; }
-        .price-tag { color: var(--radom-red); font-size: 2.5rem; font-weight: 800; }
-        .spec-box { background: white; padding: 20px; border-radius: 15px; border-left: 5px solid var(--radom-red); }
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        
+        .gallery-main { 
+            height: 450px; object-fit: cover; width: 100%; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+        }
+        
+        .price-box { 
+            background: white; padding: 25px; border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid var(--radom-red); 
+        }
+        .price-tag { color: var(--radom-red); font-size: 2.8rem; font-weight: 800; }
+        
+        /* ANALIZA AI CENY */
+        .ai-valuation-bar {
+            padding: 10px 15px; border-radius: 8px; color: white; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* PRZYCISKI PARTNERÓW */
+        .btn-check-vin { background: #eef2f6; color: #2c3e50; font-weight: 600; border: 1px solid #dce1e6; }
+        .btn-check-vin:hover { background: #dce1e6; }
+        .logo-partner { height: 20px; vertical-align: middle; margin-right: 8px; }
+
+        /* ULUBIONE */
+        .btn-fav { 
+            background: white; border: 2px solid #ddd; color: #ccc; 
+            width: 50px; height: 50px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; transition: 0.3s;
+        }
+        .btn-fav.active { border-color: var(--radom-red); color: var(--radom-red); background: #fff5f5; }
+        .btn-fav:hover { transform: scale(1.1); }
+
+        .spec-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .spec-item:last-child { border-bottom: none; }
+        .spec-label { color: #6c757d; }
+        .spec-value { font-weight: 600; color: var(--radom-dark); }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container"><a class="navbar-brand fw-bold" href="/">Giełda Radom</a></div>
-    </nav>
+<body>
 
-    <div class="container mb-5">
-        <div class="row">
-            <div class="col-lg-7">
-                <img src="{{ car.img }}" class="car-img mb-4" alt="{{ car.marka }}">
-                <div class="bg-white p-4 rounded-4 shadow-sm">
-                    <h4 class="fw-bold mb-3">Opis pojazdu</h4>
-                    <p style="white-space: pre-line;">{{ car.opis }}</p>
+<nav class="navbar navbar-dark bg-dark mb-4 sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+        <div class="d-flex gap-3">
+            {% if current_user.is_authenticated %}
+                <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill">Mój Profil</a>
+            {% else %}
+                <a href="/login" class="btn btn-danger btn-sm rounded-pill">Zaloguj</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <img src="{{ car.img }}" class="gallery-main mb-4" alt="{{ car.marka }}">
+            
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3"><i class="bi bi-stars text-primary"></i> Opis Pojazdu & Analiza AI</h4>
+                    <p class="text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ car.opis }}</p>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="spec-box shadow-sm mb-4">
-                    <h1 class="fw-bold">{{ car.marka }} {{ car.model }}</h1>
-                    <p class="text-muted">{{ car.rok }} r. | {{ car.przebieg }} km</p>
-                    <div class="price-tag mb-3">{{ car.cena|int }} PLN</div>
-                    <hr>
-                    <div class="d-grid gap-2">
-                        <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg rounded-pill">
-                            <i class="bi bi-telephone-fill me-2"></i> {{ car.telefon }}
-                        </a>
-                        <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="btn btn-outline-danger rounded-pill">
-                            <i class="bi bi-heart"></i> Dodaj do ulubionych
-                        </a>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <a href="https://www.carvertical.com/pl/sprawdzenie-vin" target="_blank" class="btn btn-check-vin w-100 py-3 rounded-3">
+                        <i class="bi bi-shield-check text-success"></i> Sprawdź historię (CarVertical)
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <a href="https://mubi.pl/" target="_blank" class="btn btn-check-vin w-100 py-3 rounded-3">
+                        <i class="bi bi-car-front-fill text-primary"></i> Oblicz OC/AC (Mubi)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="price-box sticky-top" style="top: 90px; z-index: 1;">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h2 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h2>
+                        <span class="text-muted">{{ car.rok }} r. • {{ car.przebieg }} km</span>
                     </div>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" 
+                       class="btn-fav {% if car in current_user.favorite_cars %}active{% endif %}" 
+                       title="Dodaj do ulubionych">
+                        <i class="bi bi-heart-fill"></i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="price-tag mb-3">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
+
+                {% set val = get_market_valuation(car) %}
+                <div class="ai-valuation-bar" style="background: {{ val.color }};">
+                    <span><i class="bi bi-graph-up-arrow"></i> {{ val.status }}</span>
+                    <span class="badge bg-white text-dark opacity-75">{{ val.diff }}%</span>
+                </div>
+                <p class="small text-muted text-center mb-4">Szacowana cena rynkowa: <strong>{{ val.avg }} PLN</strong></p>
+
+                <div class="d-grid gap-2 mb-4">
+                    <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg rounded-pill fw-bold shadow-sm">
+                        <i class="bi bi-telephone-fill me-2"></i> {{ car.telefon }}
+                    </a>
+                    <button class="btn btn-outline-dark rounded-pill fw-bold">
+                        <i class="bi bi-chat-dots me-2"></i> Wyślij wiadomość
+                    </button>
+                </div>
+
+                <h5 class="fw-bold border-bottom pb-2 mb-3">Szczegóły</h5>
+                <div class="spec-item">
+                    <span class="spec-label">Silnik</span>
+                    <span class="spec-value">{{ car.pojemnosc }}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Paliwo</span>
+                    <span class="spec-value">{{ car.paliwo }}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Skrzynia</span>
+                    <span class="spec-value">{{ car.skrzynia }}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Nadwozie</span>
+                    <span class="spec-value">{{ car.nadwozie }}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Lokalizacja</span>
+                    <span class="spec-value"><i class="bi bi-geo-alt text-danger"></i> {{ car.zrodlo }}</span>
                 </div>
                 
-                <div class="bg-dark text-white p-4 rounded-4 shadow-sm">
-                    <h5 class="mb-3"><i class="bi bi-info-circle"></i> Szczegóły</h5>
-                    <div class="d-flex justify-content-between mb-2"><span>Paliwo:</span><strong>{{ car.paliwo }}</strong></div>
-                    <div class="d-flex justify-content-between mb-2"><span>Skrzynia:</span><strong>{{ car.skrzynia }}</strong></div>
-                    <div class="d-flex justify-content-between mb-2"><span>Wyświetlenia:</span><strong>{{ car.wyswietlenia }}</strong></div>
+                <div class="mt-4 pt-3 border-top text-center text-muted small">
+                    <i class="bi bi-eye"></i> Wyświetlenia: {{ car.wyswietlenia }}<br>
+                    ID ogłoszenia: #{{ car.id }}
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<footer class="bg-dark text-white-50 text-center py-4 mt-5">
+    <small>&copy; 2026 Giełda Samochodowa Radom AI</small>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
