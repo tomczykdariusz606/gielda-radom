@@ -131,25 +131,6 @@ def get_market_valuation(car):
 @app.context_processor
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
-#=================€€
-@app.route('/api/analyze-car', methods=['POST'])
-def analyze_car_api():
-    data = request.json
-    # Pobieramy dane z żądania
-    marka = data.get('marka')
-    model = data.get('model')
-    przebieg = data.get('przebieg')
-    cena = data.get('cena')
-
-    prompt = f"Przeanalizuj ofertę sprzedaży: {marka} {model}, przebieg {przebieg} km, cena {cena} PLN. Napisz krótki, profesjonalny komentarz o atrakcyjności tej oferty na rynku w Radomiu."
-
-    try:
-        # Tu wywołujemy Twoją funkcję Gemini, którą już masz w app.py
-        response = model_gemini.generate_content(prompt) # Upewnij się, że nazwa obiektu 'model_gemini' jest poprawna
-        return jsonify({"analysis": response.text})
-    except Exception as e:
-        return jsonify({"analysis": "Analiza chwilowo niedostępna."}), 500
-#=============≈=======
 
 # --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
 @app.route('/api/generate-description', methods=['POST'])
@@ -498,6 +479,29 @@ def reset_token(token):
         flash('Hasło zmienione!', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html')
+
+
+@app.route('/api/analyze-car', methods=['POST'])
+def analyze_car_api():
+    try:
+        data = request.json
+        # Pobieramy dane wysłane przez stronę HTML
+        marka = data.get('marka', 'Nieznana')
+        model_car = data.get('model', 'Nieznany')
+        cena = data.get('cena', '0')
+        przebieg = data.get('przebieg', '0')
+
+        # Tworzymy instrukcję dla Gemini
+        prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz o tej ofercie w Radomiu."
+
+        # Wywołujemy model (upewnij się, że obiekt nazywa się model_gemini)
+        response = model_gemini.generate_content(prompt)
+        
+        return jsonify({"analysis": response.text})
+    except Exception as e:
+        print(f"Błąd Gemini: {e}")
+        return jsonify({"analysis": "Analiza AI jest obecnie niedostępna, spróbuj później."}), 500
+
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
