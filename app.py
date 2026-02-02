@@ -249,7 +249,7 @@ def edytuj(id):
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
 
-        # Obsługa nowych zdjęć
+        # Obsługa zdjęć
         new_files = request.files.getlist('zdjecia')
         for file in new_files:
             if file and allowed_file(file.filename):
@@ -263,7 +263,6 @@ def edytuj(id):
         return redirect(url_for('profil'))
 
     return render_template('edytuj.html', car=car)
-
 
 
 @app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
