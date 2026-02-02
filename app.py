@@ -64,7 +64,6 @@ class Car(db.Model):
     img = db.Column(db.String(200), nullable=False)
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    # Pola dodatkowe (wymagają aktualizacji bazy)
     przebieg = db.Column(db.Integer, default=0)
     skrzynia = db.Column(db.String(20))
     paliwo = db.Column(db.String(20))
@@ -83,11 +82,11 @@ class CarImage(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- ANALIZA RYNKOWA ---
+# --- AI & ANALIZA ---
 def get_market_valuation(car):
-    base = {"Audi": 1.2, "BMW": 1.2, "Mercedes": 1.3, "Toyota": 1.1}
+    base = {"Audi": 1.25, "BMW": 1.25, "Mercedes": 1.3, "Volkswagen": 1.1, "Toyota": 1.15}
     age = max(1, 2026 - (car.rok or 2015))
-    avg = 100000 * (0.88 ** age) * base.get(car.marka, 1.0)
+    avg = 120000 * (0.87 ** age) * base.get(car.marka, 1.0)
     diff = ((car.cena - avg) / avg) * 100
     return {"status": "OKAZJA" if diff < -10 else "RYNKOWA", "color": "#28a745" if diff < -10 else "#1a73e8", "avg": int(avg)}
 
@@ -95,7 +94,7 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# --- TRASY API (AI) ---
+# --- TRASY API ---
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
@@ -115,8 +114,8 @@ def index():
 @app.route('/profil')
 @login_required
 def profil():
-    cars = Car.query.filter_by(user_id=current_user.id).all()
-    return render_template('profil.html', cars=cars, fav_cars=current_user.favorite_cars, now=datetime.utcnow())
+    my_cars = Car.query.filter_by(user_id=current_user.id).all()
+    return render_template('profil.html', cars=my_cars, fav_cars=current_user.favorite_cars, now=datetime.utcnow())
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
@@ -133,8 +132,8 @@ def dodaj_ogloszenie():
     if paths:
         try:
             p = os.path.join(app.root_path, paths[0].lstrip('/'))
-            res = model_ai.generate_content(["Opisz auto po polsku.", Image.open(p)])
-            ai_desc = f"\n\n[AI]: {res.text}"
+            res = model_ai.generate_content(["Opisz auto w 2 zdaniach po polsku.", Image.open(p)])
+            ai_desc = f"\n\n[Analiza AI]: {res.text}"
         except: pass
 
     nowe = Car(
@@ -144,7 +143,7 @@ def dodaj_ogloszenie():
         telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
         paliwo=request.form.get('paliwo'), nadwozie=request.form.get('nadwozie'),
         pojemnosc=request.form.get('pojemnosc'), img=paths[0] if paths else "",
-        user_id=current_user.id
+        user_id=current_user.id, zrodlo=current_user.lokalizacja
     )
     db.session.add(nowe)
     db.session.flush()
@@ -156,29 +155,41 @@ def dodaj_ogloszenie():
 @login_required
 def toggle_favorite(car_id):
     car = Car.query.get_or_404(car_id)
-    if car in current_user.favorite_cars: current_user.favorite_cars.remove(car)
-    else: current_user.favorite_cars.append(car)
+    if car in current_user.favorite_cars:
+        current_user.favorite_cars.remove(car)
+    else:
+        current_user.favorite_cars.append(car)
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     c = Car.query.get_or_404(car_id)
-    c.wyswietlenia += 1
+    c.wyswietlenia = (c.wyswietlenia or 0) + 1
     db.session.commit()
     return render_template('details.html', car=c, now=datetime.utcnow())
+
+@app.route('/usun/<int:car_id>', methods=['POST'])
+@login_required
+def delete_car(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car.user_id == current_user.id:
+        db.session.delete(car)
+        db.session.commit()
+    return redirect(url_for('profil'))
 
 # --- SEO & BACKUP ---
 @app.route('/sitemap.xml')
 def sitemap():
     xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     xml += f'<url><loc>{request.url_root}</loc></url>'
-    for c in Car.query.all(): xml += f'<url><loc>{request.url_root}ogloszenie/{c.id}</loc></url>'
+    for c in Car.query.all():
+        xml += f'<url><loc>{request.url_root}ogloszenie/{c.id}</loc></url>'
     return Response(xml + '</urlset>', mimetype='application/xml')
 
 @app.route('/robots.txt')
 def robots():
-    return Response("User-agent: *\nAllow: /", mimetype="text/plain")
+    return Response("User-agent: *\nAllow: /\nSitemap: https://gieldaradom.pl/sitemap.xml", mimetype="text/plain")
 
 @app.route('/admin/full-backup')
 @login_required
@@ -187,16 +198,20 @@ def full_backup():
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, 'w') as zf:
         zf.write('gielda.db')
+        for root, dirs, files in os.walk(UPLOAD_FOLDER):
+            for file in files:
+                zf.write(os.path.join(root, file))
     buf.seek(0)
-    return send_file(buf, mimetype='application/zip', as_attachment=True, download_name="backup.zip")
+    return send_file(buf, mimetype='application/zip', as_attachment=True, download_name="backup_full.zip")
 
-# --- AUTH ---
+# --- LOGIN / REJESTRACJA ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         u = User.query.filter_by(username=request.form['username']).first()
         if u and check_password_hash(u.password_hash, request.form['password']):
-            login_user(u); return redirect(url_for('profil'))
+            login_user(u)
+            return redirect(url_for('profil'))
     return render_template('login.html', now=datetime.utcnow())
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -209,7 +224,13 @@ def register():
     return render_template('register.html', now=datetime.utcnow())
 
 @app.route('/logout')
-def logout(): logout_user(); return redirect(url_for('index'))
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/polityka')
+def polityka():
+    return render_template('polityka.html')
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
