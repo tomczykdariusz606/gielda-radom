@@ -89,6 +89,7 @@ class Car(db.Model):
     model = db.Column(db.String(50), nullable=False)
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
+    przebieg = db.Column(db.Integer, default=0)  # <--- WKLEJ TĘ LINIĘ TUTAJ
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False) 
@@ -241,6 +242,7 @@ def edytuj(id):
         car.model = request.form.get('model')
         car.rok = request.form.get('rok')
         car.cena = request.form.get('cena')
+        przebieg = db.Column(db.Integer, default=0)  # <--- WKLEJ TĘ LINIĘ TUTAJ
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
         car.skrzynia = request.form.get('skrzynia')
@@ -342,6 +344,8 @@ def dodaj_ogloszenie():
     nowe_auto = Car(
         marka=request.form['marka'], model=request.form['model'],
         rok=int(request.form['rok']), cena=float(request.form['cena']),
+      przebieg=request.form.get('przebieg', type=int, default=0), # <--- WKLEJ TO TUTAJ
+#_________________________________________
         opis=oryginalny_opis + ai_analysis, # Łączymy opis użytkownika z analizą AI
         telefon=request.form['telefon'],
         skrzynia=request.form.get('skrzynia'), paliwo=request.form.get('paliwo'),
