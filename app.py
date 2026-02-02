@@ -89,7 +89,6 @@ class Car(db.Model):
     model = db.Column(db.String(50), nullable=False)
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
-    przebieg = db.Column(db.Integer, default=0)
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False) 
@@ -247,8 +246,6 @@ def edytuj(id):
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
-
-#----------------------------------
 
         # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
         new_files = request.files.getlist('zdjecia')
