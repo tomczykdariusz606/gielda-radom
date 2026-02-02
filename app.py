@@ -212,16 +212,16 @@ def rodo():
 def regulamin():
     return render_template('regulamin.html')
 
+# --- SEO ---‐---------
 @app.route('/sitemap.xml')
 def sitemap():
-    base_url = "https://gieldaradom.pl"
-    cars = Car.query.all()
-    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    xml += f'  <url><loc>{base_url}/</loc><priority>1.0</priority></url>\n'
-    for car in cars:
-        xml += f'  <url><loc>{base_url}/ogloszenie/{car.id}</loc><priority>0.8</priority></url>\n'
-    xml += f'</urlset>'
+    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    xml += f'<url><loc>{request.url_root}</loc><priority>1.0</priority></url>'
+    for c in Car.query.all():
+        xml += f'<url><loc>{request.url_root}ogloszenie/{c.id}</loc><priority>0.8</priority></url>'
+    xml += '</urlset>'
     return Response(xml, mimetype='application/xml')
+
 
 @app.route('/robots.txt')
 def robots():
