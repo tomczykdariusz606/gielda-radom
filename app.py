@@ -224,16 +224,33 @@ def edytuj(id):
     if car.user_id != current_user.id:
         flash('Nie masz uprawnień do edycji.', 'danger')
         return redirect(url_for('profil'))
+
     if request.method == 'POST':
-        car.marka, car.model = request.form.get('marka'), request.form.get('model')
-        car.rok, car.cena = request.form.get('rok'), request.form.get('cena')
-        car.telefon, car.opis = request.form.get('telefon'), request.form.get('opis')
-        if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
-        if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.rok = request.form.get('rok')
+        car.cena = request.form.get('cena')
+        car.telefon = request.form.get('telefon')
+        car.opis = request.form.get('opis')
+        car.skrzynia = request.form.get('skrzynia')
+        car.paliwo = request.form.get('paliwo')
+        car.nadwozie = request.form.get('nadwozie') # Dodaj to jeśli masz w formularzu
+
+        # Obsługa nowych zdjęć w edycji
+        new_files = request.files.getlist('nowe_zdjecia')
+        for file in new_files:
+            if file and allowed_file(file.filename):
+                opt_name = save_optimized_image(file)
+                path = url_for('static', filename='uploads/' + opt_name)
+                new_img = CarImage(image_path=path, car_id=car.id)
+                db.session.add(new_img)
+
         db.session.commit()
-        flash('Zaktualizowano!', 'success')
+        flash('Ogłoszenie zaktualizowane!', 'success')
         return redirect(url_for('profil'))
+
     return render_template('edytuj.html', car=car)
+
 @app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
 @login_required
 def usun_zdjecie(image_id):
