@@ -237,25 +237,29 @@ def edytuj(id):
         flash('Nie masz uprawnień do edycji.', 'danger')
         return redirect(url_for('profil'))
 
-if request.method == 'POST':
-    car.marka = 
-request.form.get('marka')
-    car.model = 
-request.form.get('model')
-    car.rok = 
-request.form.get('rok')
-    car.cena = 
-request.form.get('cena')
-    car.przebieg = 
-request.form.get('przebieg', type=int,
-    default=0) # TO WKLEJ
+@app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edytuj(id):
+    car = Car.query.get_or_404(id)
+    if car.user_id != current_user.id:
+        flash('Nie masz uprawnień do edycji.', 'danger')
+        return redirect(url_for('profil'))
 
-#_______________________________
+    # Wszystko poniżej MUSI mieć 4 spacje wcięcia, żeby należało do funkcji 'edytuj'
+    if request.method == 'POST':
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.rok = request.form.get('rok')
+        car.cena = request.form.get('cena')
+        car.przebieg = request.form.get('przebieg', type=int, default=0)
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
+        
+        # Pamiętaj, żeby pod spodem został reszta kodu (zapisywanie zdjęć i db.session.commit())
+
 
         # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
         new_files = request.files.getlist('zdjecia')
