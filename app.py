@@ -1,9 +1,11 @@
 import os
 import uuid
 import zipfile
+import base64
+from PIL import Image
 import io
-import sekrety
 import google.generativeai as genai
+import json
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -23,13 +25,9 @@ app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
-app.config['MAIL_DEFAULT_SENDER'] = 'darius_ztom@go2.pl'
+app.config['MAIL_PASSWORD'] = '5WZR5F66GGH6WAEN' 
+app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
-
-# --- KONFIGURACJA GEMINI AI ---
-genai.configure(api_key=sekrety.GEMINI_KEY)
-model_ai = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- KONFIGURACJA APLIKACJI ---
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
@@ -128,7 +126,7 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
+# --- INTELIGENTNY GENERATOR OPISÓW GEMINI AI ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
 def generate_ai_description():
@@ -138,14 +136,29 @@ def generate_ai_description():
     rok = data.get('rok', '')
     paliwo = data.get('paliwo', '')
 
-    prompt = f"Napisz krótki, profesjonalny opis sprzedażowy dla samochodu {marka} {model} z roku {rok}, silnik {paliwo}. Wspomnij, że auto jest zadbane i zaprasza na jazdę próbną w Radomiu."
+    # Tworzymy zaawansowany prompt dla AI
+    prompt = f"""
+    Działaj jako profesjonalny sprzedawca samochodów na giełdzie w Radomiu. 
+    Napisz atrakcyjne, unikalne ogłoszenie sprzedażowe dla auta: {marka} {model}, rok {rok}, silnik {paliwo}.
+    
+    Wymagania dotyczące opisu:
+    1. Użyj języka korzyści (zachęć do zakupu).
+    2. Wspomnij, że auto idealnie nadaje się na trasy w okolicach Radomia.
+    3. Dodaj informacje o komforcie i oszczędności (jeśli pasują do modelu).
+    4. Styl powinien być profesjonalny, ale przyjazny.
+    5. Nie używaj hashtagów. 
+    6. Opis powinien mieć około 4-5 zdań.
+    """
 
     try:
-        response = model_ai.generate_content(prompt)
-        return jsonify({"description": response.text})
+        # Wywołujemy model tekstowy Gemini
+        response = vision_model.generate_content(prompt)
+        ai_text = response.text.strip()
+        return jsonify({"description": ai_text})
     except Exception as e:
-        # Fallback do f-stringa w razie błędu API
-        fallback = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę. Samochód zadbany, idealny na trasy po Radomiu. Zapraszam na jazdę próbną!"
+        print(f"Błąd generowania opisu: {e}")
+        # Rezerwowy opis na wypadek błędu API
+        fallback = f"Na sprzedaż {marka} {model} ({rok} r.). Auto zadbane, gotowe do jazdy. Zapraszam do kontaktu!"
         return jsonify({"description": fallback})
 
 # --- FUNKCJE POMOCNICZE ---
@@ -164,6 +177,55 @@ def save_optimized_image(file):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# --- KONFIGURACJA GEMINI AI ---
+genai.configure(api_key="AIzaSyAXH_NcQK2qUYV7EKhBZKc8Ban4nFdWs4g")
+vision_model = genai.GenerativeModel('gemini-1.5-flash')
+
+@app.route('/api/analyze-car', methods=['POST'])
+@login_required
+def analyze_car():
+    if 'image' not in request.files:
+        return jsonify({"error": "Brak zdjęcia"}), 400
+
+    file = request.files['image']
+    try:
+        # Odczytujemy surowe bajty i zamieniamy na tekst Base64
+        # To omija wszystkie problemy z biblioteką Pillow/PIL na serwerze
+        img_bytes = file.read()
+        img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+
+        # Przygotowujemy dane dla Gemini w formacie inline_data
+        content = [
+            {
+                "parts": [
+                    {"text": "Zidentyfikuj markę, model i rok auta na zdjęciu. Wynik zwróć WYŁĄCZNIE jako czysty JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": 2020}"},
+                    {"inline_data": {"mime_type": file.content_type or "image/jpeg", "data": img_b64}}
+                ]
+            }
+        ]
+
+        # Wywołanie modelu
+        response = vision_model.generate_content(content)
+        res_text = response.text.strip()
+
+        # Logujemy to, co faktycznie przyszło z Google (sprawdzisz w tail -f gielda.log)
+        print(f"DEBUG AI SUCCESS: {res_text}")
+
+        # Wyciągamy JSON
+        import re
+        json_match = re.search(r'\{.*\}', res_text, re.DOTALL)
+
+        if json_match:
+            return jsonify(json.loads(json_match.group()))
+
+        return jsonify({"error": "AI nie zwróciło JSON"}), 500
+
+    except Exception as e:
+        # Ten log powie nam dokładnie, co boli serwer
+        print(f"!!! KRYTYCZNY BLAD ANALIZY: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 # --- TRASY APLIKACJI ---
 
 @app.route('/')
@@ -173,14 +235,14 @@ def index():
     paliwo = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
 
-    base_query = Car.query
-
     if query_text:
         all_cars = Car.query.all()
         choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
         matches = process.extract(query_text, choices.keys(), limit=50)
         matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
         base_query = Car.query.filter(Car.id.in_(matched_ids))
+    else:
+        base_query = Car.query
 
     if skrzynia: base_query = base_query.filter(Car.skrzynia == skrzynia)
     if paliwo: base_query = base_query.filter(Car.paliwo == paliwo)
@@ -214,7 +276,15 @@ def sitemap():
 
 @app.route('/robots.txt')
 def robots():
-    lines = ["User-agent: *", "Allow: /", "Disallow: /admin/", "Disallow: /login", "Disallow: /register", "Disallow: /profil", "Sitemap: https://gieldaradom.pl/sitemap.xml"]
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /login",
+        "Disallow: /register",
+        "Disallow: /profil",
+        "Sitemap: https://gieldaradom.pl/sitemap.xml"
+    ]
     return Response("\n".join(lines), mimetype="text/plain")
 
 @app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
@@ -222,16 +292,20 @@ def robots():
 def edytuj(id):
     car = Car.query.get_or_404(id)
     if car.user_id != current_user.id:
-        flash('Nie masz uprawnień do edycji.', 'danger')
+        flash('Nie masz uprawnień do edycji tego ogłoszenia.', 'danger')
         return redirect(url_for('profil'))
+
     if request.method == 'POST':
-        car.marka, car.model = request.form.get('marka'), request.form.get('model')
-        car.rok, car.cena = request.form.get('rok'), request.form.get('cena')
-        car.telefon, car.opis = request.form.get('telefon'), request.form.get('opis')
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.rok = request.form.get('rok')
+        car.cena = request.form.get('cena')
+        car.telefon = request.form.get('telefon')
+        car.opis = request.form.get('opis')
         if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
         if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
         db.session.commit()
-        flash('Zaktualizowano!', 'success')
+        flash('Ogłoszenie zostało pomyślnie zaktualizowane!', 'success')
         return redirect(url_for('profil'))
     return render_template('edytuj.html', car=car)
 
@@ -242,44 +316,22 @@ def car_details(car_id):
     db.session.commit()
     return render_template('details.html', car=car, now=datetime.utcnow())
 
-# --- DODAWANIE OGŁOSZENIA Z ANALIZĄ ZDJĘCIA ---
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
-
-    # 1. Zapisywanie zdjęć
     for file in files[:10]:
         if file and allowed_file(file.filename):
             opt_name = save_optimized_image(file)
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
-
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    oryginalny_opis = request.form['opis']
-    ai_analysis = ""
 
-    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI (jeśli dodano zdjęcie)
-    if saved_paths:
-        try:
-            # Ścieżka do pierwszego zdjęcia (lokalna)
-            img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
-            img_to_analyze = Image.open(img_path)
-
-            prompt_vision = "Jesteś ekspertem motoryzacyjnym. Spójrz na to zdjęcie samochodu i krótko opisz jego stan wizualny, kolor i charakterystyczne cechy (np. felgi, stan lakieru). Napisz to w 2-3 zdaniach po polsku jako uzupełnienie ogłoszenia."
-
-            vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
-            ai_analysis = f"\n\n[Analiza AI wyglądu]: {vision_response.text}"
-        except Exception as e:
-            ai_analysis = ""
-
-    # 3. Tworzenie obiektu auta
     nowe_auto = Car(
         marka=request.form['marka'], model=request.form['model'],
         rok=int(request.form['rok']), cena=float(request.form['cena']),
-        opis=oryginalny_opis + ai_analysis, # Łączymy opis użytkownika z analizą AI
-        telefon=request.form['telefon'],
+        opis=request.form['opis'], telefon=request.form['telefon'],
         skrzynia=request.form.get('skrzynia'), paliwo=request.form.get('paliwo'),
         nadwozie=request.form.get('nadwozie'), pojemnosc=request.form.get('pojemnosc'),
         img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id
@@ -289,7 +341,7 @@ def dodaj_ogloszenie():
     for path in saved_paths:
         db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
     db.session.commit()
-    flash('Ogłoszenie dodane z analizą wizualną AI!', 'success')
+    flash('Ogłoszenie dodane!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/profil')
@@ -306,7 +358,7 @@ def refresh_car(car_id):
     if car.user_id == current_user.id:
         car.data_dodania = datetime.utcnow()
         db.session.commit()
-        flash('Odświeżono!', 'success')
+        flash('Ogłoszenie odświeżone!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
@@ -316,7 +368,7 @@ def delete_car(car_id):
     if car.user_id == current_user.id:
         db.session.delete(car)
         db.session.commit()
-        flash('Usunięto.', 'success')
+        flash('Usunięto ogłoszenie.', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -372,30 +424,42 @@ def toggle_favorite(car_id):
 
 def send_reset_email(user):
     token = user.get_reset_token()
-    token_str = token.decode('utf-8') if isinstance(token, bytes) else token
     msg = Message('Reset Hasła - Giełda Radom', recipients=[user.email])
-    msg.body = f"Link do resetu: {url_for('reset_token', token=token_str, _external=True)}"
+    msg.body = f'''Aby zresetować hasło, kliknij w poniższy link:
+{url_for('reset_token', token=token, _external=True)}
+
+Jeśli to nie Ty wysłałeś to żądanie, zignoruj tę wiadomość.
+'''
     mail.send(msg)
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
+    if current_user.is_authenticated: return redirect(url_for('index'))
     if request.method == 'POST':
         user = User.query.filter_by(email=request.form.get('email')).first()
         if user:
             send_reset_email(user)
-            flash('Email wysłany.', 'info')
+            flash('Wysłano email z instrukcją resetowania hasła.', 'info')
             return redirect(url_for('login'))
+        flash('Nie znaleziono konta z takim adresem email.', 'danger')
     return render_template('reset_request.html')
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
+    if current_user.is_authenticated: return redirect(url_for('index'))
     user = User.verify_reset_token(token)
-    if user is None: return redirect(url_for('reset_request'))
+    if user is None:
+        flash('To nieprawidłowy lub wygasły token.', 'warning')
+        return redirect(url_for('reset_request'))
     if request.method == 'POST':
-        user.password_hash = generate_password_hash(request.form.get('password'))
-        db.session.commit()
-        flash('Hasło zmienione!', 'success')
-        return redirect(url_for('login'))
+        password = request.form.get('password')
+        if password != request.form.get('confirm_password'):
+            flash('Hasła muszą być identyczne.', 'danger')
+        else:
+            user.password_hash = generate_password_hash(password)
+            db.session.commit()
+            flash('Twoje hasło zostało zaktualizowane!', 'success')
+            return redirect(url_for('login'))
     return render_template('reset_token.html')
 
 if __name__ == '__main__':
