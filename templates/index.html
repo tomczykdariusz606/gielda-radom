@@ -3,234 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Giełda Radom AI | Najlepsze Ogłoszenia Samochodowe w Regionie</title>
+    <title>Giełda Radom AI | Najlepsze Ogłoszenia Samochodowe</title>
     
-    <meta name="description" content="Oficjalna Giełda Radom wspierana przez AI. Sprawdzone ogłoszenia motoryzacyjne, historia pojazdów i lokalne oferty z Radomia i okolic.">
-    <meta name="keywords" content="giełda radom, samochody radom, ogłoszenia motoryzacyjne, auto giełda, czerwiec 76">
-    <meta name="author" content="Dariusz Tom">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
+    <meta name="description" content="Oficjalna Giełda Radom wspierana przez AI. Sprawdzone ogłoszenia motoryzacyjne z regionu.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://gieldaradom.pl/">
 
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Anton&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
-        :root { 
-            --radom-red: #ce2b37; 
-            --radom-dark: #0a0a0a;
-            --glass: rgba(255, 255, 255, 0.95);
-        }
+        :root { --radom-red: #ce2b37; --radom-dark: #0a0a0a; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f4f6f9; }
         
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background: #f0f2f5; 
-            color: var(--radom-dark);
-            -webkit-font-smoothing: antialiased;
+        .hero-apple {
+            height: 60vh; background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.8)), 
+            url("{{ url_for('static', filename='radom_hero.png') }}") center/cover;
+            display: flex; align-items: center; justify-content: center; color: white;
         }
 
-        /* Hero Apple-Style */
-        .hero-premium {
-            height: 70vh;
-            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
-                        url("{{ url_for('static', filename='radom_hero.png') }}") center/cover no-repeat;
-            display: flex; align-items: center; justify-content: center;
-            position: relative; overflow: hidden;
-        }
-
-        .hero-content { z-index: 2; text-align: center; color: white; }
-        .hero-content h1 { font-family: 'Anton'; font-size: clamp(3rem, 8vw, 6rem); letter-spacing: -2px; line-height: 0.9; }
-
-        /* Search Bar Glassmorphism */
-        .search-container { margin-top: -60px; position: relative; z-index: 10; padding: 0 20px; }
-        .search-glass {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 28px; padding: 25px;
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
-        }
-
-        /* Cards - Modern Look */
+        /* Karta Apple-Style */
         .car-card {
-            border: none; border-radius: 24px; background: white;
-            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-            overflow: hidden; height: 100%; display: flex; flex-direction: column;
+            border: none; border-radius: 24px; background: white; overflow: hidden;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); height: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
-        @media (hover: hover) {
-            .car-card:hover { transform: translateY(-12px) scale(1.02); box-shadow: 0 40px 80px rgba(0,0,0,0.1); }
-        }
+        .car-card:hover { transform: translateY(-10px); box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
 
-        .img-wrapper { position: relative; height: 240px; overflow: hidden; }
-        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s ease; }
-        
-        .badge-premium {
-            position: absolute; top: 20px; left: 20px;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            color: white; padding: 6px 16px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;
+        /* Ulubione i Licznik na zdjęciu */
+        .img-container { position: relative; height: 220px; }
+        .fav-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 10;
+            background: rgba(255,255,255,0.9); border: none; border-radius: 50%;
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.3s;
         }
+        .fav-btn:hover { transform: scale(1.1); background: white; }
 
-        .price-text { font-size: 1.4rem; font-weight: 800; color: var(--radom-red); letter-spacing: -0.5px; }
-
-        /* Footer SEO & Links */
-        .footer-premium { background: var(--radom-dark); color: #fff; padding: 100px 0 40px; }
-        .footer-link { color: rgba(255,255,255,0.5); text-decoration: none; transition: 0.3s; font-size: 0.9rem; }
-        .footer-link:hover { color: var(--radom-red); }
-        
-        /* Mobile Optimization */
-        @media (max-width: 768px) {
-            .hero-premium { height: 50vh; }
-            .search-glass { border-radius: 20px; padding: 20px; }
+        .time-badge {
+            position: absolute; top: 15px; left: 15px; z-index: 10;
+            font-size: 0.7rem; font-weight: 800; padding: 6px 12px; border-radius: 50px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); color: white;
         }
+        .urgent { background: var(--radom-red) !important; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" style="backdrop-filter: blur(10px); background: rgba(10,10,10,0.8) !important;">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container">
         <a class="navbar-brand fw-800" href="/">GIEŁDA RADOM <span class="text-danger">AI</span></a>
-        <div class="ms-auto d-flex align-items-center gap-3">
+        <div class="ms-auto">
             {% if current_user.is_authenticated %}
-                <a href="/profil" class="btn btn-white btn-sm rounded-pill px-4 fw-bold shadow-sm bg-white text-dark">KONTO</a>
+                <a href="/profil" class="btn btn-light btn-sm rounded-pill px-4">PANEL</a>
             {% else %}
-                <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">ZALOGUJ</a>
+                <a href="/login" class="btn btn-danger btn-sm rounded-pill px-4">ZALOGUJ</a>
             {% endif %}
         </div>
     </div>
 </nav>
 
-<header class="hero-premium">
-    <div class="hero-content container">
-        <span class="badge bg-danger rounded-pill px-4 py-2 mb-3 fw-bold">RADOM • 2026 • AI POWERED</span>
-        <h1>GIEŁDA RADOM</h1>
-        <p class="lead fw-light opacity-75">Nowa era sprzedaży samochodów w regionie.</p>
+<header class="hero-apple text-center">
+    <div class="container">
+        <h1 class="display-2 fw-800" style="font-family: 'Anton';">GIEŁDA RADOM</h1>
+        <p class="lead opacity-75">Inteligentny system sprzedaży samochodów.</p>
     </div>
 </header>
 
-<div class="container search-container">
-    <div class="search-glass">
-        <form action="/" method="GET" class="row g-3">
-            <div class="col-lg-4 col-md-12">
-                <div class="form-floating">
-                    <input type="text" name="q" class="form-control border-0 bg-light" id="q" placeholder="Wyszukaj..." value="{{ request.args.get('q', '') }}">
-                    <label for="q">Model, marka lub rok...</label>
-                </div>
-            </div>
-            <div class="col-lg-2 col-6">
-                <div class="form-floating">
-                    <select name="skrzynia" class="form-select border-0 bg-light">
-                        <option value="">Wszystkie</option>
-                        <option value="Manualna">Manualna</option>
-                        <option value="Automatyczna">Automatyczna</option>
-                    </select>
-                    <label>Skrzynia</label>
-                </div>
-            </div>
-            <div class="col-lg-2 col-6">
-                <div class="form-floating">
-                    <select name="paliwo" class="form-select border-0 bg-light">
-                        <option value="">Każde</option>
-                        <option value="Benzyna">Benzyna</option>
-                        <option value="Diesel">Diesel</option>
-                        <option value="LPG">LPG</option>
-                    </select>
-                    <label>Paliwo</label>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-9 col-8">
-                <div class="form-floating">
-                    <input type="number" name="przebieg_max" class="form-control border-0 bg-light" placeholder="Przebieg">
-                    <label>Max przebieg (km)</label>
-                </div>
-            </div>
-            <div class="col-lg-1 col-md-3 col-4">
-                <button type="submit" class="btn btn-danger w-100 h-100 rounded-4 shadow-sm">
-                    <i class="bi bi-search fs-5"></i>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<main class="container py-5 mt-4">
+<main class="container py-5">
     <div class="row g-4">
         {% for car in cars %}
         <div class="col-lg-4 col-md-6">
-            <article class="car-card shadow-sm">
-                <div class="img-wrapper">
+            <div class="car-card shadow-sm">
+                <div class="img-container">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="fav-btn">
+                        <i class="bi {{ 'bi-heart-fill text-danger' if car in current_user.favorite_cars else 'bi-heart' }} fs-5"></i>
+                    </a>
+                    {% endif %}
+                    
                     {% set pozostalo = 30 - (now - car.data_dodania).days %}
-                    <span class="badge-premium {{ 'bg-danger' if pozostalo <= 3 }}">
-                        <i class="bi bi-clock-history"></i> {{ pozostalo }} DNI DO KOŃCA
-                    </span>
-                    <img src="{{ car.img }}" alt="{{ car.marka }} {{ car.model }}" loading="lazy">
+                    <div class="time-badge shadow-sm {{ 'urgent' if pozostalo <= 3 }}">
+                        <i class="bi bi-clock-history me-1"></i> {{ pozostalo }} DNI
+                    </div>
+
+                    <img src="{{ car.img }}" class="w-100 h-100" style="object-fit: cover;">
                 </div>
-                
-                <div class="p-4 flex-grow-1">
+
+                <div class="p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="h5 fw-800 text-uppercase mb-0">{{ car.marka }} {{ car.model }}</h2>
-                        <span class="price-text">{{ "{:,.0f}".format(car.cena | default(0)).replace(',', ' ') }} <small style="font-size: 0.6em;">PLN</small></span>
+                        <h5 class="fw-800 text-uppercase mb-0">{{ car.marka }} {{ car.model }}</h5>
+                        <span class="text-danger fw-800 fs-5">{{ "{:,.0f}".format(car.cena | default(0)).replace(',', ' ') }} PLN</span>
                     </div>
 
-                    <div class="row g-2 mb-4">
-                        <div class="col-4">
-                            <div class="bg-light p-2 rounded-3 text-center">
-                                <span class="d-block text-muted" style="font-size: 0.65rem;">ROK</span>
-                                <span class="fw-bold small">{{ car.rok }}</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="bg-light p-2 rounded-3 text-center">
-                                <span class="d-block text-muted" style="font-size: 0.65rem;">PRZEBIEG</span>
-                                <span class="fw-bold small">{{ "{:,.0f}".format(car.przebieg | default(0)).replace(',', ' ') }}</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="bg-light p-2 rounded-3 text-center">
-                                <span class="d-block text-muted" style="font-size: 0.65rem;">PALIWO</span>
-                                <span class="fw-bold small">{{ car.paliwo[:3].upper() if car.paliwo else 'N/A' }}</span>
-                            </div>
-                        </div>
+                    <div class="row g-2 text-center mb-4">
+                        <div class="col-4"><div class="bg-light p-2 rounded-3 small fw-bold">{{ car.rok }}</div></div>
+                        <div class="col-4"><div class="bg-light p-2 rounded-3 small fw-bold">{{ "{:,.0f}".format(car.przebieg | default(0)).replace(',', ' ') }} km</div></div>
+                        <div class="col-4"><div class="bg-light p-2 rounded-3 small fw-bold">{{ car.paliwo[:3].upper() if car.paliwo else 'N/A' }}</div></div>
                     </div>
 
-                    <a href="/ogloszenie/{{ car.id }}" class="btn btn-dark w-100 rounded-pill py-2 fw-bold shadow-sm">SZCZEGÓŁY OFERTY</a>
+                    <a href="/ogloszenie/{{ car.id }}" class="btn btn-dark w-100 rounded-pill py-2 fw-bold shadow-sm">SZCZEGÓŁY</a>
                 </div>
-            </article>
+            </div>
         </div>
         {% endfor %}
     </div>
 </main>
 
-<footer class="footer-premium">
+<footer class="bg-dark text-white py-5 mt-5">
     <div class="container">
-        <div class="row gy-5">
-            <div class="col-lg-5">
-                <h3 class="fw-bold mb-4">GIEŁDA <span class="text-danger">RADOM</span> AI</h3>
-                <p class="text-white-50 small mb-4">Najbardziej zaawansowany portal ogłoszeń w regionie. Wspieramy lokalny biznes motoryzacyjny wykorzystując najnowsze technologie AI Gemini.</p>
-                <div class="d-flex gap-3">
-                    <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="bi bi-instagram"></i></a>
-                </div>
+        <div class="row gy-4">
+            <div class="col-md-6">
+                <h4 class="fw-bold">GIEŁDA RADOM AI</h4>
+                <p class="text-white-50 small pe-lg-5">Lokalna platforma motoryzacyjna. Wspieramy Radomski biznes od 2026 roku. Pamiętamy o Czerwcu '76.</p>
             </div>
-            <div class="col-lg-3 col-6">
-                <h6 class="text-uppercase fw-bold mb-4" style="letter-spacing: 2px; font-size: 0.8rem;">Informacje SEO</h6>
-                <nav class="d-flex flex-column gap-2">
-                    <a href="/polityka" class="footer-link">Polityka Prywatności (RODO)</a>
-                    <a href="/regulamin" class="footer-link">Regulamin serwisu</a>
-                    <a href="/kontakt" class="footer-link">Kontakt z administratorem</a>
-                </nav>
+            <div class="col-md-3">
+                <h6 class="text-uppercase fw-bold mb-3 small">Nawigacja SEO</h6>
+                <ul class="list-unstyled">
+                    <li><a href="/polityka" class="text-white-50 text-decoration-none small">Polityka Prywatności (RODO)</a></li>
+                    <li><a href="/regulamin" class="text-white-50 text-decoration-none small">Regulamin</a></li>
+                    <li><a href="/sitemap.xml" class="text-white-50 text-decoration-none small">Mapa Strony XML</a></li>
+                </ul>
             </div>
-            <div class="col-lg-4">
-                <h6 class="text-uppercase fw-bold mb-4" style="letter-spacing: 2px; font-size: 0.8rem;">Lokalizacja</h6>
-                <p class="small text-white-50"><i class="bi bi-geo-alt-fill text-danger me-2"></i> ul. Czerwca '76, Radom, Polska</p>
-                <p class="small text-white-50"><i class="bi bi-envelope-fill text-danger me-2"></i> dariusztom@go2.pl</p>
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" style="height: 25px; opacity: 0.3; margin-top: 20px;">
+            <div class="col-md-3">
+                <h6 class="text-uppercase fw-bold mb-3 small">Kontakt</h6>
+                <p class="text-white-50 small mb-0">dariusztom@go2.pl</p>
+                <p class="text-white-50 small">Radom, ul. Czerwca '76</p>
             </div>
-        </div>
-        <div class="text-center mt-5 pt-5 border-top border-white-10">
-            <p class="small text-white-50 mb-0">© 2026 Giełda Radom. Pamiętamy o Czerwcu '76. Technologia Gemini AI.</p>
         </div>
     </div>
 </footer>
