@@ -247,6 +247,8 @@ def edytuj(id):
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
+car.przebieg = request.form.get('przebieg', type=int, default=0)
+#----------------------------------
 
         # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
         new_files = request.files.getlist('zdjecia')
