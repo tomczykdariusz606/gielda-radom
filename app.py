@@ -479,6 +479,17 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html')
 
+# --- SEO ---
+@app.route('/sitemap.xml')
+def sitemap():
+    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    xml += f'<url><loc>{request.url_root}</loc><priority>1.0</priority></url>'
+    for c in Car.query.all():
+        xml += f'<url><loc>{request.url_root}ogloszenie/{c.id}</loc><priority>0.8</priority></url>'
+    xml += '</urlset>'
+    return Response(xml, mimetype='application/xml')
+
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)
+
