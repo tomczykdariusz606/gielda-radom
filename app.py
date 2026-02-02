@@ -343,6 +343,7 @@ def dodaj_ogloszenie():
     nowe_auto = Car(
         marka=request.form['marka'], model=request.form['model'],
         rok=int(request.form['rok']), cena=float(request.form['cena']),
+przebieg=request.form.get('przebieg', type=int, default=0),
         opis=oryginalny_opis + ai_analysis, # Łączymy opis użytkownika z analizą AI
         telefon=request.form['telefon'],
         skrzynia=request.form.get('skrzynia'), paliwo=request.form.get('paliwo'),
