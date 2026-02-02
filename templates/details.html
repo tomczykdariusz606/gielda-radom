@@ -243,5 +243,37 @@
             el.classList.add('active');
         }
     </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aiBox = document.querySelector('.ai-box p');
+    if (!aiBox) return;
+
+    // Pobieramy dane bezpośrednio z Twoich bocznych boksów
+    const carData = {
+        marka: "{{ car.marka }}",
+        model: "{{ car.model }}",
+        cena: "{{ car.cena }}",
+        przebieg: "{{ car.przebieg or 0 }}"
+    };
+
+    aiBox.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Gemini analizuje ofertę...';
+
+    fetch('/api/analyze-car', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(carData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        aiBox.innerHTML = data.analysis;
+    })
+    .catch(error => {
+        aiBox.innerHTML = "Analiza chwilowo niedostępna.";
+        console.error('Błąd Gemini:', error);
+    });
+});
+</script>
+
 </body>
 </html>
