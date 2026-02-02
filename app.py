@@ -25,7 +25,7 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
 app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
-app.config['MAIL_DEFAULT_SENDER'] = 'darius_ztom@go2.pl'
+app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
 # --- KONFIGURACJA GEMINI AI ---
@@ -42,6 +42,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
