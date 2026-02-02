@@ -128,6 +128,16 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
+# Wklej to na chwilę do app.py, odpal serwer i wejdź na /dump
+@app.route('/dump')
+def dump_data():
+    conn = db.engine.raw_connection()
+    dest = sqlite3.connect('temp_backup.db')
+    conn.backup(dest)
+    dest.close()
+    return "Zrzut z RAM do temp_backup.db wykonany!"
+
+
 # --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
