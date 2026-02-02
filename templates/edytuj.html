@@ -156,6 +156,12 @@
                     <label class="form-label fw-bold small text-uppercase">Rok produkcji</label>
                     <input type="number" name="rok" class="form-control form-control-modern" value="{{ car.rok }}" required>
                 </div>
+                <div class="col-md-6">
+    <label class="form-label fw-bold small text-uppercase">Przebieg (km)</label>
+    <input type="number" name="przebieg" class="form-control form-control-modern" 
+           value="{{ car.przebieg or 0 }}" required>
+                 </div>
+
 
                 <div class="col-md-6">
                     <label class="form-label fw-bold small text-uppercase">Skrzynia biegów</label>
