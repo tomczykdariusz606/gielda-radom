@@ -3,6 +3,7 @@ import uuid
 import zipfile
 import io
 import sekrety
+import sqlite3
 import google.generativeai as genai
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
@@ -431,15 +432,17 @@ def full_backup():
 def backup_db():
     if current_user.id != 1: abort(403)
     
-    target_path = get_db_path()
+    # 1. Pobierz ścieżkę (teraz spójną z resztą aplikacji)
+    db_path = os.path.join(basedir, 'gielda.db')
     
-    # Wymuszamy zrzut z pamięci na dysk
+    # 2. SYNCHRONIZACJA: Zapisz to co w RAM do pliku gielda.db
     source_db = db.engine.raw_connection()
-    dest_db = sqlite3.connect(target_path)
+    dest_db = sqlite3.connect(db_path)
     source_db.backup(dest_db)
     dest_db.close()
     
-    return send_file(target_path, as_attachment=True, download_name="gielda.db")
+    # 3. Wyślij gotowy, pełny plik użytkownikowi
+    return send_file(db_path, as_attachment=True, download_name="gielda_backup.db")
 #//////////////////////___//_//////////////
 
 @app.route('/toggle_favorite/<int:car_id>')
