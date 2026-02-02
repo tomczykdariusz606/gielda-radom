@@ -128,15 +128,6 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# Wklej to na chwilę do app.py, odpal serwer i wejdź na /dump
-@app.route('/dump')
-def dump_data():
-    conn = db.engine.raw_connection()
-    dest = sqlite3.connect('temp_backup.db')
-    conn.backup(dest)
-    dest.close()
-    return "Zrzut z RAM do temp_backup.db wykonany!"
-
 
 # --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
 @app.route('/api/generate-description', methods=['POST'])
@@ -159,6 +150,11 @@ def generate_ai_description():
         return jsonify({"description": fallback})
 
 # --- FUNKCJE POMOCNICZE ---
+
+# Funkcja pomocnicza do pobrania właściwej ścieżki
+def get_db_path():
+    # Zgodnie z Twoim URI sqlite:////gielda.db (trzy ukośniki oznaczają root /)
+    return "/gielda.db"
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -409,20 +405,43 @@ def logout():
 @app.route('/admin/full-backup')
 @login_required
 def full_backup():
-    if current_user.id != 1: abort(403)
+    # Zabezpieczenie tylko dla admina (ID 1)
+    if current_user.id != 1: 
+        abort(403)
+    
     memory_file = io.BytesIO()
+    db_path = get_db_path()
+    
+    if not os.path.exists(db_path):
+        return f"Błąd: Plik bazy nie istnieje pod ścieżką {db_path}", 404
+
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
-        if os.path.exists(db_path): zf.write(db_path, arcname='gielda.db')
+        # Dodajemy bazę do ZIPa
+        zf.write(db_path, arcname='gielda.db')
+        
+        # Opcjonalnie: dodaj folder z obrazkami, jeśli go używasz
+        # zf.write(os.path.join(app.root_path, 'static', 'uploads'), arcname='uploads')
+
     memory_file.seek(0)
-    return send_file(memory_file, mimetype='application/zip', as_attachment=True, download_name="backup.zip")
+    return send_file(
+        memory_file, 
+        mimetype='application/zip', 
+        as_attachment=True, 
+        download_name="backup_gielda_radom.zip"
+    )
 
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
-    if current_user.id != 1: abort(403)
-    db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
-    return send_file(db_path, as_attachment=True)
+    if current_user.id != 1: 
+        abort(403)
+        
+    db_path = get_db_path()
+    
+    if os.path.exists(db_path):
+        return send_file(db_path, as_attachment=True, download_name="gielda.db")
+    else:
+        return "Błąd: Nie znaleziono pliku bazy danych.", 404
 
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
