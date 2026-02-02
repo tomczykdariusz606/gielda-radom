@@ -151,10 +151,12 @@ def generate_ai_description():
 
 # --- FUNKCJE POMOCNICZE ---
 
-# Funkcja pomocnicza do pobrania właściwej ścieżki
+# Poprawiona ścieżka - baza wewnątrz folderu projektu
 def get_db_path():
-    # Zgodnie z Twoim URI sqlite:////gielda.db (trzy ukośniki oznaczają root /)
-    return "/gielda.db"
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(basedir, 'gielda.db')
+#///////////////
+
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -402,46 +404,43 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+#//////////////////////////////////////////
 @app.route('/admin/full-backup')
 @login_required
 def full_backup():
-    # Zabezpieczenie tylko dla admina (ID 1)
-    if current_user.id != 1: 
-        abort(403)
+    if current_user.id != 1: abort(403)
+    
+    target_path = get_db_path()
+    
+    # KROK RATUNKOWY: Zrzucamy dane z RAM do pliku przed zipowaniem
+    source_db = db.engine.raw_connection()
+    dest_db = sqlite3.connect(target_path)
+    source_db.backup(dest_db)
+    dest_db.close()
     
     memory_file = io.BytesIO()
-    db_path = get_db_path()
-    
-    if not os.path.exists(db_path):
-        return f"Błąd: Plik bazy nie istnieje pod ścieżką {db_path}", 404
-
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        # Dodajemy bazę do ZIPa
-        zf.write(db_path, arcname='gielda.db')
-        
-        # Opcjonalnie: dodaj folder z obrazkami, jeśli go używasz
-        # zf.write(os.path.join(app.root_path, 'static', 'uploads'), arcname='uploads')
-
+        if os.path.exists(target_path):
+            zf.write(target_path, arcname='gielda.db')
+            
     memory_file.seek(0)
-    return send_file(
-        memory_file, 
-        mimetype='application/zip', 
-        as_attachment=True, 
-        download_name="backup_gielda_radom.zip"
-    )
+    return send_file(memory_file, mimetype='application/zip', as_attachment=True, download_name="backup_gielda.zip")
 
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
-    if current_user.id != 1: 
-        abort(403)
-        
-    db_path = get_db_path()
+    if current_user.id != 1: abort(403)
     
-    if os.path.exists(db_path):
-        return send_file(db_path, as_attachment=True, download_name="gielda.db")
-    else:
-        return "Błąd: Nie znaleziono pliku bazy danych.", 404
+    target_path = get_db_path()
+    
+    # Wymuszamy zrzut z pamięci na dysk
+    source_db = db.engine.raw_connection()
+    dest_db = sqlite3.connect(target_path)
+    source_db.backup(dest_db)
+    dest_db.close()
+    
+    return send_file(target_path, as_attachment=True, download_name="gielda.db")
+#//////////////////////___//_//////////////
 
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
