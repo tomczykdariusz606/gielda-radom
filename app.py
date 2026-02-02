@@ -4,6 +4,7 @@ import zipfile
 import io
 import sekrety
 import sqlite3
+
 import google.generativeai as genai
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
@@ -297,6 +298,43 @@ def usun_zdjecie(image_id):
         return jsonify({"success": False, "error": str(e)})
 
 
+#/////////////////////////
+
+@app.route('/api/analyze-car', methods=['POST'])
+@login_required
+def analyze_car():
+    if 'image' not in request.files:
+        return jsonify({"error": "Brak zdjęcia"}), 400
+    
+    file = request.files['image']
+    if file and allowed_file(file.filename):
+        try:
+            # Tymczasowy zapis do analizy
+            img = Image.open(file)
+            
+            # Prompt dla Gemini, aby zwrócił dane w formacie JSON
+            prompt = (
+                "Jesteś ekspertem motoryzacyjnym. Rozpoznaj auto na zdjęciu. "
+                "Zwróć odpowiedź WYŁĄCZNIE w formacie JSON: "
+                '{"marka": "Nazwa", "model": "Model", "rok": "Rok", "full_label": "Pełna Nazwa"}. '
+                "Jeśli nie jesteś pewien roku, podaj przybliżony."
+            )
+            
+            response = model_ai.generate_content([prompt, img])
+            
+            # Oczyszczanie odpowiedzi (Gemini czasem dodaje ```json ... ```)
+            text_response = response.text.replace('```json', '').replace('```', '').strip()
+            import json
+            data = json.loads(text_response)
+            
+            return jsonify(data)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+            
+    return jsonify({"error": "Niepoprawny format pliku"}), 400
+
+
+
 
 
 @app.route('/ogloszenie/<int:car_id>')
@@ -355,22 +393,66 @@ def dodaj_ogloszenie():
     db.session.commit()
     flash('Ogłoszenie dodane z analizą wizualną AI!', 'success')
     return redirect(url_for('profil'))
+#%%%%%%%%%%%%%%%%%
 
-@app.route('/profil')
+@app.route('/dodaj', methods=['POST'])
 @login_required
-def profil():
-    my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    fav_cars = current_user.favorite_cars
-    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
+def dodaj_ogloszenie():
+    files = request.files.getlist('zdjecia')
+    saved_paths = []
 
-@app.route('/odswiez/<int:car_id>', methods=['POST'])
-@login_required
-def refresh_car(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id:
-        car.data_dodania = datetime.utcnow()
-        db.session.commit()
-        flash('Odświeżono!', 'success')
+    # 1. Zapisywanie zdjęć na serwerze
+    for file in files[:10]:
+        if file and allowed_file(file.filename):
+            opt_name = save_optimized_image(file)
+            path = url_for('static', filename='uploads/' + opt_name)
+            saved_paths.append(path)
+
+    main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+    oryginalny_opis = request.form.get('opis', '')
+    ai_analysis = ""
+
+    # 2. ANALIZA WIZUALNA AI (Gemini Vision) - To zostaje i działa!
+    if saved_paths and model_ai:
+        try:
+            # Pobieramy lokalną ścieżkę do pierwszego zdjęcia dla modelu AI
+            img_filename = saved_paths[0].split('/')[-1]
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_filename)
+            img_to_analyze = Image.open(img_path)
+
+            prompt_vision = "Jesteś ekspertem motoryzacyjnym. Krótko opisz stan wizualny, kolor i cechy auta ze zdjęcia w 2-3 zdaniach po polsku."
+            vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
+            ai_analysis = f"\n\n[Analiza AI wyglądu]: {vision_response.text}"
+        except Exception as e:
+            print(f"Błąd analizy AI: {e}")
+            ai_analysis = ""
+
+    # 3. Zapis do bazy danych (wszystkie parametry techniczne + AI)
+    nowe_auto = Car(
+        marka=request.form.get('marka'),
+        model=request.form.get('model'),
+        rok=int(request.form.get('rok', 0)),
+        cena=float(request.form.get('cena', 0)),
+        przebieg=int(request.form.get('przebieg', 0)),
+        opis=oryginalny_opis + ai_analysis, # Łączymy Twój opis z opisem AI
+        telefon=request.form.get('telefon'),
+        skrzynia=request.form.get('skrzynia'),
+        paliwo=request.form.get('paliwo'),
+        nadwozie=request.form.get('nadwozie'),
+        pojemnosc=request.form.get('pojemnosc'),
+        img=main_img,
+        zrodlo=current_user.lokalizacja,
+        user_id=current_user.id
+    )
+    
+    db.session.add(nowe_auto)
+    db.session.flush()
+    
+    for path in saved_paths:
+        db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
+        
+    db.session.commit()
+    flash('Ogłoszenie dodane z analizą wizualną AI!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
