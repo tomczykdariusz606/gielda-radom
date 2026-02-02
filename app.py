@@ -224,16 +224,69 @@ def edytuj(id):
     if car.user_id != current_user.id:
         flash('Nie masz uprawnień do edycji.', 'danger')
         return redirect(url_for('profil'))
+
     if request.method == 'POST':
-        car.marka, car.model = request.form.get('marka'), request.form.get('model')
-        car.rok, car.cena = request.form.get('rok'), request.form.get('cena')
-        car.telefon, car.opis = request.form.get('telefon'), request.form.get('opis')
-        if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
-        if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.rok = request.form.get('rok')
+        car.cena = request.form.get('cena')
+        car.telefon = request.form.get('telefon')
+        car.opis = request.form.get('opis')
+        car.skrzynia = request.form.get('skrzynia')
+        car.paliwo = request.form.get('paliwo')
+        car.nadwozie = request.form.get('nadwozie')
+
+        # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
+        new_files = request.files.getlist('zdjecia')
+        for file in new_files:
+            if file and allowed_file(file.filename):
+                opt_name = save_optimized_image(file)
+                path = url_for('static', filename='uploads/' + opt_name)
+                new_img = CarImage(image_path=path, car_id=car.id)
+                db.session.add(new_img)
+
         db.session.commit()
-        flash('Zaktualizowano!', 'success')
+        flash('Ogłoszenie zaktualizowane!', 'success')
         return redirect(url_for('profil'))
+
     return render_template('edytuj.html', car=car)
+
+
+@app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
+@login_required
+def usun_zdjecie(image_id):
+    image = CarImage.query.get_or_404(image_id)
+    car = Car.query.get(image.car_id)
+
+    if car.user_id != current_user.id:
+        return jsonify({"success": False}), 403
+
+    # Logika zabezpieczająca przed usunięciem ostatniego zdjęcia
+    if len(car.images) <= 1:
+        return jsonify({"success": False, "message": "Zostaw przynajmniej jedno zdjęcie!"})
+
+    try:
+        # Usuwanie z dysku
+        relative_path = image.image_path.lstrip('/')
+        full_path = os.path.join(app.root_path, relative_path)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+        
+        db.session.delete(image)
+
+        # Jeśli usuwasz główne zdjęcie, zaktualizuj car.img na inne istniejące
+        if car.img == image.image_path:
+            remaining = CarImage.query.filter(CarImage.car_id == car.id, CarImage.id != image_id).first()
+            if remaining:
+                car.img = remaining.image_path
+
+        db.session.commit()
+        return jsonify({"success": True}) # To aktywuje .then(data => if(data.success)...) w Twoim JS
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
+
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
