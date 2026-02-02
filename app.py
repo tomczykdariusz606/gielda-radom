@@ -100,6 +100,7 @@ class Car(db.Model):
     nadwozie = db.Column(db.String(30))
     pojemnosc = db.Column(db.String(20))
     wyswietlenia = db.Column(db.Integer, default=0)
+    przebieg = db.Column(db.Integer, default=0)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
 
 class CarImage(db.Model):
