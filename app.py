@@ -234,10 +234,10 @@ def edytuj(id):
         car.opis = request.form.get('opis')
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
-        car.nadwozie = request.form.get('nadwozie') # Dodaj to jeśli masz w formularzu
+        car.nadwozie = request.form.get('nadwozie')
 
-        # Obsługa nowych zdjęć w edycji
-        new_files = request.files.getlist('nowe_zdjecia')
+        # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
+        new_files = request.files.getlist('zdjecia')
         for file in new_files:
             if file and allowed_file(file.filename):
                 opt_name = save_optimized_image(file)
@@ -250,6 +250,7 @@ def edytuj(id):
         return redirect(url_for('profil'))
 
     return render_template('edytuj.html', car=car)
+
 
 @app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
 @login_required
