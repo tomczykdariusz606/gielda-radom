@@ -257,36 +257,32 @@ def usun_zdjecie(image_id):
     image = CarImage.query.get_or_404(image_id)
     car = Car.query.get(image.car_id)
 
-    # Sprawdź czy to właściciel usuwa
     if car.user_id != current_user.id:
-        abort(403)
+        return jsonify({"success": False, "message": "Brak uprawnień"}), 403
 
-    # Nie pozwól usunąć zdjęcia, jeśli jest to jedyne zdjęcie auta
     if len(car.images) <= 1:
-        flash('Samochód musi mieć przynajmniej jedno zdjęcie!', 'warning')
-        return redirect(url_for('edytuj', id=car.id))
+        return jsonify({"success": False, "message": "Samochód musi mieć przynajmniej jedno zdjęcie!"})
 
-    # Usuwanie pliku z dysku (opcjonalnie, ale zalecane)
     try:
-        # Usuwamy 'static/' z początku ścieżki jeśli tam jest, aby os.path.join zadziałał
+        # Usuwanie fizyczne pliku
         relative_path = image.image_path.lstrip('/')
         full_path = os.path.join(app.root_path, relative_path)
         if os.path.exists(full_path):
             os.remove(full_path)
+            
+        db.session.delete(image)
+        
+        # Jeśli usuwane było główne zdjęcie, ustaw następne dostępne
+        if car.img == image.image_path:
+            remaining = CarImage.query.filter(CarImage.car_id == car.id, CarImage.id != image_id).first()
+            if remaining:
+                car.img = remaining.image_path
+
+        db.session.commit()
+        return jsonify({"success": True})
     except Exception as e:
-        print(f"Błąd przy usuwaniu pliku: {e}")
+        return jsonify({"success": False, "message": str(e)})
 
-    db.session.delete(image)
-    
-    # Jeśli usuwane zdjęcie było zdjęciem głównym (car.img), ustaw inne jako główne
-    if car.img == image.image_path:
-        remaining_image = CarImage.query.filter(CarImage.car_id == car.id, CarImage.id != image_id).first()
-        if remaining_image:
-            car.img = remaining_image.image_path
-
-    db.session.commit()
-    flash('Zdjęcie zostało usunięte.', 'success')
-    return redirect(url_for('edytuj', id=car.id))
 
 
 @app.route('/ogloszenie/<int:car_id>')
