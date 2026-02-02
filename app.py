@@ -485,22 +485,21 @@ def reset_token(token):
 def analyze_car_api():
     try:
         data = request.json
-        # Pobieramy dane wysłane przez stronę HTML
         marka = data.get('marka', 'Nieznana')
         model_car = data.get('model', 'Nieznany')
         cena = data.get('cena', '0')
         przebieg = data.get('przebieg', '0')
 
-        # Tworzymy instrukcję dla Gemini
         prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz o tej ofercie w Radomiu."
 
-        # Wywołujemy model (upewnij się, że obiekt nazywa się model_gemini)
-        response = model_gemini.generate_content(prompt)
-        
+        # POPRAWKA TUTAJ: Zmień model_gemini na model_ai
+        response = model_ai.generate_content(prompt) 
+
         return jsonify({"analysis": response.text})
     except Exception as e:
         print(f"Błąd Gemini: {e}")
         return jsonify({"analysis": "Analiza AI jest obecnie niedostępna, spróbuj później."}), 500
+
 
 
 if __name__ == '__main__':
