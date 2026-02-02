@@ -75,28 +75,32 @@
             padding: 18px; 
             transition: 0.3s;
         }
-        .spec-box:hover { background: #1f2124; border-color: var(--radom-red); }
+            .spec-box { 
+            background: var(--card-bg); 
+            border: 1px solid rgba(255,255,255,0.1); /* Mocniejsza obwódka */
+            border-radius: 18px; 
+            padding: 18px; 
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Lekki cień dla głębi */
+        }
+
         .spec-label { 
-            color: #bbb; /* Rozjaśniony kolor z #888 na #bbb dla lepszej widoczności */
+            color: #d1d1d1; /* Bardzo jasny szary - teraz będzie go widać! */
             font-size: 0.75rem; 
             text-transform: uppercase; 
             font-weight: 800; 
             display: block; 
-            margin-bottom: 4px;
-            letter-spacing: 0.5px; /* Dodatkowy lekki odstęp dla czytelności */
+            margin-bottom: 6px;
+            letter-spacing: 1px;
         }
 
-        .spec-value { font-size: 1.15rem; font-weight: 700; color: #fff; }
-
-        .price-sticky { 
-            background: #fff; 
-            color: #000; 
-            border-radius: 28px; 
-            padding: 30px; 
-            position: sticky; 
-            top: 20px; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5); 
+        .spec-value { 
+            font-size: 1.2rem; 
+            font-weight: 700; 
+            color: #ffffff !important; /* Czysta biel dla cyfr i danych */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
+
         .ai-box { 
             background: var(--ai-grad); 
             border-radius: 22px; 
