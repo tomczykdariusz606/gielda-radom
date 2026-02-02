@@ -242,7 +242,9 @@ def edytuj(id):
         car.model = request.form.get('model')
         car.rok = request.form.get('rok')
         car.cena = request.form.get('cena')
-        przebieg = db.Column(db.Integer, default=0)  # <--- WKLEJ TĘ LINIĘ TUTAJ
+        # TO JEST POPRAWNE:
+        car.przebieg = request.form.get('przebieg', type=int, default=0)
+#_______________________________
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
         car.skrzynia = request.form.get('skrzynia')
