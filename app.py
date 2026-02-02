@@ -439,6 +439,10 @@ def reset_request():
             flash('Email wysłany.', 'info')
             return redirect(url_for('login'))
     return render_template('reset_request.html')
+@app.route('/polityka') # index.html szuka /polityka
+def polityka():
+    return render_template('polityka.html')
+
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
