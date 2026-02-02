@@ -408,43 +408,34 @@ def logout():
     return redirect(url_for('index'))
 
 #//////////////////////////////////////////
-@app.route('/admin/full-backup')
-@login_required
-def full_backup():
-    if current_user.id != 1: abort(403)
-    
-    target_path = get_db_path()
-    
-    # KROK RATUNKOWY: Zrzucamy dane z RAM do pliku przed zipowaniem
-    source_db = db.engine.raw_connection()
-    dest_db = sqlite3.connect(target_path)
-    source_db.backup(dest_db)
-    dest_db.close()
-    
-    memory_file = io.BytesIO()
-    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        if os.path.exists(target_path):
-            zf.write(target_path, arcname='gielda.db')
-            
-    memory_file.seek(0)
-    return send_file(memory_file, mimetype='application/zip', as_attachment=True, download_name="backup_gielda.zip")
 
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
     if current_user.id != 1: abort(403)
-    
-    # 1. Pobierz ścieżkę (teraz spójną z resztą aplikacji)
-    db_path = os.path.join(basedir, 'gielda.db')
-    
-    # 2. SYNCHRONIZACJA: Zapisz to co w RAM do pliku gielda.db
-    source_db = db.engine.raw_connection()
-    dest_db = sqlite3.connect(db_path)
-    source_db.backup(dest_db)
-    dest_db.close()
-    
-    # 3. Wyślij gotowy, pełny plik użytkownikowi
-    return send_file(db_path, as_attachment=True, download_name="gielda_backup.db")
+    try:
+        instance_path = os.path.join(app.root_path, 'instance')
+        return send_from_directory(directory=instance_path, path='gielda.db', as_attachment=True,
+                                 download_name=f"backup_gielda_{datetime.now().strftime('%Y%m%d_%H%M')}.db")
+    except Exception as e:
+        return f"Błąd: {str(e)}", 500
+
+@app.route('/admin/full-backup')
+@login_required
+def full_backup():
+    if current_user.id != 1: abort(403)
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
+        if os.path.exists(db_path): zf.write(db_path, arcname='gielda.db')
+        upload_path = app.config['UPLOAD_FOLDER']
+        for root, dirs, files in os.walk(upload_path):
+            for file in files:
+                zf.write(os.path.join(root, file), arcname=os.path.join('static/uploads', file))
+    memory_file.seek(0)
+    return send_file(memory_file, mimetype='application/zip', as_attachment=True,
+                     download_name=f"PELNY_BACKUP_{datetime.now().strftime('%Y%m%d')}.zip")
+
 #//////////////////////___//_//////////////
 
 @app.route('/toggle_favorite/<int:car_id>')
