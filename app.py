@@ -491,22 +491,21 @@ def analyze_car_api():
 
         prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz o tej ofercie w Radomiu."
 
+        # Próba kontaktu z AI
         response = model_ai.generate_content(prompt)
         
-        # Sprawdzamy czy AI faktycznie zwróciło tekst
         if response and response.text:
             return jsonify({"analysis": response.text})
         else:
-            raise Exception("Pusta odpowiedź AI")
+            raise Exception("Pusta odpowiedź od AI")
 
     except Exception as e:
-        print(f"Błąd Gemini: {e}") # TO ZOBACZYSZ W LOGACH
-        # Fallback - jeśli AI zawiedzie, dajemy gotowy tekst, żeby użytkownik nie widział błędu
-        fallback = f"Auto {marka} {model_car} to ciekawa propozycja w Radomiu. Przy cenie {cena} PLN warto umówić się na oględziny i sprawdzić stan techniczny na miejscu."
+        # To zobaczysz w terminalu - sprawdź co tu wypisze!
+        print(f"Błąd Gemini: {e}") 
+        
+        # AWARYJNY TEKST (Fallback) - strona zadziała, nawet bez AI
+        fallback = f"Auto {marka} {model_car} z przebiegiem {przebieg} km to solidna propozycja dostępna w Radomiu. Zapraszamy do kontaktu telefonicznego w celu umówienia jazdy próbnej!"
         return jsonify({"analysis": fallback})
-
-
-
 
 
 if __name__ == '__main__':
