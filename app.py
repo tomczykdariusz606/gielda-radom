@@ -97,7 +97,7 @@ class Car(db.Model):
     # NOWE POLA NA ANALIZĘ AI
     ai_label = db.Column(db.String(100)) # Rozpoznana marka/model ze zdjęcia
     ai_valuation_data = db.Column(db.Text) # Wynik analizy ceny w formacie JSON lub tekst
-    
+    db.Column(db.Integer) # DODAJ TĘ LINIĘ
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
 
 class CarImage(db.Model):
