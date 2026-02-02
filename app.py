@@ -131,7 +131,25 @@ def get_market_valuation(car):
 @app.context_processor
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
+#=================€€
+@app.route('/api/analyze-car', methods=['POST'])
+def analyze_car_api():
+    data = request.json
+    # Pobieramy dane z żądania
+    marka = data.get('marka')
+    model = data.get('model')
+    przebieg = data.get('przebieg')
+    cena = data.get('cena')
 
+    prompt = f"Przeanalizuj ofertę sprzedaży: {marka} {model}, przebieg {przebieg} km, cena {cena} PLN. Napisz krótki, profesjonalny komentarz o atrakcyjności tej oferty na rynku w Radomiu."
+
+    try:
+        # Tu wywołujemy Twoją funkcję Gemini, którą już masz w app.py
+        response = model_gemini.generate_content(prompt) # Upewnij się, że nazwa obiektu 'model_gemini' jest poprawna
+        return jsonify({"analysis": response.text})
+    except Exception as e:
+        return jsonify({"analysis": "Analiza chwilowo niedostępna."}), 500
+#=============≈=======
 
 # --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
 @app.route('/api/generate-description', methods=['POST'])
