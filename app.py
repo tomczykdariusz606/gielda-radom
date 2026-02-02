@@ -480,7 +480,6 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html')
 
-
 @app.route('/api/analyze-car', methods=['POST'])
 def analyze_car_api():
     try:
@@ -492,13 +491,14 @@ def analyze_car_api():
 
         prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz o tej ofercie w Radomiu."
 
-        # POPRAWKA TUTAJ: Zmień model_gemini na model_ai
-        response = model_ai.generate_content(prompt) 
+        # KLUCZOWA ZMIANA: używamy 'model_ai', bo tak go nazwałeś w konfiguracji
+        response = model_ai.generate_content(prompt)
 
         return jsonify({"analysis": response.text})
     except Exception as e:
         print(f"Błąd Gemini: {e}")
         return jsonify({"analysis": "Analiza AI jest obecnie niedostępna, spróbuj później."}), 500
+
 
 
 
