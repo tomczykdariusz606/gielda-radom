@@ -238,12 +238,12 @@ def edytuj(id):
         return redirect(url_for('profil'))
 
     if request.method == 'POST':
-        car.marka = request.form.get('marka')
-        car.model = request.form.get('model')
-        car.rok = request.form.get('rok')
-        car.cena = request.form.get('cena')
-        # TO JEST POPRAWNE:
-        car.przebieg = request.form.get('przebieg', type=int, default=0)
+    car.marka = request.form.get('marka')
+    car.model = request.form.get('model')
+    car.rok = request.form.get('rok')
+    car.cena = request.form.get('cena')
+    car.przebieg = request.form.get('przebieg', type=int, default=0) # TO WKLEJ
+
 #_______________________________
         car.telefon = request.form.get('telefon')
         car.opis = request.form.get('opis')
