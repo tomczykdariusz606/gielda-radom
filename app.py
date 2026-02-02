@@ -259,30 +259,32 @@ def usun_zdjecie(image_id):
     car = Car.query.get(image.car_id)
 
     if car.user_id != current_user.id:
-        return jsonify({"success": False, "message": "Brak uprawnień"}), 403
+        return jsonify({"success": False}), 403
 
+    # Logika zabezpieczająca przed usunięciem ostatniego zdjęcia
     if len(car.images) <= 1:
-        return jsonify({"success": False, "message": "Samochód musi mieć przynajmniej jedno zdjęcie!"})
+        return jsonify({"success": False, "message": "Zostaw przynajmniej jedno zdjęcie!"})
 
     try:
-        # Usuwanie fizyczne pliku
+        # Usuwanie z dysku
         relative_path = image.image_path.lstrip('/')
         full_path = os.path.join(app.root_path, relative_path)
         if os.path.exists(full_path):
             os.remove(full_path)
-            
-        db.session.delete(image)
         
-        # Jeśli usuwane było główne zdjęcie, ustaw następne dostępne
+        db.session.delete(image)
+
+        # Jeśli usuwasz główne zdjęcie, zaktualizuj car.img na inne istniejące
         if car.img == image.image_path:
             remaining = CarImage.query.filter(CarImage.car_id == car.id, CarImage.id != image_id).first()
             if remaining:
                 car.img = remaining.image_path
 
         db.session.commit()
-        return jsonify({"success": True})
+        return jsonify({"success": True}) # To aktywuje .then(data => if(data.success)...) w Twoim JS
     except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
+        return jsonify({"success": False, "error": str(e)})
+
 
 
 
