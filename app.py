@@ -234,6 +234,43 @@ def edytuj(id):
         flash('Zaktualizowano!', 'success')
         return redirect(url_for('profil'))
     return render_template('edytuj.html', car=car)
+@app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
+@login_required
+def usun_zdjecie(image_id):
+    image = CarImage.query.get_or_404(image_id)
+    car = Car.query.get(image.car_id)
+
+    # Sprawdź czy to właściciel usuwa
+    if car.user_id != current_user.id:
+        abort(403)
+
+    # Nie pozwól usunąć zdjęcia, jeśli jest to jedyne zdjęcie auta
+    if len(car.images) <= 1:
+        flash('Samochód musi mieć przynajmniej jedno zdjęcie!', 'warning')
+        return redirect(url_for('edytuj', id=car.id))
+
+    # Usuwanie pliku z dysku (opcjonalnie, ale zalecane)
+    try:
+        # Usuwamy 'static/' z początku ścieżki jeśli tam jest, aby os.path.join zadziałał
+        relative_path = image.image_path.lstrip('/')
+        full_path = os.path.join(app.root_path, relative_path)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+    except Exception as e:
+        print(f"Błąd przy usuwaniu pliku: {e}")
+
+    db.session.delete(image)
+    
+    # Jeśli usuwane zdjęcie było zdjęciem głównym (car.img), ustaw inne jako główne
+    if car.img == image.image_path:
+        remaining_image = CarImage.query.filter(CarImage.car_id == car.id, CarImage.id != image_id).first()
+        if remaining_image:
+            car.img = remaining_image.image_path
+
+    db.session.commit()
+    flash('Zdjęcie zostało usunięte.', 'success')
+    return redirect(url_for('edytuj', id=car.id))
+
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
