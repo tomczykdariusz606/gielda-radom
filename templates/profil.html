@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Mój Panel - Giełda Radom</title>
+    <title>Mój Panel - Giełda Radom AI</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zarządzaj swoimi ogłoszeniami na Giełdzie Radom. Najlepsze auta w regionie mazowieckim.">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -14,6 +16,7 @@
             --btn-edit: #0d6efd;
             --btn-refresh: #198754;
             --btn-delete: #dc3545;
+            --gemini-grad: linear-gradient(135deg, #4285f4 0%, #9b72f3 100%);
         }
         body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -22,13 +25,36 @@
         .nav-link-custom { color: rgba(255,255,255,0.8); text-decoration: none; font-weight: 500; transition: 0.2s; }
         .nav-link-custom:hover { color: white; }
 
-        /* NAGŁÓWEK */
+        /* NAGŁÓWEK AI */
         .profile-header { 
             background: white; 
             border-bottom: 1px solid #e0e0e0; 
             padding: 3rem 0; 
             margin-bottom: 2rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .ai-badge {
+            background: var(--gemini-grad);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* LOKALIZACJA BADGE */
+        .loc-badge {
+            background: #fff0f0;
+            color: var(--radom-red);
+            padding: 5px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #ffcccc;
         }
 
         /* KARTY */
@@ -94,12 +120,20 @@
         }
         .fav-remove-btn:hover { transform: scale(1.1); background: var(--radom-red); color: white; }
 
-        /* PANEL ADMINA STYL */
-        .admin-card {
-            border: 2px dashed var(--radom-red);
-            background: #fffafa;
-            border-radius: 20px;
+        .ai-sparkle-btn {
+            background: var(--gemini-grad);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 5px 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
         }
+        .ai-sparkle-btn:hover { opacity: 0.9; transform: scale(1.05); }
+
+        .admin-card { border: 2px dashed var(--radom-red); background: #fffafa; border-radius: 20px; }
     </style>
 </head>
 <body>
@@ -122,11 +156,15 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-7">
+                    <div class="ai-badge mb-2"><i class="bi bi-stars"></i> Gemini 3.0 Flash Active</div>
                     <h1 class="fw-bold mb-1">Witaj, {{ current_user.username }}!</h1>
-                    <p class="text-muted mb-0">Zarządzaj swoimi ogłoszeniami i obserwowanymi autami.</p>
+                    <div class="mb-2">
+                        <span class="loc-badge"><i class="bi bi-geo-alt-fill"></i> Lokalizacja: {{ current_user.lokalizacja }}</span>
+                    </div>
+                    <p class="text-muted mb-0">Łączna liczba wyświetleń Twoich aut: <strong>{{ cars|sum(attribute='wyswietlenia') }}</strong></p>
                 </div>
                 <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                    <button type="button" class="btn btn-radom-main btn-lg rounded-pill px-5 py-3" data-bs-toggle="modal" data-bs-target="#dodajModal">
+                    <button type="button" class="btn btn-radom-main btn-lg rounded-pill px-5 py-3 shadow" data-bs-toggle="modal" data-bs-target="#dodajModal">
                         <i class="bi bi-plus-lg me-2"></i>Dodaj nowe ogłoszenie
                     </button>
                 </div>
@@ -151,12 +189,21 @@
             {% for car in cars %}
             <div class="col">
                 <div class="card car-card">
-                    <img src="{{ car.img }}" class="card-img-top" style="height: 230px; object-fit: cover;" alt="{{ car.marka }}">
+                    <div class="position-relative">
+                        <img src="{{ car.img }}" class="card-img-top" style="height: 230px; object-fit: cover;" alt="{{ car.marka }}">
+                        <span class="badge bg-dark position-absolute bottom-0 end-0 m-3 opacity-75"><i class="bi bi-eye"></i> {{ car.wyswietlenia }}</span>
+                        <span class="badge bg-danger position-absolute top-0 start-0 m-3"><i class="bi bi-geo-alt"></i> {{ car.zrodlo }}</span>
+                    </div>
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
                             <span class="badge bg-light text-dark border">{{ car.rok }} r.</span>
                         </div>
+
+                        <div class="small text-muted mb-3">
+                            <i class="bi bi-speedometer"></i> {{ car.przebieg }} km | <i class="bi bi-fuel-pump"></i> {{ car.paliwo }} | <i class="bi bi-rulers"></i> {{ car.pojemnosc }}
+                        </div>
+
                         <p class="text-danger fw-bold fs-4 mb-4">{{ car.cena|int }} PLN</p>
 
                         <div class="mt-auto d-flex flex-column gap-2">
@@ -217,7 +264,7 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <h4 class="fw-extrabold text-dark mb-1"><i class="bi bi-shield-lock-fill text-danger me-2"></i>Panel Administratora</h4>
-                    <p class="text-muted small mb-4 mb-lg-0">Zarządzaj bezpieczeństwem danych i kopiami zapasowymi serwera.</p>
+                    <p class="text-muted small mb-4 mb-lg-0">Zarządzaj bezpieczeństwem danych i kopiami zapasowymi serwerów.</p>
                 </div>
                 <div class="col-lg-6">
                     <div class="d-grid d-md-flex gap-3 justify-content-lg-end">
@@ -234,7 +281,7 @@
         {% endif %}
 
         <div class="mt-5 pt-3 border-top text-center">
-            <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA: Usunięcie konta spowoduje skasowanie wszystkich Twoich ogłoszeń!')">
+            <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA: Usunięcie konta spowoduje skasowanie wszystkich ogłoszeń!')">
                 <button type="submit" class="btn btn-link text-muted text-decoration-none small">
                     <i class="bi bi-person-x me-1"></i> Usuń konto użytkownika
                 </button>
@@ -244,38 +291,156 @@
 
     <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white border-0">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-dark text-white border-0 py-3">
                     <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Nowe ogłoszenie</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="/dodaj" method="POST" enctype="multipart/form-data">
                     <div class="modal-body p-4">
                         <div class="row g-3">
-                            <div class="col-md-6"><label class="form-label small fw-bold">Marka</label><input type="text" name="marka" class="form-control" required></div>
-                            <div class="col-md-6"><label class="form-label small fw-bold">Model</label><input type="text" name="model" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Rok produkcji</label><input type="number" name="rok" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Cena (PLN)</label><input type="number" name="cena" class="form-control" required></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
-                            <div class="col-12"><label class="form-label small fw-bold">Wybierz zdjęcia (maks. 10)</label><input type="file" name="zdjecia" class="form-control" multiple accept="image/*"></div>
-                            <div class="col-12"><label class="form-label small fw-bold">Opis pojazdu</label><textarea name="opis" class="form-control" rows="4" required></textarea></div>
+                            <input type="hidden" name="ai_label" id="hiddenAiLabel">
+
+                            <div class="col-md-6"><label class="form-label small fw-bold">Marka</label><input type="text" id="aiMarka" name="marka" class="form-control rounded-3" required placeholder="np. Audi"></div>
+                            <div class="col-md-6"><label class="form-label small fw-bold">Model</label><input type="text" id="aiModel" name="model" class="form-control rounded-3" required placeholder="np. A4"></div>
+                            <div class="col-md-3"><label class="form-label small fw-bold">Rok produkcji</label><input type="number" id="aiRok" name="rok" class="form-control rounded-3" required></div>
+
+                            <div class="col-md-3"><label class="form-label small fw-bold">Przebieg (km)</label><input type="number" name="przebieg" class="form-control rounded-3" required placeholder="np. 150000"></div>
+
+                            <div class="col-md-3"><label class="form-label small fw-bold">Cena (PLN)</label><input type="number" name="cena" class="form-control rounded-3" required></div>
+                            <div class="col-md-3"><label class="form-label small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control rounded-3" required></div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Skrzynia</label>
+                                <select name="skrzynia" class="form-select rounded-3">
+                                    <option value="Manualna">Manualna</option>
+                                    <option value="Automatyczna">Automatyczna</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Paliwo</label>
+                                <select name="paliwo" class="form-select rounded-3" id="aiPaliwo">
+                                    <option value="Benzyna">Benzyna</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="LPG">LPG</option>
+                                    <option value="Hybryda">Hybryda</option>
+                                    <option value="Elektryczny">Elektryczny</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Nadwozie</label>
+                                <select name="nadwozie" class="form-select rounded-3">
+                                    <option value="Sedan">Sedan</option>
+                                    <option value="Kombi">Kombi</option>
+                                    <option value="SUV">SUV</option>
+                                    <option value="Hatchback">Hatchback</option>
+                                    <option value="Coupe">Coupe</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Pojemność</label>
+                                <input type="text" name="pojemnosc" class="form-control rounded-3" placeholder="np. 2.0 TDI">
+                            </div>
+
+                            <div class="col-12"><label class="form-label small fw-bold">Wybierz zdjęcia (AI zeskanuje pierwsze)</label><input type="file" name="zdjecia" id="imgInput" class="form-control rounded-3" multiple accept="image/*"></div>
+
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label small fw-bold mb-0">Opis pojazdu</label>
+                                    <button type="button" class="ai-sparkle-btn" onclick="generateAIDesc()">
+                                        <i class="bi bi-stars"></i> Generuj opis AI
+                                    </button>
+                                </div>
+                                <textarea id="aiOpis" name="opis" class="form-control rounded-3" rows="5" required placeholder="Opisz stan techniczny..."></textarea>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4">
-                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
-                        <button type="submit" class="btn btn-radom-main rounded-pill px-5">Opublikuj ogłoszenie</button>
+                    <div class="modal-footer border-0 p-4 bg-light">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
+                        <button type="submit" class="btn btn-radom-main rounded-pill px-5 shadow">Opublikuj ogłoszenie</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <footer class="bg-dark text-white-50 mt-auto py-4 border-top border-secondary">
-        <div class="container text-center">
-            <small>© 2026 Giełda Radom. Twoje ogłoszenia są widoczne przez 30 dni.</small>
+    <footer class="bg-dark text-white-50 mt-auto pt-5 pb-4 border-top border-secondary">
+        <div class="container">
+            <div class="row gy-4 text-center text-md-start">
+                <div class="col-md-4">
+                    <h6 class="text-white fw-bold mb-3">Giełda Radom AI</h6>
+                    <p class="small mb-0">Najszybsza sprzedaż aut w regionie dzięki technologii Gemini 3.0 Flash.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h6 class="text-white fw-bold mb-3">Dokumenty</h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li><a href="#" class="text-white-50 text-decoration-none">Polityka RODO</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Regulamin</a></li>
+                        <li><a href="#" class="text-white-50 text-decoration-none">Kontakt</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <h6 class="text-white fw-bold mb-3">Popularne</h6>
+                    <p class="small mb-0">Audi Radom, BMW Mazowieckie, Okazje cenowe AI.</p>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary opacity-25">
+            <div class="text-center">
+                <small>© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</small>
+            </div>
         </div>
     </footer>
 
+    <script>
+    // 1. ANALIZA ZDJĘCIA (GEMINI VISION)
+    document.getElementById('imgInput').addEventListener('change', async function(e) {
+        const files = e.target.files;
+        if (files.length === 0) return;
+        const aiBadge = document.querySelector('.ai-badge');
+        aiBadge.style.background = "orange";
+        aiBadge.innerHTML = '<i class="bi bi-hourglass-split"></i> AI Skanuje...';
+
+        const formData = new FormData();
+        formData.append('image', files[0]);
+
+        try {
+            const response = await fetch('/api/analyze-car', { method: 'POST', body: formData });
+            const data = await response.json();
+            if (data.marka) {
+                document.getElementById('aiMarka').value = data.marka;
+                document.getElementById('aiModel').value = data.model;
+                document.getElementById('aiRok').value = data.rok;
+                document.getElementById('hiddenAiLabel').value = data.full_label;
+                aiBadge.style.background = "green";
+                aiBadge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Dane uzupełnione!';
+            }
+        } catch (err) {
+            aiBadge.style.background = "red";
+            aiBadge.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Błąd skanowania';
+        }
+    });
+
+    // 2. GENEROWANIE OPISU AI
+    async function generateAIDesc() {
+        const marka = document.getElementById('aiMarka').value;
+        const model = document.getElementById('aiModel').value;
+        const btn = document.querySelector('.ai-sparkle-btn');
+        if(!marka) { alert("Wpisz markę!"); return; }
+
+        btn.innerHTML = 'Piszę...';
+        try {
+            const response = await fetch('/api/generate-description', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({marka, model, rok: document.getElementById('aiRok').value, paliwo: document.getElementById('aiPaliwo').value})
+            });
+            const data = await response.json();
+            document.getElementById('aiOpis').value = data.description;
+        } finally {
+            btn.innerHTML = '<i class="bi bi-stars"></i> Generuj opis AI';
+        }
+    }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
