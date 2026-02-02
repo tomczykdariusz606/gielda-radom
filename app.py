@@ -2,28 +2,19 @@ import os
 import uuid
 import zipfile
 import io
+import sekrety
 import google.generativeai as genai
 from datetime import datetime, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_file, Response
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from PIL import Image
 from itsdangerous import URLSafeTimedSerializer as Serializer
+# Import biblioteki do "rozmytego" wyszukiwania (literówki)
 from thefuzz import process 
-
-# Import kluczy z pliku sekrety.py
-try:
-    import sekrety
-    SECRET_KEY_VAL = getattr(sekrety, 'SECRET_KEY', 'dev_key_radom_2026')
-    GEMINI_API_KEY = getattr(sekrety, 'GEMINI_KEY', None)
-    MAIL_PASS = getattr(sekrety, 'MAIL_PWD', '5WZR5F66GGH6WAEN')
-except ImportError:
-    SECRET_KEY_VAL = 'dev_key_radom_2026'
-    GEMINI_API_KEY = None
-    MAIL_PASS = '5WZR5F66GGH6WAEN'
 
 app = Flask(__name__)
 
@@ -32,22 +23,20 @@ app.config['MAIL_SERVER'] = 'poczta.o2.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
-app.config['MAIL_PASSWORD'] = MAIL_PASS
-app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
+app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
+app.config['MAIL_DEFAULT_SENDER'] = 'darius_ztom@go2.pl'
 mail = Mail(app)
 
-# --- KONFIGURACJA AI ---
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model_ai = genai.GenerativeModel('gemini-1.5-flash')
-else:
-    model_ai = None
+# --- KONFIGURACJA GEMINI AI ---
+genai.configure(api_key=sekrety.GEMINI_KEY)
+model_ai = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- KONFIGURACJA APLIKACJI ---
-app.secret_key = SECRET_KEY_VAL
+app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
@@ -64,27 +53,31 @@ favorites = db.Table('favorites',
     db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
 )
 
-# --- MODELE (zgodne z listą .html) ---
+# --- MODELE ---
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    lokalizacja = db.Column(db.String(100), default='Radom')
+    lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
+
+    # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
+    # Metody resetowania hasła (Logic AI)
     def get_reset_token(self):
-        s = Serializer(app.secret_key)
+        s = Serializer(app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
     @staticmethod
     def verify_reset_token(token):
-        s = Serializer(app.secret_key)
+        s = Serializer(app.config['SECRET_KEY'])
         try:
-            user_id = s.loads(token, max_age=1800)['user_id']
-        except: return None
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
         return User.query.get(user_id)
 
 class Car(db.Model):
@@ -93,24 +86,18 @@ class Car(db.Model):
     model = db.Column(db.String(50), nullable=False)
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
-    przebieg = db.Column(db.Integer, default=0)
-    pojemnosc = db.Column(db.String(20))
-    skrzynia = db.Column(db.String(20))
-    paliwo = db.Column(db.String(20))
-    nadwozie = db.Column(db.String(30))
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False) 
+    zrodlo = db.Column(db.String(20), default='Lokalne')
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
-    wyswietlenia = db.Column(db.Integer, default=0)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    skrzynia = db.Column(db.String(20))
+    paliwo = db.Column(db.String(20))
+    nadwozie = db.Column(db.String(30))
+    pojemnosc = db.Column(db.String(20))
+    wyswietlenia = db.Column(db.Integer, default=0)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
-
-    @property
-    def dni_do_konca(self):
-        koniec = self.data_dodania + timedelta(days=30)
-        roznica = koniec - datetime.utcnow()
-        return max(0, roznica.days)
 
 class CarImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -121,170 +108,295 @@ class CarImage(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- LOGIKA ANALIZY I POMOCNIKI ---
-
+# --- SILNIK ANALIZY RYNKOWEJ GEMINI AI ---
 def get_market_valuation(car):
-    base_prices = {"Audi": 1.25, "BMW": 1.28, "Mercedes": 1.30, "Volkswagen": 1.10}
-    age = max(1, 2026 - car.rok)
-    val = 150000 * (0.85 ** age) * base_prices.get(car.marka, 1.0)
-    if car.przebieg > (age * 20000): val *= 0.9
-    diff = ((car.cena - val) / val) * 100
-    if diff < -15: return {"status": "SUPER OKAZJA", "pos": 20, "color": "#28a745", "diff": round(diff, 1), "avg": int(val)}
-    elif diff < 5: return {"status": "RYNKOWA", "pos": 50, "color": "#1a73e8", "diff": round(diff, 1), "avg": int(val)}
-    return {"status": "POWYŻEJ ŚREDNIEJ", "pos": 80, "color": "#ce2b37", "diff": round(diff, 1), "avg": int(val)}
+    base_prices = {"Audi": 1.25, "BMW": 1.28, "Mercedes": 1.30, "Volkswagen": 1.10, "Toyota": 1.15, "Skoda": 1.05}
+    current_year = 2026
+    age = current_year - car.rok
+    estimated_avg = 150000 * (0.85 ** age) * base_prices.get(car.marka, 1.0)
+    estimated_avg *= 0.97 
+    diff_percent = ((car.cena - estimated_avg) / estimated_avg) * 100
+
+    if diff_percent < -15:
+        return {"status": "SUPER OKAZJA", "pos": 20, "color": "#28a745", "diff": round(diff_percent, 1), "avg": int(estimated_avg)}
+    elif diff_percent < 5:
+        return {"status": "CENA RYNKOWA", "pos": 50, "color": "#1a73e8", "diff": round(diff_percent, 1), "avg": int(estimated_avg)}
+    else:
+        return {"status": "POWYŻEJ ŚREDNIEJ", "pos": 80, "color": "#ce2b37", "diff": round(diff_percent, 1), "avg": int(estimated_avg)}
 
 @app.context_processor
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
+# --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
+@app.route('/api/generate-description', methods=['POST'])
+@login_required
+def generate_ai_description():
+    data = request.json
+    marka = data.get('marka', '')
+    model = data.get('model', '')
+    rok = data.get('rok', '')
+    paliwo = data.get('paliwo', '')
+
+    prompt = f"Napisz krótki, profesjonalny opis sprzedażowy dla samochodu {marka} {model} z roku {rok}, silnik {paliwo}. Wspomnij, że auto jest zadbane i zaprasza na jazdę próbną w Radomiu."
+
+    try:
+        response = model_ai.generate_content(prompt)
+        return jsonify({"description": response.text})
+    except Exception as e:
+        # Fallback do f-stringa w razie błędu API
+        fallback = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę. Samochód zadbany, idealny na trasy po Radomiu. Zapraszam na jazdę próbną!"
+        return jsonify({"description": fallback})
+
+# --- FUNKCJE POMOCNICZE ---
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
     if img.mode in ("RGBA", "P"): img = img.convert("RGB")
-    img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+    if img.width > 1200:
+        w_percent = (1200 / float(img.width))
+        h_size = int((float(img.height) * float(w_percent)))
+        img = img.resize((1200, h_size), Image.Resampling.LANCZOS)
     img.save(filepath, "WEBP", quality=75)
     return filename
 
-# --- TRASY OBSŁUGUJĄCE TWOJE PLIKI HTML ---
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# --- TRASY APLIKACJI ---
 
 @app.route('/')
 def index():
-    limit = datetime.utcnow() - timedelta(days=30)
-    q = request.args.get('q', '').strip()
-    base_query = Car.query.filter(Car.data_dodania >= limit)
-    if q:
-        all_cars = base_query.all()
-        choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
-        matches = process.extract(q, choices.keys(), limit=20)
-        matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
-        base_query = base_query.filter(Car.id.in_(matched_ids))
-    return render_template('index.html', cars=base_query.order_by(Car.id.desc()).all(), now=datetime.utcnow())
+    query_text = request.args.get('q', '').strip()
+    skrzynia = request.args.get('skrzynia', '')
+    paliwo = request.args.get('paliwo', '')
+    cena_max = request.args.get('cena_max', type=float)
 
-@app.route('/ogloszenie/<int:car_id>')
-def details(car_id):
-    car = Car.query.get_or_404(car_id)
-    car.wyswietlenia += 1
-    db.session.commit()
-    return render_template('details.html', car=car, now=datetime.utcnow())
+    base_query = Car.query
+
+    if query_text:
+        all_cars = Car.query.all()
+        choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
+        matches = process.extract(query_text, choices.keys(), limit=50)
+        matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
+        base_query = Car.query.filter(Car.id.in_(matched_ids))
+
+    if skrzynia: base_query = base_query.filter(Car.skrzynia == skrzynia)
+    if paliwo: base_query = base_query.filter(Car.paliwo == paliwo)
+    if cena_max: base_query = base_query.filter(Car.cena <= cena_max)
+
+    cars = base_query.order_by(Car.id.desc()).all()
+    return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
+
+@app.route('/kontakt')
+def kontakt():
+    return render_template('kontakt.html')
+
+@app.route('/polityka-prywatnosci')
+def rodo():
+    return render_template('polityka.html')
+
+@app.route('/regulamin')
+def regulamin():
+    return render_template('regulamin.html')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    base_url = "https://gieldaradom.pl"
+    cars = Car.query.all()
+    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += f'  <url><loc>{base_url}/</loc><priority>1.0</priority></url>\n'
+    for car in cars:
+        xml += f'  <url><loc>{base_url}/ogloszenie/{car.id}</loc><priority>0.8</priority></url>\n'
+    xml += f'</urlset>'
+    return Response(xml, mimetype='application/xml')
+
+@app.route('/robots.txt')
+def robots():
+    lines = ["User-agent: *", "Allow: /", "Disallow: /admin/", "Disallow: /login", "Disallow: /register", "Disallow: /profil", "Sitemap: https://gieldaradom.pl/sitemap.xml"]
+    return Response("\n".join(lines), mimetype="text/plain")
 
 @app.route('/edytuj/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
-    if car.user_id != current_user.id: abort(403)
+    if car.user_id != current_user.id:
+        flash('Nie masz uprawnień do edycji.', 'danger')
+        return redirect(url_for('profil'))
     if request.method == 'POST':
-        car.marka = request.form['marka']; car.model = request.form['model']
-        car.cena = request.form['cena']; car.opis = request.form['opis']
+        car.marka, car.model = request.form.get('marka'), request.form.get('model')
+        car.rok, car.cena = request.form.get('rok'), request.form.get('cena')
+        car.telefon, car.opis = request.form.get('telefon'), request.form.get('opis')
+        if request.form.get('skrzynia'): car.skrzynia = request.form.get('skrzynia')
+        if request.form.get('paliwo'): car.paliwo = request.form.get('paliwo')
         db.session.commit()
-        flash('Zaktualizowano ogłoszenie!', 'success')
+        flash('Zaktualizowano!', 'success')
         return redirect(url_for('profil'))
     return render_template('edytuj.html', car=car)
+
+@app.route('/ogloszenie/<int:car_id>')
+def car_details(car_id):
+    car = Car.query.get_or_404(car_id)
+    car.wyswietlenia = (car.wyswietlenia or 0) + 1
+    db.session.commit()
+    return render_template('details.html', car=car, now=datetime.utcnow())
+
+# --- DODAWANIE OGŁOSZENIA Z ANALIZĄ ZDJĘCIA ---
+@app.route('/dodaj', methods=['POST'])
+@login_required
+def dodaj_ogloszenie():
+    files = request.files.getlist('zdjecia')
+    saved_paths = []
+
+    # 1. Zapisywanie zdjęć
+    for file in files[:10]:
+        if file and allowed_file(file.filename):
+            opt_name = save_optimized_image(file)
+            path = url_for('static', filename='uploads/' + opt_name)
+            saved_paths.append(path)
+
+    main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+    oryginalny_opis = request.form['opis']
+    ai_analysis = ""
+
+    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI (jeśli dodano zdjęcie)
+    if saved_paths:
+        try:
+            # Ścieżka do pierwszego zdjęcia (lokalna)
+            img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
+            img_to_analyze = Image.open(img_path)
+
+            prompt_vision = "Jesteś ekspertem motoryzacyjnym. Spójrz na to zdjęcie samochodu i krótko opisz jego stan wizualny, kolor i charakterystyczne cechy (np. felgi, stan lakieru). Napisz to w 2-3 zdaniach po polsku jako uzupełnienie ogłoszenia."
+
+            vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
+            ai_analysis = f"\n\n[Analiza AI wyglądu]: {vision_response.text}"
+        except Exception as e:
+            ai_analysis = ""
+
+    # 3. Tworzenie obiektu auta
+    nowe_auto = Car(
+        marka=request.form['marka'], model=request.form['model'],
+        rok=int(request.form['rok']), cena=float(request.form['cena']),
+        opis=oryginalny_opis + ai_analysis, # Łączymy opis użytkownika z analizą AI
+        telefon=request.form['telefon'],
+        skrzynia=request.form.get('skrzynia'), paliwo=request.form.get('paliwo'),
+        nadwozie=request.form.get('nadwozie'), pojemnosc=request.form.get('pojemnosc'),
+        img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id
+    )
+    db.session.add(nowe_auto)
+    db.session.flush()
+    for path in saved_paths:
+        db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
+    db.session.commit()
+    flash('Ogłoszenie dodane z analizą wizualną AI!', 'success')
+    return redirect(url_for('profil'))
 
 @app.route('/profil')
 @login_required
 def profil():
-    cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    return render_template('profil.html', cars=cars, fav_cars=current_user.favorite_cars, now=datetime.utcnow())
-
-@app.route('/dodaj', methods=['POST'])
-@login_required
-def dodaj():
-    files = request.files.getlist('zdjecia')
-    saved_paths = [url_for('static', filename='uploads/' + save_optimized_image(f)) for f in files[:10] if f]
-    main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400'
-    
-    # Vision AI
-    ai_note = ""
-    if model_ai and saved_paths:
-        try:
-            img_p = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
-            res = model_ai.generate_content(["Opisz krótko to auto po polsku.", Image.open(img_p)])
-            ai_note = f"\n\n[Okiem AI]: {res.text}"
-        except: pass
-
-    new_car = Car(
-        marka=request.form['marka'], model=request.form['model'],
-        rok=int(request.form['rok']), cena=float(request.form['cena']),
-        przebieg=int(request.form.get('przebieg', 0)),
-        opis=request.form['opis'] + ai_note, telefon=request.form['telefon'],
-        img=main_img, user_id=current_user.id
-    )
-    db.session.add(new_car); db.session.flush()
-    for p in saved_paths: db.session.add(CarImage(image_path=p, car_id=new_car.id))
-    db.session.commit()
-    return redirect(url_for('profil'))
+    my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
+    fav_cars = current_user.favorite_cars
+    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
-def odswiez(car_id):
+def refresh_car(car_id):
     car = Car.query.get_or_404(car_id)
     if car.user_id == current_user.id:
         car.data_dodania = datetime.utcnow()
         db.session.commit()
-        flash('Odświeżono na 30 dni!', 'success')
+        flash('Odświeżono!', 'success')
     return redirect(url_for('profil'))
 
-# --- TRASY INFORMACYJNE ---
-@app.route('/kontakt')
-def kontakt(): return render_template('kontakt.html')
-@app.route('/polityka')
-def polityka(): return render_template('polityka.html')
-@app.route('/regulamin')
-def regulamin(): return render_template('regulamin.html')
+@app.route('/usun/<int:car_id>', methods=['POST'])
+@login_required
+def delete_car(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car.user_id == current_user.id:
+        db.session.delete(car)
+        db.session.commit()
+        flash('Usunięto.', 'success')
+    return redirect(url_for('profil'))
 
-# --- RESET HASŁA ---
-@app.route('/reset_request', methods=['GET', 'POST'])
-def reset_request():
-    if request.method == 'POST':
-        user = User.query.filter_by(email=request.form['email']).first()
-        if user:
-            token = user.get_reset_token()
-            msg = Message('Reset Hasła', recipients=[user.email])
-            msg.body = f"Link: {url_for('reset_token', token=token, _external=True)}"
-            mail.send(msg)
-            flash('Email wysłany!', 'info')
-        return redirect(url_for('login'))
-    return render_template('reset_request.html')
-
-@app.route('/reset_token/<token>', methods=['GET', 'POST'])
-def reset_token(token):
-    user = User.verify_reset_token(token)
-    if not user: flash('Token wygasł!', 'warning'); return redirect(url_for('reset_request'))
-    if request.method == 'POST':
-        user.password_hash = generate_password_hash(request.form['password'])
-        db.session.commit(); flash('Hasło zmienione!', 'success')
-        return redirect(url_for('login'))
-    return render_template('reset_token.html')
-
-# --- AUTH ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        u = User.query.filter_by(username=request.form['username']).first()
-        if u and check_password_hash(u.password_hash, request.form['password']):
-            login_user(u); return redirect(url_for('profil'))
+        user = User.query.filter_by(username=request.form['username']).first()
+        if user and check_password_hash(user.password_hash, request.form['password']):
+            login_user(user)
+            return redirect(url_for('profil'))
     return render_template('login.html', now=datetime.utcnow())
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        h = generate_password_hash(request.form['password'])
-        db.session.add(User(username=request.form['username'], email=request.form['email'], password_hash=h))
-        db.session.commit(); return redirect(url_for('login'))
+        new_user = User(username=request.form['username'], email=request.form['email'], 
+                        password_hash=generate_password_hash(request.form['password']))
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
     return render_template('register.html', now=datetime.utcnow())
 
 @app.route('/logout')
-def logout(): logout_user(); return redirect(url_for('index'))
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
-# --- SEO ---
-@app.route('/sitemap.xml')
-def sitemap_xml():
-    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-    xml += f'<url><loc>{request.url_root}</loc></url>'
-    for c in Car.query.all(): xml += f'<url><loc>{request.url_root}ogloszenie/{c.id}</loc></url>'
-    xml += '</urlset>'
-    return Response(xml, mimetype='application/xml')
+@app.route('/admin/full-backup')
+@login_required
+def full_backup():
+    if current_user.id != 1: abort(403)
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
+        if os.path.exists(db_path): zf.write(db_path, arcname='gielda.db')
+    memory_file.seek(0)
+    return send_file(memory_file, mimetype='application/zip', as_attachment=True, download_name="backup.zip")
+
+@app.route('/admin/backup-db')
+@login_required
+def backup_db():
+    if current_user.id != 1: abort(403)
+    db_path = os.path.join(app.root_path, 'instance', 'gielda.db')
+    return send_file(db_path, as_attachment=True)
+
+@app.route('/toggle_favorite/<int:car_id>')
+@login_required
+def toggle_favorite(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car in current_user.favorite_cars: current_user.favorite_cars.remove(car)
+    else: current_user.favorite_cars.append(car)
+    db.session.commit()
+    return redirect(request.referrer or url_for('index'))
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    token_str = token.decode('utf-8') if isinstance(token, bytes) else token
+    msg = Message('Reset Hasła - Giełda Radom', recipients=[user.email])
+    msg.body = f"Link do resetu: {url_for('reset_token', token=token_str, _external=True)}"
+    mail.send(msg)
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if request.method == 'POST':
+        user = User.query.filter_by(email=request.form.get('email')).first()
+        if user:
+            send_reset_email(user)
+            flash('Email wysłany.', 'info')
+            return redirect(url_for('login'))
+    return render_template('reset_request.html')
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    user = User.verify_reset_token(token)
+    if user is None: return redirect(url_for('reset_request'))
+    if request.method == 'POST':
+        user.password_hash = generate_password_hash(request.form.get('password'))
+        db.session.commit()
+        flash('Hasło zmienione!', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html')
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
