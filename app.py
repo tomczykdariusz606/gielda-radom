@@ -305,7 +305,7 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     car.wyswietlenia = (car.wyswietlenia or 0) + 1
     db.session.commit()
-    return render_template('details.html', car=car, return datetime.datetime.now(datetime.timezone.utc))
+    return render_template('details.html', car=car, now=datetime.now(datetime.timezone.utc))
 
 # --- DODAWANIE OGŁOSZENIA Z ANALIZĄ ZDJĘCIA ---
 @app.route('/dodaj', methods=['POST'])
