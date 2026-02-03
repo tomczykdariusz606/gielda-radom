@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <title>Polityka Prywatności i RODO - Giełda Radom</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
-        
+
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #fcefe9; 
@@ -24,7 +24,7 @@
         }
 
         .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-        
+
         .legal-container { 
             background: white; 
             border-radius: 24px; 
@@ -38,11 +38,19 @@
         h1 { color: var(--radom-dark); font-weight: 800; margin-bottom: 2rem; border-left: 6px solid var(--radom-red); padding-left: 20px; }
         h2 { color: var(--radom-red); font-weight: 700; font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: 1rem; }
         h3 { color: var(--radom-dark); font-weight: 600; font-size: 1.1rem; margin-top: 1.5rem; }
-        
+
         .back-link { text-decoration: none; font-weight: 600; color: var(--radom-red); transition: 0.2s; }
         .legal-section { color: #444; font-size: 0.95rem; }
         .legal-section ul { padding-left: 1.2rem; }
         .legal-section li { margin-bottom: 0.5rem; }
+
+        .ai-notice {
+            background-color: #f0f7ff;
+            border-left: 4px solid #4285f4;
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 2rem 0;
+        }
 
         .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
         .footer-heading { color: white; font-weight: 600; margin-bottom: 25px; text-transform: uppercase; font-size: 0.9rem; }
@@ -67,12 +75,12 @@
                 <a href="/" class="back-link mb-4 d-inline-block">← Wróć do strony głównej</a>
 
                 <h1>Polityka Prywatności i Ochrona Danych (RODO)</h1>
-                <p class="text-muted small">Wersja rozszerzona | Obowiązuje od stycznia 2026 r.</p>
+                <p class="text-muted small">Wersja rozszerzona z uwzględnieniem technologii AI | Obowiązuje od lutego 2026 r.</p>
 
                 <hr class="my-4">
 
                 <div class="legal-section">
-                    <p>Szanujemy Twoją prywatność. Poniżej znajdują się szczegółowe informacje na temat tego, jak przetwarzamy Twoje dane osobowe w serwisie <strong>Giełda Radom</strong>, aby zapewnić Ci bezpieczeństwo i przejrzystość transakcji.</p>
+                    <p>Szanujemy Twoją prywatność. Poniżej znajdują się szczegółowe informacje na temat tego, jak przetwarzamy Twoje dane osobowe w serwisie <strong>Giełda Radom</strong>, aby zapewnić Ci bezpieczeństwo i przejrzystość transakcji w dobie nowoczesnych technologii.</p>
 
                     <h2>1. Administrator Danych Osobowych</h2>
                     <p>Administratorem danych osobowych zbieranych za pośrednictwem Serwisu jest <strong>ADT Dariusz Tomczyk</strong> z siedzibą w Radomiu (kod pocztowy: 26-600), e-mail: <strong>dariusztom@go2.pl</strong>.</p>
@@ -83,49 +91,51 @@
                         <li><strong>Dane konta:</strong> nazwa użytkownika, adres e-mail, zaszyfrowane hasło.</li>
                         <li><strong>Dane ogłoszenia:</strong> numer telefonu, lokalizacja pojazdu, zdjęcia, parametry techniczne pojazdu.</li>
                         <li><strong>Dane techniczne:</strong> adres IP, rodzaj przeglądarki, dane o zachowaniu w serwisie (pliki cookies).</li>
-                        <li><strong>Komunikacja:</strong> treść wiadomości przesyłanych przez formularze kontaktowe.</li>
+                        <li><strong>Komunikacja:</strong> treść wiadomości przesyłanych przez formularze kontaktowe oraz zapytania do Asystenta AI.</li>
                     </ul>
 
                     <h2>3. Cel i podstawa prawna przetwarzania</h2>
                     <p>Twoje dane przetwarzamy w oparciu o następujące podstawy prawne:</p>
                     <ul>
                         <li><strong>Realizacja umowy (Art. 6 ust. 1 lit. b RODO):</strong> Abyś mógł założyć konto, dodać ogłoszenie i umożliwić kupującym kontakt z Tobą.</li>
-                        <li><strong>Prawnie uzasadniony interes (Art. 6 ust. 1 lit. f RODO):</strong> Zapewnienie bezpieczeństwa, przeciwdziałanie oszustwom (scam), analiza ruchu na stronie oraz obrona przed ewentualnymi roszczeniami.</li>
-                        <li><strong>Zgoda (Art. 6 ust. 1 lit. a RODO):</strong> W przypadku zapisu na opcjonalne newslettery lub wykorzystania plików cookies analitycznych.</li>
+                        <li><strong>Prawnie uzasadniony interes (Art. 6 ust. 1 lit. f RODO):</strong> Zapewnienie bezpieczeństwa, automatyczna analiza rzetelności ofert przez systemy AI, analiza ruchu na stronie oraz obrona przed ewentualnymi roszczeniami.</li>
+                        <li><strong>Zgoda (Art. 6 ust. 1 lit. a RODO):</strong> W przypadku zapisu na newslettery lub wykorzystania opcjonalnych plików cookies analitycznych.</li>
                     </ul>
 
                     <h2>4. Udostępnianie danych</h2>
                     <p>Twoje dane mogą być udostępniane:</p>
                     <ul>
-                        <li><strong>Użytkownikom Serwisu:</strong> Numer telefonu i lokalizacja auta są widoczne dla potencjalnych kupujących (po kliknięciu przycisku "Pokaż numer").</li>
-                        <li><strong>Dostawcom usług:</strong> Firmom hostingowym, operatorom systemów pocztowych oraz dostawcom narzędzi analitycznych (np. Google Analytics).</li>
-                        <li><strong>Organom ścigania:</strong> Jeśli wpłynie do nas prawnie uzasadnione wezwanie (Policja, Prokuratura).</li>
+                        <li><strong>Użytkownikom Serwisu:</strong> Numer telefonu i lokalizacja auta są widoczne dla potencjalnych kupujących.</li>
+                        <li><strong>Dostawcom technologii AI (Google Cloud/Gemini):</strong> Zdjęcia pojazdów oraz parametry techniczne są przesyłane w formie zanonimizowanej (bez danych osobowych właściciela) do silnika AI w celu dokonania wizualnej analizy stanu pojazdu i wyceny rynkowej.</li>
+                        <li><strong>Dostawcom usług:</strong> Firmom hostingowym i operatorom systemów pocztowych.</li>
+                        <li><strong>Organom ścigania:</strong> Jeśli wpłynie do nas prawnie uzasadnione wezwanie.</li>
                     </ul>
 
                     <h2>5. Twoje prawa (Zgodnie z RODO)</h2>
-                    <p>Posiadasz pełną kontrolę nad swoimi danymi:</p>
                     <ul>
-                        <li><strong>Prawo dostępu i poprawiania:</strong> Możesz edytować swoje dane w profilu użytkownika.</li>
-                        <li><strong>Prawo do usunięcia danych ("Prawo do bycia zapomnianym"):</strong> Możesz usunąć swoje konto i wszystkie ogłoszenia w dowolnym momencie.</li>
-                        <li><strong>Prawo do sprzeciwu:</strong> Możesz sprzeciwić się przetwarzaniu danych w celach analitycznych lub marketingowych.</li>
+                        <li><strong>Prawo dostępu i poprawiania:</strong> Możesz edytować swoje dane w profilu.</li>
+                        <li><strong>Prawo do usunięcia danych:</strong> Możesz usunąć konto w dowolnym momencie.</li>
+                        <li><strong>Prawo do sprzeciwu wobec profilowania:</strong> Możesz zgłosić sprzeciw wobec automatycznej ocenie Twojego ogłoszenia przez system AI.</li>
                     </ul>
 
                     <h2>6. Pliki Cookies (Ciasteczka)</h2>
-                    <p>Stosujemy pliki cookies w celu:</p>
-                    <ul>
-                        <li>Utrzymania Twojej sesji (abyś nie musiał logować się na każdej podstronie).</li>
-                        <li>Zapamiętywania filtrów wyszukiwania.</li>
-                        <li>Statystyk oglądalności ofert.</li>
-                    </ul>
-                    <p>Możesz zarządzać cookies w ustawieniach swojej przeglądarki.</p>
+                    <p>Stosujemy pliki cookies w celu utrzymania sesji, zapamiętywania filtrów wyszukiwania oraz statystyk oglądalności ofert.</p>
 
                     <h2>7. Bezpieczeństwo</h2>
-                    <p>Stosujemy szyfrowanie połączeń SSL oraz regularne aktualizacje oprogramowania, aby chronić Twoje dane przed nieautoryzowanym dostępem. Pamiętaj jednak, że podając numer telefonu w ogłoszeniu, staje się on dostępny dla osób zainteresowanych zakupem pojazdu.</p>
+                    <p>Stosujemy szyfrowanie połączeń SSL. Pamiętaj, że podając numer telefonu w ogłoszeniu, staje się on publicznie dostępny dla osób zainteresowanych zakupem pojazdu.</p>
+
+                    <div class="ai-notice">
+                        <h2 style="margin-top: 0;"><i class="bi bi-cpu me-2"></i>8. Przetwarzanie przez Sztuczną Inteligencję (AI)</h2>
+                        <p>W ramach serwisu Giełda Radom korzystamy z technologii <strong>Google Gemini 3.0</strong>. Przetwarzanie to odbywa się w następujący sposób:</p>
+                        <p>a) <strong>Analiza obrazu:</strong> Każde zdjęcie dodane do ogłoszenia jest analizowane przez AI w celu identyfikacji uszkodzeń i oceny stanu wizualnego. Proces ten jest zautomatyzowany.</p>
+                        <p>b) <strong>Uczenie maszynowe:</strong> Dane o parametrach aut (bez danych osobowych) służą do kalibracji algorytmu wyceny, aby prezentowane na stronie wyniki były jak najdokładniejsze dla lokalnego rynku w Radomiu.</p>
+                        <p>c) <strong>Interakcja:</strong> Jeśli korzystasz z funkcji "Zapytaj AI" o szczegóły auta, treść Twojego zapytania jest przetwarzana przez model językowy w celu wygenerowania odpowiedzi na podstawie treści ogłoszenia.</p>
+                    </div>
                 </div>
 
                 <div class="mt-5 p-4 bg-light rounded-4 border text-center">
                     <p class="mb-0 small fw-bold">
-                        Masz pytania dotyczące Twojej prywatności na Giełdzie Radom? Napisz do Dariusza: <a href="mailto:dariusztom@go2.pl" class="text-danger">dariusztom@go2.pl</a>
+                        Masz pytania dotyczące Twojej prywatności lub działania AI na Giełdzie Radom? Napisz: <a href="mailto:dariusztom@go2.pl" class="text-danger">dariusztom@go2.pl</a>
                     </p>
                 </div>
             </div>
@@ -137,8 +147,7 @@
             <div class="row gy-4">
                 <div class="col-lg-4">
                     <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
-                    <p class="small">Lokalny portal ogłoszeniowy. Wspieramy mieszkańców Radomia w handlu motoryzacyjnym bez prowizji. Tradycja Czerwca '76.</p>
-                    <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
+                    <p class="small">Lokalny portal ogłoszeniowy z technologią AI. Wspieramy mieszkańców Radomia w bezpiecznym handlu motoryzacyjnym. Tradycja Czerwca '76.</p>
                 </div>
                 <div class="col-lg-2">
                     <h5 class="footer-heading">Nawigacja</h5>
@@ -157,7 +166,7 @@
                 </div>
             </div>
             <hr class="my-4 border-secondary opacity-25">
-            <p class="text-center small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
+            <p class="text-center small mb-0">© 2026 Giełda Radom. Budujemy technologię w hołdzie Czerwca '76.</p>
         </div>
     </footer>
 
