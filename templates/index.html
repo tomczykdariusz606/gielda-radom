@@ -133,49 +133,39 @@
             </form>
         </div>
     </header>
-<section class="container mb-5">
-    <div class="p-4 p-md-5 mb-4 rounded-4 text-white shadow-lg" style="background: linear-gradient(135deg, #1a1a1a 0%, #ce2b37 100%); position: relative; overflow: hidden;">
-        <div class="row align-items-center position-relative" style="z-index: 2;">
-            <div class="col-lg-8">
-                <div class="badge bg-white text-danger fw-bold mb-3 px-3 py-2 rounded-pill shadow-sm">
-                    <i class="bi bi-cpu-fill me-2"></i> NOWOŚĆ: TECHNOLOGIA 2026
-                </div>
-                <h2 class="display-5 fw-800 mb-3" style="font-family: 'Anton'; letter-spacing: 1px;">AUTOPILOT SPRZEDAŻY Z GEMINI 3.0</h2>
-                <p class="lead mb-4 opacity-90">Nie tracimy czasu na puste opisy. Nasza sztuczna inteligencja od Google analizuje zdjęcia, wycenia auto względem rynku i doradza kupującym w czasie rzeczywistym.</p>
-                
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-eye text-white fs-3 me-2"></i>
-                            <span class="small fw-bold">Wizualna analiza uszkodzeń</span>
-                        </div>
+
+    <section class="container mb-5">
+        <div class="p-4 p-md-5 mb-4 rounded-4 text-white shadow-lg" style="background: linear-gradient(135deg, #1a1a1a 0%, #ce2b37 100%); position: relative; overflow: hidden;">
+            <div class="row align-items-center position-relative" style="z-index: 2;">
+                <div class="col-lg-8">
+                    <div class="badge bg-white text-danger fw-bold mb-3 px-3 py-2 rounded-pill shadow-sm">
+                        <i class="bi bi-cpu-fill me-2"></i> NOWOŚĆ: TECHNOLOGIA 2026
                     </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-graph-up-arrow text-white fs-3 me-2"></i>
-                            <span class="small fw-bold">Precyzyjna wycena rynkowa</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-chat-dots text-white fs-3 me-2"></i>
-                            <span class="small fw-bold">Asystent AI 24/7</span>
-                        </div>
+                    <h2 class="display-5 fw-800 mb-3" style="font-family: 'Anton'; letter-spacing: 1px;">AUTOPILOT SPRZEDAŻY Z GEMINI 3.0</h2>
+                    <p class="lead mb-4 opacity-90">Nasza sztuczna inteligencja analizuje zdjęcia i wycenia auto względem rynku w czasie rzeczywistym.</p>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-4"><small><i class="bi bi-check2-circle me-1"></i> Wizualna analiza stanu</small></div>
+                        <div class="col-md-4"><small><i class="bi bi-check2-circle me-1"></i> Wycena rynkowa</small></div>
+                        <div class="col-md-4"><small><i class="bi bi-check2-circle me-1"></i> Asystent Kupującego</small></div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4 text-center d-none d-lg-block">
-                <div class="ai-orb animate-pulse">
-                    <i class="bi bi-robot" style="font-size: 6rem; filter: drop-shadow(0 0 20px rgba(255,255,255,0.4));"></i>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <div class="ai-orb animate-pulse">
+                        <i class="bi bi-robot" style="font-size: 6rem;"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div style="position: absolute; top: -20%; right: -10%; font-size: 20rem; color: rgba(255,255,255,0.03); font-family: 'Anton'; z-index: 1;">AI</div>
-    </div>
-</section>
+    </section>
+
     <div class="container mb-5">
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for car in cars %}
+                {% endfor %}
+        </div>
+    </div>
+
             <div class="col">
                 <div class="card h-100 car-card">
                     {% set dni_od_dodania = (now - car.data_dodania).days %}
