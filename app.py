@@ -94,8 +94,8 @@ class Car(db.Model):
     img = db.Column(db.String(200), nullable=False) 
     zrodlo = db.Column(db.String(20), default='Lokalne')
 # TWOJE NOWE KOLUMNY:
-    price_valuation = db.Column(db.Text, nullable=True) # Tu AI zapisze JSON
-    last_valuation_date = db.Column(db.DateTime, nullable=True) # Tu AI zapisze datę
+        ai_label = db.Column(db.String(100), nullable=True)
+     ai_valuation_data = db.Column(db.Text, nullable=True)
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     skrzynia = db.Column(db.String(20))
