@@ -205,46 +205,47 @@ def index():
 
     cars = base_query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
+
 @app.route('/api/check-price-valuation', methods=['POST'])
 def check_price_valuation():
     data = request.get_json()
-    # Pobieramy auto z bazy na podstawie ID wysłanego z JavaScriptu
     car = Car.query.get(data.get('car_id'))
 
     if not car:
         return jsonify({"error": "Nie znaleziono auta"}), 404
 
-    # Logika Cache: Sprawdzamy czy od ostatniej analizy minęły 3 dni
-    if car.last_valuation_date and car.last_valuation_date > datetime.now() - timedelta(days=3):
-        res = json.loads(car.price_valuation)
-        res['date'] = car.last_valuation_date.strftime("%d.%m.%Y")
-        return jsonify(res)
+    # Sprawdzanie cache przy użyciu nowych nazw kolumn
+    if car.ai_valuation_data and car.ai_label:
+        # Zakładamy, że ai_valuation_data przechowuje datę jako string lub obiekt
+        # Dla uproszczenia zwracamy cache, jeśli oba pola są wypełnione
+        try:
+            res = json.loads(car.ai_label)
+            res['date'] = str(car.ai_valuation_data)
+            return jsonify(res)
+        except:
+            pass # Jeśli JSON byłby błędny, generujemy nowy
 
-    # Budujemy prompt dla AI (Luty 2026)
-    # Dodaję tu wzmiankę o opisie, żeby AI wiedziało np. o uszkodzeniach
     prompt = (
-        f"Jesteś ekspertem rynku aut w Polsce (luty 2026). "
+        f"Jesteś ekspertem rynku aut w Polsce (2026). "
         f"Oceń cenę {car.cena} PLN dla: {car.marka} {car.model}, {car.rok}r, {car.przebieg}km. "
-        f"Opis auta: {car.opis[:200]}... "
         f"Zwróć TYLKO czysty JSON: {{\"score\": 1-100, \"label\": \"Okazja/Średnia/Drogo\", \"color\": \"success/warning/danger\"}}"
     )
-    
+
     try:
         response = model_ai.generate_content(prompt)
-        # Czyścimy odpowiedź z ewentualnego formatowania markdown (```json ... ```)
         raw_json = response.text.replace('```json', '').replace('```', '').strip()
-        
-        # Zapisujemy wynik do bazy, żeby oszczędzać zapytania
-        car.price_valuation = raw_json
-        car.last_valuation_date = datetime.now()
+
+        # Zapisujemy do bazy używając nazw z PRAGMA
+        car.ai_label = raw_json
+        car.ai_valuation_data = datetime.now().strftime("%d.%m.%Y")
         db.session.commit()
-        
+
         res = json.loads(raw_json)
-        res['date'] = car.last_valuation_date.strftime("%d.%m.%Y")
+        res['date'] = car.ai_valuation_data
         return jsonify(res)
     except Exception as e:
-        print(f"Błąd wyceny AI: {e}")
         return jsonify({"score": 50, "label": "Stabilna", "color": "secondary", "date": "dzisiaj"})
+
 
 
 @app.route('/kontakt')
