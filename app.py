@@ -91,9 +91,8 @@ class Car(db.Model):
     cena = db.Column(db.Float, nullable=False)
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
-    img = db.Column(db.String(200), nullable=False) 
+    img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(20), default='Lokalne')
-# TWOJE NOWE KOLUMNY:
     ai_label = db.Column(db.String(100), nullable=True)
     ai_valuation_data = db.Column(db.Text, nullable=True)
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
@@ -105,6 +104,7 @@ class Car(db.Model):
     wyswietlenia = db.Column(db.Integer, default=0)
     przebieg = db.Column(db.Integer, default=0)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
+
 
 class CarImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
