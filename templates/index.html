@@ -29,21 +29,43 @@
             width: 150px; height: 150px; background: radial-gradient(circle, rgba(66, 133, 244, 0.4) 0%, rgba(206, 43, 55, 0) 70%);
             z-index: 1; border-radius: 50%; animation: glow-pulse 3s infinite;
         }
-        @keyframes glow-pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-        }
-        @keyframes pulse-red {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(206, 43, 55, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0); }
-        }
-        .animate-pulse { animation: pulse-red 2s infinite; }
+        /* --- Poprawiona animacja Gemini AI --- */
+@keyframes ai-glow {
+    0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.6)); opacity: 0.8; }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 25px rgba(66, 133, 244, 1)); opacity: 1; }
+    100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(66, 133, 244, 0.6)); opacity: 0.8; }
+}
 
-        /* Komponenty */
-        .navbar { background: rgba(26, 26, 26, 0.95) !important; backdrop-filter: blur(10px); border-bottom: 3px solid var(--radom-red); }
-        .hero-section {
-            position: relative; background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
+.animate-pulse-ai {
+    animation: ai-glow 2s infinite ease-in-out;
+    display: inline-block;
+}
+
+/* --- Nowoczesny panel wyszukiwania --- */
+.search-panel {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    border-radius: 24px;
+    border-bottom: 4px solid var(--radom-red);
+    color: var(--radom-dark);
+}
+
+.form-label-small {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Dostosowanie Hero pod większy panel */
+.hero-section {
+    min-height: 600px;
+    height: auto !important;
+    padding: 100px 0;
+}
+
             background-size: cover; background-position: center; height: 500px; display: flex; align-items: center; justify-content: center;
             text-align: center; color: white; overflow: hidden; margin-bottom: 3rem; border-bottom-left-radius: 50px; border-bottom-right-radius: 50px; 
         }
@@ -80,21 +102,88 @@
         </div>
     </nav>
 
-    <header class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="big-text-76">CZERWIEC '76</div>
-        <div class="hero-content px-3 text-center">
-            <h1 class="display-3 fw-800 mb-2" style="font-family: 'Anton';">GIEŁDA RADOM</h1>
-            <p class="lead fw-bold mb-4 opacity-75">Największa lokalna baza aut z darmową wyceną AI</p>
-            <form action="/" method="GET" class="mx-auto" style="max-width: 600px;">
-                <div class="input-group input-group-lg shadow-lg bg-white rounded-pill p-1">
-                    <span class="input-group-text border-0 bg-transparent ms-2"><i class="bi bi-search text-danger"></i></span>
-                    <input type="text" name="q" class="form-control border-0 bg-transparent shadow-none" placeholder="Szukaj marki lub modelu..." value="{{ search_query or '' }}">
-                    <button class="btn btn-danger rounded-pill px-4 fw-bold" type="submit">Szukaj</button>
+   <header class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="big-text-76">CZERWIEC '76</div>
+    
+    <div class="hero-content container">
+        <h1 class="display-3 fw-800 mb-2 text-white" style="font-family: 'Anton';">GIEŁDA RADOM</h1>
+        <p class="lead fw-bold mb-5 text-white-50">Lokalne ogłoszenia napędzane przez AI Gemini 3.0</p>
+
+        <div class="search-panel p-4 shadow-lg mx-auto" style="max-width: 1100px;">
+            <form action="/" method="GET" class="row g-3 align-items-end text-start">
+                
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label-small"><i class="bi bi-grid-fill text-danger"></i> Kategoria</label>
+                    <select name="typ" class="form-select border-0 bg-light">
+                        <option value="">Wszystkie</option>
+                        <option value="Osobowe">🚗 Osobowe</option>
+                        <option value="Bus">🚐 Busy / Dostawcze</option>
+                        <option value="Rower">🚲 Rower</option>
+                        <option value="SUV">⛰️ SUV</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-8">
+                    <label class="form-label-small"><i class="bi bi-search text-danger"></i> Czego szukasz?</label>
+                    <input type="text" name="q" class="form-control border-0 bg-light" placeholder="Np. Astra, Scott, Master..." value="{{ request.args.get('q', '') }}">
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label-small"><i class="bi bi-fuel-pump-fill text-danger"></i> Napęd</label>
+                    <select name="paliwo" class="form-select border-0 bg-light">
+                        <option value="">Wszystkie</option>
+                        <option value="Benzyna">Benzyna</option>
+                        <option value="Diesel">Diesel</option>
+                        <option value="LPG">LPG</option>
+                        <option value="Elektryczny">Elektryczny</option>
+                        <option value="Manualny">Siła mięśni</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label-small"><i class="bi bi-cash-stack text-danger"></i> Cena do</label>
+                    <input type="number" name="cena_max" class="form-control border-0 bg-light" placeholder="PLN" value="{{ request.args.get('cena_max', '') }}">
+                </div>
+
+                <div class="col-lg-2 col-md-4">
+                    <label class="form-label-small"><i class="bi bi-speedometer2 text-danger"></i> Przebieg do</label>
+                    <input type="number" name="przebieg_max" class="form-control border-0 bg-light" placeholder="km" value="{{ request.args.get('przebieg_max', '') }}">
+                </div>
+
+                <div class="col-lg-1 col-md-12">
+                    <button type="submit" class="btn btn-danger w-100 py-2 rounded-3 shadow-sm fw-bold">
+                        <i class="bi bi-search"></i>
+                    </button>
                 </div>
             </form>
         </div>
-    </header>
+    </div>
+</header>
+
+<section class="container mb-5" style="margin-top: -50px;">
+    <div class="p-4 p-md-5 rounded-4 text-white shadow-lg" style="background: linear-gradient(135deg, #1a1a1a 0%, #ce2b37 100%); position: relative; overflow: hidden;">
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <div class="badge bg-white text-danger fw-bold mb-3 px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-cpu-fill me-2"></i> SYSTEM GEMINI 3.0 LIVE
+                </div>
+                <h2 class="display-5 fw-800 mb-3" style="font-family: 'Anton';">ANALIZA RYNKU RADOM</h2>
+                <p class="lead mb-0 opacity-90">Nasze AI sprawdza ceny aut, busów i rowerów w regionie 26-600.</p>
+            </div>
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <div class="animate-pulse-ai">
+                    <i class="bi bi-robot" style="font-size: 6rem; color: #fff;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
 
     <section class="container mb-5">
         <div class="p-4 p-md-5 rounded-4 text-white shadow-lg" style="background: linear-gradient(135deg, #1a1a1a 0%, #ce2b37 100%); position: relative; overflow: hidden;">
