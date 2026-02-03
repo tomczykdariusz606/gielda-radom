@@ -142,7 +142,7 @@ def generate_ai_description():
     paliwo = data.get('paliwo', '')
 
     
-    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz BARDZO BARDZO KRÓTKO (max 2-3 zdania) na pytanie: '{user_q}' "
+    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz BARDZO KRÓTKO (max 2-3 zdania) na pytanie: '{user_q}' "
               f"dotyczące auta {marka} {model_car}. Bądź konkretny.")
 
 
@@ -497,20 +497,22 @@ def analyze_car_api():
         data = request.get_json()
         marka = data.get('marka', 'Pojazd')
         model_car = data.get('model', '')
-        # ... reszta danych ...
+        pytanie = data.get('query', '') # Pobieramy pytanie od użytkownika
 
-        prompt = f"Przeanalizuj auto {marka} {model_car}."
+        # Krótki, konkretny prompt dla okienka czatu
+        prompt = (
+            f"Jako ekspert opowiedz o {marka} {model_car}. "
+            f"Użytkownik pyta: {pytanie}. "
+            f"Odpowiedz konkretnie w 2-3 zdaniach."
+        )
         
-        # Wywołanie modelu
         response = model_ai.generate_content(prompt)
         return jsonify({"analysis": response.text})
 
     except Exception as e:
-        # TA LINIA JEST KLUCZOWA - wypisze błąd w tail -f gielda.log
-        print(f"!!! BŁĄD GEMINI !!!: {str(e)}") 
-        
-        # Tymczasowo wyślij błąd na stronę, żebyśmy go widzieli
-        return jsonify({"analysis": f"Błąd systemowy: {str(e)}"})
+        print(f"!!! BŁĄD GEMINI API !!!: {str(e)}") 
+        return jsonify({"analysis": "Nie udało mi się teraz odpowiedzieć. Spróbuj później."})
+
 
 
 
