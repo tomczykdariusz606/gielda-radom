@@ -482,43 +482,25 @@ def reset_token(token):
 
 @app.route('/api/analyze-car', methods=['POST'])
 def analyze_car_api():
-    # 1. Domyślne wartości
-    marka = "Pojazd"
-    model_car = ""
-    przebieg = "niedostępny"
-    cena = "?"
-    user_q = ""
-
     try:
-        # 2. Pobieranie danych z frontendu
         data = request.get_json()
-        if data:
-            marka = data.get('marka', marka)
-            model_car = data.get('model', model_car)
-            przebieg = data.get('przebieg', przebieg)
-            cena = data.get('cena', cena)
-            # To odbiera pytanie z nowego okna na stronie
-            user_q = data.get('pytanie_uzytkownika', '')
+        marka = data.get('marka', 'Pojazd')
+        model_car = data.get('model', '')
+        # ... reszta danych ...
 
-        # 3. Tworzenie inteligentnego zapytania (Promptu)
-        if user_q:
-            prompt = f"Użytkownik pyta: '{user_q}' o samochód {marka} {model_car} (cena: {cena}, przebieg: {przebieg}). Odpowiedz konkretnie jako ekspert."
-        else:
-            prompt = f"Przeanalizuj krótko auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz zachęcający komentarz."
-
-        # 4. Wywołanie Gemini
+        prompt = f"Przeanalizuj auto {marka} {model_car}."
+        
+        # Wywołanie modelu
         response = model_ai.generate_content(prompt)
-
-        if response and response.text:
-            return jsonify({"analysis": response.text})
-        else:
-            raise Exception("AI nie zwróciło tekstu")
+        return jsonify({"analysis": response.text})
 
     except Exception as e:
-        print(f"Błąd Gemini: {e}")
-        # Bezpieczny powrót (fallback), gdyby AI było przeciążone
-        fallback = f"Auto {marka} {model_car} to solidna propozycja. Zapraszamy do kontaktu w celu poznania szczegółów!"
-        return jsonify({"analysis": fallback})
+        # TA LINIA JEST KLUCZOWA - wypisze błąd w tail -f gielda.log
+        print(f"!!! BŁĄD GEMINI !!!: {str(e)}") 
+        
+        # Tymczasowo wyślij błąd na stronę, żebyśmy go widzieli
+        return jsonify({"analysis": f"Błąd systemowy: {str(e)}"})
+
 
 
 
