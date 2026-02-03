@@ -162,7 +162,7 @@
             resText.innerText = "Błąd połączenia z AI.";
         });
     };
-</script>
+
 fetch('/api/check-price-valuation', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -176,6 +176,6 @@ fetch('/api/check-price-valuation', {
     document.getElementById('priceLabel').className = `badge rounded-pill bg-${data.color} px-3`;
     document.getElementById('valuationDate').innerText = "Aktualizacja: " + data.date;
 });
-
+</script>
 
 {% endblock %}
