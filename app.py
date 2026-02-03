@@ -9,8 +9,11 @@ import google.generativeai as genai
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_, func
+
+# POPRAWIONE I POŁĄCZONE IMPORTY SQLALCHEMY:
+from sqlalchemy import or_, and_, func  
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from PIL import Image
