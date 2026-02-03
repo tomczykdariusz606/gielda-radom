@@ -77,6 +77,22 @@
         </div>
 
         <div class="col-lg-4">
+<div class="market-valuation mt-3 mb-4 p-3 border rounded-4 bg-white shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small fw-bold text-muted">Ocena ceny Gemini AI:</span>
+        <span id="priceLabel" class="badge rounded-pill bg-secondary px-3">Sprawdzanie...</span>
+    </div>
+    
+    <div class="progress" style="height: 12px; background-color: #e9ecef; border-radius: 10px;">
+        <div id="priceBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; border-radius: 10px;"></div>
+    </div>
+    
+    <div class="d-flex justify-content-between mt-2">
+        <span class="small text-muted" style="font-size: 0.75rem;">Okazja <--- Średnia ---> Drogo</span>
+        <span id="valuationDate" class="small text-muted" style="font-size: 0.75rem;"></span>
+    </div>
+</div>
+
             <div class="card border-0 p-4 rounded-4 shadow-sm bg-white">
                 <h2 class="fw-bold mb-0">{{ car.marka }}</h2>
                 <h4 class="text-muted">{{ car.model }}</h4>
