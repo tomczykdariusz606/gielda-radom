@@ -568,6 +568,12 @@ def analyze_car_api():
         return jsonify({"analysis": "Nie udało mi się teraz odpowiedzieć. Spróbuj później."})
 
 
+@app.template_filter('from_json')
+def from_json_filter(value):
+    try:
+        return json.loads(value)
+    except (ValueError, TypeError):
+        return None
 
 
 
