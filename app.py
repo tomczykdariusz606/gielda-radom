@@ -4,6 +4,7 @@ import zipfile
 import io
 import sekrety
 import sqlite3
+import json
 import google.generativeai as genai
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
@@ -92,6 +93,9 @@ class Car(db.Model):
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False) 
     zrodlo = db.Column(db.String(20), default='Lokalne')
+# TWOJE NOWE KOLUMNY:
+    price_valuation = db.Column(db.Text, nullable=True) # Tu AI zapisze JSON
+    last_valuation_date = db.Column(db.DateTime, nullable=True) # Tu AI zapisze datę
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     skrzynia = db.Column(db.String(20))
@@ -201,6 +205,47 @@ def index():
 
     cars = base_query.order_by(Car.id.desc()).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
+@app.route('/api/check-price-valuation', methods=['POST'])
+def check_price_valuation():
+    data = request.get_json()
+    # Pobieramy auto z bazy na podstawie ID wysłanego z JavaScriptu
+    car = Car.query.get(data.get('car_id'))
+
+    if not car:
+        return jsonify({"error": "Nie znaleziono auta"}), 404
+
+    # Logika Cache: Sprawdzamy czy od ostatniej analizy minęły 3 dni
+    if car.last_valuation_date and car.last_valuation_date > datetime.now() - timedelta(days=3):
+        res = json.loads(car.price_valuation)
+        res['date'] = car.last_valuation_date.strftime("%d.%m.%Y")
+        return jsonify(res)
+
+    # Budujemy prompt dla AI (Luty 2026)
+    # Dodaję tu wzmiankę o opisie, żeby AI wiedziało np. o uszkodzeniach
+    prompt = (
+        f"Jesteś ekspertem rynku aut w Polsce (luty 2026). "
+        f"Oceń cenę {car.cena} PLN dla: {car.marka} {car.model}, {car.rok}r, {car.przebieg}km. "
+        f"Opis auta: {car.opis[:200]}... "
+        f"Zwróć TYLKO czysty JSON: {{\"score\": 1-100, \"label\": \"Okazja/Średnia/Drogo\", \"color\": \"success/warning/danger\"}}"
+    )
+    
+    try:
+        response = model_ai.generate_content(prompt)
+        # Czyścimy odpowiedź z ewentualnego formatowania markdown (```json ... ```)
+        raw_json = response.text.replace('```json', '').replace('```', '').strip()
+        
+        # Zapisujemy wynik do bazy, żeby oszczędzać zapytania
+        car.price_valuation = raw_json
+        car.last_valuation_date = datetime.now()
+        db.session.commit()
+        
+        res = json.loads(raw_json)
+        res['date'] = car.last_valuation_date.strftime("%d.%m.%Y")
+        return jsonify(res)
+    except Exception as e:
+        print(f"Błąd wyceny AI: {e}")
+        return jsonify({"score": 50, "label": "Stabilna", "color": "secondary", "date": "dzisiaj"})
+
 
 @app.route('/kontakt')
 def kontakt():
