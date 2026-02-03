@@ -30,6 +30,38 @@
         body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 
         /* Animacje */
+/* Styl dla nowoczesnej reklamy Gemini AI */
+.ai-orb {
+    position: relative;
+    display: inline-block;
+    color: #fff;
+}
+
+.ai-orb i {
+    position: relative;
+    z-index: 2;
+}
+
+.ai-orb::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(66, 133, 244, 0.4) 0%, rgba(206, 43, 55, 0) 70%);
+    z-index: 1;
+    border-radius: 50%;
+    animation: glow-pulse 3s infinite;
+}
+
+@keyframes glow-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+}
+
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(206, 43, 55, 0); }
