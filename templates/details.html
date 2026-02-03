@@ -97,8 +97,6 @@
             margin-top: 30px;
             box-shadow: 0 10px 30px rgba(66, 133, 244, 0.3);
         }
-
-
         .partner-link { 
             display: flex; 
             align-items: center; 
@@ -166,7 +164,7 @@
 
             <div class="col-lg-4">
                 <div class="price-sticky">
-                    <div class="d-flex justify-content-between align-items-center 
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="h1 fw-900 text-danger mb-0">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} <span class="fs-4">PLN</span></div>
                         <i class="bi bi-heart fs-3" style="cursor:pointer" onclick="this.classList.toggle('bi-heart'); this.classList.toggle('bi-heart-fill'); this.classList.toggle('text-danger');"></i>
                     </div>
@@ -276,59 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-<script>
-// Funkcja 1: Automatyczna analiza przy ładowaniu
-document.addEventListener('DOMContentLoaded', function() {
-    const aiBox = document.querySelector('.ai-box p');
-    if (!aiBox) return;
-
-    fetch('/api/analyze-car', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            marka: "{{ car.marka }}",
-            model: "{{ car.model }}",
-            cena: "{{ car.cena }}",
-            przebieg: "{{ car.przebieg or 0 }}"
-        })
-    })
-    .then(response => response.json())
-    .then(data => { aiBox.innerHTML = data.analysis; })
-    .catch(error => { aiBox.innerHTML = "Analiza chwilowo niedostępna."; });
-});
-
-// Funkcja 2: Zadawanie pytań przez użytkownika
-function askGemini() {
-    const question = document.getElementById('userQuestion').value;
-    const answerDiv = document.getElementById('aiResponse');
-    const answerText = document.getElementById('answerText');
-
-    if (!question) return alert("Wpisz pytanie!");
-
-    answerText.innerHTML = '<i class="bi bi-hourglass-split"></i> Gemini analizuje Twoje pytanie...';
-    answerDiv.style.display = 'block';
-
-    fetch('/api/analyze-car', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            marka: "{{ car.marka }}",
-            model: "{{ car.model }}",
-            przebieg: "{{ car.przebieg }}",
-            cena: "{{ car.cena }}",
-            pytanie_uzytkownika: question
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        answerText.innerText = data.analysis;
-    })
-    .catch(err => {
-        answerText.innerText = "Błąd połączenia z AI.";
-    });
-}
-</script>
-
 
 </body>
 </html>
