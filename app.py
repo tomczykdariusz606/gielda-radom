@@ -142,7 +142,7 @@ def generate_ai_description():
     paliwo = data.get('paliwo', '')
 
     
-    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz bardzo krótko (max 2-3 zdania) na pytanie: '{user_q}' "
+    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz BARDZO BARDZO KRÓTKO (max 2-3 zdania) na pytanie: '{user_q}' "
               f"dotyczące auta {marka} {model_car}. Bądź konkretny.")
 
 
@@ -327,25 +327,28 @@ def dodaj_ogloszenie():
     oryginalny_opis = request.form['opis']
     ai_analysis = ""
 
-    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI     # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
+  
+      # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
     if saved_paths:
         try:
             img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
             img_to_analyze = Image.open(img_path)
 
-            # Nowy, krótki prompt vision
+            # Używamy instrukcji "BEZ HISTORII", żeby uciąć wywody o Stellantisie
             prompt_vision = (
-                "Jesteś rzeczoznawcą. Opisz auto ze zdjęcia w JEDNYM krótkim zdaniu (max 100 znaków). "
-                "Skup się tylko na kolorze i jednym detalu (np. felgi). Bez lania wody."
+                "Zidentyfikuj auto na zdjęciu. "
+                "NAPISZ TYLKO JEDNO KRÓTKIE ZDANIE (MAX 100 ZNAKÓW) o jego kolorze i stanie. "
+                "ZAKAZ PISANIA O HISTORII MARKI I KONCERNACH. BĄDŹ BARDZO ZWIĘZŁY."
             )
 
             vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
             
-            # Dodajemy tylko jeśli tekst jest krótki
-            clean_text = vision_response.text.strip()
-            ai_analysis = f"\n\n[Wygląd]: {clean_text}"
+            # Dodatkowe zabezpieczenie: ucinamy tekst programowo, gdyby AI znów popłynęło
+            short_analysis = vision_response.text.strip()[:150] 
+            ai_analysis = f"\n\n[Analiza wyglądu]: {short_analysis}"
         except Exception as e:
             ai_analysis = ""
+
 
     # 3. Tworzenie obiektu auta
     nowe_auto = Car(
