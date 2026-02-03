@@ -30,7 +30,7 @@ mail = Mail(app)
 
 # --- KONFIGURACJA GEMINI AI ---
 genai.configure(api_key=sekrety.GEMINI_KEY)
-model_ai = genai.GenerativeModel('gemini-2.0-flash') 
+model_ai = genai.GenerativeModel('gemini-3-flash-preview')
 # --- KONFIGURACJA APLIKACJI ---
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
