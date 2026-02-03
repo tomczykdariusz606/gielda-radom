@@ -482,30 +482,36 @@ def reset_token(token):
 
 @app.route('/api/analyze-car', methods=['POST'])
 def analyze_car_api():
+    # 1. NAJPIERW tworzymy puste zmienne, żeby Python wiedział, że istnieją
+    marka = "Pojazd"
+    model_car = ""
+    przebieg = "niedostępny"
+    cena = "?"
+
     try:
-        data = request.json
-        marka = data.get('marka', 'Nieznana')
-        model_car = data.get('model', 'Nieznany')
-        cena = data.get('cena', '0')
-        przebieg = data.get('przebieg', '0')
+        # 2. Próbujemy pobrać dane z zapytania
+        data = request.get_json()
+        if data:
+            marka = data.get('marka', marka)
+            model_car = data.get('model', model_car)
+            przebieg = data.get('przebieg', przebieg)
+            cena = data.get('cena', cena)
 
-        prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz o tej ofercie w Radomiu."
-
-        # Próba kontaktu z AI
+        # 3. Próba połączenia ze mną (Gemini)
+        prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz."
         response = model_ai.generate_content(prompt)
         
         if response and response.text:
             return jsonify({"analysis": response.text})
         else:
-            raise Exception("Pusta odpowiedź od AI")
+            raise Exception("AI nie zwróciło tekstu")
 
     except Exception as e:
-        # To zobaczysz w terminalu - sprawdź co tu wypisze!
-        print(f"Błąd Gemini: {e}") 
-        
-        # AWARYJNY TEKST (Fallback) - strona zadziała, nawet bez AI
-        fallback = f"Auto {marka} {model_car} z przebiegiem {przebieg} km to solidna propozycja dostępna w Radomiu. Zapraszamy do kontaktu telefonicznego w celu umówienia jazdy próbnej!"
+        # 4. Jeśli cokolwiek pójdzie nie tak, Python JUŻ ZNA zmienną 'marka', więc błąd 500 zniknie!
+        print(f"Błąd Gemini: {e}")
+        fallback = f"Auto {marka} {model_car} z przebiegiem {przebieg} km to solidna propozycja dostępna w Radomiu. Zapraszamy do kontaktu!"
         return jsonify({"analysis": fallback})
+
 
 
 if __name__ == '__main__':
