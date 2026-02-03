@@ -141,7 +141,10 @@ def generate_ai_description():
     rok = data.get('rok', '')
     paliwo = data.get('paliwo', '')
 
-    prompt = f"Napisz krótki, profesjonalny opis sprzedażowy dla samochodu {marka} {model} z roku {rok}, silnik {paliwo}. Wspomnij, że auto jest zadbane i zaprasza na jazdę próbną w Radomiu."
+    
+    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz bardzo krótko (max 2-3 zdania) na pytanie: '{user_q}' "
+              f"dotyczące auta {marka} {model_car}. Bądź konkretny.")
+
 
     try:
         response = model_ai.generate_content(prompt)
