@@ -182,5 +182,24 @@
         thumb.classList.add('active');
     };
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aiTextElement = document.getElementById('mainAiText');
+    
+    // Jeśli w ramce jest komunikat o generowaniu, wywołaj API
+    if (aiTextElement && aiTextElement.innerText.includes("Gemini generuje")) {
+        fetch('/analyze_car/{{ car.id }}') // Upewnij się, że masz taki routing w app.py
+            .then(response => response.json())
+            .then(data => {
+                aiTextElement.innerHTML = data.analysis;
+            })
+            .catch(err => {
+                aiTextElement.innerHTML = "Analiza chwilowo niedostępna. Odśwież za chwilę.";
+                console.error(err);
+            });
+    }
+});
+</script>
+
 
 {% endblock %}
