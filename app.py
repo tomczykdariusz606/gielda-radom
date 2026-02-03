@@ -30,7 +30,7 @@ mail = Mail(app)
 
 # --- KONFIGURACJA GEMINI AI ---
 genai.configure(api_key=sekrety.GEMINI_KEY)
-model_ai = genai.GenerativeModel('gemini-1.5-flash')
+model_ai = genai.GenerativeModel('gemini-pro')
 
 # --- KONFIGURACJA APLIKACJI ---
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
