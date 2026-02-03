@@ -225,11 +225,19 @@ def check_price_valuation():
         except:
             pass # Jeśli JSON byłby błędny, generujemy nowy
 
+        # Nowy, bardziej precyzyjny prompt
     prompt = (
-        f"Jesteś ekspertem rynku aut w Polsce (2026). "
-        f"Oceń cenę {car.cena} PLN dla: {car.marka} {car.model}, {car.rok}r, {car.przebieg}km. "
-        f"Zwróć TYLKO czysty JSON: {{\"score\": 1-100, \"label\": \"Okazja/Średnia/Drogo\", \"color\": \"success/warning/danger\"}}"
+        f"Jesteś ekspertem rynku (Luty 2026). Oceń cenę {car.cena} PLN dla: {car.marka} {car.model}, {car.rok}r, {car.przebieg}km. "
+        f"Dane z analizy wizualnej i opisu: {car.opis[-200:]}. "
+        f"Zwróć TYLKO JSON: {{"
+        f"\"score\": 1-100, "
+        f"\"label\": \"Okazja/Dobra oferta/Cena rynkowa/Wysoka cena\", "
+        f"\"color\": \"success/info/warning/danger\", "
+        f"\"sample_size\": \"ok. 40-60 aut\", "
+        f"\"condition\": \"nieuszkodzony/do poprawek/uszkodzony\""
+        f"}}"
     )
+
 
     try:
         response = model_ai.generate_content(prompt)
