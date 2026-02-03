@@ -260,25 +260,52 @@
         </div>
 
         {% if current_user.id == 1 %}
-        <div class="admin-card p-4 p-md-5 mb-5 shadow-sm">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h4 class="fw-extrabold text-dark mb-1"><i class="bi bi-shield-lock-fill text-danger me-2"></i>Panel Administratora</h4>
-                    <p class="text-muted small mb-4 mb-lg-0">Zarządzaj bezpieczeństwem danych i kopiami zapasowymi serwerów.</p>
-                </div>
-                <div class="col-lg-6">
-                    <div class="d-grid d-md-flex gap-3 justify-content-lg-end">
-                        <a href="{{ url_for('backup_db') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small">
-                            <i class="bi bi-database-down me-2"></i>Baza (.db)
-                        </a>
-                        <a href="{{ url_for('full_backup') }}" class="btn btn-radom-main rounded-pill px-4 py-2 fw-bold small">
-                            <i class="bi bi-file-zip-fill me-2"></i>Pełny Backup (ZIP)
-                        </a>
-                    </div>
-                </div>
-            </div>
+<h3 class="section-title text-danger">Centrum Dowodzenia Admina</h3>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+            <i class="bi bi-people text-primary fs-1 mb-2"></i>
+            <h6 class="text-muted small fw-bold uppercase">Zarejestrowane konta</h6>
+            <h2 class="fw-800">{{ stats.total_users }}</h2>
         </div>
-        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center position-relative">
+            <div class="position-absolute top-0 start-50 translate-middle mt-2">
+                <span class="badge bg-success rounded-pill animate-pulse" style="font-size: 0.6rem;">LIVE</span>
+            </div>
+            <i class="bi bi-person-pulse text-success fs-1 mb-2"></i>
+            <h6 class="text-muted small fw-bold uppercase">Użytkownicy Online</h6>
+            <h2 class="fw-800">{{ stats.users_online }}</h2>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+            <i class="bi bi-megaphon text-danger fs-1 mb-2"></i>
+            <h6 class="text-muted small fw-bold uppercase">Wszystkie ogłoszenia</h6>
+            <h2 class="fw-800">{{ stats.total_listings }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card p-4 p-md-5 mb-5 shadow-sm">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h4 class="fw-extrabold text-dark mb-1"><i class="bi bi-shield-lock-fill text-danger me-2"></i>Zarządzanie Systemem</h4>
+            <p class="text-muted small mb-4 mb-lg-0">Ostatni pełny backup: {{ now.strftime('%d.%m.%Y') }}</p>
+        </div>
+        <div class="col-lg-6 text-lg-end">
+            <a href="{{ url_for('backup_db') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold small me-2">
+                <i class="bi bi-database-down me-2"></i>Baza danych
+            </a>
+            <a href="{{ url_for('full_backup') }}" class="btn btn-radom-main rounded-pill px-4 py-2 fw-bold small">
+                <i class="bi bi-file-zip-fill me-2"></i>Pełny Backup
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 
         <div class="mt-5 pt-3 border-top text-center">
             <form action="/usun_konto" method="POST" onsubmit="return confirm('UWAGA: Usunięcie konta spowoduje skasowanie wszystkich ogłoszeń!')">
@@ -392,6 +419,17 @@
     </footer>
 
     <script>
+function toggleBikeFields() {
+    const typ = document.getElementById('aiTyp').value;
+    const pojemnoscField = document.querySelector('input[name="pojemnosc"]');
+    if (typ === 'Rower') {
+        pojemnoscField.placeholder = "Np. Rozmiar L / Karbon";
+        document.getElementById('aiPaliwo').value = "Siła mięśni";
+    } else {
+        pojemnoscField.placeholder = "np. 2.0 TDI";
+    }
+}
+
     // 1. ANALIZA ZDJĘCIA (GEMINI VISION)
     document.getElementById('imgInput').addEventListener('change', async function(e) {
         const files = e.target.files;
