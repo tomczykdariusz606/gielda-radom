@@ -147,5 +147,19 @@
         });
     };
 </script>
+fetch('/api/check-price-valuation', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ car_id: "{{ car.id }}" })
+})
+.then(res => res.json())
+.then(data => {
+    document.getElementById('priceBar').style.width = data.score + '%';
+    document.getElementById('priceBar').className = `progress-bar bg-${data.color}`;
+    document.getElementById('priceLabel').innerText = data.label;
+    document.getElementById('priceLabel').className = `badge rounded-pill bg-${data.color} px-3`;
+    document.getElementById('valuationDate').innerText = "Aktualizacja: " + data.date;
+});
+
 
 {% endblock %}
