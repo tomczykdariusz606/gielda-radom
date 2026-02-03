@@ -570,9 +570,11 @@ def analyze_car_api():
 
 @app.template_filter('from_json')
 def from_json_filter(value):
+    if not value:
+        return None
     try:
         return json.loads(value)
-    except (ValueError, TypeError):
+    except Exception:
         return None
 
 
