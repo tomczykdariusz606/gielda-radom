@@ -125,15 +125,51 @@
     });
     lightbox.init();
 
+    // Funkcja zmiany zdjęcia w galerii
     window.updateGallery = function(src, thumb) {
-        document.getElementById('mainDisplayImg').src = src;
-        document.getElementById('mainDisplayImg').parentElement.href = src;
+        const mainImg = document.getElementById('mainDisplayImg');
+        if (mainImg) {
+            mainImg.src = src;
+            mainImg.parentElement.href = src;
+        }
         document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
     };
 
+    // Funkcja zadawania pytań do AI (Czat)
     window.askGemini = function() {
-          // Kod wyceny opakowany w "EventListener" dla pewności działania:
+        const query = document.getElementById('userAiQuery').value;
+        const resBox = document.getElementById('aiResponse');
+        const resText = document.getElementById('aiResponseText');
+        const spinner = document.getElementById('aiSpinner');
+
+        if(!query) return;
+        resBox.style.display = 'block';
+        resText.innerText = ' Gemini myśli...';
+        spinner.style.display = 'inline-block';
+
+        fetch('/api/analyze-car', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                query: query, 
+                marka: "{{ car.marka }}", 
+                model: "{{ car.model }}",
+                car_id: "{{ car.id }}"
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            spinner.style.display = 'none';
+            resText.innerText = data.analysis || data.answer;
+        })
+        .catch(err => {
+            spinner.style.display = 'none';
+            resText.innerText = "Błąd połączenia z AI.";
+        });
+    };
+
+    // Automatyczna wycena ceny rynkowej po załadowaniu strony
     document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/check-price-valuation', {
             method: 'POST',
@@ -148,7 +184,7 @@
 
             if (bar && data.score) {
                 bar.style.width = data.score + '%';
-                bar.className = `progress-bar bg-${data.color}`;
+                bar.className = `progress-bar bg-${data.color} progress-bar-striped`;
                 label.innerText = data.label;
                 label.className = `badge rounded-pill bg-${data.color} px-3`;
                 dateSpan.innerText = "Aktualizacja: " + data.date;
