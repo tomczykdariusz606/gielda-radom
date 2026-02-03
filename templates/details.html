@@ -273,6 +273,38 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Błąd Gemini:', error);
     });
 });
+<script>
+function askGemini() {
+    const question = document.getElementById('userQuestion').value;
+    const answerDiv = document.getElementById('aiResponse');
+    const answerText = document.getElementById('answerText');
+    
+    if (!question) return alert("Wpisz pytanie!");
+
+    answerText.innerText = "Czekaj, pytam Gemini...";
+    answerDiv.style.display = 'block';
+
+    fetch('/api/analyze-car', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            marka: "{{ car.marka }}",
+            model: "{{ car.model }}",
+            przebieg: "{{ car.przebieg }}",
+            cena: "{{ car.cena }}",
+            pytanie_uzytkownika: question
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        answerText.innerText = data.analysis;
+    })
+    .catch(err => {
+        answerText.innerText = "Błąd połączenia z AI.";
+    });
+}
+</script>
+
 </script>
 
 </body>
