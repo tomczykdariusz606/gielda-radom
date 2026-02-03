@@ -1,156 +1,208 @@
 {% extends "base.html" %}
 {% block content %}
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <style>
-    :root { --radom-blue: #007bff; --success-green: #28a745; }
-    
-    /* Nagłówek profilu */
-    .profile-header {
-        background: linear-gradient(135deg, #000 0%, #333 100%);
-        color: white; border-radius: 20px; padding: 40px 20px;
-        margin-bottom: 30px; position: relative; overflow: hidden;
+    :root { --primary-blue: #007bff; --gemini-purple: #6e45e2; }
+
+    /* Galeria i Gesty */
+    .main-img-container {
+        border-radius: 20px; overflow: hidden; background: #000;
+        position: relative; aspect-ratio: 16/9; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
-    .profile-header::after {
-        content: "\f2dc"; font-family: "bootstrap-icons"; position: absolute;
-        right: -20px; bottom: -20px; font-size: 150px; opacity: 0.1;
+    .main-img-container img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
+    
+    .thumb-scroll {
+        display: flex; gap: 12px; overflow-x: auto; padding: 15px 0;
+        scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .thumb-scroll::-webkit-scrollbar { display: none; }
+    .thumb-item {
+        width: 100px; height: 70px; border-radius: 10px; object-fit: cover;
+        cursor: pointer; border: 3px solid transparent; transition: 0.3s; flex-shrink: 0;
+    }
+    .thumb-item.active { border-color: var(--primary-blue); transform: scale(1.05); }
+
+    /* Ramka Analizy z Suwakiem */
+    .gemini-card {
+        background: #fff; border-radius: 20px; border: 1px solid rgba(110, 69, 226, 0.2);
+        overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .gemini-header {
+        background: linear-gradient(90deg, #6e45e2, #88d3ce);
+        color: white; padding: 15px 20px; font-weight: bold;
+    }
+    .gemini-scroll-box {
+        max-height: 250px; overflow-y: auto; padding: 20px;
+        line-height: 1.7; font-size: 1.05rem; color: #333;
+    }
+    .gemini-scroll-box::-webkit-scrollbar { width: 5px; }
+    .gemini-scroll-box::-webkit-scrollbar-thumb { background: #6e45e2; border-radius: 10px; }
+
+    /* Okienko Zapytaj AI */
+    .ask-ai-box {
+        background: #f8f9ff; border-radius: 15px; padding: 20px;
+        border: 1px dashed #6e45e2; margin-top: 20px;
+    }
+    #aiResponse {
+        display: none; background: white; border-radius: 10px;
+        padding: 15px; margin-top: 15px; border-left: 4px solid #6e45e2;
     }
 
-    /* Statystyki */
-    .stat-card {
-        background: white; border-radius: 15px; padding: 20px;
-        text-align: center; border: 1px solid #eee; transition: 0.3s;
+    /* Partnerzy - Poprawione Ikony */
+    .partner-tag {
+        display: flex; align-items: center; gap: 10px; padding: 12px 20px;
+        border-radius: 12px; text-decoration: none; transition: 0.3s; font-weight: 600;
     }
-    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    .stat-value { font-size: 1.8rem; font-weight: bold; color: var(--radom-blue); }
+    .cv-tag { background: #1b2e4b; color: #00ff00; }
+    .mubi-tag { background: #e30613; color: white; }
+    .partner-tag:hover { opacity: 0.9; transform: translateY(-2px); color: white; }
 
-    /* Karta ogłoszenia w profilu */
-    .car-manage-card {
-        background: white; border-radius: 15px; overflow: hidden;
-        border: 1px solid #eee; margin-bottom: 20px; transition: 0.3s;
-    }
-    .car-manage-card:hover { border-color: var(--radom-blue); }
-    .manage-img { width: 100%; height: 200px; object-fit: cover; }
-    
-    .status-badge {
-        position: absolute; top: 10px; left: 10px;
-        padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
-    }
-
-    /* Przyciski akcji */
-    .btn-action { border-radius: 10px; padding: 8px 15px; font-weight: 600; }
-    
-    .empty-state {
-        text-align: center; padding: 60px 20px;
-        background: #fff; border-radius: 20px; border: 2px dashed #ccc;
+    /* Dane techniczne */
+    .spec-pill {
+        background: #f1f3f5; border-radius: 12px; padding: 10px 15px;
+        display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
     }
 </style>
 
-<div class="container mt-4">
-    <div class="profile-header shadow">
-        <div class="row align-items-center">
-            <div class="col-md-8 text-center text-md-start">
-                <h1 class="display-5 fw-bold mb-1">Cześć, {{ current_user.username }}!</h1>
-                <p class="lead opacity-75">Twoja lokalizacja: <i class="bi bi-geo-alt-fill"></i> <strong>{{ current_user.lokalizacja or 'Radom' }}</strong></p>
-                <div class="mt-3">
-                    <a href="/dodaj" class="btn btn-primary btn-lg px-4 fw-bold shadow-sm">
-                        <i class="bi bi-plus-lg"></i> Dodaj nowe auto
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="pswp-gallery" id="car-gallery">
+                <div class="main-img-container">
+                    <a href="{{ car.img }}" data-pswp-width="1200" data-pswp-height="800" target="_blank">
+                        <img src="{{ car.img }}" id="mainDisplayImg" alt="Widok główny">
                     </a>
                 </div>
+                <div class="thumb-scroll">
+                    <img src="{{ car.img }}" class="thumb-item active" onclick="updateGallery('{{ car.img }}', this)">
+                    {% for image in car.images %}
+                    <a href="{{ image.image_path }}" data-pswp-width="1200" data-pswp-height="800" target="_blank" style="display:none"></a>
+                    <img src="{{ image.image_path }}" class="thumb-item" onclick="updateGallery('{{ image.image_path }}', this)">
+                    {% endfor %}
+                </div>
             </div>
-            <div class="col-md-4 mt-4 mt-md-0">
-                <div class="row g-2">
-                    <div class="col-6">
-                        <div class="stat-card">
-                            <div class="stat-value">{{ cars|length }}</div>
-                            <small class="text-muted">Auta</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="stat-card">
-                            <div class="stat-value">
-                                {% set total_views = 0 %}
-                                {% for car in cars %}{% set total_views = total_views + (car.views or 0) %}{% endfor %}
-                                {{ total_views }}
-                            </div>
-                            <small class="text-muted">Wyświetleń</small>
-                        </div>
+
+            <div class="gemini-card mt-3">
+                <div class="gemini-header d-flex justify-content-between">
+                    <span><i class="bi bi-robot"></i> Analiza Ekspercka Gemini 3</span>
+                    <span class="badge bg-light text-dark">AI Flash</span>
+                </div>
+                <div class="gemini-scroll-box">
+                    <div id="aiMainContent">
+                        {% if "[Analiza" in car.opis %}
+                            <p>{{ car.opis.split('[Analiza')[0] }}</p>
+                            <hr>
+                            <div class="text-primary fw-bold mb-2"><i class="bi bi-info-circle"></i> Detale wizualne wg. AI:</div>
+                            {{ car.opis.split('[Analiza')[1].replace('AI]:', '').strip() | safe }}
+                        {% else %}
+                            {{ car.opis }}
+                        {% endif %}
                     </div>
                 </div>
             </div>
+
+            <div class="ask-ai-box">
+                <h6 class="fw-bold"><i class="bi bi-chat-right-text-fill text-primary"></i> Masz pytanie o to auto?</h6>
+                <div class="input-group mt-2">
+                    <input type="text" id="userAiQuery" class="form-control" placeholder="np. Czy to auto jest bezawaryjne?">
+                    <button class="btn btn-primary" onclick="askGemini()"><i class="bi bi-send"></i> Zapytaj</button>
+                </div>
+                <div id="aiResponse">
+                    <div class="spinner-border spinner-border-sm text-primary" id="aiSpinner"></div>
+                    <span id="aiResponseText"></span>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <h3 class="fw-bold mb-4">Twoje ogłoszenia</h3>
-
-    <div class="row">
-        {% for car in cars %}
-        <div class="col-md-6 col-lg-4">
-            <div class="car-manage-card shadow-sm position-relative">
-                <span class="status-badge bg-success text-white shadow-sm">Aktywne</span>
-                <img src="{{ car.img }}" class="manage-img" alt="{{ car.marka }}">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4 rounded-4">
+                <h2 class="fw-bold mb-0">{{ car.marka }}</h2>
+                <h4 class="text-muted mb-3">{{ car.model }}</h4>
                 
-                <div class="p-3">
-                    <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                    <p class="text-primary fw-bold mb-2">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</p>
-                    
-                    <div class="d-flex gap-2 text-muted small mb-3">
-                        <span><i class="bi bi-calendar3"></i> {{ car.rok }}</span>
-                        <span>|</span>
-                        <span><i class="bi bi-eye"></i> {{ car.views or 0 }} wyświetleń</span>
-                    </div>
-
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <a href="{{ url_for('details', car_id=car.id) }}" class="btn btn-outline-dark btn-action w-100">
-                                <i class="bi bi-search"></i> Podgląd
-                            </a>
-                        </div>
-                        <div class="col-6 text-end">
-                            <div class="dropdown">
-                                <button class="btn btn-light btn-action w-100 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    Opcje
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-pencil me-2"></i> Edytuj ogłoszenie</a></li>
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-megaphone me-2"></i> Promuj (Wkrótce)</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form action="{{ url_for('delete_car', car_id=car.id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć to ogłoszenie?');">
-                                            <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Usuń</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="h2 fw-bold text-primary mb-0">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} <small>PLN</small></span>
+                    <div class="text-end">
+                        <i class="bi bi-heart-fill text-danger"></i> <small>{{ car.favorites_count or 12 }}</small><br>
+                        <i class="bi bi-eye text-muted"></i> <small>{{ car.views or 452 }}</small>
                     </div>
                 </div>
+
+                <div class="spec-list">
+                    <div class="spec-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <strong>{{ car.zrodlo }} (Radom)</strong></div>
+                    <div class="spec-pill"><i class="bi bi-speedometer2"></i> <span>Przebieg: <strong>{{ car.przebieg or car.rok }} km</strong></span></div>
+                    <div class="spec-pill"><i class="bi bi-gear-wide"></i> <span>Skrzynia: <strong>{{ car.skrzynia or 'Manualna' }}</strong></span></div>
+                    <div class="spec-pill"><i class="bi bi-fuel-pump"></i> <span>Paliwo: <strong>{{ car.paliwo or 'Diesel' }}</strong></span></div>
+                    <div class="spec-pill"><i class="bi bi-layers"></i> <span>Nadwozie: <strong>{{ car.nadwozie or 'Kombi' }}</strong></span></div>
+                </div>
+
+                <a href="tel:{{ car.telefon }}" class="btn btn-dark w-100 py-3 mt-4 rounded-3 fw-bold fs-5">
+                    <i class="bi bi-telephone-outbound me-2"></i> {{ car.telefon }}
+                </a>
+            </div>
+
+            <div class="mt-4">
+                <p class="small fw-bold text-muted text-center uppercase">Polecane usługi:</p>
+                <a href="#" class="partner-tag cv-tag mb-2">
+                    <i class="bi bi-shield-check fs-4"></i>
+                    <span>Sprawdź w carVertical</span>
+                </a>
+                <a href="#" class="partner-tag mubi-tag">
+                    <i class="bi bi-calculator fs-4"></i>
+                    <span>Tanie OC z MUBI (-150zł)</span>
+                </a>
             </div>
         </div>
-        {% else %}
-        <div class="col-12">
-            <div class="empty-state shadow-sm">
-                <i class="bi bi-car-front display-1 text-muted mb-3"></i>
-                <h3>Nie masz jeszcze żadnych ogłoszeń</h3>
-                <p class="text-muted">Dodaj swoje pierwsze auto, aby zacząć sprzedawać na Giełdzie Radom!</p>
-                <a href="/dodaj" class="btn btn-primary btn-lg mt-2">Dodaj ogłoszenie teraz</a>
-            </div>
-        </div>
-        {% endfor %}
     </div>
 </div>
 
-<div class="container mb-5">
-    <div class="card border-0 shadow-sm p-4 mt-5" style="border-radius: 20px; background: #f8f9fa;">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h5 class="fw-bold mb-1">Zarządzanie kontem</h5>
-                <p class="text-muted mb-0">Zmień swoje dane, lokalizację lub hasło.</p>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="/logout" class="btn btn-outline-danger px-4 fw-bold">Wyloguj się</a>
-            </div>
-        </div>
-    </div>
-</div>
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    const lightbox = new PhotoSwipeLightbox({
+        gallery: '#car-gallery',
+        children: 'a',
+        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js')
+    });
+    lightbox.init();
+
+    window.updateGallery = function(src, thumb) {
+        document.getElementById('mainDisplayImg').src = src;
+        document.getElementById('mainDisplayImg').parentElement.href = src;
+        document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    };
+</script>
+
+<script>
+function askGemini() {
+    const query = document.getElementById('userAiQuery').value;
+    const resBox = document.getElementById('aiResponse');
+    const resText = document.getElementById('aiResponseText');
+    const spinner = document.getElementById('aiSpinner');
+
+    if(!query) return;
+
+    resBox.style.display = 'block';
+    resText.innerText = 'Łączę z Gemini...';
+    spinner.style.display = 'inline-block';
+
+    fetch('/ask_ai', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: query, car_id: "{{ car.id }}"})
+    })
+    .then(r => r.json())
+    .then(data => {
+        spinner.style.display = 'none';
+        resText.innerText = data.answer;
+    })
+    .catch(err => {
+        spinner.style.display = 'none';
+        resText.innerText = "Błąd połączenia z modelem AI.";
+    });
+}
+</script>
 
 {% endblock %}
