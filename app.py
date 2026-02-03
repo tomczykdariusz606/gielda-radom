@@ -391,7 +391,7 @@ def login():
         if user and check_password_hash(user.password_hash, request.form['password']):
             login_user(user)
             return redirect(url_for('profil'))
-    return render_template('login.html', now=datetime.utcnow())
+    return render_template('login.html', now=datetime.now(timezone.utc)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
