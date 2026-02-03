@@ -97,6 +97,18 @@
             margin-top: 30px;
             box-shadow: 0 10px 30px rgba(66, 133, 244, 0.3);
         }
+<div class="mt-4 p-4 border rounded-4 bg-dark text-white shadow-sm" style="border: 1px solid rgba(66, 133, 244, 0.3) !important;">
+    <h5 class="fw-bold mb-3"><i class="bi bi-chat-dots-fill text-primary"></i> Masz pytanie o to auto?</h5>
+    <div class="input-group mb-2">
+        <input type="text" id="userQuestion" class="form-control bg-dark text-white border-secondary" placeholder="Np. Czy ten silnik nadaje się pod gaz?">
+        <button onclick="askGemini()" class="btn btn-primary px-4 fw-bold">ZAPYTAJ</button>
+    </div>
+    <div id="aiResponse" class="mt-3 p-3 rounded-3" style="display:none; background: rgba(255,255,255,0.05);">
+        <div class="small text-primary mb-1 fw-bold">EKSPERT GEMINI ODPOWIADA:</div>
+        <div id="answerText" class="fs-6" style="line-height: 1.6;"></div>
+    </div>
+</div>
+
         .partner-link { 
             display: flex; 
             align-items: center; 
