@@ -616,15 +616,15 @@ def from_json_filter(value):
 
 
 if __name__ == '__main__':
-    with app.app_context(): db.create_all()
-# To automatycznie doda kolumnę 'typ' jeśli jej brakuje, bez psucia bazy
-with app.app_context():
-    inspector = db.inspect(db.engine)
-    columns = [c['name'] for c in inspector.get_columns('car')]
-    if 'typ' not in columns:
-        with db.engine.connect() as conn:
-            conn.execute(db.text('ALTER TABLE car ADD COLUMN typ VARCHAR(20) DEFAULT "Osobowe"'))
-            conn.commit()
-
-
+    with app.app_context():
+        db.create_all()
+        # Sprawdzenie i dodanie kolumny 'typ'
+        inspector = db.inspect(db.engine)
+        columns = [c['name'] for c in inspector.get_columns('car')]
+        if 'typ' not in columns:
+            with db.engine.connect() as conn:
+                conn.execute(db.text('ALTER TABLE car ADD COLUMN typ VARCHAR(20) DEFAULT "Osobowe"'))
+                conn.commit()
+    
     app.run(host='0.0.0.0', port=5000, debug=True)
+
