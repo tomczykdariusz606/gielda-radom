@@ -362,7 +362,7 @@ def dodaj_ogloszenie():
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
     fav_cars = current_user.favorite_cars
-    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.utcnow())
+    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.now(timezone.utc))
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
