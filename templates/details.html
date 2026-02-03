@@ -20,8 +20,8 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--dark-bg); color: #e9ecef; overflow-x: hidden; }
 
         .hero-banner {
-            position: relative; height: 300px;
-            background: linear-gradient(0deg, var(--dark-bg) 0%, rgba(0,0,0,0.6) 100%), url('/static/czerwiec_tlo.jpg');
+            position: relative; height: 250px;
+            background: linear-gradient(0deg, var(--dark-bg) 0%, rgba(0,0,0,0.4) 100%), url('/static/czerwiec_tlo.jpg');
             background-size: cover; background-position: center; display: flex; align-items: center;
         }
 
@@ -32,26 +32,27 @@
         .thumb-card { width: 80px; height: 60px; border-radius: 10px; object-fit: cover; cursor: pointer; opacity: 0.4; border: 2px solid transparent; }
         .thumb-card.active { opacity: 1; border-color: var(--radom-red); }
 
-        .spec-box { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 15px; }
+        .spec-box { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 15px; height: 100%; }
         .spec-label { color: #d1d1d1; font-size: 0.7rem; text-transform: uppercase; font-weight: 800; display: block; }
         .spec-value { font-size: 1.1rem; font-weight: 700; color: #fff; }
 
-        .price-sticky { background: #fff; color: #000; border-radius: 28px; padding: 25px; position: sticky; top: 20px; }
+        .price-sticky { background: #fff; color: #000; border-radius: 28px; padding: 25px; position: sticky; top: 20px; z-index: 100; }
         
-        /* Sekcje AI */
-        .ai-box { background: var(--ai-grad); border-radius: 22px; padding: 25px; color: #fff; margin-top: 20px; }
-        .ai-chat-window { border: 1px solid rgba(66, 133, 244, 0.4); border-radius: 20px; background: rgba(255,255,255,0.03); padding: 20px; margin-top: 20px; }
+        .ai-box { background: var(--ai-grad); border-radius: 22px; padding: 25px; color: #fff; margin-top: 20px; box-shadow: 0 10px 30px rgba(66, 133, 244, 0.3); }
+        .ai-chat-window { border: 1px solid rgba(66, 133, 244, 0.3); border-radius: 22px; background: rgba(255,255,255,0.02); padding: 20px; margin-top: 20px; }
         
         .spin { animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) { .main-img { height: 300px; } }
     </style>
 </head>
 <body>
 
     <section class="hero-banner">
         <div class="container">
+            <span class="badge bg-danger mb-2 px-3">RADOM AI EXCLUSIVE</span>
             <h1 class="display-4 fw-800 text-white">{{ car.marka }} {{ car.model }}</h1>
-            <p class="fs-5 text-white-50"><i class="bi bi-geo-alt"></i> Radom</p>
         </div>
     </section>
 
@@ -59,8 +60,8 @@
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="gallery-wrapper">
-                    <img src="{{ car.img }}" id="mainStage" class="main-img" alt="Foto">
-                    <div class="thumb-strip">
+                    <img src="{{ car.img }}" id="mainStage" class="main-img" alt="Widok auta">
+                    <div class="thumb-strip" id="thumbStrip">
                         <img src="{{ car.img }}" class="thumb-card active" onclick="updateView('{{ car.img }}', this)">
                         {% for img in car.images %}
                             {% if img.image_path != car.img %}
@@ -70,28 +71,30 @@
                     </div>
                 </div>
 
-                <div class="ai-box shadow-lg">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-stars"></i> Ekspertyza Gemini AI</h5>
-                    <p class="mb-0 fs-5" id="autoAnalysisText">
-                        <i class="bi bi-arrow-repeat spin"></i> Generowanie unikalnej analizy dla tego pojazdu...
-                    </p>
+                <div class="ai-box">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-stars"></i> Analiza Ekspercka Gemini</h5>
+                    <div id="mainAiContainer">
+                        <p class="mb-0 fs-5" id="mainAiText">
+                            <i class="bi bi-arrow-repeat spin"></i> Gemini generuje unikalną analizę dla tego pojazdu...
+                        </p>
+                    </div>
                 </div>
 
                 <div class="ai-chat-window">
-                    <h6 class="fw-bold mb-3 text-primary text-uppercase">Zapytaj AI o szczegóły</h6>
-                    <div class="input-group shadow-sm">
-                        <input type="text" id="userQuestion" class="form-control bg-dark text-white border-0 py-2" placeholder="Np. Jakie są typowe usterki tego modelu?">
-                        <button onclick="askGemini()" class="btn btn-primary px-4 border-0">WYŚLIJ</button>
+                    <h6 class="fw-bold mb-3 text-primary text-uppercase">Zadaj pytanie o to auto</h6>
+                    <div class="input-group">
+                        <input type="text" id="userQuestion" class="form-control bg-dark text-white border-0 py-2" placeholder="Np. Czy ten silnik jest bezawaryjny?">
+                        <button onclick="askGemini()" class="btn btn-primary px-4 fw-bold">ZAPYTAJ</button>
                     </div>
                     <div id="aiResponse" class="mt-3 p-3 rounded-3 bg-black" style="display:none; border-left: 4px solid #4285f4;">
-                        <small class="text-white-50">Odpowiedź Gemini:</small>
-                        <div id="answerText" class="mt-1"></div>
+                        <small class="text-primary fw-bold">ODPOWIEDŹ GEMINI:</small>
+                        <div id="answerText" class="mt-1 text-white" style="line-height: 1.6;"></div>
                     </div>
                 </div>
 
                 <div class="mt-5">
-                    <h4 class="fw-bold border-bottom pb-2">OPIS</h4>
-                    <p class="fs-5 text-secondary" style="white-space: pre-line;">{{ car.opis }}</p>
+                    <h4 class="fw-bold border-bottom pb-2 text-uppercase" style="letter-spacing: 1px;">Opis sprzedającego</h4>
+                    <p class="fs-5 text-secondary" style="white-space: pre-line; line-height: 1.8;">{{ car.opis }}</p>
                 </div>
             </div>
 
@@ -106,17 +109,23 @@
                         <div class="col-6"><div class="spec-box"><span class="spec-label">Silnik</span><span class="spec-value text-dark">{{ car.pojemnosc }}</span></div></div>
                     </div>
 
-                    <a href="tel:{{ car.telefon }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill fs-5">
-                        <i class="bi bi-telephone-fill"></i> ZADZWOŃ
+                    <a href="tel:{{ car.telefon }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill shadow fs-5">
+                        <i class="bi bi-telephone-fill me-2"></i> {{ car.telefon }}
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
+    <footer>
+        <div class="container py-5 text-center text-muted border-top border-secondary mt-5">
+            <p>© 2026 Giełda Radom AI | Technologia Gemini 1.5</p>
+        </div>
+    </footer>
+
     <script>
         const mainImg = document.getElementById('mainStage');
-        let touchX = 0;
+        let touchStartX = 0;
 
         // Galeria i Swipe
         function updateView(src, el) {
@@ -125,63 +134,77 @@
             el.classList.add('active');
         }
 
-        mainImg.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+        mainImg.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
         mainImg.addEventListener('touchend', e => {
-            const diff = touchX - e.changedTouches[0].clientX;
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
             const thumbs = Array.from(document.querySelectorAll('.thumb-card'));
-            const idx = thumbs.findIndex(t => t.classList.contains('active'));
+            const currentIdx = thumbs.findIndex(t => t.classList.contains('active'));
+
             if (Math.abs(diff) > 50) {
-                let next = diff > 0 ? (idx + 1) % thumbs.length : (idx - 1 + thumbs.length) % thumbs.length;
-                updateView(thumbs[next].src, thumbs[next]);
+                let nextIdx = diff > 0 ? (currentIdx + 1) % thumbs.length : (currentIdx - 1 + thumbs.length) % thumbs.length;
+                updateView(thumbs[nextIdx].src, thumbs[nextIdx]);
             }
         });
 
-        // 1. ANALIZA AUTOMATYCZNA PO ZAŁADOWANIU
-        window.onload = function() {
-            fetch('/api/analyze-car', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    marka: "{{ car.marka }}",
-                    model: "{{ car.model }}",
-                    cena: "{{ car.cena }}",
-                    przebieg: "{{ car.przebieg }}"
-                })
-            })
-            .then(r => r.json())
-            .then(d => document.getElementById('autoAnalysisText').innerText = d.analysis)
-            .catch(() => document.getElementById('autoAnalysisText').innerText = "AI odpoczywa. Spróbuj za chwilę.");
-        };
-
-        // 2. PYTANIE UŻYTKOWNIKA
-        function askGemini() {
-            const q = document.getElementById('userQuestion').value;
-            const resDiv = document.getElementById('aiResponse');
-            const resTxt = document.getElementById('answerText');
-            
-            if(!q) return;
-            resDiv.style.display = 'block';
-            resTxt.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Gemini analizuje Twoje pytanie...';
-
-            fetch('/api/analyze-car', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    marka: "{{ car.marka }}",
-                    model: "{{ car.model }}",
-                    pytanie_uzytkownika: q
-                })
-            })
-            .then(r => r.json())
-            .then(d => {
-                resTxt.innerText = d.analysis;
-                document.getElementById('userQuestion').value = "";
-            });
+        // 1. Ładowanie analizy (bez szablonu)
+        async function fetchInitialAnalysis() {
+            const aiText = document.getElementById('mainAiText');
+            try {
+                const response = await fetch('/api/analyze-car', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        marka: "{{ car.marka }}",
+                        model: "{{ car.model }}",
+                        cena: "{{ car.cena }}",
+                        przebieg: "{{ car.przebieg }}"
+                    })
+                });
+                const data = await response.json();
+                aiText.innerHTML = data.analysis;
+            } catch (err) {
+                aiText.innerHTML = "<span class='text-warning'>Analiza chwilowo niedostępna. Gemini odpoczywa.</span>";
+            }
         }
 
-        // Enter obsługa
-        document.getElementById('userQuestion').onkeypress = e => { if(e.key==='Enter') askGemini(); };
-    </script>
+        // 2. Obsługa pytań użytkownika
+        async function askGemini() {
+            const input = document.getElementById('userQuestion');
+            const question = input.value;
+            const resDiv = document.getElementById('aiResponse');
+            const resTxt = document.getElementById('answerText');
 
+            if (!question) return;
+
+            resDiv.style.display = 'block';
+            resTxt.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Gemini analizuje ofertę i Twoje pytanie...';
+
+            try {
+                const response = await fetch('/api/analyze-car', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        marka: "{{ car.marka }}",
+                        model: "{{ car.model }}",
+                        pytanie_uzytkownika: question
+                    })
+                });
+                const data = await response.json();
+                resTxt.innerText = data.analysis;
+                input.value = "";
+            } catch (err) {
+                resTxt.innerText = "Błąd połączenia z serwerem AI.";
+            }
+        }
+
+        // Enter Listener
+        document.getElementById('userQuestion').addEventListener('keypress', e => {
+            if (e.key === 'Enter') askGemini();
+        });
+
+        // Start
+        window.onload = fetchInitialAnalysis;
+    </script>
 </body>
 </html>
