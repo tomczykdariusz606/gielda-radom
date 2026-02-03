@@ -88,7 +88,9 @@ class User(UserMixin, db.Model):
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    typ = db.Column(db.String(20), default='Osobowe') # Tego brakowało
     marka = db.Column(db.String(50), nullable=False)
+    # ... reszta pól bez zmian ...
     model = db.Column(db.String(50), nullable=False)
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
