@@ -482,35 +482,44 @@ def reset_token(token):
 
 @app.route('/api/analyze-car', methods=['POST'])
 def analyze_car_api():
-    # 1. NAJPIERW tworzymy puste zmienne, żeby Python wiedział, że istnieją
+    # 1. Domyślne wartości
     marka = "Pojazd"
     model_car = ""
     przebieg = "niedostępny"
     cena = "?"
+    user_q = ""
 
     try:
-        # 2. Próbujemy pobrać dane z zapytania
+        # 2. Pobieranie danych z frontendu
         data = request.get_json()
         if data:
             marka = data.get('marka', marka)
             model_car = data.get('model', model_car)
             przebieg = data.get('przebieg', przebieg)
             cena = data.get('cena', cena)
+            # To odbiera pytanie z nowego okna na stronie
+            user_q = data.get('pytanie_uzytkownika', '')
 
-        # 3. Próba połączenia ze mną (Gemini)
-        prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz."
+        # 3. Tworzenie inteligentnego zapytania (Promptu)
+        if user_q:
+            prompt = f"Użytkownik pyta: '{user_q}' o samochód {marka} {model_car} (cena: {cena}, przebieg: {przebieg}). Odpowiedz konkretnie jako ekspert."
+        else:
+            prompt = f"Przeanalizuj krótko auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz zachęcający komentarz."
+
+        # 4. Wywołanie Gemini
         response = model_ai.generate_content(prompt)
-        
+
         if response and response.text:
             return jsonify({"analysis": response.text})
         else:
             raise Exception("AI nie zwróciło tekstu")
 
     except Exception as e:
-        # 4. Jeśli cokolwiek pójdzie nie tak, Python JUŻ ZNA zmienną 'marka', więc błąd 500 zniknie!
         print(f"Błąd Gemini: {e}")
-        fallback = f"Auto {marka} {model_car} z przebiegiem {przebieg} km to solidna propozycja dostępna w Radomiu. Zapraszamy do kontaktu!"
+        # Bezpieczny powrót (fallback), gdyby AI było przeciążone
+        fallback = f"Auto {marka} {model_car} to solidna propozycja. Zapraszamy do kontaktu w celu poznania szczegółów!"
         return jsonify({"analysis": fallback})
+
 
 
 
