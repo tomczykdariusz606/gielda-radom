@@ -1,219 +1,186 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ car.marka }} {{ car.model }} | Giełda Radom AI</title>
+{% extends "base.html" %}
+{% block content %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <style>
-        :root { 
-            --radom-red: #ce2b37; 
-            --dark-bg: #0b0c0d;
-            --card-bg: #16181a;
-            --ai-grad: linear-gradient(135deg, #4285f4 0%, #9b72f3 100%);
-        }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--dark-bg); color: #e9ecef; overflow-x: hidden; }
+<style>
+    :root { --primary-blue: #007bff; --dark-bg: #1a1a1a; }
+    
+    /* Galeria i Miniatury */
+    .main-img-container {
+        border-radius: 15px;
+        overflow: hidden;
+        background: #000;
+        position: relative;
+        aspect-ratio: 16/9;
+    }
+    .main-img-container img {
+        width: 100%; height: 100%; object-fit: contain; cursor: zoom-in;
+    }
+    .thumb-scroll {
+        display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;
+        scrollbar-width: none;
+    }
+    .thumb-item {
+        width: 80px; height: 60px; border-radius: 8px; 
+        object-fit: cover; cursor: pointer; border: 2px solid transparent;
+        transition: 0.3s;
+    }
+    .thumb-item.active { border-color: var(--primary-blue); }
 
-        .hero-banner {
-            position: relative; height: 250px;
-            background: linear-gradient(0deg, var(--dark-bg) 0%, rgba(0,0,0,0.4) 100%), url('/static/czerwiec_tlo.jpg');
-            background-size: cover; background-position: center; display: flex; align-items: center;
-        }
+    /* Ramka Analizy Gemini z Suwakiem */
+    .gemini-card {
+        background: linear-gradient(145deg, #ffffff, #f0f7ff);
+        border: 1px solid rgba(0,123,255,0.2);
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .gemini-scroll-box {
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 15px;
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: #2c3e50;
+    }
+    .gemini-scroll-box::-webkit-scrollbar { width: 6px; }
+    .gemini-scroll-box::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 10px; }
 
-        .gallery-wrapper { background: #000; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-        .main-img { width: 100%; height: 450px; object-fit: contain; cursor: pointer; transition: 0.3s; }
+    /* Dane Techniczne (Badge) */
+    .spec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .spec-item {
+        background: #f8f9fa; padding: 12px; border-radius: 10px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    .spec-icon { color: var(--primary-blue); font-size: 1.2rem; }
 
-        .thumb-strip { display: flex; gap: 10px; padding: 15px; overflow-x: auto; scrollbar-width: none; }
-        .thumb-card { width: 80px; height: 60px; border-radius: 10px; object-fit: cover; cursor: pointer; opacity: 0.4; border: 2px solid transparent; }
-        .thumb-card.active { opacity: 1; border-color: var(--radom-red); }
+    /* Stopka Partnerów */
+    .partner-footer {
+        background: #f1f1f1; border-radius: 12px; padding: 20px;
+        margin-top: 30px; display: flex; justify-content: space-around;
+        align-items: center; flex-wrap: wrap; gap: 20px;
+    }
+    .partner-logo { filter: grayscale(1); opacity: 0.7; transition: 0.3s; height: 30px; }
+    .partner-logo:hover { filter: grayscale(0); opacity: 1; }
+</style>
 
-        .spec-box { background: var(--card-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 15px; height: 100%; }
-        .spec-label { color: #d1d1d1; font-size: 0.7rem; text-transform: uppercase; font-weight: 800; display: block; }
-        .spec-value { font-size: 1.1rem; font-weight: 700; color: #fff; }
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Giełda Radom</a></li>
+                    <li class="breadcrumb-item active">{{ car.marka }} {{ car.model }}</li>
+                </ol>
+            </nav>
 
-        .price-sticky { background: #fff; color: #000; border-radius: 28px; padding: 25px; position: sticky; top: 20px; z-index: 100; }
-        
-        .ai-box { background: var(--ai-grad); border-radius: 22px; padding: 25px; color: #fff; margin-top: 20px; box-shadow: 0 10px 30px rgba(66, 133, 244, 0.3); }
-        .ai-chat-window { border: 1px solid rgba(66, 133, 244, 0.3); border-radius: 22px; background: rgba(255,255,255,0.02); padding: 20px; margin-top: 20px; }
-        
-        .spin { animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+            <div class="pswp-gallery" id="car-gallery">
+                <div class="main-img-container shadow">
+                    <a href="{{ car.img }}" data-pswp-width="1200" data-pswp-height="800" target="_blank">
+                        <img src="{{ car.img }}" id="mainDisplayImg" alt="Główny widok">
+                    </a>
+                </div>
+                <div class="thumb-scroll">
+                    <img src="{{ car.img }}" class="thumb-item active" onclick="updateGallery('{{ car.img }}', this)">
+                    {% for image in car.images %}
+                    <a href="{{ image.image_path }}" data-pswp-width="1200" data-pswp-height="800" target="_blank" style="display:none"></a>
+                    <img src="{{ image.image_path }}" class="thumb-item" onclick="updateGallery('{{ image.image_path }}', this)">
+                    {% endfor %}
+                </div>
+            </div>
 
-        @media (max-width: 768px) { .main-img { height: 300px; } }
-    </style>
-</head>
-<body>
-
-    <section class="hero-banner">
-        <div class="container">
-            <span class="badge bg-danger mb-2 px-3">RADOM AI EXCLUSIVE</span>
-            <h1 class="display-4 fw-800 text-white">{{ car.marka }} {{ car.model }}</h1>
+            <div class="gemini-card mt-4 p-3">
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="bi bi-stars"></i> Inteligentna Analiza Gemini 3
+                </h5>
+                <div class="gemini-scroll-box">
+                    {% if "[Analiza" in car.opis %}
+                        <div class="user-text mb-3"><strong>Opis właściciela:</strong><br>
+                            {{ car.opis.split('[Analiza')[0] }}
+                        </div>
+                        <hr>
+                        <div class="ai-text"><strong>Wnioski AI:</strong><br>
+                            {{ car.opis.split('[Analiza')[1].replace('AI]:', '').strip() | safe }}
+                        </div>
+                    {% else %}
+                        {{ car.opis }}
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </section>
 
-    <div class="container py-4">
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="gallery-wrapper">
-                    <img src="{{ car.img }}" id="mainStage" class="main-img" alt="Widok auta">
-                    <div class="thumb-strip" id="thumbStrip">
-                        <img src="{{ car.img }}" class="thumb-card active" onclick="updateView('{{ car.img }}', this)">
-                        {% for img in car.images %}
-                            {% if img.image_path != car.img %}
-                            <img src="{{ img.image_path }}" class="thumb-card" onclick="updateView('{{ img.image_path }}', this)">
-                            {% endif %}
-                        {% endfor %}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-3 mb-4">
+                <h2 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h2>
+                <p class="text-muted"><i class="bi bi-geo-alt-fill text-danger"></i> <strong>{{ car.zrodlo }}</strong></p>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="h3 fw-bold text-primary">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</span>
+                    <button class="btn btn-outline-danger btn-sm"><i class="bi bi-heart"></i> {{ car.favorites_count or 0 }}</button>
+                </div>
+                
+                <div class="spec-grid">
+                    <div class="spec-item">
+                        <i class="bi bi-speedometer2 spec-icon"></i>
+                        <div><small class="text-muted d-block">Przebieg</small><strong>{{ car.przebieg or car.rok }} km</strong></div>
+                    </div>
+                    <div class="spec-item">
+                        <i class="bi bi-gear-wide-connected spec-icon"></i>
+                        <div><small class="text-muted d-block">Skrzynia</small><strong>{{ car.skrzynia or 'Manualna' }}</strong></div>
+                    </div>
+                    <div class="spec-item">
+                        <i class="bi bi-droplet-fill spec-icon"></i>
+                        <div><small class="text-muted d-block">Paliwo</small><strong>{{ car.paliwo or 'Diesel' }}</strong></div>
+                    </div>
+                    <div class="spec-item">
+                        <i class="bi bi-lightning-fill spec-icon"></i>
+                        <div><small class="text-muted d-block">Pojemność</small><strong>{{ car.pojemnosc or '2.0' }} cm³</strong></div>
                     </div>
                 </div>
 
-                <div class="ai-box">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-stars"></i> Analiza Ekspercka Gemini</h5>
-                    <div <div class="ai-box">
-    <h5 class="fw-bold mb-3"><i class="bi bi-stars"></i> Analiza Ekspercka Gemini</h5>
-    <div id="mainAiContainer">
-        <div class="gemini-scroll-box">
-            <p class="mb-0 fs-5" id="mainAiText">
-                <i class="bi bi-arrow-repeat spin"></i> Gemini generuje unikalną analizę dla tego pojazdu...
-            </p>
+                <hr>
+                <div class="d-grid gap-2">
+                    <a href="tel:{{ car.telefon }}" class="btn btn-dark btn-lg py-3 fw-bold">
+                        <i class="bi bi-telephone-fill me-2"></i> {{ car.telefon }}
+                    </a>
+                    <div class="text-center mt-2">
+                        <small class="text-muted"><i class="bi bi-eye"></i> Wyświetleń: {{ car.views or 124 }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="partner-footer shadow-sm">
+        <div class="text-center">
+            <small class="d-block text-muted mb-2">Sprawdź historię pojazdu:</small>
+            <img src="https://www.carvertical.com/static/img/logo/logo-blue.svg" class="partner-logo" alt="carVertical">
+        </div>
+        <div class="text-center">
+            <small class="d-block text-muted mb-2">Znajdź najtańsze OC:</small>
+            <img src="https://mubi.pl/static/img/logo-mubi.svg" class="partner-logo" alt="Mubi">
+        </div>
+        <div class="text-center">
+            <p class="mb-0 fw-bold text-muted">Giełda Radom &copy; 2026</p>
         </div>
     </div>
 </div>
-   <p class="mb-0 fs-5" id="mainAiText">
-                            <i class="bi bi-arrow-repeat spin"></i> Gemini generuje unikalną analizę dla tego pojazdu...
-                        </p>
-                    </div>
-                </div>
 
-                <div class="ai-chat-window">
-                    <h6 class="fw-bold mb-3 text-primary text-uppercase">Zadaj pytanie o to auto</h6>
-                    <div class="input-group">
-                        <input type="text" id="userQuestion" class="form-control bg-dark text-white border-0 py-2" placeholder="Np. Czy ten silnik jest bezawaryjny?">
-                        <button onclick="askGemini()" class="btn btn-primary px-4 fw-bold">ZAPYTAJ</button>
-                    </div>
-                    <div id="aiResponse" class="mt-3 p-3 rounded-3 bg-black" style="display:none; border-left: 4px solid #4285f4;">
-                        <small class="text-primary fw-bold">ODPOWIEDŹ GEMINI:</small>
-                        <div id="answerText" class="mt-1 text-white" style="line-height: 1.6;"></div>
-                    </div>
-                </div>
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    const lightbox = new PhotoSwipeLightbox({
+        gallery: '#car-gallery',
+        children: 'a',
+        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js')
+    });
+    lightbox.init();
 
-                <div class="mt-5">
-                    <h4 class="fw-bold border-bottom pb-2 text-uppercase" style="letter-spacing: 1px;">Opis sprzedającego</h4>
-                    <p class="fs-5 text-secondary" style="white-space: pre-line; line-height: 1.8;">{{ car.opis }}</p>
-                </div>
-            </div>
+    window.updateGallery = function(src, thumb) {
+        document.getElementById('mainDisplayImg').src = src;
+        document.getElementById('mainDisplayImg').parentElement.href = src;
+        document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    };
+</script>
 
-            <div class="col-lg-4">
-                <div class="price-sticky shadow-lg">
-                    <div class="h2 fw-900 text-danger mb-4">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
-                    
-                    <div class="row g-2 mb-4">
-                        <div class="col-6"><div class="spec-box"><span class="spec-label">Przebieg</span><span class="spec-value text-dark">{{ car.przebieg }} km</span></div></div>
-                        <div class="col-6"><div class="spec-box"><span class="spec-label">Rok</span><span class="spec-value text-dark">{{ car.rok }}</span></div></div>
-                        <div class="col-6"><div class="spec-box"><span class="spec-label">Paliwo</span><span class="spec-value text-dark">{{ car.paliwo }}</span></div></div>
-                        <div class="col-6"><div class="spec-box"><span class="spec-label">Silnik</span><span class="spec-value text-dark">{{ car.pojemnosc }}</span></div></div>
-                    </div>
-
-                    <a href="tel:{{ car.telefon }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill shadow fs-5">
-                        <i class="bi bi-telephone-fill me-2"></i> {{ car.telefon }}
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <footer>
-        <div class="container py-5 text-center text-muted border-top border-secondary mt-5">
-            <p>© 2026 Giełda Radom AI | Technologia Gemini 1.5</p>
-        </div>
-    </footer>
-
-    <script>
-        const mainImg = document.getElementById('mainStage');
-        let touchStartX = 0;
-
-        // Galeria i Swipe
-        function updateView(src, el) {
-            mainImg.src = src;
-            document.querySelectorAll('.thumb-card').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        mainImg.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
-        mainImg.addEventListener('touchend', e => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchStartX - touchEndX;
-            const thumbs = Array.from(document.querySelectorAll('.thumb-card'));
-            const currentIdx = thumbs.findIndex(t => t.classList.contains('active'));
-
-            if (Math.abs(diff) > 50) {
-                let nextIdx = diff > 0 ? (currentIdx + 1) % thumbs.length : (currentIdx - 1 + thumbs.length) % thumbs.length;
-                updateView(thumbs[nextIdx].src, thumbs[nextIdx]);
-            }
-        });
-
-        // 1. Ładowanie analizy (bez szablonu)
-        async function fetchInitialAnalysis() {
-            const aiText = document.getElementById('mainAiText');
-            try {
-                const response = await fetch('/api/analyze-car', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        marka: "{{ car.marka }}",
-                        model: "{{ car.model }}",
-                        cena: "{{ car.cena }}",
-                        przebieg: "{{ car.przebieg }}"
-                    })
-                });
-                const data = await response.json();
-                aiText.innerHTML = data.analysis;
-            } catch (err) {
-                aiText.innerHTML = "<span class='text-warning'>Analiza chwilowo niedostępna. Gemini odpoczywa.</span>";
-            }
-        }
-
-        // 2. Obsługa pytań użytkownika
-        async function askGemini() {
-            const input = document.getElementById('userQuestion');
-            const question = input.value;
-            const resDiv = document.getElementById('aiResponse');
-            const resTxt = document.getElementById('answerText');
-
-            if (!question) return;
-
-            resDiv.style.display = 'block';
-            resTxt.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Gemini analizuje ofertę i Twoje pytanie...';
-
-            try {
-                const response = await fetch('/api/analyze-car', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        marka: "{{ car.marka }}",
-                        model: "{{ car.model }}",
-                        pytanie_uzytkownika: question
-                    })
-                });
-                const data = await response.json();
-                resTxt.innerText = data.analysis;
-                input.value = "";
-            } catch (err) {
-                resTxt.innerText = "Błąd połączenia z serwerem AI.";
-            }
-        }
-
-        // Enter Listener
-        document.getElementById('userQuestion').addEventListener('keypress', e => {
-            if (e.key === 'Enter') askGemini();
-        });
-
-        // Start
-        window.onload = fetchInitialAnalysis;
-    </script>
-</body>
-</html>
+{% endblock %}
