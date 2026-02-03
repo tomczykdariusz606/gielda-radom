@@ -446,7 +446,21 @@ def dodaj_ogloszenie():
 def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
     fav_cars = current_user.favorite_cars
-    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.now(timezone.utc))
+    
+    # DODAJEMY TYLKO TO (Dane dla Admina, których brakuje w HTML):
+    stats_data = {
+        "total_users": User.query.count(),
+        "total_listings": Car.query.count(),
+        "users_online": 1  # Statyczna wartość dla widoku
+    }
+    
+    # Przekazujemy stats i statystyki (pod obiema nazwami, by uniknąć UndefinedError)
+    return render_template('profil.html', 
+                           cars=my_cars, 
+                           fav_cars=fav_cars, 
+                           stats=stats_data, 
+                           statystyki=stats_data, 
+                           now=datetime.now())
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
