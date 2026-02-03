@@ -185,60 +185,44 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # --- TRASY APLIKACJI ---
-
 @app.route('/')
 def index():
-    # Pobieranie parametrów z paska adresu
+    # Pobieranie wszystkich filtrów
     query_text = request.args.get('q', '').strip().lower()
-    skrzynia = request.args.get('skrzynia', '')
-    paliwo_filter = request.args.get('paliwo', '')
+    typ = request.args.get('typ', '')
+    paliwo = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
+    rok_min = request.args.get('rok_min', type=int)
 
-    # Startowe zapytanie do bazy
     base_query = Car.query
 
+    # 1. Filtrowanie tekstowe
     if query_text:
-        # 1. FAZA FUZZY (Wybacza literówki)
-        all_cars = Car.query.all()
-        # Rozszerzamy zakres dopasowania o paliwo i pojemność
-        choices = {f"{c.marka} {c.model} {c.paliwo} {c.pojemnosc}".lower(): c.id for c in all_cars}
-        matches = process.extract(query_text, choices.keys(), limit=100)
-        
-        # Zwiększamy próg do 65, żeby odrzucić bardzo słabe dopasowania
-        matched_ids = [choices[m[0]] for m in matches if m[1] > 65]
-        
-        # Filtrujemy bazę po ID, które przeszły test fuzzy
-        base_query = base_query.filter(Car.id.in_(matched_ids))
-
-        # 2. FAZA TWARDEGO FILTRA (Eliminuje np. Zafirę przy wpisaniu Astra)
-        # Każde słowo z zapytania MUSI znaleźć odzwierciedlenie w danych auta
         words = query_text.split()
         for word in words:
             base_query = base_query.filter(or_(
                 Car.marka.ilike(f'%{word}%'),
                 Car.model.ilike(f'%{word}%'),
-                Car.paliwo.ilike(f'%{word}%'),
-                Car.pojemnosc.ilike(f'%{word}%'),
                 Car.opis.ilike(f'%{word}%')
             ))
 
-    # 3. FILTRY BOCZNE (Selecty)
-    if skrzynia: 
-        base_query = base_query.filter(Car.skrzynia == skrzynia)
-    if paliwo_filter: 
-        base_query = base_query.filter(Car.paliwo == paliwo_filter)
-    if cena_max: 
+    # 2. Filtry sztywne
+    if typ:
+        base_query = base_query.filter(Car.typ == typ)
+    if paliwo:
+        base_query = base_query.filter(Car.paliwo == paliwo)
+    if cena_max:
         base_query = base_query.filter(Car.cena <= cena_max)
+    if rok_min:
+        base_query = base_query.filter(Car.rok >= rok_min)
 
-    # Sortowanie od najnowszych
+    # Sortowanie: najpierw najnowsze ogłoszenia
     cars = base_query.order_by(Car.id.desc()).all()
-    
-    return render_template('index.html', 
-                         cars=cars, 
-                         now=datetime.utcnow(), 
-                         request=request, 
-                         search_query=query_text)
 
+    return render_template('index.html', 
+                           cars=cars, 
+                           now=datetime.utcnow(), 
+                           request=request)
 
 
 # TWOJE API DO WYCENY AI
