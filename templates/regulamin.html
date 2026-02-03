@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <title>Regulamin - Giełda Radom</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
         body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
-        
+
         .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
         .legal-container { background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 3rem; margin-top: 3rem; margin-bottom: 3rem; border: 1px solid #eee; }
-        
+
         h1 { color: var(--radom-dark); font-weight: 800; margin-bottom: 2rem; border-left: 6px solid var(--radom-red); padding-left: 20px; }
-        h2 { color: var(--radom-red); font-weight: 700; font-size: 1.3rem; margin-top: 2rem; }
+        h2 { color: var(--radom-red); font-weight: 700; font-size: 1.3rem; margin-top: 2rem; margin-bottom: 1rem; }
         
+        .ai-section { background-color: #f8f9ff; border: 1px solid #e0e7ff; border-radius: 16px; padding: 2rem; margin-top: 2rem; }
+        .ai-badge { background: linear-gradient(135deg, #4285f4, #9b51e0); color: white; padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem; display: inline-block; }
+
         .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
         .footer-link { color: #bbb; text-decoration: none; transition: 0.2s; display: block; margin-bottom: 12px; }
         .footer-link:hover { color: var(--radom-red); padding-left: 5px; }
@@ -39,30 +42,41 @@
         <div class="row justify-content-center">
             <div class="col-lg-10 legal-container">
                 <h1>Regulamin Serwisu</h1>
-                <p class="text-muted">Obowiązuje od 2026 roku dla wszystkich użytkowników Giełdy Radom.</p>
-                
+                <p class="text-muted">Obowiązuje od lutego 2026 roku dla wszystkich użytkowników Giełdy Radom.</p>
+
                 <hr class="my-4">
 
                 <section>
                     <h2>1. Postanowienia ogólne</h2>
-                    <p>Serwis <strong>Giełda Radom</strong> jest lokalną platformą ogłoszeniową dedykowaną mieszkańcom Radomia i okolic. Korzystanie z serwisu oznacza akceptację niniejszego regulaminu.</p>
+                    <p>Serwis <strong>Giełda Radom</strong> jest lokalną platformą ogłoszeniową dedykowaną mieszkańcom Radomia i okolic. Korzystanie z serwisu oznacza pełną akceptację niniejszego regulaminu.</p>
                 </section>
 
                 <section>
                     <h2>2. Zasady dodawania ogłoszeń</h2>
                     <p>1. Serwis służy do publikacji bezpłatnych ogłoszeń motoryzacyjnych.</p>
-                    <p>2. Zabrania się dodawania ogłoszeń o charakterze obraźliwym, niezgodnym z polskim prawem lub wprowadzających w błąd co do stanu technicznego pojazdu.</p>
-                    <p>3. Każde ogłoszenie jest ważne przez 30 dni.</p>
+                    <p>2. Zabrania się dodawania ogłoszeń o charakterze obraźliwym, niezgodnym z polskim prawem lub wprowadzających w błąd co do rzeczywistego stanu technicznego pojazdu.</p>
+                    <p>3. Każde ogłoszenie jest ważne przez okres 30 dni.</p>
                 </section>
 
                 <section>
                     <h2>3. Odpowiedzialność</h2>
-                    <p>Administrator nie ponosi odpowiedzialności za treść ogłoszeń ani za wynik transakcji między użytkownikami. Wszystkie transakcje odbywają się bezpośrednio między kupującym a sprzedającym.</p>
+                    <p>Administrator nie ponosi odpowiedzialności za treść ogłoszeń ani za wynik transakcji między użytkownikami. Wszystkie transakcje odbywają się bezpośrednio między kupującym a sprzedającym na ich własne ryzyko.</p>
+                </section>
+
+                <section class="ai-section">
+                    <div class="ai-badge shadow-sm"><i class="bi bi-robot me-2"></i>TECHNOLOGIA AI GEMINI 3.0</div>
+                    <h2>4. System Analizy AI i Weryfikacji Ofert</h2>
+                    <p>1. Serwis wykorzystuje zaawansowaną technologię sztucznej inteligencji <strong>Gemini 3.0 Flash (v. 2026)</strong> do automatycznej analizy treści ogłoszeń oraz dokumentacji fotograficznej.</p>
+                    <p>2. <strong>Analiza Wizualna:</strong> System AI analizuje zdjęcia pojazdu pod kątem wykrywania uszkodzeń zewnętrznych, stanu lakierniczego oraz ogólnej prezentacji wizualnej, co wpływa na generowaną ocenę kondycji pojazdu.</p>
+                    <p>3. <strong>Wycena Rynkowa:</strong> Prezentowany "Pasek wyceny" oraz etykiety (np. "Okazja", "Cena rynkowa") są wynikiem analizy danych rynkowych opartej na próbce kontrolnej ok. 50-70 podobnych pojazdów.</p>
+                    <p>4. <strong>Charakter informacyjny:</strong> Analizy generowane przez AI mają charakter wyłącznie pomocniczy i doradczy. Nie stanowią one oficjalnej wyceny rzeczoznawcy, ekspertyzy technicznej ani gwarancji sprzedaży pojazdu w sugerowanej cenie.</p>
+                    <p>5. <strong>Cykliczność aktualizacji:</strong> Dane analityczne oraz oceny AI są odświeżane w interwałach co 3 dni w celu zapewnienia aktualności informacji rynkowych.</p>
+                    <p>6. Administrator nie ponosi odpowiedzialności za subiektywny odbiór ocen generowanych przez AI przez Użytkowników ani za ewentualne błędy w interpretacji obrazu przez algorytmy sztucznej inteligencji.</p>
                 </section>
 
                 <div class="mt-5 p-4 bg-light rounded-4 border text-center">
                     <p class="mb-0 small">
-                        Pytania dotyczące regulaminu prosimy kierować na adres: <strong>dariusztom@go2.pl</strong>
+                        Pytania dotyczące funkcjonowania systemu AI oraz regulaminu prosimy kierować na: <strong>dariusztom@go2.pl</strong>
                     </p>
                 </div>
             </div>
@@ -74,7 +88,7 @@
             <div class="row gy-4">
                 <div class="col-lg-4">
                     <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
-                    <p class="small">Lokalny portal ogłoszeniowy. Wspieramy mieszkańców Radomia w handlu motoryzacyjnym bez prowizji. Tradycja Czerwca '76.</p>
+                    <p class="small">Pierwszy w regionie portal motoryzacyjny wykorzystujący Google Gemini 3.0 do analizy rynku. Tradycja Czerwca '76 w nowoczesnym wydaniu.</p>
                     <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
                 </div>
                 <div class="col-lg-2">
@@ -91,6 +105,7 @@
                 <div class="col-lg-3 text-md-end">
                     <h5 class="text-white small fw-bold mb-3 text-uppercase">Radom 26-600</h5>
                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.3;">
+                    <p class="small text-muted mt-2">Dumni z historii, napędzani technologią.</p>
                 </div>
             </div>
             <hr class="my-4 border-secondary opacity-25">
