@@ -186,33 +186,34 @@ def allowed_file(filename):
 
 # --- TRASY APLIKACJI ---
 
-from sqlalchemy import or_, and_
-
 @app.route('/')
 def index():
+    # Pobieranie parametrów z paska adresu
     query_text = request.args.get('q', '').strip().lower()
     skrzynia = request.args.get('skrzynia', '')
     paliwo_filter = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
 
+    # Startowe zapytanie do bazy
     base_query = Car.query
 
     if query_text:
-        # 1. ROZMYTE SZUKANIE (Fuzzy Matching) - zostawiamy dla literówek
+        # 1. FAZA FUZZY (Wybacza literówki)
         all_cars = Car.query.all()
+        # Rozszerzamy zakres dopasowania o paliwo i pojemność
         choices = {f"{c.marka} {c.model} {c.paliwo} {c.pojemnosc}".lower(): c.id for c in all_cars}
         matches = process.extract(query_text, choices.keys(), limit=100)
         
-        # Zwiększamy próg dopasowania (np. 65), żeby odsiać zbyt odległe modele
+        # Zwiększamy próg do 65, żeby odrzucić bardzo słabe dopasowania
         matched_ids = [choices[m[0]] for m in matches if m[1] > 65]
         
-        # 2. TWARDE FILTROWANIE SŁÓW (Eliminacja "Zafiry" przy wpisaniu "Astra")
-        # Jeśli użytkownik wpisze dwa słowa, oba muszą się w jakiś sposób odnaleźć w danych
-        words = query_text.split()
+        # Filtrujemy bazę po ID, które przeszły test fuzzy
         base_query = base_query.filter(Car.id.in_(matched_ids))
-        
+
+        # 2. FAZA TWARDEGO FILTRA (Eliminuje np. Zafirę przy wpisaniu Astra)
+        # Każde słowo z zapytania MUSI znaleźć odzwierciedlenie w danych auta
+        words = query_text.split()
         for word in words:
-            # Każde wpisane słowo musi pasować do którejś z kluczowych kolumn
             base_query = base_query.filter(or_(
                 Car.marka.ilike(f'%{word}%'),
                 Car.model.ilike(f'%{word}%'),
@@ -221,7 +222,7 @@ def index():
                 Car.opis.ilike(f'%{word}%')
             ))
 
-    # Filtry boczne (Selecty)
+    # 3. FILTRY BOCZNE (Selecty)
     if skrzynia: 
         base_query = base_query.filter(Car.skrzynia == skrzynia)
     if paliwo_filter: 
@@ -229,6 +230,7 @@ def index():
     if cena_max: 
         base_query = base_query.filter(Car.cena <= cena_max)
 
+    # Sortowanie od najnowszych
     cars = base_query.order_by(Car.id.desc()).all()
     
     return render_template('index.html', 
@@ -236,6 +238,7 @@ def index():
                          now=datetime.utcnow(), 
                          request=request, 
                          search_query=query_text)
+
 
 
 # TWOJE API DO WYCENY AI
