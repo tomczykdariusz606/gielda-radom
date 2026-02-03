@@ -327,17 +327,23 @@ def dodaj_ogloszenie():
     oryginalny_opis = request.form['opis']
     ai_analysis = ""
 
-    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI (jeśli dodano zdjęcie)
+    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI     # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
     if saved_paths:
         try:
-            # Ścieżka do pierwszego zdjęcia (lokalna)
             img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
             img_to_analyze = Image.open(img_path)
 
-            prompt_vision = "Jesteś ekspertem motoryzacyjnym. Spójrz na to zdjęcie samochodu i krótko opisz jego stan wizualny, kolor i charakterystyczne cechy (np. felgi, stan lakieru). Napisz to w 2-3 zdaniach po polsku jako uzupełnienie ogłoszenia."
+            # Nowy, krótki prompt vision
+            prompt_vision = (
+                "Jesteś rzeczoznawcą. Opisz auto ze zdjęcia w JEDNYM krótkim zdaniu (max 100 znaków). "
+                "Skup się tylko na kolorze i jednym detalu (np. felgi). Bez lania wody."
+            )
 
             vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
-            ai_analysis = f"\n\n[Analiza AI wyglądu]: {vision_response.text}"
+            
+            # Dodajemy tylko jeśli tekst jest krótki
+            clean_text = vision_response.text.strip()
+            ai_analysis = f"\n\n[Wygląd]: {clean_text}"
         except Exception as e:
             ai_analysis = ""
 
