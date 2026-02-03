@@ -402,14 +402,12 @@ def dodaj_ogloszenie():
     oryginalny_opis = request.form['opis']
     ai_analysis = ""
 
-
-      # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
+    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
     if saved_paths:
         try:
             img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
             img_to_analyze = Image.open(img_path)
 
-            # Używamy instrukcji "BEZ HISTORII", żeby uciąć wywody o Stellantisie
             prompt_vision = (
                 "Zidentyfikuj auto na zdjęciu. "
                 "NAPISZ TYLKO JEDNO KRÓTKIE ZDANIE (MAX 100 ZNAKÓW) o jego kolorze i stanie. "
@@ -417,30 +415,38 @@ def dodaj_ogloszenie():
             )
 
             vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
-
-            # Dodatkowe zabezpieczenie: ucinamy tekst programowo, gdyby AI znów popłynęło
             short_analysis = vision_response.text.strip()[:150] 
             ai_analysis = f"\n\n[Analiza wyglądu]: {short_analysis}"
         except Exception as e:
             ai_analysis = ""
 
-
-    # 3. Tworzenie obiektu auta
+    # 3. Tworzenie obiektu auta - TUTAJ DODANO 'typ'
     nowe_auto = Car(
-        marka=request.form['marka'], model=request.form['model'],
-        rok=int(request.form['rok']), cena=float(request.form['cena']),
-        opis=oryginalny_opis + ai_analysis, # Łączymy opis użytkownika z analizą AI
+        marka=request.form['marka'], 
+        model=request.form['model'],
+        rok=int(request.form['rok']), 
+        cena=float(request.form['cena']),
+        typ=request.form.get('typ', 'Osobowe'), # <--- POBIERA WYBÓR Z MODALA
+        opis=oryginalny_opis + ai_analysis,
         telefon=request.form['telefon'],
-        skrzynia=request.form.get('skrzynia'), paliwo=request.form.get('paliwo'),
-        nadwozie=request.form.get('nadwozie'), pojemnosc=request.form.get('pojemnosc'),
-        img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id
+        skrzynia=request.form.get('skrzynia'), 
+        paliwo=request.form.get('paliwo'),
+        nadwozie=request.form.get('nadwozie'), 
+        pojemnosc=request.form.get('pojemnosc'),
+        przebieg=int(request.form.get('przebieg', 0)), # Dodane dla pewności
+        img=main_img, 
+        zrodlo=current_user.lokalizacja, 
+        user_id=current_user.id
     )
+    
     db.session.add(nowe_auto)
-    db.session.flush()
+    db.session.flush() # Pobiera ID nowo utworzonego auta przed commitem
+    
     for path in saved_paths:
         db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
+        
     db.session.commit()
-    flash('Ogłoszenie dodane z analizą wizualną AI!', 'success')
+    flash('Ogłoszenie dodane poprawnie!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/profil')
