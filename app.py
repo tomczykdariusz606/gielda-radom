@@ -627,37 +627,22 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 @app.route('/api/analyze-car', methods=['POST'])
-@login_required
-def api_analyze_car():
-    today = datetime.now().date()
-    
-    # 1. Resetowanie licznika, jeśli mamy nowy dzień
-    if current_user.last_ai_request_date != today:
-        current_user.ai_requests_today = 0
-        current_user.last_ai_request_date = today
-        db.session.commit()
-
-    # 2. Sprawdzenie limitu (max 5)
-    if current_user.ai_requests_today >= 5:
-        return jsonify({
-            'error': 'Wykorzystałeś dzisiejszy limit 5 analiz obrazu. Możesz nadal dodać ogłoszenie ręcznie.'
-        }), 429
-
+def analyze_car():
     try:
-        # (...) kod obsługujący obraz i Gemini (...)
-        
-        # 3. Jeśli analiza się powiodła, zwiększamy licznik
-        response = model_ai.generate_content([prompt, img])
-        
-        current_user.ai_requests_today += 1
-        db.session.commit()
-
-        # (...) reszta przetwarzania JSON (...)
-        return jsonify(json.loads(res_text))
-
+        # (...) Twoja logika analizy obrazu (...)
+        # Jeśli API Gemini zwróci błąd 429 lub inny:
+        pass 
     except Exception as e:
-        print(f"Błąd AI: {e}")
-        return jsonify({'error': 'Błąd podczas analizy obrazu.'}), 500
+        # To wysyłamy do administratora w profil.html
+        print(f"🚨 LOG SYSTEMOWY: Błąd AI -> {str(e)}") 
+        
+        return jsonify({
+            "marka": "", 
+            "model": "", 
+            "sugestia": "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)",
+            "error_type": "api_limit"
+        }), 200 # Zwracamy 200, żeby JS mógł to odebrać jako normalną wiadomość
+
 
 
 
