@@ -126,6 +126,7 @@
                         <input type="number" name="cena_max" class="form-control border-0 bg-light" placeholder="Max" value="{{ request.args.get('cena_max', '') }}">
                     </div>
                     <div class="col-lg-2 col-md-4">
+
                         <label class="form-label-small">Przebieg do</label>
                         <input type="number" name="przebieg_max" class="form-control border-0 bg-light" placeholder="km" value="{{ request.args.get('przebieg_max', '') }}">
                     </div>
@@ -189,7 +190,12 @@
 
                     <div class="card-body d-flex flex-column p-4">
                         <h5 class="fw-800 text-uppercase mb-1">{{ car.marka }} {{ car.model }}</h5>
-
+<div class="mb-2">
+    <span class="badge bg-light text-muted border rounded-pill" style="font-size: 0.7rem;">
+        <i class="bi bi-calendar3 text-danger me-1"></i>
+        Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') if car.data_dodania else 'Niedawno' }}
+    </span>
+</div>
                         {% if car.ai_label %}
                             {% set ai = car.ai_label | from_json %}
                             <div class="mt-2 mb-3 p-2 bg-light rounded-3 border-start border-{{ ai.color }} border-4">
