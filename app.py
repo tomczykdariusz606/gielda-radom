@@ -461,6 +461,18 @@ def dodaj_ogloszenie():
 @app.route('/profil')
 @login_required
 def profil():
+    # Użytkownicy aktywni w ciągu ostatnich 5 minut
+    five_minutes_ago = datetime.now() - timedelta(minutes=5)
+    online_count = User.query.filter(User.last_seen > five_minutes_ago).count()
+    
+    # Przekaż do stats
+    stats = {
+        'total_users': User.query.count(),
+        'total_listings': Car.query.count(),
+        'users_online': online_count  # To trafi do Twojej pulsującej kropki!
+    }
+    # ... reszta funkcji profil ...
+
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
     fav_cars = current_user.favorite_cars
     
