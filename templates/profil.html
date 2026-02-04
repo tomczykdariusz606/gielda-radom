@@ -216,56 +216,87 @@
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleBike() {
-            const typ = document.querySelector('input[name="typ"]:checked').value;
-            const paliwo = document.getElementById('aiPaliwo');
-            if(typ === 'Rowery') paliwo.value = 'Siła mięśni';
-            else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
-        }
+  <script>
+    function toggleBike() {
+        const typ = document.querySelector('input[name="typ"]:checked').value;
+        const paliwo = document.getElementById('aiPaliwo');
+        if(typ === 'Rowery') paliwo.value = 'Siła mięśni';
+        else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
+    }
 
-        async function generateDesc() {
-            const btn = document.querySelector('.btn-ai');
-            const marka = document.getElementById('aiMarka').value;
-            const model = document.getElementById('aiModel').value;
-            const opisPole = document.getElementById('aiOpis');
-            if(!marka || !model) return alert("Brak marki/modelu!");
-            const stary = opisPole.value.split('✍️ TWÓJ OPIS:')[1] || "";
-            btn.innerHTML = 'Piszę...';
-            try {
-                const res = await fetch('/api/generate-description', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({marka, model, rok: document.getElementById('aiRok').value, przebieg: document.getElementById('aiPrzebieg').value})
-                });
-                const data = await res.json();
-                opisPole.value = `✨ OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:${stary}`;
-            } finally { btn.innerHTML = '✨ Pełny opis AI'; }
-        }
+    async function generateDesc() {
+        const btn = document.querySelector('.btn-ai');
+        const marka = document.getElementById('aiMarka').value;
+        const model = document.getElementById('aiModel').value;
+        const opisPole = document.getElementById('aiOpis');
+        if(!marka || !model) return alert("Brak marki/modelu!");
+        const stary = opisPole.value.split('✍️ TWÓJ OPIS:')[1] || "";
+        btn.innerHTML = 'Piszę...';
+        try {
+            const res = await fetch('/api/generate-description', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({marka, model, rok: document.getElementById('aiRok').value, przebieg: document.getElementById('aiPrzebieg').value})
+            });
+            const data = await res.json();
+            
+            // JEŚLI LIMIT AI (429)
+            if(res.status === 429) {
+                opisPole.value = `✨ Gemini odpoczywa, spróbuj jutro lub napisz sam ;)\n\n__________________________\n✍️ TWÓJ OPIS:${stary}`;
+                return;
+            }
 
-        document.getElementById('imgInput').addEventListener('change', async function(e) {
-            const title = document.querySelector('.modal-title');
-            const badge = document.getElementById('aiLimitBadge');
-            let current = parseInt(badge.innerText.split(' /')[0]);
-            if(current <= 0) return alert("Limit AI wyczerpany!");
+            opisPole.value = `✨ OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:${stary}`;
+        } finally { btn.innerHTML = '✨ Pełny opis AI'; }
+    }
 
-            title.innerHTML = '⌛ AI analizuje...';
-            const formData = new FormData();
-            formData.append('image', e.target.files[0]);
+    document.getElementById('imgInput').addEventListener('change', async function(e) {
+        const title = document.querySelector('.modal-title');
+        const badge = document.getElementById('aiLimitBadge');
+        const logConsole = document.getElementById('logConsole'); // Terminal admina
+        const errCount = document.getElementById('errCount'); // Licznik błędów
+        
+        let current = badge ? parseInt(badge.innerText.split(' /')[0]) : 5;
 
-            try {
-                const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
-                const data = await res.json();
-                if(res.ok && data.marka) {
-                    document.getElementById('aiMarka').value = data.marka;
-                    document.getElementById('aiModel').value = data.model;
-                    document.getElementById('aiOpis').value = `🤖 ANALIZA WIZUALNA:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
-                    badge.innerText = (current - 1) + ' / 5';
-                    title.innerHTML = '✅ Gotowe!';
-                    document.getElementById('aiRok').focus();
+        title.innerHTML = '⌛ AI analizuje...';
+        const formData = new FormData();
+        formData.append('image', e.target.files[0]);
+
+        try {
+            const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            // OBSŁUGA BŁĘDU 429 I LOGI DLA ADMINA
+            if(res.status === 429) {
+                title.innerHTML = '❌ Gemini odpoczywa...';
+                document.getElementById('aiOpis').value = "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)";
+                
+                if(logConsole) {
+                    const time = new Date().toLocaleTimeString();
+                    logConsole.innerHTML = `<span style="color:orange">[${time}] ⚠️ Limit Gemini (429)</span><br>` + logConsole.innerHTML;
+                    if(errCount) errCount.innerText = parseInt(errCount.innerText || 0) + 1;
                 }
-            } catch(e) { title.innerHTML = 'Błąd analizy'; }
-        });
-    </script>
+                return;
+            }
+
+            if(res.ok && data.marka) {
+                document.getElementById('aiMarka').value = data.marka;
+                document.getElementById('aiModel').value = data.model;
+                document.getElementById('aiOpis').value = `🤖 ANALIZA WIZUALNA:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
+                if(badge) badge.innerText = (current - 1) + ' / 5';
+                title.innerHTML = '✅ Gotowe!';
+                
+                if(logConsole) {
+                    const time = new Date().toLocaleTimeString();
+                    logConsole.innerHTML = `<span style="color:green">[${time}] ✅ OK: ${data.marka}</span><br>` + logConsole.innerHTML;
+                }
+            }
+        } catch(err) { 
+            title.innerHTML = 'Błąd analizy'; 
+            if(logConsole) logConsole.innerHTML = `<span style="color:red">[${new Date().toLocaleTimeString()}] 🚨 Błąd sieci</span><br>` + logConsole.innerHTML;
+        }
+    });
+</script>
+
 
 
 
