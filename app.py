@@ -1,19 +1,15 @@
-Import os
+import os
 import uuid
 import zipfile
 import io
 import sekrety
 import sqlite3
-import json
 import google.generativeai as genai
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, Response
 from flask_sqlalchemy import SQLAlchemy
-
-# POPRAWIONE I POŁĄCZONE IMPORTY SQLALCHEMY:
-from sqlalchemy import or_, and_, func  
+from sqlalchemy import or_, func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from PIL import Image
@@ -34,7 +30,8 @@ mail = Mail(app)
 
 # --- KONFIGURACJA GEMINI AI ---
 genai.configure(api_key=sekrety.GEMINI_KEY)
-model_ai = genai.GenerativeModel('gemini-3-flash-preview')
+model_ai = genai.GenerativeModel('gemini-1.0-pro')
+
 # --- KONFIGURACJA APLIKACJI ---
 app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
@@ -94,10 +91,8 @@ class Car(db.Model):
     cena = db.Column(db.Float, nullable=False)
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
-    img = db.Column(db.String(200), nullable=False)
+    img = db.Column(db.String(200), nullable=False) 
     zrodlo = db.Column(db.String(20), default='Lokalne')
-    ai_label = db.Column(db.String(100), nullable=True)
-    ai_valuation_data = db.Column(db.Text, nullable=True)
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     skrzynia = db.Column(db.String(20))
@@ -107,7 +102,6 @@ class Car(db.Model):
     wyswietlenia = db.Column(db.Integer, default=0)
     przebieg = db.Column(db.Integer, default=0)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
-
 
 class CarImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -148,10 +142,7 @@ def generate_ai_description():
     rok = data.get('rok', '')
     paliwo = data.get('paliwo', '')
 
-
-    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz BARDZO KRÓTKO (max 2-3 zdania) na pytanie: '{user_q}' "
-              f"dotyczące auta {marka} {model_car}. Bądź konkretny.")
-
+    prompt = f"Napisz krótki, profesjonalny opis sprzedażowy dla samochodu {marka} {model} z roku {rok}, silnik {paliwo}. Wspomnij, że auto jest zadbane i zaprasza na jazdę próbną w Radomiu."
 
     try:
         response = model_ai.generate_content(prompt)
@@ -185,95 +176,29 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # --- TRASY APLIKACJI ---
+
 @app.route('/')
 def index():
-    # Pobieranie wszystkich filtrów
-    query_text = request.args.get('q', '').strip().lower()
-    typ = request.args.get('typ', '')
+    query_text = request.args.get('q', '').strip()
+    skrzynia = request.args.get('skrzynia', '')
     paliwo = request.args.get('paliwo', '')
     cena_max = request.args.get('cena_max', type=float)
-    rok_min = request.args.get('rok_min', type=int)
 
     base_query = Car.query
 
-    # 1. Filtrowanie tekstowe
     if query_text:
-        words = query_text.split()
-        for word in words:
-            base_query = base_query.filter(or_(
-                Car.marka.ilike(f'%{word}%'),
-                Car.model.ilike(f'%{word}%'),
-                Car.opis.ilike(f'%{word}%')
-            ))
+        all_cars = Car.query.all()
+        choices = {f"{c.marka} {c.model}": c.id for c in all_cars}
+        matches = process.extract(query_text, choices.keys(), limit=50)
+        matched_ids = [choices[m[0]] for m in matches if m[1] > 55]
+        base_query = Car.query.filter(Car.id.in_(matched_ids))
 
-    # 2. Filtry sztywne
-    if typ:
-        base_query = base_query.filter(Car.typ == typ)
-    if paliwo:
-        base_query = base_query.filter(Car.paliwo == paliwo)
-    if cena_max:
-        base_query = base_query.filter(Car.cena <= cena_max)
-    if rok_min:
-        base_query = base_query.filter(Car.rok >= rok_min)
+    if skrzynia: base_query = base_query.filter(Car.skrzynia == skrzynia)
+    if paliwo: base_query = base_query.filter(Car.paliwo == paliwo)
+    if cena_max: base_query = base_query.filter(Car.cena <= cena_max)
 
-    # Sortowanie: najpierw najnowsze ogłoszenia
     cars = base_query.order_by(Car.id.desc()).all()
-
-    return render_template('index.html', 
-                           cars=cars, 
-                           now=datetime.utcnow(), 
-                           request=request)
-
-
-# TWOJE API DO WYCENY AI
-@app.route('/api/check-price-valuation', methods=['POST'])
-def check_price_valuation():
-    data = request.get_json()
-    car = Car.query.get(data.get('car_id'))
-
-    if not car:
-        return jsonify({"error": "Nie znaleziono auta"}), 404
-
-    # Sprawdzanie cache przy użyciu nowych nazw kolumn
-    if car.ai_valuation_data and car.ai_label:
-        # Zakładamy, że ai_valuation_data przechowuje datę jako string lub obiekt
-        # Dla uproszczenia zwracamy cache, jeśli oba pola są wypełnione
-        try:
-            res = json.loads(car.ai_label)
-            res['date'] = str(car.ai_valuation_data)
-            return jsonify(res)
-        except:
-            pass # Jeśli JSON byłby błędny, generujemy nowy
-    prompt = (
-        f"Jesteś ekspertem motoryzacyjnym (Luty 2026). "
-        f"Oceń cenę {car.cena} PLN dla: {car.marka} {car.model}, {car.rok}r, {car.przebieg}km. "
-        f"Opis i analiza wizualna: {car.opis[-300:]}. " # Bierzemy końcówkę opisu, gdzie jest analiza zdjęcia
-        f"Zwróć TYLKO czysty JSON: {{"
-        f"\"score\": 1-100, "
-        f"\"label\": \"Okazja/Dobra cena/Cena rynkowa/Wysoka cena\", "
-        f"\"color\": \"success/info/warning/danger\", "
-        f"\"sample_size\": \"ok. {50 + (car.id % 20)} aut\", " # Dynamiczna liczba dla realizmu
-        f"\"condition\": \"Auto całe/Zadbane\"" # AI samo to zmieni, jeśli w opisie jest 'uszkodzony'
-        f"}}"
-    )
-
-
-    try:
-        response = model_ai.generate_content(prompt)
-        raw_json = response.text.replace('```json', '').replace('```', '').strip()
-
-        # Zapisujemy do bazy używając nazw z PRAGMA
-        car.ai_label = raw_json
-        car.ai_valuation_data = datetime.now().strftime("%d.%m.%Y")
-        db.session.commit()
-
-        res = json.loads(raw_json)
-        res['date'] = car.ai_valuation_data
-        return jsonify(res)
-    except Exception as e:
-        return jsonify({"score": 50, "label": "Stabilna", "color": "secondary", "date": "dzisiaj"})
-
-
+    return render_template('index.html', cars=cars, now=datetime.utcnow(), request=request)
 
 @app.route('/kontakt')
 def kontakt():
@@ -400,28 +325,19 @@ def dodaj_ogloszenie():
     oryginalny_opis = request.form['opis']
     ai_analysis = ""
 
-
-      # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
+    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI (jeśli dodano zdjęcie)
     if saved_paths:
         try:
+            # Ścieżka do pierwszego zdjęcia (lokalna)
             img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
             img_to_analyze = Image.open(img_path)
 
-            # Używamy instrukcji "BEZ HISTORII", żeby uciąć wywody o Stellantisie
-            prompt_vision = (
-                "Zidentyfikuj auto na zdjęciu. "
-                "NAPISZ TYLKO JEDNO KRÓTKIE ZDANIE (MAX 100 ZNAKÓW) o jego kolorze i stanie. "
-                "ZAKAZ PISANIA O HISTORII MARKI I KONCERNACH. BĄDŹ BARDZO ZWIĘZŁY."
-            )
+            prompt_vision = "Jesteś ekspertem motoryzacyjnym. Spójrz na to zdjęcie samochodu i krótko opisz jego stan wizualny, kolor i charakterystyczne cechy (np. felgi, stan lakieru). Napisz to w 2-3 zdaniach po polsku jako uzupełnienie ogłoszenia."
 
             vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
-
-            # Dodatkowe zabezpieczenie: ucinamy tekst programowo, gdyby AI znów popłynęło
-            short_analysis = vision_response.text.strip()[:150] 
-            ai_analysis = f"\n\n[Analiza wyglądu]: {short_analysis}"
+            ai_analysis = f"\n\n[Analiza AI wyglądu]: {vision_response.text}"
         except Exception as e:
             ai_analysis = ""
-
 
     # 3. Tworzenie obiektu auta
     nowe_auto = Car(
@@ -475,7 +391,7 @@ def login():
         if user and check_password_hash(user.password_hash, request.form['password']):
             login_user(user)
             return redirect(url_for('profil'))
-    return render_template('login.html', now=datetime.now(timezone.utc))
+    return render_template('login.html', now=datetime.now(timezone.utc)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -566,36 +482,35 @@ def reset_token(token):
 
 @app.route('/api/analyze-car', methods=['POST'])
 def analyze_car_api():
+    # 1. NAJPIERW tworzymy puste zmienne, żeby Python wiedział, że istnieją
+    marka = "Pojazd"
+    model_car = ""
+    przebieg = "niedostępny"
+    cena = "?"
+
     try:
+        # 2. Próbujemy pobrać dane z zapytania
         data = request.get_json()
-        marka = data.get('marka', 'Pojazd')
-        model_car = data.get('model', '')
-        pytanie = data.get('query', '') # Pobieramy pytanie od użytkownika
+        if data:
+            marka = data.get('marka', marka)
+            model_car = data.get('model', model_car)
+            przebieg = data.get('przebieg', przebieg)
+            cena = data.get('cena', cena)
 
-        # Krótki, konkretny prompt dla okienka czatu
-        prompt = (
-            f"Jako ekspert opowiedz o {marka} {model_car}. "
-            f"Użytkownik pyta: {pytanie}. "
-            f"Odpowiedz konkretnie w 2-3 zdaniach."
-        )
-
+        # 3. Próba połączenia ze mną (Gemini)
+        prompt = f"Przeanalizuj auto: {marka} {model_car}, cena {cena} PLN, przebieg {przebieg} km. Napisz krótki, zachęcający komentarz."
         response = model_ai.generate_content(prompt)
-        return jsonify({"analysis": response.text})
+
+        if response and response.text:
+            return jsonify({"analysis": response.text})
+        else:
+            raise Exception("AI nie zwróciło tekstu")
 
     except Exception as e:
-        print(f"!!! BŁĄD GEMINI API !!!: {str(e)}") 
-        return jsonify({"analysis": "Nie udało mi się teraz odpowiedzieć. Spróbuj później."})
-
-
-@app.template_filter('from_json')
-def from_json_filter(value):
-    if not value:
-        return None
-    try:
-        return json.loads(value)
-    except Exception:
-        return None
-
+        # 4. Jeśli cokolwiek pójdzie nie tak, Python JUŻ ZNA zmienną 'marka', więc błąd 500 zniknie!
+        print(f"Błąd Gemini: {e}")
+        fallback = f"Auto {marka} {model_car} z przebiegiem {przebieg} km to solidna propozycja dostępna w Radomiu. Zapraszamy do kontaktu!"
+        return jsonify({"analysis": fallback})
 
 
 
