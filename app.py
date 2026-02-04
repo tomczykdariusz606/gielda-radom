@@ -1,4 +1,4 @@
-Import os
+import os
 import uuid
 import zipfile
 import io
@@ -588,11 +588,22 @@ def full_backup():
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
 def toggle_favorite(car_id):
-    car = Car.query.get_or_404(car_id)
-    if car in current_user.favorite_cars: current_user.favorite_cars.remove(car)
-    else: current_user.favorite_cars.append(car)
+    # Sprawdzamy, czy to auto jest już w ulubionych tego użytkownika
+    fav = Favorite.query.filter_by(user_id=current_user.id, car_id=car_id).first()
+    
+    if fav:
+        # Jeśli jest - usuwamy
+        db.session.delete(fav)
+        flash('Usunięto z ulubionych', 'info')
+    else:
+        # Jeśli nie ma - dodajemy nowy rekord
+        new_fav = Favorite(user_id=current_user.id, car_id=car_id)
+        db.session.add(new_fav)
+        flash('Dodano do ulubionych!', 'success')
+        
     db.session.commit()
     return redirect(request.referrer or url_for('index'))
+
 
 def send_reset_email(user):
     token = user.get_reset_token()
