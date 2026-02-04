@@ -672,29 +672,24 @@ def from_json_filter(value):
 
 if __name__ == '__main__':
     with app.app_context():
-        # Tworzy tabele, jeśli ich nie ma
         db.create_all()
-        
         inspector = db.inspect(db.engine)
         
-        # 1. NAPRAWA TABELI USER (last_seen + limity AI)
+        # 1. NAPRAWA TABELI USER
         user_cols = [c['name'] for c in inspector.get_columns('user')]
-        
-        # Słownik nowych kolumn dla User
         needed_user_cols = {
             'last_seen': 'DATETIME',
             'ai_requests_today': 'INTEGER DEFAULT 0',
             'last_ai_request_date': 'DATE'
         }
-
         for col, definition in needed_user_cols.items():
             if col not in user_cols:
                 with db.engine.connect() as conn:
                     conn.execute(db.text(f'ALTER TABLE user ADD COLUMN {col} {definition}'))
                     conn.commit()
-                    print(f"✅ Dodano brakującą kolumnę '{col}' do tabeli user.")
+                    print(f"✅ User: Dodano {col}")
 
-        # 2. NAPRAWA TABELI CAR (pozostałe parametry)
+        # 2. NAPRAWA TABELI CAR (Parametry techniczne)
         car_cols = [c['name'] for c in inspector.get_columns('car')]
         needed_car_cols = {
             'typ': 'VARCHAR(20) DEFAULT "Osobowe"',
@@ -704,13 +699,25 @@ if __name__ == '__main__':
             'pojemnosc': 'VARCHAR(20) DEFAULT ""',
             'przebieg': 'INTEGER DEFAULT 0'
         }
-        
         for col, definition in needed_car_cols.items():
             if col not in car_cols:
                 with db.engine.connect() as conn:
                     conn.execute(db.text(f'ALTER TABLE car ADD COLUMN {col} {definition}'))
                     conn.commit()
-                    print(f"✅ Dodano brakującą kolumnę '{col}' do tabeli car.")
+                    print(f"✅ Car: Dodano {col}")
 
-    # Uruchomienie aplikacji
+        # 3. NOWE: NAPRAWA DATY I STATYSTYK (Kluczowe dla licznika dni!)
+        # Sprawdzamy czy są kolumny niezbędne do wyświetlania daty i liczników
+        if 'data_dodania' not in car_cols:
+            with db.engine.connect() as conn:
+                conn.execute(db.text('ALTER TABLE car ADD COLUMN data_dodania DATETIME DEFAULT CURRENT_TIMESTAMP'))
+                conn.commit()
+                print("✅ Car: Dodano data_dodania")
+        
+        if 'wyswietlenia' not in car_cols:
+            with db.engine.connect() as conn:
+                conn.execute(db.text('ALTER TABLE car ADD COLUMN wyswietlenia INTEGER DEFAULT 0'))
+                conn.commit()
+                print("✅ Car: Dodano wyswietlenia")
+
     app.run(host='0.0.0.0', port=5000, debug=True)
