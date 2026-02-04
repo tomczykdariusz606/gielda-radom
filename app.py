@@ -67,6 +67,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
+    ai_requests_today = db.Column(db.Integer, default=0)
+    last_ai_request_date = db.Column(db.Date, default=datetime.now().date())
 
     # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
@@ -625,37 +627,36 @@ def reset_token(token):
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def api_analyze_car():
-    try:
-        file = request.files.get('image')
-        if not file:
-            return jsonify({'error': 'Brak pliku'}), 400
-            
-        img = Image.open(file)
-        
-        # DEFINICJA PROMPTU - teraz pasuje do Twojego JS
-        prompt = (
-            "Zidentyfikuj auto na zdjęciu. Odpowiedz TYLKO czystym JSON-em: "
-            "{\"marka\": \"...\", \"model\": \"...\", \"sugestia\": \"np. Bardzo ładny, zadbany czarny sedan o sportowej sylwetce.\"} "
-            "Opis w polu 'sugestia' musi być po polsku, być krótki i dotyczyć koloru oraz sylwetki."
-        )
+    today = datetime.now().date()
+    
+    # 1. Resetowanie licznika, jeśli mamy nowy dzień
+    if current_user.last_ai_request_date != today:
+        current_user.ai_requests_today = 0
+        current_user.last_ai_request_date = today
+        db.session.commit()
 
-        # Generowanie treści przez Gemini
+    # 2. Sprawdzenie limitu (max 5)
+    if current_user.ai_requests_today >= 5:
+        return jsonify({
+            'error': 'Wykorzystałeś dzisiejszy limit 5 analiz obrazu. Możesz nadal dodać ogłoszenie ręcznie.'
+        }), 429
+
+    try:
+        # (...) kod obsługujący obraz i Gemini (...)
+        
+        # 3. Jeśli analiza się powiodła, zwiększamy licznik
         response = model_ai.generate_content([prompt, img])
         
-        # Pancerne czyszczenie odpowiedzi z formatowania Markdown
-        res_text = response.text.strip()
-        if "```" in res_text:
-            res_text = res_text.split("```")[1]
-            if res_text.startswith("json"):
-                res_text = res_text[4:]
-            res_text = res_text.split("```")[0].strip()
+        current_user.ai_requests_today += 1
+        db.session.commit()
 
-        # Wysyłamy czysty JSON do przeglądarki
+        # (...) reszta przetwarzania JSON (...)
         return jsonify(json.loads(res_text))
 
     except Exception as e:
-        print(f"!!! BLAD ANALIZY AI: {e}")
-        return jsonify({'error': str(e)}), 500
+        print(f"Błąd AI: {e}")
+        return jsonify({'error': 'Błąd podczas analizy obrazu.'}), 500
+
 
 
 @app.template_filter('from_json')
@@ -676,15 +677,24 @@ if __name__ == '__main__':
         
         inspector = db.inspect(db.engine)
         
-        # 1. NAPRAWA TABELI USER (kolumna last_seen)
+        # 1. NAPRAWA TABELI USER (last_seen + limity AI)
         user_cols = [c['name'] for c in inspector.get_columns('user')]
-        if 'last_seen' not in user_cols:
-            with db.engine.connect() as conn:
-                conn.execute(db.text('ALTER TABLE user ADD COLUMN last_seen DATETIME'))
-                conn.commit()
-                print("✅ Dodano brakującą kolumnę 'last_seen' do tabeli user.")
+        
+        # Słownik nowych kolumn dla User
+        needed_user_cols = {
+            'last_seen': 'DATETIME',
+            'ai_requests_today': 'INTEGER DEFAULT 0',
+            'last_ai_request_date': 'DATE'
+        }
 
-        # 2. NAPRAWA TABELI CAR (typ, skrzynia, paliwo, nadwozie, pojemnosc, przebieg)
+        for col, definition in needed_user_cols.items():
+            if col not in user_cols:
+                with db.engine.connect() as conn:
+                    conn.execute(db.text(f'ALTER TABLE user ADD COLUMN {col} {definition}'))
+                    conn.commit()
+                    print(f"✅ Dodano brakującą kolumnę '{col}' do tabeli user.")
+
+        # 2. NAPRAWA TABELI CAR (pozostałe parametry)
         car_cols = [c['name'] for c in inspector.get_columns('car')]
         needed_car_cols = {
             'typ': 'VARCHAR(20) DEFAULT "Osobowe"',
