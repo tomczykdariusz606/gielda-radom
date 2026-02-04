@@ -489,6 +489,8 @@ def profil():
         online_count = User.query.filter(User.last_seen > five_minutes_ago).count()
     except Exception:
         online_count = 1 # Fallback, jeśli kolumna jeszcze nie istnieje
+          # !!! TO JEST LINIA, KTÓREJ BRAKOWAŁO DLA ULUBIONYCH !!!
+        user_favorites = Favorite.query.filter_by(user_id=current_user.id).all() 
 
     # 2. Przygotowanie statystyk dla Admina
     stats_data = {
@@ -501,7 +503,7 @@ def profil():
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
     
     # Ulubione - pobieramy bezpiecznie
-    fav_cars = getattr(current_user, 'favorite_cars', []) 
+    fav_cars = getattr(current_user, 'favorites_cars', []) 
     
     return render_template('profil.html', 
                            cars=my_cars, 
