@@ -87,9 +87,22 @@
             <div class="col">
                 <div class="card car-card h-100">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 220px; object-fit: cover;">
-                        <div class="expiry-badge"><i class="bi bi-clock"></i> 28 dni</div>
-                    </div>
+    <img src="{{ car.img }}" class="card-img-top" style="height: 220px; object-fit: cover;">
+    
+    {# OBLICZENIA CZASU #}
+    {% set dni_od_dodania = (now - car.data_dodania).days %}
+    {% set pozostalo_dni = 30 - dni_od_dodania %}
+    
+    <div class="expiry-badge {% if pozostalo_dni <= 3 %}bg-danger{% endif %}">
+        <i class="bi bi-clock"></i> 
+        {% if pozostalo_dni > 0 %}
+            {{ pozostalo_dni }} dni
+        {% else %}
+            Ostatnie godziny!
+        {% endif %}
+    </div>
+</div>
+
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
                         <h3 class="text-danger fw-800 mb-3">{{ car.cena|int }} PLN</h3>
