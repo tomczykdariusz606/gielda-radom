@@ -140,28 +140,29 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
-# --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
 def generate_ai_description():
     data = request.json
     marka = data.get('marka', '')
-    model = data.get('model', '')
+    model_car = data.get('model', '')  # Zmieniono nazwę na model_car
     rok = data.get('rok', '')
     paliwo = data.get('paliwo', '')
+    przebieg = data.get('przebieg', '')
 
-
-    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz BARDZO KRÓTKO (max 2-3 zdania) na pytanie: '{user_q}' "
-              f"dotyczące auta {marka} {model_car}. Bądź konkretny.")
-
+    # Poprawiony prompt - teraz używa właściwych zmiennych
+    prompt = (f"Napisz krótkie, atrakcyjne ogłoszenie sprzedażowe dla auta {marka} {model_car} "
+              f"z roku {rok}. Silnik {paliwo}, przebieg {przebieg} km. "
+              "Użyj 2-3 konkretnych zdań, dodaj emoji i zachęć do oględzin w Radomiu.")
 
     try:
         response = model_ai.generate_content(prompt)
-        return jsonify({"description": response.text})
+        return jsonify({"description": response.text.strip()})
     except Exception as e:
-        # Fallback do f-stringa w razie błędu API
-        fallback = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę. Samochód zadbany, idealny na trasy po Radomiu. Zapraszam na jazdę próbną!"
+        # Fallback jest teraz bardziej kompletny
+        fallback = f"Na sprzedaż {marka} {model_car} ({rok} r.). Silnik {paliwo}, przebieg {przebieg} km. Auto w dobrym stanie, godne polecenia. Zapraszam do kontaktu!"
         return jsonify({"description": fallback})
+
 
 # --- FUNKCJE POMOCNICZE ---
 
@@ -324,6 +325,7 @@ def edytuj(id):
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
+        car.pojemnosc = request.form.get('pojemnosc') # To pole było pominięte!
 
         # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
         new_files = request.files.getlist('zdjecia')
@@ -421,23 +423,30 @@ def dodaj_ogloszenie():
             ai_analysis = ""
 
     # 3. Tworzenie obiektu auta - TUTAJ DODANO 'typ'
+        # 3. Tworzenie obiektu auta
+    # Używamy .get(), aby uniknąć błędów KeyError, jeśli pole jest puste
     nowe_auto = Car(
-        marka=request.form['marka'], 
-        model=request.form['model'],
-        rok=int(request.form['rok']), 
-        cena=float(request.form['cena']),
-        typ=request.form.get('typ', 'Osobowe'), # <--- POBIERA WYBÓR Z MODALA
+        marka=request.form.get('marka'), 
+        model=request.form.get('model'),
+        rok=int(request.form.get('rok', 0)) if request.form.get('rok') else 0, 
+        cena=float(request.form.get('cena', 0)) if request.form.get('cena') else 0.0,
+        typ=request.form.get('typ', 'Osobowe'),
         opis=oryginalny_opis + ai_analysis,
-        telefon=request.form['telefon'],
-        skrzynia=request.form.get('skrzynia'), 
-        paliwo=request.form.get('paliwo'),
-        nadwozie=request.form.get('nadwozie'), 
-        pojemnosc=request.form.get('pojemnosc'),
-        przebieg=int(request.form.get('przebieg', 0)), # Dodane dla pewności
+        telefon=request.form.get('telefon'),
+        
+        # TE POLA MUSZĄ SIĘ ZGADZAĆ Z NAME W HTML:
+        skrzynia=request.form.get('skrzynia', 'Manualna'), 
+        paliwo=request.form.get('paliwo', 'Benzyna'),
+        nadwozie=request.form.get('nadwozie', 'Sedan'), 
+        pojemnosc=request.form.get('pojemnosc', ''), # Sprawdź czy w bazie to String!
+        
+        przebieg=int(request.form.get('przebieg', 0)) if request.form.get('przebieg') else 0,
         img=main_img, 
         zrodlo=current_user.lokalizacja, 
-        user_id=current_user.id
+        user_id=current_user.id,
+        data_dodania=datetime.now() # Dodaj to, żeby licznik dni do końca działał!
     )
+
     
     db.session.add(nowe_auto)
     db.session.flush() # Pobiera ID nowo utworzonego auta przed commitem
