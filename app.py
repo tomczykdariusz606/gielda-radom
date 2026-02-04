@@ -478,35 +478,31 @@ def dodaj_ogloszenie():
         flash('Wystąpił błąd podczas zapisu do bazy.', 'danger')
 
     return redirect(url_for('profil'))
+
 @app.route('/profil')
 @login_required
 def profil():
-    # 1. Statystyki online
-    try:
-        five_minutes_ago = datetime.now() - timedelta(minutes=5)
-        online_count = User.query.filter(User.last_seen > five_minutes_ago).count()
-    except Exception:
-        online_count = 1
-
-    # 2. Przygotowanie danych dla Admina
-    stats_data = {
-        'total_users': User.query.count(),
-        'total_listings': Car.query.count(),
-        'users_online': max(online_count, 1)
-    }
-
-    # 3. Pobieranie aut użytkownika
-    my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
+    # Pobieramy auta dodane przez użytkownika
+    user_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
     
-    # 4. Pobieranie ulubionych (spójne z nazwą w HTML: "favorites")
-    # Pobieramy relację z modelu Favorite
+    # !!! TO JEST LINIA, KTÓREJ BRAKOWAŁO DLA ULUBIONYCH !!!
     user_favorites = Favorite.query.filter_by(user_id=current_user.id).all()
-    
+
+    # Statystyki dla admina
+    stats = {}
+    if current_user.id == 1:
+        stats = {
+            'users_online': 1, # Tutaj Twoja logika online
+            'total_users': User.query.count(),
+            'total_listings': Car.query.count()
+        }
+
     return render_template('profil.html', 
-                           cars=my_cars, 
-                           favorites=user_favorites, # Zmienione z fav_cars na favorites
-                           stats=stats_data, 
-                           now=datetime.now())
+                         cars=user_cars, 
+                         favorites=user_favorites,  # <-- Przekazujemy ulubione tutaj
+                         stats=stats, 
+                         now=datetime.now())
+
 
 
 
