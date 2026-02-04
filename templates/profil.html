@@ -19,6 +19,7 @@
         .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
         .profile-header { background: white; padding: 3rem 0; border-bottom: 1px solid #eee; margin-bottom: 2rem; }
 
+        /* KARTY */
         .car-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; background: white; overflow: hidden; }
         .car-card:hover { transform: translateY(-5px); }
         .expiry-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; backdrop-filter: blur(4px); }
@@ -46,9 +47,13 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-dark p-3">
-        <div class="container text-center text-md-start">
+    <nav class="navbar navbar-dark p-3 shadow">
+        <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+            <div class="d-flex align-items-center gap-3 text-white">
+                <span class="small d-none d-md-inline"><i class="bi bi-person-circle"></i> {{ current_user.username }}</span>
+                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-3">Wyloguj</a>
+            </div>
         </div>
     </nav>
 
@@ -56,7 +61,10 @@
         <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <div>
                 <h1 class="fw-800 mb-1">Cześć, {{ current_user.username }}!</h1>
-                <p class="text-muted small mb-0"><i class="bi bi-geo-alt-fill text-danger"></i> {{ current_user.lokalizacja }} | <i class="bi bi-eye"></i> {{ cars|sum(attribute='wyswietlenia') }} odsłon</p>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ current_user.lokalizacja }} | 
+                    <i class="bi bi-eye"></i> {{ cars|sum(attribute='wyswietlenia') }} odsłon łącznie
+                </p>
             </div>
             <button class="btn btn-danger btn-lg rounded-pill px-5 shadow-lg fw-bold" data-bs-toggle="modal" data-bs-target="#dodajModal">
                 + DODAJ OGŁOSZENIE
@@ -69,17 +77,18 @@
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for car in cars %}
             <div class="col">
-                <div class="card car-card h-100">
+                <div class="card car-card h-100 shadow-sm">
                     <div class="position-relative">
                         <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;">
-                        <div class="expiry-badge">Wygasa za: 28 dni</div>
+                        <div class="expiry-badge">Aktywne</div>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
-                            <span class="badge bg-light text-dark border">{{ car.typ }}</span>
+                            <h5 class="fw-bold mb-0 text-truncate" style="max-width: 70%;">{{ car.marka }} {{ car.model }}</h5>
+                            <span class="badge bg-light text-dark border small">{{ car.typ }}</span>
                         </div>
                         <h4 class="text-danger fw-800 mb-3">{{ car.cena|int }} PLN</h4>
+
                         <div class="spec-grid">
                             <div class="spec-item"><i class="bi bi-calendar3"></i> {{ car.rok }} r.</div>
                             <div class="spec-item"><i class="bi bi-speedometer2"></i> {{ car.przebieg }} km</div>
@@ -88,12 +97,10 @@
                             <div class="spec-item"><i class="bi bi-car-front"></i> {{ car.nadwozie }}</div>
                             <div class="spec-item"><i class="bi bi-droplet"></i> {{ car.pojemnosc }}</div>
                         </div>
+
                         <div class="d-flex gap-2">
                             <a href="/edytuj/{{ car.id }}" class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1">Edytuj</a>
-                            <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button type="submit" class="btn btn-outline-success btn-sm rounded-pill w-100">Odśwież</button>
-                            </form>
-                            <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1" onsubmit="return confirm('Usunąć?')">
+                            <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1" onsubmit="return confirm('Czy na pewno usunąć?')">
                                 <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill w-100">Usuń</button>
                             </form>
                         </div>
@@ -102,24 +109,48 @@
             </div>
             {% endfor %}
         </div>
+
+        {% if current_user.id == 1 %}
+        <div class="mt-5 p-4 bg-white rounded-4 shadow-sm border-0">
+            <h3 class="fw-bold mb-4 border-start border-primary border-5 ps-3 text-primary">Panel Administratora</h3>
+            <div class="row text-center mb-4">
+                <div class="col-md-4">
+                    <p class="text-muted small fw-bold">ONLINE</p>
+                    <h2 class="fw-800"><span class="online-dot"></span> {{ stats.users_online }}</h2>
+                </div>
+                <div class="col-md-4 border-start border-end">
+                    <p class="text-muted small fw-bold">UŻYTKOWNICY</p>
+                    <h2 class="fw-800">{{ stats.total_users }}</h2>
+                </div>
+                <div class="col-md-4">
+                    <p class="text-muted small fw-bold">OGŁOSZENIA</p>
+                    <h2 class="fw-800">{{ stats.total_listings }}</h2>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('backup_db') }}" class="btn btn-dark rounded-pill px-4 shadow-sm">Kopia Bazy</a>
+                <a href="{{ url_for('full_backup') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">Full Backup ZIP</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content rounded-4 border-0">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-lightning-charge-fill text-warning"></i> Nowe Ogłoszenie AI</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-lightning-charge-fill text-warning"></i> Dodaj Ogłoszenie AI</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="/dodaj" method="POST" enctype="multipart/form-data">
                     <div class="modal-body p-4">
                         
-                        <div id="aiLimitContainer" class="alert d-flex align-items-center justify-content-between rounded-4 py-2 px-3 mb-4 {% if current_user.ai_requests_today >= 5 %}alert-danger{% else %}alert-info{% endif %}" style="border: none; background: #f0f7ff;">
+                        <div id="aiLimitContainer" class="alert d-flex align-items-center justify-content-between rounded-4 py-2 px-3 mb-4 alert-info" style="border: none; background: #f0f7ff;">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-stars text-primary"></i>
-                                <small class="fw-bold text-dark">Analizy AI na dziś:</small>
+                                <small class="fw-bold text-dark">Dostępne analizy AI na dziś:</small>
                             </div>
-                            <span id="aiLimitBadge" class="badge {% if current_user.ai_requests_today >= 5 %}bg-danger{% else %}bg-primary{% endif %} rounded-pill">
+                            <span id="aiLimitBadge" class="badge bg-primary rounded-pill">
                                 {{ 5 - current_user.ai_requests_today }} / 5
                             </span>
                         </div>
@@ -170,24 +201,50 @@
 
                             <div class="col-12 mt-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="fw-bold small text-muted"><i class="bi bi-pencil-square"></i> Treść Twojego ogłoszenia</label>
+                                    <label class="fw-bold small text-muted"><i class="bi bi-pencil-square"></i> Treść Ogłoszenia</label>
                                     <button type="button" class="btn-ai" onclick="generateDesc()"><i class="bi bi-magic"></i> ✨ Pełny opis AI</button>
                                 </div>
                                 <textarea name="opis" id="aiOpis" class="form-control rounded-4 shadow-sm" rows="10" 
-                                          placeholder="Tutaj pojawi się analiza AI, możesz ją dowolnie edytować..."
                                           style="border: 2px solid #eee; font-size: 0.95rem; line-height: 1.6; padding: 15px;"></textarea>
                             </div>
 
-                            <div class="col-12"><label class="small fw-bold">Zdjęcia</label><input type="file" name="zdjecia" id="imgInput" class="form-control" multiple></div>
+                            <div class="col-12">
+                                <label class="small fw-bold">Zdjęcie główne</label>
+                                <input type="file" name="zdjecia" id="imgInput" class="form-control">
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow">OPUBLIKUJ</button>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow">OPUBLIKUJ TERAZ</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h6 class="fw-800">Giełda Radom AI</h6>
+                    <p class="small text-muted">Najnowocześniejsza platforma ogłoszeniowa w regionie, wspierana przez technologię Gemini AI.</p>
+                </div>
+                <div class="col-md-4 mb-4 text-center">
+                    <h6 class="fw-800">Nawigacja</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/">Strona Główna</a></li>
+                        <li><a href="/kontakt">Pomoc techniczna</a></li>
+                        <li><a href="/logout">Wyloguj się</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4 text-md-end">
+                    <h6 class="fw-800">Status Systemu</h6>
+                    <span class="badge bg-success rounded-pill px-3">Wszystkie systemy OK</span>
+                    <p class="small mt-3 mb-0">© 2026 Giełda Radom AI</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -198,17 +255,14 @@
             else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
         }
 
-        // --- GENEROWANIE PEŁNEGO OPISU ---
         async function generateDesc() {
             const btn = document.querySelector('.btn-ai');
             const marka = document.getElementById('aiMarka').value;
             const model = document.getElementById('aiModel').value;
             const opisPole = document.getElementById('aiOpis');
+            if(!marka || !model) return alert("Najpierw wgraj zdjęcie lub wpisz markę i model!");
 
-            if(!marka || !model) return alert("Wpisz markę i model!");
-
-            const trescKlienta = opisPole.value.split('✍️ TWÓJ OPIS (opcjonalnie):')[1] || "";
-
+            const trescKlienta = opisPole.value.split('✍️ TWÓJ OPIS:')[1] || "";
             btn.innerHTML = '✨ Piszę...';
             try {
                 const res = await fetch('/api/generate-description', {
@@ -220,26 +274,23 @@
                     })
                 });
                 const data = await res.json();
-                opisPole.value = `✨ PEŁNY OPIS TECHNICZNY AI:\n${data.description}\n\n__________________________\n✍️ TWOJE UWAGI:${trescKlienta}`;
+                opisPole.value = `✨ PEŁNY OPIS TECHNICZNY AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:${trescKlienta}`;
                 opisPole.scrollTop = opisPole.scrollHeight;
-            } finally { 
-                btn.innerHTML = '<i class="bi bi-magic"></i> ✨ Pełny opis AI'; 
-            }
+            } finally { btn.innerHTML = '<i class="bi bi-magic"></i> ✨ Pełny opis AI'; }
         }
 
-        // --- ANALIZA OBRAZU Z LICZNIKIEM ---
         document.getElementById('imgInput').addEventListener('change', async function(e) {
             const title = document.querySelector('.modal-title');
             const badge = document.getElementById('aiLimitBadge');
-            
             let currentLimit = parseInt(badge.innerText.split(' /')[0]);
+
             if (currentLimit <= 0) {
-                alert("Osiągnąłeś dzienny limit analiz AI.");
+                alert("Wykorzystałeś dzisiejszy limit 5 analiz AI.");
                 return;
             }
 
-            title.innerHTML = '⌛ AI rozpoznaje auto...';
-            const formData = new FormData(); 
+            title.innerHTML = '⌛ AI analizuje zdjęcie...';
+            const formData = new FormData();
             formData.append('image', e.target.files[0]);
 
             try {
@@ -249,25 +300,18 @@
                 if(res.ok && data.marka) {
                     document.getElementById('aiMarka').value = data.marka;
                     document.getElementById('aiModel').value = data.model;
-                    
                     if(data.sugestia) {
                         document.getElementById('aiOpis').value = `🤖 WIZUALNA ANALIZA AI:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS (opcjonalnie):\n`;
                     }
-
                     title.innerHTML = '✅ Rozpoznano: ' + data.marka;
-                    
-                    // Aktualizacja licznika na stronie
-                    let newLimit = currentLimit - 1;
-                    badge.innerText = `${newLimit} / 5`;
-                    if (newLimit === 0) badge.classList.replace('bg-primary', 'bg-danger');
-
+                    badge.innerText = (currentLimit - 1) + ' / 5';
+                    if ((currentLimit - 1) === 0) badge.classList.replace('bg-primary', 'bg-danger');
                     document.getElementById('aiRok').focus();
                 } else {
-                    title.innerHTML = 'Błąd rozpoznawania';
+                    title.innerHTML = '❌ Błąd analizy';
+                    alert(data.error || "Błąd");
                 }
-            } catch(err) { 
-                title.innerHTML = 'Błąd połączenia'; 
-            }
+            } catch(e) { title.innerHTML = 'Błąd połączenia'; }
         });
     </script>
 </body>
