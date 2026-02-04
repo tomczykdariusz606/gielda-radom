@@ -610,38 +610,35 @@ def reset_token(token):
 @login_required
 def api_analyze_car():
     try:
-        if 'image' not in request.files:
+        file = request.files.get('image')
+        if not file:
             return jsonify({'error': 'Brak pliku'}), 400
             
-        file = request.files['image']
         img = Image.open(file)
-
-        # Prompt, który dosłownie ZAKAZUJE AI pisania czegokolwiek poza danymi
         prompt = (
-            "Jesteś ekspertem motoryzacyjnym. Zidentyfikuj auto na zdjęciu. "
-            "Odpowiedz WYŁĄCZNIE w formacie JSON, bez żadnych wstępów i markdown. "
-            "Użyj dokładnie tych kluczy: "
-            "{\"marka\": \"NAZWA\", \"model\": \"NAZWA\", \"rok\": \"ROK_LICZBA\"}"
+            "Zidentyfikuj auto na zdjęciu. Odpowiedz TYLKO czystym JSON-em: "
+            "{\"marka\": \"...\", \"model\": \"...\", \"rok\": \"...\"}. "
+            "Bez markdown, bez tekstu przed i po."
         )
 
+        # Upewnij się, że model_ai jest zdefiniowany globalnie wcześniej!
         response = model_ai.generate_content([prompt, img])
         
-        # CZYSZCZENIE: Usuwamy ewentualne śmieci, które AI mogło dodać
-        raw_text = response.text.strip()
-        if "```json" in raw_text:
-            raw_text = raw_text.split("```json")[1].split("```")[0].strip()
-        elif "```" in raw_text:
-            raw_text = raw_text.split("```")[1].split("```")[0].strip()
+        # Pancerne czyszczenie odpowiedzi
+        res_text = response.text.strip()
+        if "```" in res_text:
+            res_text = res_text.split("```")[1]
+            if res_text.startswith("json"):
+                res_text = res_text[4:]
+            res_text = res_text.split("```")[0].strip()
 
-        # Próbujemy sparsować JSON, żeby upewnić się, że jest poprawny
-        data = json.loads(raw_text)
-        
-        # Zwracamy czyste dane do JavaScriptu
-        return jsonify(data)
+        return jsonify(json.loads(res_text))
 
     except Exception as e:
-        print(f"!!! BŁĄD ANALIZY LIVE !!!: {str(e)}")
-        return jsonify({'error': 'AI nie dało rady'}), 500
+        # TO JEST KLUCZOWE: Zobaczysz to w terminalu po puszczeniu python3 app.py
+        print(f"!!! BLAD ANALIZY AI: {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 
 
