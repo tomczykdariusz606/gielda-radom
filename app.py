@@ -650,20 +650,42 @@ def reset_token(token):
 
 @app.route('/api/analyze-car', methods=['POST'])
 def analyze_car():
+    # Sprawdzenie limitu użytkownika przed wysłaniem zapytania
+    if current_user.ai_requests_today >= 5:
+        add_log(f"<span class='text-warning'>Limit:</span> {current_user.username} wyczerpał próby.")
+        return jsonify({
+            "marka": "", "model": "", 
+            "sugestia": "Wykorzystałeś dzisiejszy limit 5 analiz AI. Wpisz dane ręcznie.",
+            "error_type": "user_limit"
+        }), 200
+
     try:
-        # (...) Twoja logika analizy obrazu (...)
-        # Jeśli API Gemini zwróci błąd 429 lub inny:
-        pass 
+        # (...) Tutaj Twoja logika analizy zdjęcia (...)
+        # Załóżmy, że tutaj wywołujesz Gemini:
+        # response = model_ai.generate_content(...) 
+        
+        # Sukces:
+        current_user.ai_requests_today += 1
+        db.session.commit()
+        add_log(f"<span class='text-success'>AI Success:</span> Analiza dla {current_user.username} OK.")
+        
+        # Tutaj zwracasz normalne dane...
+        return jsonify({"marka": "Zidentyfikowana", "model": "Model", "sugestia": "Opis..."})
+
     except Exception as e:
-        # To wysyłamy do administratora w profil.html
+        # To jest kluczowe - wysyłamy błąd do Twojego czarnego okienka
+        error_msg = str(e)[:50] # bierzemy tylko początek błędu
+        add_log(f"<span class='text-danger'>AI Error:</span> {error_msg}")
+        
         print(f"🚨 LOG SYSTEMOWY: Błąd AI -> {str(e)}") 
         
         return jsonify({
             "marka": "", 
             "model": "", 
-            "sugestia": "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)",
+            "sugestia": "✨ Gemini odpoczywa (limit API), spróbuj jutro lub wpisz dane ręcznie ;)",
             "error_type": "api_limit"
-        }), 200 # Zwracamy 200, żeby JS mógł to odebrać jako normalną wiadomość
+        }), 200
+
 
 
 
