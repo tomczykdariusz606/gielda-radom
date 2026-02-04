@@ -76,7 +76,7 @@ class User(UserMixin, db.Model):
 
     # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    favorites = db.relationship('Favorite', backref='user', lazy=True)
+    favorites = db.relationship('Favorite', backref='user', lazy=True, cascade="all, delete-orphan")
 
     # Metody resetowania hasła (Logic AI)
     def get_reset_token(self):
