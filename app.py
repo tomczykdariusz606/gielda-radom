@@ -607,16 +607,41 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 @app.route('/api/analyze-car', methods=['POST'])
+@login_required
 def api_analyze_car():
-    file = request.files.get('image')
-    if not file: return jsonify({'error': 'Brak pliku'})
-    
-    img = Image.open(file)
-    prompt = "Zidentyfikuj auto. Odpowiedz TYLKO JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": \"...\"}"
-    
-    response = model_ai.generate_content([prompt, img])
-    clean_json = response.text.replace('```json', '').replace('```', '').strip()
-    return jsonify(json.loads(clean_json))
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'Brak pliku'}), 400
+            
+        file = request.files['image']
+        img = Image.open(file)
+
+        # Prompt, który dosłownie ZAKAZUJE AI pisania czegokolwiek poza danymi
+        prompt = (
+            "Jesteś ekspertem motoryzacyjnym. Zidentyfikuj auto na zdjęciu. "
+            "Odpowiedz WYŁĄCZNIE w formacie JSON, bez żadnych wstępów i markdown. "
+            "Użyj dokładnie tych kluczy: "
+            "{\"marka\": \"NAZWA\", \"model\": \"NAZWA\", \"rok\": \"ROK_LICZBA\"}"
+        )
+
+        response = model_ai.generate_content([prompt, img])
+        
+        # CZYSZCZENIE: Usuwamy ewentualne śmieci, które AI mogło dodać
+        raw_text = response.text.strip()
+        if "```json" in raw_text:
+            raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in raw_text:
+            raw_text = raw_text.split("```")[1].split("```")[0].strip()
+
+        # Próbujemy sparsować JSON, żeby upewnić się, że jest poprawny
+        data = json.loads(raw_text)
+        
+        # Zwracamy czyste dane do JavaScriptu
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"!!! BŁĄD ANALIZY LIVE !!!: {str(e)}")
+        return jsonify({'error': 'AI nie dało rady'}), 500
 
 
 
