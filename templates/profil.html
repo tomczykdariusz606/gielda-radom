@@ -216,25 +216,27 @@
         </div>
     </footer>
 
-   <script>
+<script>
     function toggleBike() {
-        const typ = document.querySelector('input[name="typ"]:checked').value;
+        const typ = document.querySelector('input[name="typ"]:checked');
         const paliwo = document.getElementById('aiPaliwo');
-        if(typ === 'Rowery') paliwo.value = 'Siła mięśni';
-        else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
+        if(typ && paliwo) {
+            if(typ.value === 'Rowery') paliwo.value = 'Siła mięśni';
+            else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
+        }
     }
 
-    // OBSŁUGA MULTI UPLOAD, PODGLĄDU I LOGÓW DO ADMINA
+    // BEZPIECZNA OBSŁUGA MULTI UPLOAD
     document.getElementById('imgInput').addEventListener('change', async function(e) {
         const files = e.target.files;
         const container = document.getElementById('imagePreviewContainer');
         const counter = document.getElementById('photoCounter');
         const title = document.querySelector('.modal-title');
-        const logConsole = document.getElementById('logConsole'); // Twoje okno terminala w adminie
+        const logConsole = document.getElementById('logConsole'); 
         const errCount = document.getElementById('errCount');
 
-        container.innerHTML = '';
-        counter.innerText = `Wybrano: ${files.length} / 9`;
+        if(container) container.innerHTML = '';
+        if(counter) counter.innerText = `Wybrano: ${files.length} / 9`;
 
         if(files.length > 9) {
             alert("Maksymalnie 9 zdjęć!");
@@ -242,21 +244,21 @@
             return;
         }
 
-        // Podgląd miniatur (z Twojego ładnego skryptu)
+        // Podgląd miniatur
         for(let file of files) {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const img = document.createElement('img');
                 img.src = ev.target.result;
                 img.className = 'preview-img';
-                container.appendChild(img);
+                if(container) container.appendChild(img);
             }
             reader.readAsDataURL(file);
         }
 
-        // ANALIZA AI (Tylko pierwszego zdjęcia + Raportowanie błędów)
+        // ANALIZA AI
         if(files.length > 0) {
-            title.innerHTML = '⌛ AI analizuje główne zdjęcie...';
+            if(title) title.innerHTML = '⌛ AI analizuje główne zdjęcie...';
             const formData = new FormData();
             formData.append('image', files[0]);
 
@@ -264,66 +266,72 @@
                 const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
                 const data = await res.json();
 
-                // Sprawdzamy czy API Gemini "odpoczywa" (Limit 429)
+                // Obsługa limitu 429
                 if(res.status === 429 || data.error_type === 'api_limit') {
-                    title.innerHTML = '❌ Gemini odpoczywa...';
-                    document.getElementById('aiOpis').value = "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)";
+                    if(title) title.innerHTML = '❌ Gemini odpoczywa...';
+                    const descField = document.getElementById('aiOpis');
+                    if(descField) descField.value = "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)";
                     
-                    // Log do terminala admina
                     if(logConsole) {
                         const time = new Date().toLocaleTimeString();
-                        logConsole.innerHTML = `<span class="text-warning">[${time}] ⚠️ Limit API Gemini przekroczony (429)</span><br>` + logConsole.innerHTML;
-                        if(errCount) errCount.innerText = parseInt(errCount.innerText) + 1;
+                        logConsole.innerHTML = `<span style="color:orange">[${time}] ⚠️ Limit Gemini (429)</span><br>` + logConsole.innerHTML;
+                        if(errCount) errCount.innerText = parseInt(errCount.innerText || 0) + 1;
                     }
                     return;
                 }
 
-                // Jeśli sukces
                 if(res.ok && data.marka) {
-                    document.getElementById('aiMarka').value = data.marka;
-                    document.getElementById('aiModel').value = data.model;
-                    document.getElementById('aiOpis').value = `🤖 ANALIZA WIZUALNA AI:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
-                    title.innerHTML = '✅ Rozpoznano: ' + data.marka;
+                    const markaField = document.getElementById('aiMarka');
+                    const modelField = document.getElementById('aiModel');
+                    const descField = document.getElementById('aiOpis');
+                    
+                    if(markaField) markaField.value = data.marka;
+                    if(modelField) modelField.value = data.model;
+                    if(descField) descField.value = `🤖 ANALIZA WIZUALNA AI:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
+                    if(title) title.innerHTML = '✅ Rozpoznano: ' + data.marka;
                     
                     if(logConsole) {
                         const time = new Date().toLocaleTimeString();
-                        logConsole.innerHTML = `<span class="text-success">[${time}] ✅ Analiza OK: ${data.marka}</span><br>` + logConsole.innerHTML;
+                        logConsole.innerHTML = `<span style="color:green">[${time}] ✅ OK: ${data.marka}</span><br>` + logConsole.innerHTML;
                     }
                 }
             } catch(err) { 
-                title.innerHTML = 'Błąd połączenia z AI';
-                if(logConsole) logConsole.innerHTML = `<span class="text-danger">[${new Date().toLocaleTimeString()}] 🚨 Błąd: ${err.message}</span><br>` + logConsole.innerHTML;
+                if(title) title.innerHTML = 'Błąd połączenia z AI';
             }
         }
     });
 
     async function generateDesc() {
         const btn = document.querySelector('.btn-ai');
-        const marka = document.getElementById('aiMarka').value;
-        const model = document.getElementById('aiModel').value;
-        if(!marka || !model) return alert("Najpierw marka i model!");
+        const marka = document.getElementById('aiMarka');
+        const model = document.getElementById('aiModel');
+        
+        if(!marka || !marka.value) return alert("Najpierw marka i model!");
 
         btn.innerHTML = '✨ Piszę...';
         try {
             const res = await fetch('/api/generate-description', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    marka, model, 
-                    rok: document.getElementById('aiRok').value, 
-                    przebieg: document.getElementById('aiPrzebieg').value
+                    marka: marka.value, 
+                    model: model ? model.value : "", 
+                    rok: document.getElementById('aiRok') ? document.getElementById('aiRok').value : "", 
+                    przebieg: document.getElementById('aiPrzebieg') ? document.getElementById('aiPrzebieg').value : ""
                 })
             });
             const data = await res.json();
+            const descField = document.getElementById('aiOpis');
             
             if(res.status === 429) {
-                document.getElementById('aiOpis').value = "✨ Gemini odpoczywa, opis musisz napisać sam ;)";
+                if(descField) descField.value = "✨ Gemini odpoczywa, opis musisz napisać sam ;)";
                 return;
             }
 
-            document.getElementById('aiOpis').value = `✨ PROFESJONALNY OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
-        } finally { btn.innerHTML = '✨ Generuj Pełny Opis'; }
+            if(descField) descField.value = `✨ PROFESJONALNY OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
+        } finally { if(btn) btn.innerHTML = '✨ Generuj Pełny Opis'; }
     }
 </script>
+
 
 </body>
 </html>
