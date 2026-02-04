@@ -125,6 +125,7 @@ class Car(db.Model):
     wyswietlenia = db.Column(db.Integer, default=0)
     przebieg = db.Column(db.Integer, default=0)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
+    favorited_by = db.relationship('Favorite', backref='target_car', cascade="all, delete-orphan")
 
 
 class CarImage(db.Model):
@@ -539,7 +540,9 @@ def delete_car(car_id):
     if car.user_id == current_user.id:
         db.session.delete(car)
         db.session.commit()
-        flash('Usunięto.', 'success')
+        flash('Ogłoszenie zostało pomyślnie usunięte.', 'success')
+    else:
+        flash('Nie masz uprawnień do usunięcia tego ogłoszenia.', 'danger')
     return redirect(url_for('profil'))
 
 @app.route('/login', methods=['GET', 'POST'])
