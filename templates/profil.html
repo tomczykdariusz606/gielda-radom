@@ -256,20 +256,36 @@
 
         // Analiza obrazu
         document.getElementById('imgInput').addEventListener('change', async function(e) {
-            const title = document.querySelector('.modal-title');
-            title.innerHTML = '⌛ Analizuję zdjęcie...';
-            const formData = new FormData(); formData.append('image', e.target.files[0]);
-            try {
-                const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
-                const data = await res.json();
-                if(data.marka) {
-                    document.getElementById('aiMarka').value = data.marka;
-                    document.getElementById('aiModel').value = data.model;
-                    document.getElementById('aiRok').value = data.rok;
-                    title.innerHTML = '✅ AI rozpoznało pojazd!';
-                }
-            } catch(e) { title.innerHTML = 'Nowe Ogłoszenie AI'; }
-        });
+    const title = document.querySelector('.modal-title');
+    title.innerHTML = '⌛ AI rozpoznaje auto...';
+    
+    const formData = new FormData(); 
+    formData.append('image', e.target.files[0]);
+
+    try {
+        const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        if(data.marka) {
+            // Wypełniamy markę i model
+            document.getElementById('aiMarka').value = data.marka;
+            document.getElementById('aiModel').value = data.model;
+            
+            // Wpisujemy sugestię do pola opisu (aiOpis)
+            if(data.sugestia) {
+                document.getElementById('aiOpis').value = data.sugestia;
+            }
+
+            title.innerHTML = '✅ Rozpoznano: ' + data.marka + ' ' + data.model;
+            
+            // Fokus na cenę lub rok, bo te pola user musi wypełnić sam
+            document.getElementById('aiRok').focus();
+        }
+    } catch(e) { 
+        title.innerHTML = 'Błąd rozpoznawania'; 
+    }
+});
+
     </script>
 </body>
 </html>
