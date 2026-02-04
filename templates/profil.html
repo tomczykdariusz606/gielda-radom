@@ -9,7 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --radom-red: #ce2b37; --radom-dark: #1a1a1a;
+            --radom-red: #ce2b37; 
+            --radom-dark: #1a1a1a;
             --gemini-grad: linear-gradient(135deg, #4285f4 0%, #9b72f3 100%);
         }
         body { font-family: 'Inter', sans-serif; background: #f4f7f6; display: flex; flex-direction: column; min-height: 100vh; }
@@ -17,14 +18,14 @@
 
         /* TŁO NAGŁÓWKA */
         .profile-header { 
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/static/czerwiec_tlo.jpg');
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/czerwiec_tlo.jpg');
             background-size: cover;
             background-position: center;
             padding: 4rem 0; 
             border-bottom: 5px solid var(--radom-red);
             margin-bottom: 2rem; 
             color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
         }
 
         .car-card { border: none; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: 0.3s; background: white; overflow: hidden; position: relative; }
@@ -34,7 +35,7 @@
         .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; font-size: 0.85rem; color: #555; }
         .spec-item { display: flex; align-items: center; gap: 6px; }
 
-        /* MINIATURY */
+        /* MINIATURY ZDJĘĆ */
         #imagePreviewContainer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
         .preview-img { width: 100%; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid #ddd; }
 
@@ -112,29 +113,27 @@
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-muted py-3">Brak aktywnych ogłoszeń.</div>
+            <div class="col-12 text-muted py-3">Brak aktywnych ogłoszeń. Kliknij przycisk u góry, aby dodać.</div>
             {% endfor %}
         </div>
 
+        {% if favorites %}
         <h3 class="fw-bold mb-4 ps-3 border-start border-warning border-5 mt-5">Obserwowane <i class="bi bi-heart-fill text-danger"></i></h3>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-            {% if favorites %}
-                {% for fav in favorites %}
-                <div class="col">
-                    <div class="card car-card h-100 border-0 shadow-sm">
-                        <img src="{{ fav.car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
-                        <div class="card-body">
-                            <h6 class="fw-bold text-truncate">{{ fav.car.marka }} {{ fav.car.model }}</h6>
-                            <p class="text-danger fw-bold fs-5 mb-3">{{ fav.car.cena|int }} PLN</p>
-                            <a href="/auto/{{ fav.car.id }}" class="btn btn-dark btn-sm w-100 rounded-pill">Zobacz szczegóły</a>
-                        </div>
+            {% for fav in favorites %}
+            <div class="col">
+                <div class="card car-card h-100 border-0 shadow-sm">
+                    <img src="{{ fav.car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-truncate">{{ fav.car.marka }} {{ fav.car.model }}</h6>
+                        <p class="text-danger fw-bold fs-5 mb-3">{{ fav.car.cena|int }} PLN</p>
+                        <a href="/auto/{{ fav.car.id }}" class="btn btn-dark btn-sm w-100 rounded-pill">Zobacz szczegóły</a>
                     </div>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="col-12"><p class="text-muted fst-italic">Nie masz jeszcze obserwowanych ogłoszeń.</p></div>
-            {% endif %}
+            </div>
+            {% endfor %}
         </div>
+        {% endif %}
 
         {% if current_user.id == 1 %}
         <div class="card border-0 shadow rounded-4 mt-5 overflow-hidden">
@@ -142,9 +141,10 @@
                 <h5 class="mb-0 fw-bold"><i class="bi bi-shield-lock-fill text-warning"></i> Admin Panel</h5>
                 <div>
                     <a href="{{ url_for('backup_db') }}" class="btn btn-outline-light btn-sm rounded-pill me-1">Kopia SQL</a>
-                    <a href="{{ url_for('full_backup') }}" class="btn btn-success btn-sm rounded-pill me-2 fw-bold"><i class="bi bi-archive-fill"></i> FULL ZIP</a>
                     
-                    <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearLogs()"><i class="bi bi-eraser"></i> Czyść</button>
+                    <a href="{{ url_for('full_backup') }}" class="btn btn-success btn-sm rounded-pill me-2 fw-bold"><i class="bi bi-file-earmark-zip-fill"></i> FULL ZIP</a>
+                    
+                    <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearLogs()"><i class="bi bi-eraser"></i> Czyść logi</button>
                 </div>
             </div>
             <div class="card-body p-4 bg-white">
@@ -164,7 +164,7 @@
                     <div class="col-md-6 border-start">
                         <h6 class="text-start small fw-bold text-muted ps-2 mb-2">DZIENNIK ZDARZEŃ (LIVE)</h6>
                         <div id="logConsole" class="bg-dark text-info p-2 rounded text-start font-monospace small" style="height: 85px; overflow-y: auto;">
-                            <span class="text-secondary">[{{ now.strftime('%H:%M:%S') }}]</span> System gotowy.<br>
+                            <span class="text-secondary">[{{ now.strftime('%H:%M:%S') }}]</span> System admina gotowy.<br>
                         </div>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold">Zdjęcia pojazdu (Max 9 szt.)</label>
                             <input type="file" name="zdjecia" id="imgInput" class="form-control" multiple accept="image/*">
-                            <div class="form-text text-primary" id="uploadStatus">Wybierz zdjęcia, a AI automatycznie uzupełni dane!</div>
+                            <div class="form-text mt-2" id="uploadStatus">Wybierz zdjęcia, a AI automatycznie uzupełni dane!</div>
                             <div id="imagePreviewContainer"></div>
                         </div>
 
@@ -249,7 +249,8 @@
         function clearLogs() {
             const console = document.getElementById('logConsole');
             if(console) console.innerHTML = '<span class="text-success">[SYSTEM] Logi wyczyszczone.</span><br>';
-            document.getElementById('errCount').innerText = '0';
+            const err = document.getElementById('errCount');
+            if(err) err.innerText = '0';
         }
 
         async function generateDesc() {
@@ -273,7 +274,7 @@
             } finally { btn.innerHTML = '<i class="bi bi-stars"></i> Generuj Opis'; }
         }
 
-        // --- GŁÓWNA LOGIKA "CZEKAJ" PRZY ZDJĘCIACH ---
+        // --- OBSŁUGA PLIKÓW I STATUSU "CZEKAJ" ---
         document.getElementById('imgInput').addEventListener('change', async function(e) {
             const files = e.target.files;
             const container = document.getElementById('imagePreviewContainer');
@@ -283,12 +284,12 @@
 
             container.innerHTML = '';
             
-            // 1. NATYCHMIASTOWY KOMUNIKAT
             if(files.length > 0) {
+                // 1. ZMIANA STATUSU NA "CZEKAJ"
                 title.innerHTML = '<span class="spinner-border spinner-border-sm text-warning"></span> CZEKAJ... Analizuję';
                 title.classList.add('text-warning');
-                status.innerHTML = '<b class="text-warning">⏳ Przetwarzanie zdjęcia... Proszę nie zamykać okna.</b>';
-                submitBtn.disabled = true; // Blokujemy przycisk
+                status.innerHTML = '<b class="text-warning">⏳ Przetwarzanie... Proszę czekać.</b>';
+                submitBtn.disabled = true; // Blokada przycisku
             }
 
             if(files.length > 9) {
@@ -296,11 +297,12 @@
                 this.value = '';
                 title.innerHTML = 'Nowe Ogłoszenie AI';
                 title.classList.remove('text-warning');
+                status.innerText = 'Wybierz zdjęcia, a AI automatycznie uzupełni dane!';
                 submitBtn.disabled = false;
                 return;
             }
 
-            // Miniatury
+            // Podgląd
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
@@ -326,13 +328,13 @@
                         document.getElementById('aiModel').value = data.model;
                         document.getElementById('aiOpis').value = `🤖 ANALIZA:\n${data.sugestia}\n\n__________________________\n`;
                         
-                        // SUKCES
+                        // SUKCES - ODBLOKOWANIE
                         title.innerHTML = '✅ Gotowe! Sprawdź dane';
                         title.classList.remove('text-warning');
                         title.classList.add('text-success');
                         status.innerHTML = '<b class="text-success">Zdjęcie przeanalizowane pomyślnie!</b>';
                     } else {
-                         // BŁĄD API LUB LIMIT
+                        // BŁĄD/LIMIT
                         title.innerHTML = '⚠️ Wpisz dane ręcznie';
                         title.classList.remove('text-warning');
                         status.innerText = 'AI nie rozpoznało auta lub limit wyczerpany.';
@@ -340,7 +342,7 @@
                 } catch(err) {
                     title.innerHTML = 'Błąd połączenia';
                 } finally {
-                    // ODBLOKUJ PRZYCISK NA KONIEC
+                    // ZAWSZE ODBLOKUJ PRZYCISK NA KONIEC
                     submitBtn.disabled = false;
                 }
             }
