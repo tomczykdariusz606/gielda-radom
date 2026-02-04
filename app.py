@@ -1,4 +1,4 @@
-import os
+Import os
 import uuid
 import zipfile
 import io
@@ -53,15 +53,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- MODEL ULUBIONYCH ---
-class Favorite(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
-    
-    # Dodajemy relację, aby w profilu działało fav.car.marka
-    car = db.relationship('Car', backref='fav_entries')
-
+# --- TABELA ULUBIONYCH ---
+favorites = db.Table('favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
+)
 
 # --- MODELE ---
 
@@ -71,12 +67,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), nullable=True, default='Radom')
-    ai_requests_today = db.Column(db.Integer, default=0)
-    last_ai_request_date = db.Column(db.Date, default=datetime.now().date())
 
     # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    favorites = db.relationship('Favorite', backref='user', lazy=True)
+    favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
 
     # Metody resetowania hasła (Logic AI)
     def get_reset_token(self):
@@ -94,9 +88,7 @@ class User(UserMixin, db.Model):
 
 class Car(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    typ = db.Column(db.String(20), default='Osobowe') # Tego brakowało
     marka = db.Column(db.String(50), nullable=False)
-    # ... reszta pól bez zmian ...
     model = db.Column(db.String(50), nullable=False)
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
@@ -146,30 +138,28 @@ def get_market_valuation(car):
 def utility_processor():
     return dict(get_market_valuation=get_market_valuation)
 
+# --- GENERATOR OPISÓW AI (Zaktualizowany o Gemini) ---
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
-def api_generate_description():
+def generate_ai_description():
     data = request.json
     marka = data.get('marka', '')
     model = data.get('model', '')
     rok = data.get('rok', '')
-    przebieg = data.get('przebieg', '')
+    paliwo = data.get('paliwo', '')
 
-    if not marka or not model:
-        return jsonify({'description': 'Proszę najpierw podać markę i model!'})
 
-    prompt = (
-        f"Napisz profesjonalne, sprzedażowe ogłoszenie dla: {marka} {model}, rok {rok}, przebieg {przebieg} km. "
-        "Użyj języka korzyści, bądź konkretny i zachęcający. Nie kłam. Max 600 znaków."
-    )
+    prompt = (f"Jako ekspert motoryzacyjny, odpowiedz BARDZO KRÓTKO (max 2-3 zdania) na pytanie: '{user_q}' "
+              f"dotyczące auta {marka} {model_car}. Bądź konkretny.")
+
 
     try:
         response = model_ai.generate_content(prompt)
-        return jsonify({'description': response.text.strip()})
+        return jsonify({"description": response.text})
     except Exception as e:
-        return jsonify({'description': f'Błąd AI: {str(e)}'})
-
-
+        # Fallback do f-stringa w razie błędu API
+        fallback = f"Na sprzedaż wyjątkowy {marka} {model} z {rok} roku. Silnik {paliwo} zapewnia świetną dynamikę. Samochód zadbany, idealny na trasy po Radomiu. Zapraszam na jazdę próbną!"
+        return jsonify({"description": fallback})
 
 # --- FUNKCJE POMOCNICZE ---
 
@@ -197,8 +187,6 @@ def allowed_file(filename):
 # --- TRASY APLIKACJI ---
 @app.route('/')
 def index():
-    # Pobieramy auta (najlepiej najnowsze na górze)
-    cars = Car.query.order_by(Car.data_dodania.desc()).all()
     # Pobieranie wszystkich filtrów
     query_text = request.args.get('q', '').strip().lower()
     typ = request.args.get('typ', '')
@@ -334,7 +322,6 @@ def edytuj(id):
         car.skrzynia = request.form.get('skrzynia')
         car.paliwo = request.form.get('paliwo')
         car.nadwozie = request.form.get('nadwozie')
-        car.pojemnosc = request.form.get('pojemnosc') # To pole było pominięte!
 
         # Poprawione: pobieramy 'zdjecia' zgodnie z name="zdjecia" w HTML
         new_files = request.files.getlist('zdjecia')
@@ -402,113 +389,64 @@ def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
 
-    # 1. Zapisywanie i optymalizacja zdjęć
+    # 1. Zapisywanie zdjęć
     for file in files[:10]:
         if file and allowed_file(file.filename):
             opt_name = save_optimized_image(file)
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
 
-    # Ustalenie zdjęcia głównego
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    
-    user_opis = request.form.get('opis', '')
-    ai_extra_info = ""
+    oryginalny_opis = request.form['opis']
+    ai_analysis = ""
 
-    # 2. ANALIZA AI (Marka, Model + Krótki Opis Wizualny)
+
+      # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
     if saved_paths:
         try:
-            # Pobranie fizycznej ścieżki do pierwszego zdjęcia
-            filename = saved_paths[0].split('/')[-1]
-            img_full_path = os.path.join(app.root_path, 'static', 'uploads', filename)
-            
-            if os.path.exists(img_full_path):
-                img_to_analyze = Image.open(img_full_path)
-                
-                # Uproszczony prompt - tylko to co widać
-                prompt = (
-                    "Zidentyfikuj auto na zdjęciu. Odpowiedz TYLKO JSON: "
-                    "{\"marka\": \"...\", \"model\": \"...\", \"opis_wizualny\": \"jedno krótkie zdanie o kolorze i sylwetce\"}"
-                )
+            img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
+            img_to_analyze = Image.open(img_path)
 
-                response = model_ai.generate_content([prompt, img_to_analyze])
-                
-                # Czyszczenie odpowiedzi z ewentualnego markdownu
-                res_text = response.text.strip().replace('```json', '').replace('```', '').strip()
-                data = json.loads(res_text)
-                
-                # Tworzymy krótki dodatek do opisu
-                wizualny = data.get('opis_wizualny', 'Pojazd widoczny na zdjęciu.')
-                ai_extra_info = f"\n\n[Analiza AI]: {wizualny}"
-                
+            # Używamy instrukcji "BEZ HISTORII", żeby uciąć wywody o Stellantisie
+            prompt_vision = (
+                "Zidentyfikuj auto na zdjęciu. "
+                "NAPISZ TYLKO JEDNO KRÓTKIE ZDANIE (MAX 100 ZNAKÓW) o jego kolorze i stanie. "
+                "ZAKAZ PISANIA O HISTORII MARKI I KONCERNACH. BĄDŹ BARDZO ZWIĘZŁY."
+            )
+
+            vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
+
+            # Dodatkowe zabezpieczenie: ucinamy tekst programowo, gdyby AI znów popłynęło
+            short_analysis = vision_response.text.strip()[:150] 
+            ai_analysis = f"\n\n[Analiza wyglądu]: {short_analysis}"
         except Exception as e:
-            print(f"!!! Błąd analizy przy zapisie: {e}")
-            ai_extra_info = ""
+            ai_analysis = ""
 
-    # 3. Tworzenie obiektu auta i zapis do bazy
-    try:
-        nowe_auto = Car(
-            marka=request.form.get('marka'),
-            model=request.form.get('model'),
-            rok=int(request.form.get('rok', 0)) if request.form.get('rok') else 0,
-            cena=float(request.form.get('cena', 0)) if request.form.get('cena') else 0.0,
-            typ=request.form.get('typ', 'Osobowe'),
-            opis=user_opis + ai_extra_info, # Łączymy tekst usera z opisem AI
-            telefon=request.form.get('telefon'),
-            skrzynia=request.form.get('skrzynia', 'Manualna'),
-            paliwo=request.form.get('paliwo', 'Benzyna'),
-            nadwozie=request.form.get('nadwozie', 'Sedan'),
-            pojemnosc=request.form.get('pojemnosc', ''),
-            przebieg=int(request.form.get('przebieg', 0)) if request.form.get('przebieg') else 0,
-            img=main_img,
-            zrodlo=current_user.lokalizacja,
-            user_id=current_user.id,
-            data_dodania=datetime.now()
-        )
 
-        db.session.add(nowe_auto)
-        db.session.flush()
-
-        # Powiązanie wszystkich wgranych zdjęć z autem
-        for path in saved_paths:
-            db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
-
-        db.session.commit()
-        flash('Ogłoszenie dodane pomyślnie!', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Błąd bazy danych: {e}")
-        flash('Wystąpił błąd podczas zapisu do bazy.', 'danger')
-
+    # 3. Tworzenie obiektu auta
+    nowe_auto = Car(
+        marka=request.form['marka'], model=request.form['model'],
+        rok=int(request.form['rok']), cena=float(request.form['cena']),
+        opis=oryginalny_opis + ai_analysis, # Łączymy opis użytkownika z analizą AI
+        telefon=request.form['telefon'],
+        skrzynia=request.form.get('skrzynia'), paliwo=request.form.get('paliwo'),
+        nadwozie=request.form.get('nadwozie'), pojemnosc=request.form.get('pojemnosc'),
+        img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id
+    )
+    db.session.add(nowe_auto)
+    db.session.flush()
+    for path in saved_paths:
+        db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
+    db.session.commit()
+    flash('Ogłoszenie dodane z analizą wizualną AI!', 'success')
     return redirect(url_for('profil'))
 
 @app.route('/profil')
 @login_required
 def profil():
-    # Pobieramy auta dodane przez użytkownika
-    user_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
-    
-    # !!! TO JEST LINIA, KTÓREJ BRAKOWAŁO DLA ULUBIONYCH !!!
-    user_favorites = Favorite.query.filter_by(user_id=current_user.id).all()
-
-    # Statystyki dla admina
-    stats = {}
-    if current_user.id == 1:
-        stats = {
-            'users_online': 1, # Tutaj Twoja logika online
-            'total_users': User.query.count(),
-            'total_listings': Car.query.count()
-        }
-
-    return render_template('profil.html', 
-                         cars=user_cars, 
-                         favorites=user_favorites,  # <-- Przekazujemy ulubione tutaj
-                         stats=stats, 
-                         now=datetime.now())
-
-
-
+    my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
+    fav_cars = current_user.favorite_cars
+    return render_template('profil.html', cars=my_cars, fav_cars=fav_cars, now=datetime.now(timezone.utc))
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
@@ -627,25 +565,28 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 @app.route('/api/analyze-car', methods=['POST'])
-def analyze_car():
+def analyze_car_api():
     try:
-        # (...) Twoja logika analizy obrazu (...)
-        # Jeśli API Gemini zwróci błąd 429 lub inny:
-        pass 
+        data = request.get_json()
+        marka = data.get('marka', 'Pojazd')
+        model_car = data.get('model', '')
+        pytanie = data.get('query', '') # Pobieramy pytanie od użytkownika
+
+        # Krótki, konkretny prompt dla okienka czatu
+        prompt = (
+            f"Jako ekspert opowiedz o {marka} {model_car}. "
+            f"Użytkownik pyta: {pytanie}. "
+            f"Odpowiedz konkretnie w 2-3 zdaniach."
+        )
+
+        response = model_ai.generate_content(prompt)
+        return jsonify({"analysis": response.text})
+
     except Exception as e:
-        # To wysyłamy do administratora w profil.html
-        print(f"🚨 LOG SYSTEMOWY: Błąd AI -> {str(e)}") 
-        
-        return jsonify({
-            "marka": "", 
-            "model": "", 
-            "sugestia": "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)",
-            "error_type": "api_limit"
-        }), 200 # Zwracamy 200, żeby JS mógł to odebrać jako normalną wiadomość
+        print(f"!!! BŁĄD GEMINI API !!!: {str(e)}") 
+        return jsonify({"analysis": "Nie udało mi się teraz odpowiedzieć. Spróbuj później."})
 
 
-
-
 @app.template_filter('from_json')
 def from_json_filter(value):
     if not value:
@@ -657,54 +598,7 @@ def from_json_filter(value):
 
 
 
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        inspector = db.inspect(db.engine)
-        
-        # 1. NAPRAWA TABELI USER
-        user_cols = [c['name'] for c in inspector.get_columns('user')]
-        needed_user_cols = {
-            'last_seen': 'DATETIME',
-            'ai_requests_today': 'INTEGER DEFAULT 0',
-            'last_ai_request_date': 'DATE'
-        }
-        for col, definition in needed_user_cols.items():
-            if col not in user_cols:
-                with db.engine.connect() as conn:
-                    conn.execute(db.text(f'ALTER TABLE user ADD COLUMN {col} {definition}'))
-                    conn.commit()
-                    print(f"✅ User: Dodano {col}")
-
-        # 2. NAPRAWA TABELI CAR (Parametry techniczne)
-        car_cols = [c['name'] for c in inspector.get_columns('car')]
-        needed_car_cols = {
-            'typ': 'VARCHAR(20) DEFAULT "Osobowe"',
-            'skrzynia': 'VARCHAR(20) DEFAULT "Manualna"',
-            'paliwo': 'VARCHAR(20) DEFAULT "Benzyna"',
-            'nadwozie': 'VARCHAR(30) DEFAULT "Sedan"',
-            'pojemnosc': 'VARCHAR(20) DEFAULT ""',
-            'przebieg': 'INTEGER DEFAULT 0'
-        }
-        for col, definition in needed_car_cols.items():
-            if col not in car_cols:
-                with db.engine.connect() as conn:
-                    conn.execute(db.text(f'ALTER TABLE car ADD COLUMN {col} {definition}'))
-                    conn.commit()
-                    print(f"✅ Car: Dodano {col}")
-
-        # 3. NOWE: NAPRAWA DATY I STATYSTYK (Kluczowe dla licznika dni!)
-        # Sprawdzamy czy są kolumny niezbędne do wyświetlania daty i liczników
-        if 'data_dodania' not in car_cols:
-            with db.engine.connect() as conn:
-                conn.execute(db.text('ALTER TABLE car ADD COLUMN data_dodania DATETIME DEFAULT CURRENT_TIMESTAMP'))
-                conn.commit()
-                print("✅ Car: Dodano data_dodania")
-        
-        if 'wyswietlenia' not in car_cols:
-            with db.engine.connect() as conn:
-                conn.execute(db.text('ALTER TABLE car ADD COLUMN wyswietlenia INTEGER DEFAULT 0'))
-                conn.commit()
-                print("✅ Car: Dodano wyswietlenia")
-
+    with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)
