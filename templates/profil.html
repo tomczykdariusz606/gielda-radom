@@ -159,11 +159,21 @@
                     </div>
                     <div class="col-md-2 mb-3 mb-md-0 border-start">
                         <h6 class="text-muted small fw-bold">BŁĘDY AI</h6>
-                        <h2 class="fw-800 text-danger mb-0" id="errCount">0</h2>
+                       <h2 class="fw-800 text-danger mb-0" id="errCount">{{ stats.ai_errors|default(0) }}</h2>
+
                     </div>
                     <div class="col-md-6 border-start">
                         <h6 class="text-start small fw-bold text-muted ps-2 mb-2">DZIENNIK ZDARZEŃ (LIVE)</h6>
-                        <div id="logConsole" class="bg-dark text-info p-2 rounded text-start font-monospace small" style="height: 85px; overflow-y: auto;">
+                      <div id="logConsole" class="bg-dark text-info p-2 rounded text-start font-monospace small" style="height: 85px; overflow-y: auto;">
+    {% if stats.logs %}
+        {% for log in stats.logs %}
+            {{ log | safe }}<br>
+        {% endfor %}
+    {% else %}
+        <span class="text-secondary">[{{ now.strftime('%H:%M:%S') }}]</span> Brak nowych zdarzeń.<br>
+    {% endif %}
+</div>
+
                             <span class="text-secondary">[{{ now.strftime('%H:%M:%S') }}]</span> System admina gotowy.<br>
                         </div>
                     </div>
