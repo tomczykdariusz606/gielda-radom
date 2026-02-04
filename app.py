@@ -631,17 +631,18 @@ def api_analyze_car():
             return jsonify({'error': 'Brak pliku'}), 400
             
         img = Image.open(file)
-        # W pliku app.py zmień linię z promptem:
-prompt = (
-    "Zidentyfikuj auto na zdjęciu. Podaj markę, model i przybliżony rok produkcji (jeśli potrafisz określić generację). "
-    "Odpowiedz TYLKO JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": \"...\"}"
-)
+        
+        # DEFINICJA PROMPTU - teraz pasuje do Twojego JS
+        prompt = (
+            "Zidentyfikuj auto na zdjęciu. Odpowiedz TYLKO czystym JSON-em: "
+            "{\"marka\": \"...\", \"model\": \"...\", \"sugestia\": \"np. Bardzo ładny, zadbany czarny sedan o sportowej sylwetce.\"} "
+            "Opis w polu 'sugestia' musi być po polsku, być krótki i dotyczyć koloru oraz sylwetki."
+        )
 
-
-        # Upewnij się, że model_ai jest zdefiniowany globalnie wcześniej!
+        # Generowanie treści przez Gemini
         response = model_ai.generate_content([prompt, img])
         
-        # Pancerne czyszczenie odpowiedzi
+        # Pancerne czyszczenie odpowiedzi z formatowania Markdown
         res_text = response.text.strip()
         if "```" in res_text:
             res_text = res_text.split("```")[1]
@@ -649,16 +650,14 @@ prompt = (
                 res_text = res_text[4:]
             res_text = res_text.split("```")[0].strip()
 
+        # Wysyłamy czysty JSON do przeglądarki
         return jsonify(json.loads(res_text))
 
     except Exception as e:
-        # TO JEST KLUCZOWE: Zobaczysz to w terminalu po puszczeniu python3 app.py
         print(f"!!! BLAD ANALIZY AI: {e}")
         return jsonify({'error': str(e)}), 500
 
-
-
-
+
 @app.template_filter('from_json')
 def from_json_filter(value):
     if not value:
