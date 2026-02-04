@@ -663,13 +663,10 @@ def analyze_car():
             "model": "", 
             "sugestia": "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)",
             "error_type": "api_limit"
-        }), 200 # Zwracamy 200, żeby JS mógł to odebrać jako normalną wiadomość
+        }), 200 
+# Zwracamy 200, żeby JS mógł to odebrać jako normalną wiadomość
 
 
-
-
-
-
 @app.template_filter('from_json')
 def from_json_filter(value):
     if not value:
