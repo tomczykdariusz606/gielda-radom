@@ -615,11 +615,12 @@ def api_analyze_car():
             return jsonify({'error': 'Brak pliku'}), 400
             
         img = Image.open(file)
-        prompt = (
-            "Zidentyfikuj auto na zdjęciu. Odpowiedz TYLKO czystym JSON-em: "
-            "{\"marka\": \"...\", \"model\": \"...\", \"rok\": \"...\"}. "
-            "Bez markdown, bez tekstu przed i po."
-        )
+        # W pliku app.py zmień linię z promptem:
+prompt = (
+    "Zidentyfikuj auto na zdjęciu. Podaj markę, model i przybliżony rok produkcji (jeśli potrafisz określić generację). "
+    "Odpowiedz TYLKO JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": \"...\"}"
+)
+
 
         # Upewnij się, że model_ai jest zdefiniowany globalnie wcześniej!
         response = model_ai.generate_content([prompt, img])
