@@ -188,13 +188,20 @@
                             <div class="col-md-6"><label class="small fw-bold">Pojemność / Silnik</label><input type="text" name="pojemnosc" class="form-control" placeholder="np. 2.0 TDI"></div>
                             <div class="col-md-6"><label class="small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
 
-                            <div class="col-12 mt-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="fw-bold small">Opis Ogłoszenia</label>
-                                    <button type="button" class="btn-ai" onclick="generateDesc()"><i class="bi bi-magic"></i> ✨ Generuj opis AI</button>
-                                </div>
-                                <textarea name="opis" id="aiOpis" class="form-control" rows="4"></textarea>
-                            </div>
+                            <div <div class="col-12 mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <label class="fw-bold small text-muted">
+            <i class="bi bi-pencil-square"></i> Treść Twojego ogłoszenia
+        </label>
+        <button type="button" class="btn-ai" onclick="generateDesc()">
+            <i class="bi bi-magic"></i> ✨ Pełny opis AI
+        </button>
+    </div>
+    <textarea name="opis" id="aiOpis" class="form-control rounded-4 shadow-sm" rows="10" 
+              placeholder="Tutaj pojawi się analiza AI, możesz ją dowolnie edytować..."
+              style="border: 2px solid #eee; font-size: 0.95rem; line-height: 1.6; padding: 15px;"></textarea>
+</div>
+
                             <div class="col-12"><label class="small fw-bold">Zdjęcia</label><input type="file" name="zdjecia" id="imgInput" class="form-control" multiple></div>
                         </div>
                     </div>
@@ -285,6 +292,51 @@
         title.innerHTML = 'Błąd rozpoznawania'; 
     }
 });
+// --- CZĘŚĆ 1: Przy analizie zdjęcia ---
+// Wewnątrz eventu: document.getElementById('imgInput').addEventListener(...)
+if (res.ok && data.marka) {
+    // ... reszta Twojej logiki (wypełnianie marki/modelu) ...
+    
+    if(data.sugestia) {
+        // Dodajemy sugestię wizualną na samą górę, zachowując czytelny odstęp
+        document.getElementById('aiOpis').value = `🤖 WIZUALNA ANALIZA AI:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS (opcjonalnie):\n`;
+    }
+}
+
+// --- CZĘŚĆ 2: Przy generowaniu pełnego opisu magią ---
+async function generateDesc() {
+    const btn = document.querySelector('.btn-ai');
+    const marka = document.getElementById('aiMarka').value;
+    const model = document.getElementById('aiModel').value;
+    const opisPole = document.getElementById('aiOpis');
+    
+    if(!marka || !model) return alert("Wpisz markę i model!");
+
+    // Zapamiętujemy to, co klient dopisał pod linią "TWÓJ OPIS"
+    const trescKlienta = opisPole.value.split('✍️ TWÓJ OPIS (opcjonalnie):')[1] || "";
+
+    btn.innerHTML = '✨ Piszę...';
+    try {
+        const res = await fetch('/api/generate-description', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                marka, model, 
+                rok: document.getElementById('aiRok').value, 
+                przebieg: document.getElementById('aiPrzebieg').value
+            })
+        });
+        const data = await res.json();
+        
+        // Łączymy: Nowy opis AI + stare uwagi klienta
+        opisPole.value = `✨ PEŁNY OPIS TECHNICZNY AI:\n${data.description}\n\n__________________________\n✍️ TWOJE UWAGI:${trescKlienta}`;
+        
+        // Automatyczne przewinięcie na dół pola, żeby user widział swój tekst
+        opisPole.scrollTop = opisPole.scrollHeight;
+        
+    } finally { 
+        btn.innerHTML = '<i class="bi bi-magic"></i> ✨ Pełny opis AI'; 
+    }
+}
 
     </script>
 </body>
