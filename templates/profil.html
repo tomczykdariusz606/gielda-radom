@@ -127,6 +127,27 @@
             <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-shield-lock-fill"></i> Panel Administratora</h4>
             <div class="row text-center">
                 <div class="col-md-3"><h6>ONLINE</h6><h3 class="fw-800 text-success">{{ stats.users_online }}</h3></div>
+<div class="row text-center">
+    <div class="col-md-2">
+        <h6>ONLINE</h6>
+        <h3 class="fw-800 text-success">{{ stats.users_online }}</h3>
+    </div>
+    <div class="col-md-2 border-start">
+        <h6>KONTA</h6>
+        <h3 class="fw-800 text-primary">{{ stats.total_users }}</h3>
+    </div>
+    <div class="col-md-2 border-start">
+        <h6>BŁĘDY AI</h6>
+        <h3 class="fw-800 text-danger" id="errCount">0</h3>
+    </div>
+    <div class="col-md-6 border-start">
+        <h6>OSTATNIE ZDARZENIA</h6>
+        <div id="logConsole" class="small bg-dark text-info p-2 rounded text-start" style="height: 60px; overflow-y: auto; font-family: monospace;">
+            [System Gotowy]
+        </div>
+    </div>
+</div>
+
                 <div class="col-md-3 border-start"><h6>BŁĘDY AI</h6><h3 class="fw-800 text-danger" id="errCount">0</h3></div>
                 <div class="col-md-6 border-start"><h6>OSTATNIE ZDARZENIA</h6><div id="logConsole" class="small bg-dark text-info p-2 rounded text-start" style="height: 60px; overflow-y: auto; font-family: monospace;">[System Live]</div></div>
             </div>
