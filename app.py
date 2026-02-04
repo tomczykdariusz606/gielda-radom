@@ -142,26 +142,27 @@ def utility_processor():
 
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
-def generate_ai_description():
+def api_generate_description():
     data = request.json
     marka = data.get('marka', '')
-    model_car = data.get('model', '')  # Zmieniono nazwę na model_car
+    model = data.get('model', '')
     rok = data.get('rok', '')
-    paliwo = data.get('paliwo', '')
     przebieg = data.get('przebieg', '')
 
-    # Poprawiony prompt - teraz używa właściwych zmiennych
-    prompt = (f"Napisz krótkie, atrakcyjne ogłoszenie sprzedażowe dla auta {marka} {model_car} "
-              f"z roku {rok}. Silnik {paliwo}, przebieg {przebieg} km. "
-              "Użyj 2-3 konkretnych zdań, dodaj emoji i zachęć do oględzin w Radomiu.")
+    if not marka or not model:
+        return jsonify({'description': 'Proszę najpierw podać markę i model!'})
+
+    prompt = (
+        f"Napisz profesjonalne, sprzedażowe ogłoszenie dla: {marka} {model}, rok {rok}, przebieg {przebieg} km. "
+        "Użyj języka korzyści, bądź konkretny i zachęcający. Nie kłam. Max 600 znaków."
+    )
 
     try:
         response = model_ai.generate_content(prompt)
-        return jsonify({"description": response.text.strip()})
+        return jsonify({'description': response.text.strip()})
     except Exception as e:
-        # Fallback jest teraz bardziej kompletny
-        fallback = f"Na sprzedaż {marka} {model_car} ({rok} r.). Silnik {paliwo}, przebieg {przebieg} km. Auto w dobrym stanie, godne polecenia. Zapraszam do kontaktu!"
-        return jsonify({"description": fallback})
+        return jsonify({'description': f'Błąd AI: {str(e)}'})
+
 
 
 # --- FUNKCJE POMOCNICZE ---
@@ -606,26 +607,17 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 @app.route('/api/analyze-car', methods=['POST'])
-def analyze_car_api():
-    try:
-        data = request.get_json()
-        marka = data.get('marka', 'Pojazd')
-        model_car = data.get('model', '')
-        pytanie = data.get('query', '') # Pobieramy pytanie od użytkownika
+def api_analyze_car():
+    file = request.files.get('image')
+    if not file: return jsonify({'error': 'Brak pliku'})
+    
+    img = Image.open(file)
+    prompt = "Zidentyfikuj auto. Odpowiedz TYLKO JSON: {\"marka\": \"...\", \"model\": \"...\", \"rok\": \"...\"}"
+    
+    response = model_ai.generate_content([prompt, img])
+    clean_json = response.text.replace('```json', '').replace('```', '').strip()
+    return jsonify(json.loads(clean_json))
 
-        # Krótki, konkretny prompt dla okienka czatu
-        prompt = (
-            f"Jako ekspert opowiedz o {marka} {model_car}. "
-            f"Użytkownik pyta: {pytanie}. "
-            f"Odpowiedz konkretnie w 2-3 zdaniach."
-        )
-
-        response = model_ai.generate_content(prompt)
-        return jsonify({"analysis": response.text})
-
-    except Exception as e:
-        print(f"!!! BŁĄD GEMINI API !!!: {str(e)}") 
-        return jsonify({"analysis": "Nie udało mi się teraz odpowiedzieć. Spróbuj później."})
 
 
 @app.template_filter('from_json')
