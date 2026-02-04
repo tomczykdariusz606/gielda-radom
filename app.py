@@ -528,10 +528,11 @@ Car.query.count(),
 def refresh_car(car_id):
     car = Car.query.get_or_404(car_id)
     if car.user_id == current_user.id:
-        car.data_dodania = datetime.utcnow()
+        car.data_dodania = datetime.now(timezone.utc) # To "resetuje" licznik 30 dni
         db.session.commit()
-        flash('Odświeżono!', 'success')
+        flash('Ogłoszenie zostało odświeżone i będzie widoczne przez kolejne 30 dni.', 'success')
     return redirect(url_for('profil'))
+
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
