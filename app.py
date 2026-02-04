@@ -461,34 +461,29 @@ def dodaj_ogloszenie():
 @app.route('/profil')
 @login_required
 def profil():
-    # Użytkownicy aktywni w ciągu ostatnich 5 minut
+    # 1. Obliczanie prawdziwych statystyk online (5 minut aktywności)
     five_minutes_ago = datetime.now() - timedelta(minutes=5)
     online_count = User.query.filter(User.last_seen > five_minutes_ago).count()
     
-    # Przekaż do stats
-    stats = {
+    # 2. Przygotowanie słownika statystyk
+    stats_data = {
         'total_users': User.query.count(),
         'total_listings': Car.query.count(),
-        'users_online': online_count  # To trafi do Twojej pulsującej kropki!
+        'users_online': online_count if online_count > 0 else 1 # Zawsze min. 1 (Ty)
     }
-    # ... reszta funkcji profil ...
 
+    # 3. Pobieranie aut użytkownika i ulubionych
     my_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.id.desc()).all()
-    fav_cars = current_user.favorite_cars
     
-    # DODAJEMY TYLKO TO (Dane dla Admina, których brakuje w HTML):
-    stats_data = {
-        "total_users": User.query.count(),
-        "total_listings": Car.query.count(),
-        "users_online": 1  # Statyczna wartość dla widoku
-    }
+    # Zakładając, że masz relację 'favorite_cars' w modelu User
+    fav_cars = getattr(current_user, 'favorite_cars', []) 
     
-    # Przekazujemy stats i statystyki (pod obiema nazwami, by uniknąć UndefinedError)
+    # 4. Renderowanie szablonu ze wszystkimi potrzebnymi danymi
     return render_template('profil.html', 
                            cars=my_cars, 
                            fav_cars=fav_cars, 
                            stats=stats_data, 
-                           statystyki=stats_data, 
+                           statystyki=stats_data, # Na wszelki wypadek pod obiema nazwami
                            now=datetime.now())
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
