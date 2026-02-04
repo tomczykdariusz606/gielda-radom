@@ -65,38 +65,62 @@
 
     <div class="container mb-5">
         <h3 class="fw-bold mb-4 border-start border-danger border-5 ps-3">Twoje Ogłoszenia</h3>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-            {% for car in cars %}
-            <div class="col">
-                <div class="card car-card h-100">
-                    <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;">
-                    <div class="card-body">
-                        <h5 class="fw-bold mb-0 text-truncate">{{ car.marka }} {{ car.model }}</h5>
-                        <h4 class="text-danger fw-800 mb-2">{{ car.cena|int }} PLN</h4>
-                        
-                        <div class="date-badge"><i class="bi bi-calendar-check"></i> Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') }}</div>
+       <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="ogloszenia-container">
+    {% for car in cars %}
+    <div class="col">
+        <div class="card car-card h-100 shadow-sm border-0 rounded-4 overflow-hidden position-relative">
+            <span class="badge bg-dark position-absolute top-0 end-0 m-3 rounded-pill px-3">{{ car.typ }}</span>
+            
+            <img src="{{ car.img }}" class="card-img-top" alt="{{ car.marka }}" style="height: 220px; object-fit: cover;">
+            
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold mb-0 text-truncate">{{ car.marka }} {{ car.model }}</h5>
+                </div>
+                
+                <h3 class="text-danger fw-800 mb-3">{{ car.cena|int }} PLN</h3>
 
-                        <div class="spec-grid mt-3">
-                            <div class="spec-item"><i class="bi bi-speedometer2"></i> {{ car.przebieg }} km</div>
-                            <div class="spec-item"><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</div>
-                            <div class="spec-item"><i class="bi bi-gear-wide-connected"></i> {{ car.skrzynia }}</div>
-                            <div class="spec-item"><i class="bi bi-droplet-fill"></i> {{ car.pojemnosc }}</div>
-                        </div>
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <div class="px-2 py-1 bg-light rounded-pill border d-inline-block" style="font-size: 0.75rem; color: #666;">
+                        <i class="bi bi-clock-history text-primary"></i> 
+                        {% if car.data_dodania %}
+                            Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') }}
+                        {% else %}
+                            Dodano: niedawno
+                        {% endif %}
+                    </div>
+                    
+                    <small class="text-muted" style="font-size: 0.7rem;">
+                        <i class="bi bi-eye"></i> {{ car.wyswietlenia if car.wyswietlenia else 0 }}
+                    </small>
+                </div>
 
-                        <div class="d-flex gap-2">
-                            <a href="/edytuj/{{ car.id }}" class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1">Edytuj</a>
-                            <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button class="btn btn-outline-success btn-sm rounded-pill w-100">Odśwież</button>
-                            </form>
-                            <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button class="btn btn-outline-danger btn-sm rounded-pill w-100" onclick="return confirm('Usunąć?')">Usuń</button>
-                            </form>
-                        </div>
+                <div class="row g-2 mb-4 text-muted small">
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar3 text-danger"></i> {{ car.rok }} r.
+                    </div>
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-speedometer2 text-danger"></i> {{ car.przebieg }} km
+                    </div>
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-fuel-pump text-danger"></i> {{ car.paliwo }}
+                    </div>
+                    <div class="col-6 d-flex align-items-center gap-2 text-truncate">
+                        <i class="bi bi-gear-wide-connected text-danger"></i> {{ car.skrzynia }}
                     </div>
                 </div>
+
+                <div class="d-grid">
+                    <a href="/auto/{{ car.id }}" class="btn btn-outline-danger rounded-pill fw-bold">
+                        ZOBACZ SZCZEGÓŁY
+                    </a>
+                </div>
             </div>
-            {% endfor %}
         </div>
+    </div>
+    {% endfor %}
+</div>
+
 
         {% if current_user.id == 1 %}
         <div class="card p-4 rounded-4 shadow-sm border-0 mt-5 bg-white border-top border-primary border-4">
