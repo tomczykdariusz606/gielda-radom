@@ -193,6 +193,8 @@ def allowed_file(filename):
 # --- TRASY APLIKACJI ---
 @app.route('/')
 def index():
+    # Pobieramy auta (najlepiej najnowsze na górze)
+    cars = Car.query.order_by(Car.data_dodania.desc()).all()
     # Pobieranie wszystkich filtrów
     query_text = request.args.get('q', '').strip().lower()
     typ = request.args.get('typ', '')
