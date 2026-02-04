@@ -649,41 +649,68 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 @app.route('/api/analyze-car', methods=['POST'])
+@login_required
 def analyze_car():
-    # Sprawdzenie limitu użytkownika przed wysłaniem zapytania
+    # 1. Sprawdzenie limitu dziennego użytkownika
     if current_user.ai_requests_today >= 5:
-        add_log(f"<span class='text-warning'>Limit:</span> {current_user.username} wyczerpał próby.")
+        add_log(f"<span class='text-warning'>Limit:</span> {current_user.username} próbował użyć AI bez limitu.")
         return jsonify({
             "marka": "", "model": "", 
-            "sugestia": "Wykorzystałeś dzisiejszy limit 5 analiz AI. Wpisz dane ręcznie.",
+            "sugestia": "Wykorzystałeś limit 5 analiz na dziś. Wpisz dane ręcznie!",
             "error_type": "user_limit"
         }), 200
 
     try:
-        # (...) Tutaj Twoja logika analizy zdjęcia (...)
-        # Załóżmy, że tutaj wywołujesz Gemini:
-        # response = model_ai.generate_content(...) 
+        if 'image' not in request.files:
+            return jsonify({"error": "Brak zdjęcia"}), 400
+            
+        file = request.files['image']
+        # Konwersja zdjęcia dla Gemini (zakładając użycie biblioteki PIL lub bytes)
+        image_data = file.read() 
+
+        # 2. Twoje autorskie "Drzewko Wyboru" w prompcie
+        prompt = """
+        Działaj jako rzeczoznawca Giełdy Radom. Przeanalizuj zdjęcie auta i:
+        1. Określ markę wybierając z: 1. Audi, 2. BMW, 3. Mercedes, 4. Volkswagen, 5. Inna (podaj jaka).
+        2. Jeśli marka to BMW, określ czy to seria 3, 5, X3, X5 itd.
+        3. Określ typ nadwozia (Sedan, SUV, Kombi, Hatchback).
+        4. Podaj sugerowany rok produkcji i kolor.
+
+        Odpowiedz WYŁĄCZNIE czystym JSON-em:
+        {
+          "marka": "BMW",
+          "model": "X3",
+          "nadwozie": "SUV",
+          "kolor": "Srebrny",
+          "rok": 2017,
+          "sugestia": "To BMW wygląda na zadbane. Średnia cena w naszym regionie to ok. 115-130 tys. PLN."
+        }
+        """
+
+        # Wywołanie modelu (zakładając, że masz zainicjowany 'model')
+        response = model.generate_content([prompt, {'mime_type': 'image/jpeg', 'data': image_data}])
         
-        # Sukces:
+        # Czyszczenie odpowiedzi i parsowanie JSON
+        raw_text = response.text.replace('```json', '').replace('```', '').strip()
+        data = json.loads(raw_text)
+
+        # 3. Sukces - aktualizacja limitu i logów
         current_user.ai_requests_today += 1
         db.session.commit()
-        add_log(f"<span class='text-success'>AI Success:</span> Analiza dla {current_user.username} OK.")
         
-        # Tutaj zwracasz normalne dane...
-        return jsonify({"marka": "Zidentyfikowana", "model": "Model", "sugestia": "Opis..."})
+        add_log(f"<span class='text-success'>AI OK:</span> {current_user.username} rozpoznał {data.get('marka')} {data.get('model')}")
+
+        return jsonify(data)
 
     except Exception as e:
-        # To jest kluczowe - wysyłamy błąd do Twojego czarnego okienka
-        error_msg = str(e)[:50] # bierzemy tylko początek błędu
-        add_log(f"<span class='text-danger'>AI Error:</span> {error_msg}")
-        
-        print(f"🚨 LOG SYSTEMOWY: Błąd AI -> {str(e)}") 
+        # 4. Logowanie błędu do Twojego panelu admina
+        error_msg = str(e)[:60]
+        add_log(f"<span class='text-danger'>AI Error:</span> {error_msg}", is_error=True)
         
         return jsonify({
-            "marka": "", 
-            "model": "", 
-            "sugestia": "✨ Gemini odpoczywa (limit API), spróbuj jutro lub wpisz dane ręcznie ;)",
-            "error_type": "api_limit"
+            "marka": "Błąd", 
+            "model": "Analizy", 
+            "sugestia": "Coś poszło nie tak z Gemini. Spróbuj za chwilę lub wpisz dane ręcznie."
         }), 200
 
 
