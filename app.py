@@ -636,23 +636,24 @@ def from_json_filter(value):
 
 
 
-
 if __name__ == '__main__':
     with app.app_context():
+        # Tworzy tabele, jeśli ich nie ma
         db.create_all()
+        
         inspector = db.inspect(db.engine)
         
-        # Sprawdzanie tabeli 'user'
+        # 1. NAPRAWA TABELI USER (kolumna last_seen)
         user_cols = [c['name'] for c in inspector.get_columns('user')]
         if 'last_seen' not in user_cols:
             with db.engine.connect() as conn:
                 conn.execute(db.text('ALTER TABLE user ADD COLUMN last_seen DATETIME'))
                 conn.commit()
-                print("✅ Dodano kolumnę last_seen do bazy")
+                print("✅ Dodano brakującą kolumnę 'last_seen' do tabeli user.")
 
-        # Sprawdzanie tabeli 'car' dla wszystkich atrybutów
+        # 2. NAPRAWA TABELI CAR (typ, skrzynia, paliwo, nadwozie, pojemnosc, przebieg)
         car_cols = [c['name'] for c in inspector.get_columns('car')]
-        brakujace_pola = {
+        needed_car_cols = {
             'typ': 'VARCHAR(20) DEFAULT "Osobowe"',
             'skrzynia': 'VARCHAR(20) DEFAULT "Manualna"',
             'paliwo': 'VARCHAR(20) DEFAULT "Benzyna"',
@@ -661,14 +662,12 @@ if __name__ == '__main__':
             'przebieg': 'INTEGER DEFAULT 0'
         }
         
-        for col, definition in brakujace_pola.items():
+        for col, definition in needed_car_cols.items():
             if col not in car_cols:
                 with db.engine.connect() as conn:
                     conn.execute(db.text(f'ALTER TABLE car ADD COLUMN {col} {definition}'))
                     conn.commit()
-                    print(f"✅ Dodano kolumnę: {col}")
+                    print(f"✅ Dodano brakującą kolumnę '{col}' do tabeli car.")
 
+    # Uruchomienie aplikacji
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
