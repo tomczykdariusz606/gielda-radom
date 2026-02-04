@@ -16,24 +16,26 @@
         .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
         .profile-header { background: white; padding: 3rem 0; border-bottom: 1px solid #eee; margin-bottom: 2rem; }
 
-        /* KARTY POJAZDÓW */
+        /* KARTY */
         .car-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: 0.3s; background: white; overflow: hidden; position: relative; }
-        .car-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        
+        .car-card:hover { transform: translateY(-5px); }
         .date-badge { font-size: 0.75rem; color: #777; background: #f8f9fa; padding: 4px 12px; border-radius: 50px; display: inline-block; margin-top: 10px; border: 1px solid #eee; }
         
         .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; font-size: 0.8rem; color: #555; }
         .spec-item { display: flex; align-items: center; gap: 6px; background: #f8f9fa; padding: 5px 10px; border-radius: 10px; }
 
+        /* MULTIUPLOAD PREVIEW */
+        #imagePreviewContainer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .preview-img { width: 100%; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid #eee; }
+
         /* KATEGORIE */
         .category-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
         .category-item { flex: 1; max-width: 100px; position: relative; }
         .category-item input { position: absolute; opacity: 0; cursor: pointer; }
-        .category-label { display: flex; flex-direction: column; align-items: center; padding: 12px; background: #f8f9fa; border: 2px solid #eee; border-radius: 15px; cursor: pointer; transition: 0.2s; }
-        .category-item input:checked + .category-label { border-color: var(--radom-red); background: #fff0f0; color: var(--radom-red); box-shadow: 0 4px 12px rgba(206, 43, 55, 0.1); }
+        .category-label { display: flex; flex-direction: column; align-items: center; padding: 12px; background: #f8f9fa; border: 2px solid #eee; border-radius: 15px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .category-item input:checked + .category-label { border-color: var(--radom-red); background: #fff0f0; color: var(--radom-red); }
 
         .btn-ai { background: var(--gemini-grad); color: white; border: none; border-radius: 50px; padding: 6px 18px; font-size: 0.85rem; font-weight: 600; }
-        
         footer { background: var(--radom-dark); color: #888; padding: 40px 0; margin-top: auto; border-top: 5px solid var(--radom-red); }
     </style>
 </head>
@@ -52,50 +54,42 @@
     <div class="profile-header">
         <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <div>
-                <h1 class="fw-800 mb-1">Witaj, {{ current_user.username }}!</h1>
-                <p class="text-muted small mb-0">
-                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ current_user.lokalizacja }} | 
-                    <i class="bi bi-heart-fill text-danger"></i> {{ favorites|length }} ulubionych
-                </p>
+                <h1 class="fw-800 mb-1">Panel Użytkownika</h1>
+                <p class="text-muted small mb-0"><i class="bi bi-geo-alt-fill text-danger"></i> {{ current_user.lokalizacja }} | <i class="bi bi-eye"></i> {{ cars|sum(attribute='wyswietlenia') }} odsłon</p>
             </div>
             <button class="btn btn-danger btn-lg rounded-pill px-5 shadow-lg fw-bold" data-bs-toggle="modal" data-bs-target="#dodajModal">
-                + DODAJ OGŁOSZENIE
+                + DODAJ OGŁOSZENIE (Limit 9 zdjęć)
             </button>
         </div>
     </div>
 
     <div class="container mb-5">
-        <h3 class="fw-bold mb-4 border-start border-danger border-5 ps-3">Twoje Pojazdy</h3>
+        <h3 class="fw-bold mb-4 border-start border-danger border-5 ps-3">Twoje Ogłoszenia</h3>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for car in cars %}
             <div class="col">
                 <div class="card car-card h-100">
                     <img src="{{ car.img }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between mb-2">
-                            <h5 class="fw-bold mb-0">{{ car.marka }} {{ car.model }}</h5>
-                            <span class="badge bg-dark rounded-pill">{{ car.typ }}</span>
-                        </div>
+                        <h5 class="fw-bold mb-0 text-truncate">{{ car.marka }} {{ car.model }}</h5>
                         <h4 class="text-danger fw-800 mb-2">{{ car.cena|int }} PLN</h4>
                         
-                        <div class="date-badge">
-                            <i class="bi bi-calendar-check"></i> Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') }}
-                        </div>
+                        <div class="date-badge"><i class="bi bi-calendar-check"></i> Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') }}</div>
 
                         <div class="spec-grid mt-3">
                             <div class="spec-item"><i class="bi bi-speedometer2"></i> {{ car.przebieg }} km</div>
                             <div class="spec-item"><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</div>
                             <div class="spec-item"><i class="bi bi-gear-wide-connected"></i> {{ car.skrzynia }}</div>
-                            <div class="spec-item"><i class="bi bi-calendar-event"></i> {{ car.rok }}</div>
+                            <div class="spec-item"><i class="bi bi-droplet-fill"></i> {{ car.pojemnosc }}</div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-3">
+                        <div class="d-flex gap-2">
                             <a href="/edytuj/{{ car.id }}" class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1">Edytuj</a>
                             <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
                                 <button class="btn btn-outline-success btn-sm rounded-pill w-100">Odśwież</button>
                             </form>
                             <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill w-100" onclick="return confirm('Usunąć?')">Usuń</button>
+                                <button class="btn btn-outline-danger btn-sm rounded-pill w-100" onclick="return confirm('Usunąć?')">Usuń</button>
                             </form>
                         </div>
                     </div>
@@ -103,37 +97,14 @@
             </div>
             {% endfor %}
         </div>
-
-        {% if favorites %}
-        <h3 class="fw-bold mb-4 border-start border-warning border-5 ps-3">Obserwowane</h3>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-            {% for fav in favorites %}
-            <div class="col">
-                <div class="card car-card h-100 shadow-sm" style="opacity: 0.9;">
-                    <img src="{{ fav.car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-1">{{ fav.car.marka }} {{ fav.car.model }}</h6>
-                        <p class="text-danger small fw-bold mb-2">{{ fav.car.cena|int }} PLN</p>
-                        <a href="/auto/{{ fav.car.id }}" class="btn btn-dark btn-sm rounded-pill w-100">Zobacz</a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
 
         {% if current_user.id == 1 %}
         <div class="card p-4 rounded-4 shadow-sm border-0 mt-5 bg-white border-top border-primary border-4">
             <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-shield-lock-fill"></i> Panel Administratora</h4>
             <div class="row text-center">
                 <div class="col-md-3"><h6>ONLINE</h6><h3 class="fw-800 text-success">{{ stats.users_online }}</h3></div>
-                <div class="col-md-3 border-start"><h6>OFERTY</h6><h3 class="fw-800">{{ stats.total_listings }}</h3></div>
-                <div class="col-md-3 border-start"><h6>BŁĘDY AI (429)</h6><h3 class="fw-800 text-danger" id="errCount">0</h3></div>
-                <div class="col-md-3 border-start"><h6>LOGI</h6><div id="logConsole" class="small bg-dark text-info p-2 rounded text-start" style="height: 60px; overflow-y: auto; font-family: monospace;">[System Live]</div></div>
-            </div>
-            <div class="d-flex justify-content-center gap-3 mt-4">
-                <a href="{{ url_for('backup_db') }}" class="btn btn-dark btn-sm rounded-pill px-4">Kopia DB</a>
-                <a href="{{ url_for('full_backup') }}" class="btn btn-primary btn-sm rounded-pill px-4">Full ZIP</a>
+                <div class="col-md-3 border-start"><h6>BŁĘDY AI</h6><h3 class="fw-800 text-danger" id="errCount">0</h3></div>
+                <div class="col-md-6 border-start"><h6>OSTATNIE ZDARZENIA</h6><div id="logConsole" class="small bg-dark text-info p-2 rounded text-start" style="height: 60px; overflow-y: auto; font-family: monospace;">[System Live]</div></div>
             </div>
         </div>
         {% endif %}
@@ -143,14 +114,17 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 border-0 shadow-lg">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-stars text-warning"></i> Dodaj Ogłoszenie AI</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-camera-fill text-warning"></i> Dodaj Ogłoszenie (Max 9 zdjęć)</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="/dodaj" method="POST" enctype="multipart/form-data">
                     <div class="modal-body p-4">
-                        <div class="alert alert-info rounded-4 py-2 d-flex justify-content-between align-items-center mb-3 border-0">
-                            <small class="fw-bold"><i class="bi bi-lightning-fill"></i> Dzisiejszy limit AI:</small>
-                            <span class="badge bg-primary rounded-pill">{{ 5 - current_user.ai_requests_today }} / 5</span>
+                        
+                        <div class="mb-4 text-center p-3 bg-light rounded-4 border-dashed border-2">
+                            <label class="fw-bold mb-2 d-block">Wybierz do 9 zdjęć (AI przeanalizuje pierwsze z nich)</label>
+                            <input type="file" name="zdjecia" id="imgInput" class="form-control" multiple accept="image/*">
+                            <div id="imagePreviewContainer"></div>
+                            <small class="text-muted mt-2 d-block" id="photoCounter">Wybrano: 0 / 9</small>
                         </div>
 
                         <div class="category-selector">
@@ -168,7 +142,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-3 mt-2">
+                        <div class="row g-3">
                             <div class="col-md-6"><label class="small fw-bold">Marka</label><input type="text" name="marka" id="aiMarka" class="form-control" required></div>
                             <div class="col-md-6"><label class="small fw-bold">Model</label><input type="text" name="model" id="aiModel" class="form-control" required></div>
                             <div class="col-md-4"><label class="small fw-bold">Rok</label><input type="number" name="rok" id="aiRok" class="form-control" required></div>
@@ -185,36 +159,36 @@
                                 <label class="small fw-bold">Skrzynia</label>
                                 <select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select>
                             </div>
-                            <div class="col-md-4"><label class="small fw-bold">Pojemność</label><input type="text" name="pojemnosc" class="form-control" placeholder="np. 2.0 TDI"></div>
+                            <div class="col-md-4">
+                                <label class="small fw-bold">Nadwozie</label>
+                                <select name="nadwozie" class="form-select">
+                                    <option>Sedan</option><option>Kombi</option><option>SUV</option><option>Hatchback</option><option>Coupe</option><option>Inne</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6"><label class="small fw-bold">Pojemność Silnika</label><input type="text" name="pojemnosc" class="form-control" placeholder="np. 2.0 TDI"></div>
+                            <div class="col-md-6"><label class="small fw-bold">Numer Telefonu</label><input type="text" name="telefon" class="form-control" required></div>
 
                             <div class="col-12 mt-3">
                                 <div class="d-flex justify-content-between mb-2">
-                                    <label class="fw-bold small">Treść ogłoszenia</label>
-                                    <button type="button" class="btn-ai" onclick="generateDesc()">✨ Opis AI</button>
+                                    <label class="fw-bold small text-primary">Profesjonalny opis AI</label>
+                                    <button type="button" class="btn-ai" onclick="generateDesc()">✨ Generuj Pełny Opis</button>
                                 </div>
-                                <textarea name="opis" id="aiOpis" class="form-control rounded-4" rows="8"></textarea>
+                                <textarea name="opis" id="aiOpis" class="form-control rounded-4 shadow-sm" rows="8"></textarea>
                             </div>
-                            <div class="col-12"><label class="small fw-bold">Zdjęcie główne</label><input type="file" name="zdjecia" id="imgInput" class="form-control"></div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0"><button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow">OPUBLIKUJ OGŁOSZENIE</button></div>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow-lg">DODAJ OGŁOSZENIE</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
     <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <h5 class="text-white fw-bold">Giełda Radom AI</h5>
-                    <p class="small">Innowacyjna platforma wspierana przez Gemini. © 2026</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
-                    <a href="/" class="text-white me-3 small text-decoration-none">Główna</a>
-                    <a href="/kontakt" class="text-white small text-decoration-none">Pomoc</a>
-                </div>
-            </div>
+        <div class="container text-center">
+            <h6 class="text-white fw-bold">Giełda Radom AI © 2026</h6>
+            <p class="small text-muted mb-0">Wszystkie systemy sprawne. Limit zdjęć na ofertę: 9 sztuk.</p>
         </div>
     </footer>
 
@@ -227,51 +201,79 @@
             else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
         }
 
+        // OBSŁUGA MULTI UPLOAD I PODGLĄDU
+        document.getElementById('imgInput').addEventListener('change', async function(e) {
+            const files = e.target.files;
+            const container = document.getElementById('imagePreviewContainer');
+            const counter = document.getElementById('photoCounter');
+            const title = document.querySelector('.modal-title');
+            
+            container.innerHTML = '';
+            counter.innerText = `Wybrano: ${files.length} / 9`;
+
+            if(files.length > 9) {
+                alert("Maksymalnie 9 zdjęć!");
+                this.value = '';
+                return;
+            }
+
+            // Podgląd miniatur
+            for(let file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-img';
+                    container.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            }
+
+            // ANALIZA AI (Tylko pierwszego zdjęcia)
+            if(files.length > 0) {
+                title.innerHTML = '⌛ AI analizuje główne zdjęcie...';
+                const formData = new FormData();
+                formData.append('image', files[0]);
+
+                try {
+                    const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    
+                    if(res.status === 429) {
+                        title.innerHTML = '❌ Błąd 429 - Limit AI przekroczony';
+                        return;
+                    }
+
+                    if(res.ok && data.marka) {
+                        document.getElementById('aiMarka').value = data.marka;
+                        document.getElementById('aiModel').value = data.model;
+                        document.getElementById('aiOpis').value = `🤖 ANALIZA WIZUALNA AI:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
+                        title.innerHTML = '✅ Rozpoznano: ' + data.marka;
+                    }
+                } catch(e) { title.innerHTML = 'Błąd połączenia z AI'; }
+            }
+        });
+
         async function generateDesc() {
             const btn = document.querySelector('.btn-ai');
             const marka = document.getElementById('aiMarka').value;
             const model = document.getElementById('aiModel').value;
-            if(!marka || !model) return alert("Wpisz markę i model!");
+            if(!marka || !model) return alert("Najpierw marka i model!");
             
             btn.innerHTML = '✨ Piszę...';
             try {
                 const res = await fetch('/api/generate-description', {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({marka, model, rok: document.getElementById('aiRok').value, przebieg: document.getElementById('aiPrzebieg').value})
+                    body: JSON.stringify({
+                        marka, model, 
+                        rok: document.getElementById('aiRok').value, 
+                        przebieg: document.getElementById('aiPrzebieg').value
+                    })
                 });
                 const data = await res.json();
-                document.getElementById('aiOpis').value = `✨ OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
-            } finally { btn.innerHTML = '✨ Opis AI'; }
+                document.getElementById('aiOpis').value = `✨ PROFESJONALNY OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
+            } finally { btn.innerHTML = '✨ Generuj Pełny Opis'; }
         }
-
-        document.getElementById('imgInput').addEventListener('change', async function(e) {
-            const title = document.querySelector('.modal-title');
-            title.innerHTML = '⌛ AI analizuje zdjęcie...';
-            
-            const formData = new FormData();
-            formData.append('image', e.target.files[0]);
-
-            try {
-                const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
-                const data = await res.json();
-                
-                if(res.status === 429) {
-                    title.innerHTML = '❌ Limit API 429 - wpisz ręcznie';
-                    if(document.getElementById('logConsole')) {
-                        document.getElementById('logConsole').innerHTML = `[${new Date().toLocaleTimeString()}] Błąd 429 Quota Exceeded<br>` + document.getElementById('logConsole').innerHTML;
-                        document.getElementById('errCount').innerText = parseInt(document.getElementById('errCount').innerText) + 1;
-                    }
-                    return;
-                }
-
-                if(res.ok && data.marka) {
-                    document.getElementById('aiMarka').value = data.marka;
-                    document.getElementById('aiModel').value = data.model;
-                    document.getElementById('aiOpis').value = `🤖 WIZUALNA ANALIZA:\n${data.sugestia}\n\n__________________________\n✍️ TWÓJ OPIS:\n`;
-                    title.innerHTML = '✅ Gotowe: ' + data.marka;
-                }
-            } catch(e) { title.innerHTML = 'Błąd połączenia'; }
-        });
     </script>
 </body>
 </html>
