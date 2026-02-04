@@ -22,6 +22,15 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from thefuzz import process 
 
 app = Flask(__name__)
+# Lista na logi systemowe
+system_logs = []
+
+def add_log(message):
+    now = datetime.now().strftime('%H:%M:%S')
+    system_logs.append(f"[{now}] {message}")
+    if len(system_logs) > 10:  # Trzymaj tylko 10 ostatnich
+        system_logs.pop(0)
+
 
 # --- KONFIGURACJA POCZTY ---
 app.config['MAIL_SERVER'] = 'poczta.o2.pl'
@@ -498,7 +507,9 @@ def profil():
         stats = {
             'users_online': 1, # Tutaj Twoja logika online
             'total_users': User.query.count(),
-            'total_listings': Car.query.count()
+            'total_listings':
+Car.query.count(),
+            'logs': system_logs 
         }
 
     return render_template('profil.html', 
