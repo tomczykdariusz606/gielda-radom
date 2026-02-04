@@ -170,7 +170,8 @@
                         
                         {% if current_user.is_authenticated %}
                         <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="fav-btn" title="Dodaj do ulubionych">
-                            <i class="bi {{ 'bi-heart-fill text-danger' if car in current_user.favorite_cars else 'bi-heart' }} fs-5"></i>
+                            <i class="bi {{ 'bi-heart-fill text-danger' if car.id in current_user.favorites|map(attribute='car_id') else 'bi-heart' }} fs-5"></i>
+
                         </a>
                         {% endif %}
 
