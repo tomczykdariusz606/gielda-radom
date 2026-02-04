@@ -394,69 +394,85 @@ def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
 
-    # 1. Zapisywanie zdjęć
+    # 1. Zapisywanie i optymalizacja zdjęć
     for file in files[:10]:
         if file and allowed_file(file.filename):
             opt_name = save_optimized_image(file)
             path = url_for('static', filename='uploads/' + opt_name)
             saved_paths.append(path)
 
+    # Ustalenie zdjęcia głównego
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    oryginalny_opis = request.form['opis']
-    ai_analysis = ""
+    
+    user_opis = request.form.get('opis', '')
+    ai_extra_info = ""
 
-    # 2. ANALIZA ZDJĘCIA PRZEZ GEMINI
+    # 2. ANALIZA AI (Marka, Model + Krótki Opis Wizualny)
     if saved_paths:
         try:
-            img_path = os.path.join(app.root_path, saved_paths[0].lstrip('/'))
-            img_to_analyze = Image.open(img_path)
+            # Pobranie fizycznej ścieżki do pierwszego zdjęcia
+            filename = saved_paths[0].split('/')[-1]
+            img_full_path = os.path.join(app.root_path, 'static', 'uploads', filename)
+            
+            if os.path.exists(img_full_path):
+                img_to_analyze = Image.open(img_full_path)
+                
+                # Uproszczony prompt - tylko to co widać
+                prompt = (
+                    "Zidentyfikuj auto na zdjęciu. Odpowiedz TYLKO JSON: "
+                    "{\"marka\": \"...\", \"model\": \"...\", \"opis_wizualny\": \"jedno krótkie zdanie o kolorze i sylwetce\"}"
+                )
 
-            prompt_vision = (
-                "Zidentyfikuj auto na zdjęciu. "
-                "NAPISZ TYLKO JEDNO KRÓTKIE ZDANIE (MAX 100 ZNAKÓW) o jego kolorze i stanie. "
-                "ZAKAZ PISANIA O HISTORII MARKI I KONCERNACH. BĄDŹ BARDZO ZWIĘZŁY."
-            )
-
-            vision_response = model_ai.generate_content([prompt_vision, img_to_analyze])
-            short_analysis = vision_response.text.strip()[:150] 
-            ai_analysis = f"\n\n[Analiza wyglądu]: {short_analysis}"
+                response = model_ai.generate_content([prompt, img_to_analyze])
+                
+                # Czyszczenie odpowiedzi z ewentualnego markdownu
+                res_text = response.text.strip().replace('```json', '').replace('```', '').strip()
+                data = json.loads(res_text)
+                
+                # Tworzymy krótki dodatek do opisu
+                wizualny = data.get('opis_wizualny', 'Pojazd widoczny na zdjęciu.')
+                ai_extra_info = f"\n\n[Analiza AI]: {wizualny}"
+                
         except Exception as e:
-            ai_analysis = ""
+            print(f"!!! Błąd analizy przy zapisie: {e}")
+            ai_extra_info = ""
 
-    # 3. Tworzenie obiektu auta - TUTAJ DODANO 'typ'
-        # 3. Tworzenie obiektu auta
-    # Używamy .get(), aby uniknąć błędów KeyError, jeśli pole jest puste
-    nowe_auto = Car(
-        marka=request.form.get('marka'), 
-        model=request.form.get('model'),
-        rok=int(request.form.get('rok', 0)) if request.form.get('rok') else 0, 
-        cena=float(request.form.get('cena', 0)) if request.form.get('cena') else 0.0,
-        typ=request.form.get('typ', 'Osobowe'),
-        opis=oryginalny_opis + ai_analysis,
-        telefon=request.form.get('telefon'),
-        
-        # TE POLA MUSZĄ SIĘ ZGADZAĆ Z NAME W HTML:
-        skrzynia=request.form.get('skrzynia', 'Manualna'), 
-        paliwo=request.form.get('paliwo', 'Benzyna'),
-        nadwozie=request.form.get('nadwozie', 'Sedan'), 
-        pojemnosc=request.form.get('pojemnosc', ''), # Sprawdź czy w bazie to String!
-        
-        przebieg=int(request.form.get('przebieg', 0)) if request.form.get('przebieg') else 0,
-        img=main_img, 
-        zrodlo=current_user.lokalizacja, 
-        user_id=current_user.id,
-        data_dodania=datetime.now() # Dodaj to, żeby licznik dni do końca działał!
-    )
+    # 3. Tworzenie obiektu auta i zapis do bazy
+    try:
+        nowe_auto = Car(
+            marka=request.form.get('marka'),
+            model=request.form.get('model'),
+            rok=int(request.form.get('rok', 0)) if request.form.get('rok') else 0,
+            cena=float(request.form.get('cena', 0)) if request.form.get('cena') else 0.0,
+            typ=request.form.get('typ', 'Osobowe'),
+            opis=user_opis + ai_extra_info, # Łączymy tekst usera z opisem AI
+            telefon=request.form.get('telefon'),
+            skrzynia=request.form.get('skrzynia', 'Manualna'),
+            paliwo=request.form.get('paliwo', 'Benzyna'),
+            nadwozie=request.form.get('nadwozie', 'Sedan'),
+            pojemnosc=request.form.get('pojemnosc', ''),
+            przebieg=int(request.form.get('przebieg', 0)) if request.form.get('przebieg') else 0,
+            img=main_img,
+            zrodlo=current_user.lokalizacja,
+            user_id=current_user.id,
+            data_dodania=datetime.now()
+        )
 
-    
-    db.session.add(nowe_auto)
-    db.session.flush() # Pobiera ID nowo utworzonego auta przed commitem
-    
-    for path in saved_paths:
-        db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
+        db.session.add(nowe_auto)
+        db.session.flush()
+
+        # Powiązanie wszystkich wgranych zdjęć z autem
+        for path in saved_paths:
+            db.session.add(CarImage(image_path=path, car_id=nowe_auto.id))
+
+        db.session.commit()
+        flash('Ogłoszenie dodane pomyślnie!', 'success')
         
-    db.session.commit()
-    flash('Ogłoszenie dodane poprawnie!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"Błąd bazy danych: {e}")
+        flash('Wystąpił błąd podczas zapisu do bazy.', 'danger')
+
     return redirect(url_for('profil'))
 
 @app.route('/profil')
