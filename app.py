@@ -53,11 +53,15 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- TABELA ULUBIONYCH ---
-favorites = db.Table('favorites',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
-)
+# --- MODEL ULUBIONYCH ---
+class Favorite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
+    
+    # Dodajemy relację, aby w profilu działało fav.car.marka
+    car = db.relationship('Car', backref='fav_entries')
+
 
 # --- MODELE ---
 
@@ -72,7 +76,7 @@ class User(UserMixin, db.Model):
 
     # Relacje
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
-    favorite_cars = db.relationship('Car', secondary=favorites, backref='fans')
+    favorites = db.relationship('Favorite', backref='user', lazy=True)
 
     # Metody resetowania hasła (Logic AI)
     def get_reset_token(self):
