@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twój Profil - Giełda Radom</title>
+    <title>Twój Profil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -58,16 +58,12 @@
             <div class="card car-card h-100">
                 <div class="position-relative">
                     <img src="{{ car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
-                    
                     {% set dni = (now - car.data_dodania).days %}
                     {% set left = 30 - dni %}
                     <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">
                         {% if left > 0 %}{{ left }} dni{% else %}WYGASŁO{% endif %}
                     </span>
-                    
-                    {% if car.is_promoted %}
-                    <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow fw-bold">GOLD</span>
-                    {% endif %}
+                    {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow">GOLD</span>{% endif %}
                 </div>
                 
                 <div class="card-body d-flex flex-column">
@@ -200,12 +196,6 @@
                         <div class="col-12"><label class="small fw-bold text-muted">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
                         <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3"></textarea></div>
                     </div>
-                    
-                    <div class="mt-3 p-2 border border-warning rounded bg-warning bg-opacity-10 position-relative">
-                        <div class="small fw-bold text-warning"><i class="bi bi-star-fill"></i> PROMOWANIE (Wkrótce)</div>
-                        <div class="d-flex justify-content-between small text-white-50"><span>Pakiet GOLD (14 dni)</span><span>19 PLN</span></div>
-                    </div>
-
                 </div>
                 <div class="modal-footer border-secondary pt-0">
                     <button class="btn btn-danger w-100 rounded-pill fw-bold py-2">WYSTAW OGŁOSZENIE</button>
@@ -256,3 +246,4 @@
 </script>
 </body>
 </html>
+
