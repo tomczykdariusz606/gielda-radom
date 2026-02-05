@@ -22,12 +22,12 @@ try:
     GEMINI_KEY = sekrety.GEMINI_KEY
     MAIL_PWD = sekrety.MAIL_PWD
     # Sprawdzamy czy w sekretach jest klucz sesji, jak nie to domyślny
-    SECRET_KEY_APP = getattr(sekrety, 'SECRET_KEY', 'radom_sekret_key_2026')
+    SECRET_KEY_APP = getattr(sekrety, 'SECRET_KEY', 'sekretny_klucz_gieldy_radom_2024')
 except ImportError:
     print("❌ BŁĄD: Brak pliku sekrety.py! Funkcje AI i Email nie będą działać.")
     GEMINI_KEY = None
     MAIL_PWD = None
-    SECRET_KEY_APP = 'awaryjny_klucz_jesli_brak_pliku'
+    SECRET_KEY_APP = 'sekretny_klucz_gieldy_radom_2024'
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY_APP
