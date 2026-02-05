@@ -247,8 +247,6 @@ def index():
                            now=datetime.utcnow(), 
                            request=request)
 
-
-# TWOJE API DO WYCENY AI
 @app.route('/api/check-price-valuation', methods=['POST'])
 def check_price_valuation():
     data = request.get_json()
@@ -257,35 +255,26 @@ def check_price_valuation():
     if not car:
         return jsonify({"error": "Nie znaleziono auta"}), 404
 
-    # Sprawdzanie cache przy użyciu nowych nazw kolumn
-    if car.ai_valuation_data and car.ai_label:
-        # Zakładamy, że ai_valuation_data przechowuje datę jako string lub obiekt
-        # Dla uproszczenia zwracamy cache, jeśli oba pola są wypełnione
-        try:
-            res = json.loads(car.ai_label)
-            res['date'] = str(car.ai_valuation_data)
-            return jsonify(res)
-        except:
-            pass # Jeśli JSON byłby błędny, generujemy nowy
+    # PROMPT SKIEROWANY NA ANALIZĘ POLSKIEGO RYNKU
     prompt = (
-        f"Jesteś ekspertem motoryzacyjnym (Luty 2026). "
-        f"Oceń cenę {car.cena} PLN dla: {car.marka} {car.model}, {car.rok}r, {car.przebieg}km. "
-        f"Opis i analiza wizualna: {car.opis[-300:]}. " # Bierzemy końcówkę opisu, gdzie jest analiza zdjęcia
-        f"Zwróć TYLKO czysty JSON: {{"
+        f"Jesteś ekspertem polskiego rynku wtórnego samochodów (stan na luty 2026). "
+        f"Przeanalizuj ofertę: {car.marka} {car.model}, rok {car.rok}, przebieg {car.przebieg} km, cena {car.cena} PLN. "
+        f"1. Porównaj tę cenę z aktualnymi notowaniami w Polsce (OTOMOTO, OLX). "
+        f"2. Oszacuj, ile podobnych ofert jest obecnie wystawionych. "
+        f"3. Zwróć TYLKO czysty JSON: {{"
         f"\"score\": 1-100, "
-        f"\"label\": \"Okazja/Dobra cena/Cena rynkowa/Wysoka cena\", "
+        f"\"label\": \"Okazja / Dobra cena / Cena rynkowa / Drogo\", "
         f"\"color\": \"success/info/warning/danger\", "
-        f"\"sample_size\": \"ok. {50 + (car.id % 20)} aut\", " # Dynamiczna liczba dla realizmu
-        f"\"condition\": \"Auto całe/Zadbane\"" # AI samo to zmieni, jeśli w opisie jest 'uszkodzony'
+        f"\"sample_size\": \"liczba ofert, np. 142\", "
+        f"\"market_comment\": \"krótkie uzasadnienie (np. Średnia cena w PL to X PLN)\""
         f"}}"
     )
-
 
     try:
         response = model_ai.generate_content(prompt)
         raw_json = response.text.replace('```json', '').replace('```', '').strip()
-
-        # Zapisujemy do bazy używając nazw z PRAGMA
+        
+        # Zapisujemy analizę do bazy jako cache
         car.ai_label = raw_json
         car.ai_valuation_data = datetime.now().strftime("%d.%m.%Y")
         db.session.commit()
@@ -294,7 +283,7 @@ def check_price_valuation():
         res['date'] = car.ai_valuation_data
         return jsonify(res)
     except Exception as e:
-        return jsonify({"score": 50, "label": "Stabilna", "color": "secondary", "date": "dzisiaj"})
+        return jsonify({"score": 50, "label": "Błąd analizy", "color": "secondary", "sample_size": "brak danych"})
 
 
 
