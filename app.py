@@ -643,22 +643,29 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 @app.route('/api/analyze-car', methods=['POST'])
-def analyze_car():
+@login_required
+def api_analyze_car():
+    """Analiza zdjęcia dla formularza 'Dodaj Ogłoszenie'"""
+    if not check_ai_limit():
+        return jsonify({"error": "Limit wyczerpany"}), 429
+
+    file = request.files.get('image')
+    if not file: return jsonify({"error": "Brak pliku"}), 400
+
+    img_data = file.read()
+    prompt = """Rozpoznaj samochód na zdjęciu. 
+    Zwróć TYLKO JSON: {"marka": "...", "model": "...", "sugestia": "krótka, 1-zdanionwa zachęta dla kupującego"}"""
+    
     try:
-        # (...) Twoja logika analizy obrazu (...)
-        # Jeśli API Gemini zwróci błąd 429 lub inny:
-        pass 
-    except Exception as e:
-        # To wysyłamy do administratora w profil.html
-        print(f"🚨 LOG SYSTEMOWY: Błąd AI -> {str(e)}") 
+        response = model_ai.generate_content([prompt, {"mime_type": "image/jpeg", "data": img_data}])
+        current_user.ai_requests_today += 1
+        db.session.commit()
         
-        return jsonify({
-            "marka": "", 
-            "model": "", 
-            "sugestia": "✨ Gemini odpoczywa, spróbuj jutro lub wpisz dane ręcznie ;)",
-            "error_type": "api_limit"
-        }), 200 
-# Zwracamy 200, żeby JS mógł to odebrać jako normalną wiadomość
+        clean_json = response.text.replace('```json', '').replace('```', '').strip()
+        return jsonify(json.loads(clean_json))
+    except Exception as e:
+        return jsonify({"marka": "", "model": "", "sugestia": "Wpisz dane ręcznie"}), 500
+
 
 
 @app.template_filter('from_json')
