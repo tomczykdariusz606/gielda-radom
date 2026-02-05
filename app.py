@@ -30,7 +30,7 @@ except ImportError:
     SECRET_KEY_APP = 'awaryjny_klucz_jesli_brak_pliku'
 
 app = Flask(__name__)
-app.secret_key = SECRET_KEY_APP
+app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 
 # --- KONFIGURACJA ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
