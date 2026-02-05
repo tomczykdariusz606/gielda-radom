@@ -115,45 +115,61 @@
             <h1 class="display-2 fw-800 mb-2 text-white" style="font-family: 'Anton';">RADOMSKA GIEŁDA POJAZDÓW</h1>
             <p class="lead fw-bold mb-5 text-white-50">Lokalne ogłoszenia napędzane przez Google Gemini 3.0 Live</p>
 
-            <div class="search-panel p-4 p-lg-5 shadow-lg mx-auto text-start" style="max-width: 1150px;">
-                <form action="/" method="GET" class="row g-3 align-items-end">
-                    <div class="col-lg-2">
-                        <label class="form-label-small"><i class="bi bi-tag-fill text-danger"></i> Typ</label>
-                        <select name="typ" class="form-select border-0 bg-light">
-                            <option value="">Wszystkie</option>
-                            <option value="Osobowe" {% if request.args.get('typ') == 'Osobowe' %}selected{% endif %}>Samochody</option>
-                            <option value="Bus" {% if request.args.get('typ') == 'Bus' %}selected{% endif %}>Busy / Dostawcze</option>
-                            <option value="Rower" {% if request.args.get('typ') == 'Rower' %}selected{% endif %}>Rowery / Moto</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-3">
-                        <label class="form-label-small"><i class="bi bi-search text-danger"></i> Model lub marka</label>
-                        <input type="text" name="q" class="form-control border-0 bg-light" placeholder="Np. Passat, Master..." value="{{ request.args.get('q', '') }}">
-                    </div>
-                    <div class="col-lg-2">
-                        <label class="form-label-small">Paliwo</label>
-                        <select name="paliwo" class="form-select border-0 bg-light">
-                            <option value="">Dowolne</option>
-                            <option value="Benzyna">Benzyna</option>
-                            <option value="Diesel">Diesel</option>
-                            <option value="LPG">LPG</option>
-                            <option value="Elektryczny">Elektryczny</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-2">
-                        <label class="form-label-small">Cena do (PLN)</label>
-                        <input type="number" name="cena_max" class="form-control border-0 bg-light" placeholder="Max" value="{{ request.args.get('cena_max', '') }}">
-                    </div>
-                    <div class="col-lg-2">
-                        <label class="form-label-small">Rok od</label>
-                        <input type="number" name="rok_min" class="form-control border-0 bg-light" placeholder="2010" value="{{ request.args.get('rok_min', '') }}">
-                    </div>
-                    <div class="col-lg-1">
-                        <button type="submit" class="btn btn-danger w-100 py-2 shadow-sm"><i class="bi bi-search fs-5"></i></button>
-                    </div>
-                </form>
-            </div>
+           <div class="search-panel p-4 p-lg-5 shadow-lg mx-auto text-start" style="max-width: 1150px;">
+    <form action="/" method="GET" class="row g-3">
+        <div class="col-lg-5 col-md-12">
+            <label class="form-label-small"><i class="bi bi-search text-danger"></i> Czego szukasz?</label>
+            <input type="text" name="q" class="form-control border-0 bg-light py-3" placeholder="Np. BMW E46, Sprinter, Rower szosowy..." value="{{ request.args.get('q', '') }}">
         </div>
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label-small"><i class="bi bi-grid-fill text-danger"></i> Kategoria pojazdu</label>
+            <select name="typ" class="form-select border-0 bg-light py-3">
+                <option value="">Wszystkie kategorie</option>
+                <option value="Osobowe" {% if request.args.get('typ') == 'Osobowe' %}selected{% endif %}>🚗 Samochody Osobowe</option>
+                <option value="Bus" {% if request.args.get('typ') == 'Bus' %}selected{% endif %}>🚐 Busy i Dostawcze</option>
+                <option value="Rower" {% if request.args.get('typ') == 'Rower' %}selected{% endif %}>🚲 Rowery i Skutery</option>
+            </select>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <label class="form-label-small"><i class="bi bi-fuel-pump-fill text-danger"></i> Rodzaj napędu</label>
+            <select name="paliwo" class="form-select border-0 bg-light py-3">
+                <option value="">Dowolne paliwo</option>
+                <option value="Benzyna" {% if request.args.get('paliwo') == 'Benzyna' %}selected{% endif %}>Benzyna</option>
+                <option value="Diesel" {% if request.args.get('paliwo') == 'Diesel' %}selected{% endif %}>Diesel</option>
+                <option value="LPG" {% if request.args.get('paliwo') == 'LPG' %}selected{% endif %}>Benzyna + LPG</option>
+                <option value="Elektryczny" {% if request.args.get('paliwo') == 'Elektryczny' %}selected{% endif %}>Elektryczny</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-6">
+            <label class="form-label-small">Cena od</label>
+            <input type="number" name="cena_min" class="form-control border-0 bg-light" placeholder="Min PLN" value="{{ request.args.get('cena_min', '') }}">
+        </div>
+        <div class="col-lg-2 col-6">
+            <label class="form-label-small">Cena do</label>
+            <input type="number" name="cena_max" class="form-control border-0 bg-light" placeholder="Max PLN" value="{{ request.args.get('cena_max', '') }}">
+        </div>
+        <div class="col-lg-2 col-6">
+            <label class="form-label-small">Rok od</label>
+            <input type="number" name="rok_min" class="form-control border-0 bg-light" placeholder="2000" value="{{ request.args.get('rok_min', '') }}">
+        </div>
+        <div class="col-lg-2 col-6">
+            <label class="form-label-small">Rok do</label>
+            <input type="number" name="rok_max" class="form-control border-0 bg-light" placeholder="2026" value="{{ request.args.get('rok_max', '') }}">
+        </div>
+        <div class="col-lg-2 col-12">
+            <label class="form-label-small">Max przebieg (km)</label>
+            <input type="number" name="przebieg_max" class="form-control border-0 bg-light" placeholder="np. 200000" value="{{ request.args.get('przebieg_max', '') }}">
+        </div>
+        <div class="col-lg-2 col-12">
+            <label class="form-label-small d-none d-lg-block">&nbsp;</label>
+            <button type="submit" class="btn btn-danger w-100 py-2 fw-bold shadow-sm">
+                <i class="bi bi-search me-2"></i>SZUKAJ
+            </button>
+        </div>
+    </form>
+</div>
+
     </header>
 
     <section class="container mb-5" style="margin-top: -60px; position: relative; z-index: 10;">
