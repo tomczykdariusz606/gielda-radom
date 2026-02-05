@@ -159,26 +159,20 @@ def utility_processor():
 
 @app.route('/api/generate-description', methods=['POST'])
 @login_required
-def api_generate_description():
-    data = request.json
-    marka = data.get('marka', '')
-    model = data.get('model', '')
-    rok = data.get('rok', '')
-    przebieg = data.get('przebieg', '')
+def generate_description():
+    data = request.get_json()
+    marka = data.get('marka')
+    model = data.get('model')
+    rok = data.get('rok')
 
-    if not marka or not model:
-        return jsonify({'description': 'Proszę najpierw podać markę i model!'})
-
-    prompt = (
-        f"Napisz profesjonalne, sprzedażowe ogłoszenie dla: {marka} {model}, rok {rok}, przebieg {przebieg} km. "
-        "Użyj języka korzyści, bądź konkretny i zachęcający. Nie kłam. Max 600 znaków."
-    )
+    prompt = f"Napisz porywający, handlowy opis dla auta {marka} {model} z {rok} roku. Skup się na zaletach, użyj języka korzyści i emoji. Opis ma być gotowy do wklejenia na portal ogłoszeniowy."
 
     try:
         response = model_ai.generate_content(prompt)
-        return jsonify({'description': response.text.strip()})
-    except Exception as e:
-        return jsonify({'description': f'Błąd AI: {str(e)}'})
+        return jsonify({"description": response.text})
+    except:
+        return jsonify({"description": "Nie udało się wygenerować opisu. Spróbuj wpisać dane ręcznie."})
+
 
 
 
