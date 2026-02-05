@@ -202,44 +202,54 @@ def allowed_file(filename):
 # --- TRASY APLIKACJI ---
 @app.route('/')
 def index():
-    # Pobieramy auta (najlepiej najnowsze na górze)
-    cars = Car.query.order_by(Car.data_dodania.desc()).all()
-    # Pobieranie wszystkich filtrów
-    query_text = request.args.get('q', '').strip().lower()
+    # Pobieranie parametrów z URL
+    q = request.args.get('q', '').strip()
     typ = request.args.get('typ', '')
     paliwo = request.args.get('paliwo', '')
+    cena_min = request.args.get('cena_min', type=float)
     cena_max = request.args.get('cena_max', type=float)
     rok_min = request.args.get('rok_min', type=int)
+    rok_max = request.args.get('rok_max', type=int)
+    przebieg_max = request.args.get('przebieg_max', type=int)
 
-    base_query = Car.query
+    # Startujemy z bazowym zapytaniem
+    query = Car.query
 
-    # 1. Filtrowanie tekstowe
-    if query_text:
-        words = query_text.split()
-        for word in words:
-            base_query = base_query.filter(or_(
-                Car.marka.ilike(f'%{word}%'),
-                Car.model.ilike(f'%{word}%'),
-                Car.opis.ilike(f'%{word}%')
-            ))
-
-    # 2. Filtry sztywne
+    # --- FILTROWANIE KONKRETNE ---
+    if q:
+        # Szuka w marce, modelu LUB opisie (OR)
+        query = query.filter(db.or_(
+            Car.marka.icontains(q),
+            Car.model.icontains(q),
+            Car.opis.icontains(q)
+        ))
+    
     if typ:
-        base_query = base_query.filter(Car.typ == typ)
+        query = query.filter(Car.zrodlo == typ) # Zakładamy, że typ trzymasz w 'zrodlo' lub dodaj kolumnę 'typ'
+    
     if paliwo:
-        base_query = base_query.filter(Car.paliwo == paliwo)
+        query = query.filter(Car.paliwo == paliwo)
+    
+    if cena_min:
+        query = query.filter(Car.cena >= cena_min)
+    
     if cena_max:
-        base_query = base_query.filter(Car.cena <= cena_max)
+        query = query.filter(Car.cena <= cena_max)
+        
     if rok_min:
-        base_query = base_query.filter(Car.rok >= rok_min)
+        query = query.filter(Car.rok >= rok_min)
+        
+    if rok_max:
+        query = query.filter(Car.rok <= rok_max)
+        
+    if przebieg_max:
+        query = query.filter(Car.przebieg <= przebieg_max)
 
     # Sortowanie: najpierw najnowsze ogłoszenia
-    cars = base_query.order_by(Car.id.desc()).all()
+    cars = query.order_by(Car.data_dodania.desc()).all()
+    
+    return render_template('index.html', cars=cars, now=datetime.utcnow())
 
-    return render_template('index.html', 
-                           cars=cars, 
-                           now=datetime.utcnow(), 
-                           request=request)
 
 @app.route('/api/check-price-valuation', methods=['POST'])
 def check_price_valuation():
