@@ -13,16 +13,23 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer as Serializer
 import google.generativeai as genai
+from flask_mail import Mail, Message
 
-# --- PRÓBA IMPORTU KLUCZY ---
+# --- IMPORT TWOICH SEKRETÓW ---
 try:
     import sekrety
+    # Przypisanie zmiennych z pliku sekrety.py
     GEMINI_KEY = sekrety.GEMINI_KEY
+    MAIL_PWD = sekrety.MAIL_PWD
+    SECRET_KEY_APP = sekrety.SECRET_KEY
 except ImportError:
-    GEMINI_KEY = "BRAK_KLUCZA" 
+    print("❌ BŁĄD: Brak pliku sekrety.py! Funkcje AI i Email nie będą działać.")
+    GEMINI_KEY = None
+    MAIL_PWD = None
+    SECRET_KEY_APP = 'awaryjny_klucz_jesli_brak_pliku'
 
 app = Flask(__name__)
-app.secret_key = 'radom_sekret_key_2026'
+app.secret_key = SECRET_KEY_APP
 
 # --- KONFIGURACJA ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
@@ -39,10 +46,23 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# AI CONFIG
-if GEMINI_KEY != "BRAK_KLUCZA":
+# --- KONFIGURACJA AI (GEMINI) ---
+if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
+    # Używamy sprawdzonego modelu Flash (szybki i tani)
     model_ai = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    model_ai = None
+
+# --- KONFIGURACJA EMAIL (O2.PL) ---
+app.config['MAIL_SERVER'] = 'poczta.o2.pl'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'  # Twój login
+app.config['MAIL_PASSWORD'] = MAIL_PWD             # Hasło z sekrety.py
+app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
+
+mail = Mail(app)
 
 # --- MODELE BAZY DANYCH ---
 
@@ -129,7 +149,7 @@ def check_ai_limit():
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = today
         db.session.commit()
-    return current_user.ai_requests_today < 5
+    return current_user.ai_requests_today < 10 # Zwiększyłem lekko limit dla testów
 
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
@@ -147,7 +167,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def update_market_valuation(car):
-    if GEMINI_KEY == "BRAK_KLUCZA": return
+    if not model_ai: return
     try:
         prompt = f"""
         Jesteś analitykiem rynku aut w Polsce (Luty 2026).
@@ -157,14 +177,14 @@ def update_market_valuation(car):
         {{
             "score": 85, 
             "label": "OKAZJA / CENA RYNKOWA / DROGO", 
-            "color": "success (okazja) / primary (norma) / danger (drogo)",
+            "color": "success / primary / danger",
             "sample_size": "np. 58 ofert",
             "market_info": "Krótkie zdanie uzasadnienia"
         }}
         """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        json.loads(clean_json)
+        json.loads(clean_json) # Test poprawności
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
@@ -202,7 +222,7 @@ def car_details(car_id):
             if (datetime.now() - last_check).days >= 3:
                 should_update = True
         except: should_update = True
-    if should_update:
+    if should_update and model_ai:
         update_market_valuation(car)
     car.wyswietlenia = (car.wyswietlenia or 0) + 1
     db.session.commit()
@@ -211,7 +231,15 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
+    # Pokazujemy auta użytkownika, chyba że to ADMIN - wtedy wszystkie (do zarządzania)
+    if current_user.username == 'admin':
+        # Admin widzi swoje, ale w "Gotowcu" niżej daliśmy mu prawo edycji wszystkiego
+        # Tutaj pobieramy auta przypisane do niego, żeby widział co wystawił.
+        # Pełna lista jest w panelu SQL, a na stronie głównej może edytować każde.
+        cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
+    else:
+        cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
+        
     favorites = Favorite.query.filter_by(user_id=current_user.id).all()
     return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.now(timezone.utc))
 
@@ -258,7 +286,7 @@ def dodaj_ogloszenie():
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def api_analyze_car():
-    if GEMINI_KEY == "BRAK_KLUCZA": return jsonify({"error": "Brak API KEY"}), 500
+    if not model_ai: return jsonify({"error": "AI niedostępne"}), 500
     if not check_ai_limit(): return jsonify({"error": "Limit na dziś wyczerpany"}), 429
     file = request.files.get('scan_image') or request.files.get('image')
     if not file: return jsonify({"error": "Brak zdjęcia"}), 400
@@ -276,7 +304,8 @@ def api_analyze_car():
         resp = model_ai.generate_content([prompt, {"mime_type": "image/jpeg", "data": file.read()}])
         current_user.ai_requests_today += 1
         db.session.commit()
-        return jsonify(json.loads(resp.text.replace('```json','').replace('```','').strip()))
+        clean = resp.text.replace('```json','').replace('```','').strip()
+        return jsonify(json.loads(clean))
     except:
         return jsonify({"error": "Błąd analizy"}), 500
 
@@ -284,17 +313,20 @@ def api_analyze_car():
 @login_required
 def delete_car(car_id):
     car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id or current_user.id == 1:
+    # TRYB BOGA DLA ADMINA:
+    if car.user_id == current_user.id or current_user.username == 'admin':
         db.session.delete(car)
         db.session.commit()
         flash('Usunięto.', 'success')
+    else:
+        flash('Brak uprawnień!', 'danger')
     return redirect(url_for('profil'))
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
 def refresh_car(car_id):
     car = Car.query.get_or_404(car_id)
-    if car.user_id == current_user.id:
+    if car.user_id == current_user.id or current_user.username == 'admin':
         car.data_dodania = datetime.now(timezone.utc)
         db.session.commit()
         flash('Odświeżono na 30 dni!', 'success')
@@ -332,7 +364,7 @@ def register():
             lokalizacja=request.form.get('location', 'Radom')
         ))
         db.session.commit()
-        flash('Zaloguj się', 'success')
+        flash('Konto założone! Zaloguj się.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -343,7 +375,10 @@ def logout(): logout_user(); return redirect('/')
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
-    if car.user_id != current_user.id: return redirect('/')
+    # TRYB BOGA DLA ADMINA:
+    if car.user_id != current_user.id and current_user.username != 'admin':
+        return redirect('/')
+        
     if request.method == 'POST':
         car.cena = request.form.get('cena')
         car.opis = request.form.get('opis')
@@ -358,7 +393,6 @@ def edytuj(id):
         car.nadwozie = request.form.get('nadwozie')
         car.pojemnosc = request.form.get('pojemnosc')
         
-        # Nowe zdjęcia
         files = request.files.getlist('zdjecia')
         for file in files:
             if file and allowed_file(file.filename):
@@ -375,7 +409,9 @@ def edytuj(id):
 def usun_zdjecie(image_id):
     img = CarImage.query.get_or_404(image_id)
     car = Car.query.get(img.car_id)
-    if car.user_id != current_user.id: return jsonify({'success': False}), 403
+    if car.user_id != current_user.id and current_user.username != 'admin':
+        return jsonify({'success': False}), 403
+    
     if len(car.images) <= 1: return jsonify({'success': False, 'message': 'Musi zostać 1 zdjęcie'})
     
     try:
@@ -389,42 +425,51 @@ def usun_zdjecie(image_id):
         return jsonify({'success': True})
     except: return jsonify({'success': False})
 
-# --- RESET HASŁA ---
+# --- RESET HASŁA (EMAIL) ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if request.method == 'POST':
         user = User.query.filter_by(email=request.form.get('email')).first()
         if user:
             token = user.get_reset_token()
-            print(f"LINK: {url_for('reset_token', token=token, _external=True)}")
-            flash(f'Link wysłano (Sprawdź konsolę)', 'info')
+            msg = Message('Reset Hasła - Giełda Radom', recipients=[user.email])
+            msg.body = f'''Aby zresetować hasło, kliknij w link:
+{url_for('reset_token', token=token, _external=True)}
+
+Jeśli to nie Ty, zignoruj tę wiadomość.
+'''
+            mail.send(msg)
+            flash('Wysłano email z linkiem resetującym!', 'info')
             return redirect(url_for('login'))
+        else:
+            flash('Brak takiego emaila w bazie.', 'warning')
     return render_template('reset_request.html')
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
     user = User.verify_reset_token(token)
     if not user:
-        flash('Link wygasł', 'warning')
+        flash('Link wygasł lub jest nieprawidłowy.', 'warning')
         return redirect(url_for('reset_request'))
     if request.method == 'POST':
         user.password_hash = generate_password_hash(request.form.get('password'))
         db.session.commit()
-        flash('Hasło zmienione', 'success')
+        flash('Hasło zostało zmienione! Zaloguj się.', 'success')
         return redirect(url_for('login'))
     return render_template('reset_token.html')
 
-# --- ADMIN ---
+# --- ADMIN ROUTES ---
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
-    if current_user.id != 1: abort(403)
+    # Pozwalamy jeśli ID=1 LUB username='admin'
+    if current_user.id != 1 and current_user.username != 'admin': abort(403)
     return send_from_directory('instance', 'gielda.db', as_attachment=True)
 
 @app.route('/admin/full-backup')
 @login_required
 def full_backup():
-    if current_user.id != 1: abort(403)
+    if current_user.id != 1 and current_user.username != 'admin': abort(403)
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
         db_p = os.path.join(app.instance_path, 'gielda.db')
