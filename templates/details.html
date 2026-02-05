@@ -1,342 +1,282 @@
-{% extends "base.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
+    
+    <meta name="description" content="Sprzedam {{ car.marka }} {{ car.model }}, Rok {{ car.rok }}, Cena {{ car.cena }} PLN. Zobacz ofertę na Giełdzie Radom.">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fslightbox/3.3.1/index.min.css" rel="stylesheet">
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
+    <style>
+        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; }
+        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
+        
+        /* GALERIA */
+        .carousel-item { height: 60vh; background: #000; position: relative; }
+        .carousel-item img { object-fit: contain; width: 100%; height: 100%; }
+        @media (max-width: 768px) { .carousel-item { height: 40vh; } }
 
-<style>
-    :root { 
-        --radom-red: #ce2b37; 
-        --radom-dark: #1a1a1a; 
-        --ai-gradient: linear-gradient(135deg, #6e45e2 0%, #ce2b37 100%);
-    }
+        /* PASEK AI */
+        .ai-box { background: #fff; border: 1px solid #e0e0e0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .progress-stacked { height: 20px; border-radius: 10px; overflow: hidden; background: #eee; }
 
-    body {
-        background: #f8f9fa url('/static/czerwiec_tlo.jpg') no-repeat center center fixed;
-        background-size: cover;
-    }
+        /* KAFELKI PARAMETRÓW */
+        .spec-box { background: white; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #f0f0f0; transition: 0.2s; }
+        .spec-box:hover { transform: translateY(-2px); border-color: #ddd; }
+        .spec-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+        .spec-val { font-weight: 700; color: #333; font-size: 1.1rem; }
 
-    /* Główne kontenery */
-    .main-wrapper {
-        background: rgba(255, 255, 255, 0.94);
-        backdrop-filter: blur(12px);
-        border-radius: 30px;
-        padding: 30px;
-        margin-top: 20px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-        border: 1px solid rgba(255,255,255,0.3);
-    }
+        /* PRZYCISKI ZEWNĘTRZNE */
+        .btn-cv { background: #1a237e; color: white; border: none; font-weight: 700; }
+        .btn-mubi { background: #00c853; color: white; border: none; font-weight: 700; }
 
-    /* Galeria Premium */
-    .main-img-container { 
-        border-radius: 24px; 
-        overflow: hidden; 
-        background: #000; 
-        aspect-ratio: 16/9; 
-        position: relative;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    .main-img-container img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; transition: 0.3s; }
-    .main-img-container:hover img { transform: scale(1.02); }
+        /* OPISY */
+        .desc-box { background: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .ai-desc { background: linear-gradient(to right, #f8f9fa, #fff); border-left: 4px solid #4285f4; }
+        
+        /* STICKY SIDEBAR */
+        .sticky-card { position: sticky; top: 90px; }
+        
+        /* ULUBIONE */
+        .fav-btn-lg { 
+            position: absolute; top: 20px; right: 20px; 
+            background: white; border-radius: 50%; width: 50px; height: 50px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            z-index: 100; transition: 0.2s; cursor: pointer; text-decoration: none;
+        }
+        .fav-btn-lg:hover { transform: scale(1.1); }
+    </style>
+</head>
+<body>
 
-    .thumb-scroll { scrollbar-width: thin; padding-bottom: 10px; }
-    .thumb-item { 
-        width: 110px; height: 75px; border-radius: 12px; 
-        object-fit: cover; cursor: pointer; border: 3px solid transparent; 
-        flex-shrink: 0; transition: 0.2s; 
-    }
-    .thumb-item:hover { transform: translateY(-3px); }
-    .thumb-item.active { border-color: var(--radom-red); box-shadow: 0 5px 15px rgba(206, 43, 55, 0.3); }
+<nav class="navbar navbar-dark p-3 sticky-top shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+        <a href="/" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-arrow-left"></i> Powrót</a>
+    </div>
+</nav>
 
-    /* Gemini "Petarda" Sections */
-    .gemini-card { 
-        background: white; border-radius: 24px; 
-        border: none; overflow: hidden; margin-top: 25px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    }
-    .gemini-header { 
-        background: var(--ai-gradient); color: white; 
-        padding: 15px 25px; font-family: 'Anton', sans-serif;
-        letter-spacing: 1px; display: flex; align-items: center; justify-content: space-between;
-    }
-    .gemini-scroll-box { max-height: 350px; overflow-y: auto; padding: 25px; line-height: 1.7; color: #444; }
+<div class="position-relative bg-dark">
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="fav-btn-lg">
+        <i class="bi {{ 'bi-heart-fill text-danger' if car.id in current_user.favorites|map(attribute='car_id') else 'bi-heart text-dark' }}"></i>
+    </a>
+    {% endif %}
 
-    /* Nowa Reklama Gemini - PETARDA */
-    .gemini-ad-banner {
-        background: #1a1a1a;
-        color: white;
-        border-radius: 20px;
-        padding: 20px;
-        position: relative;
-        overflow: hidden;
-        margin-bottom: 25px;
-        border-left: 5px solid var(--radom-red);
-    }
-    .gemini-ad-banner::after {
-        content: "\F52C"; font-family: "bootstrap-icons";
-        position: absolute; right: -20px; bottom: -20px;
-        font-size: 8rem; opacity: 0.1; color: white;
-    }
+    <div id="carCarousel" class="carousel slide" data-bs-ride="false" data-bs-touch="true">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <a data-fslightbox="gallery" href="{{ car.img }}">
+                    <img src="{{ car.img }}" class="d-block w-100" alt="Main Photo">
+                </a>
+            </div>
+            {% for img in car.images %}
+            <div class="carousel-item">
+                <a data-fslightbox="gallery" href="{{ img.image_path }}">
+                    <img src="{{ img.image_path }}" class="d-block w-100" alt="Photo {{ loop.index }}">
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon bg-dark rounded-circle p-4 bg-opacity-50"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon bg-dark rounded-circle p-4 bg-opacity-50"></span>
+        </button>
+        
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+            <span class="badge bg-dark bg-opacity-75 fs-6 px-3 py-2 rounded-pill border border-secondary">
+                <i class="bi bi-zoom-in me-1"></i> Kliknij zdjęcie aby powiększyć
+            </span>
+        </div>
+    </div>
+</div>
 
-    /* Interaktywny Czat AI */
-    .ai-chat-box { 
-        background: #f0f2f5; border-radius: 24px; border: 2px dashed #6e45e2; 
-        padding: 20px; transition: 0.3s;
-    }
-    .ai-chat-box:focus-within { border-style: solid; background: #fff; box-shadow: 0 10px 30px rgba(110, 69, 226, 0.1); }
-
-    /* Prawy Panel */
-    .price-card { 
-        background: white; border-radius: 24px; padding: 30px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: sticky; top: 100px;
-    }
-    .partner-btn { 
-        display: flex; align-items: center; gap: 12px; padding: 15px; 
-        border-radius: 15px; text-decoration: none; font-weight: 800; 
-        margin-bottom: 12px; color: white !important; transition: 0.3s;
-    }
-    .partner-btn:hover { transform: scale(1.03); filter: brightness(1.1); }
-    .cv-btn { background: #1b2e4b; border-bottom: 4px solid #00ff00; }
-    .mubi-btn { background: #e30613; border-bottom: 4px solid #ffffff; }
-</style>
-
-<div class="container main-wrapper mb-5">
+<div class="container py-4">
     <div class="row g-4">
+        
         <div class="col-lg-8">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-3">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-danger fw-bold">Giełda Radom</a></li>
-                    <li class="breadcrumb-item active">{{ car.marka }} {{ car.model }}</li>
-                </ol>
-            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="fw-800 display-6 mb-1">{{ car.marka }} {{ car.model }}</h1>
+                    <div class="text-muted d-flex gap-3 align-items-center">
+                        <span><i class="bi bi-geo-alt-fill text-danger"></i> {{ car.zrodlo }}</span>
+                        <span><i class="bi bi-calendar-check"></i> Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                </div>
+                <div class="text-end d-lg-none">
+                    <h2 class="text-danger fw-bold mb-0">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</h2>
+                </div>
+            </div>
 
-            <div class="pswp-gallery" id="car-gallery">
-                <div class="main-img-container shadow">
-                    <a href="{{ car.img }}" data-pswp-width="1200" data-pswp-height="800" target="_blank">
-                        <img src="{{ car.img }}" id="mainDisplayImg" alt="{{ car.marka }} {{ car.model }} - zdjęcie główne">
+            {% if car.ai_label %}
+                {% set ai = car.ai_label | from_json %}
+                {% if ai %}
+                <div class="ai-box mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-stars text-primary"></i> Analiza Rynkowa AI</h5>
+                        <span class="badge bg-{{ ai.color }} fs-6">{{ ai.label }}</span>
+                    </div>
+                    
+                    <div class="progress" style="height: 25px; border-radius: 12px;">
+                        <div class="progress-bar bg-{{ ai.color }} progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: {{ ai.score }}%">
+                             {{ ai.score }}/100 pkt atrakcyjności
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3 text-muted small border-top pt-2">
+                        <span><i class="bi bi-robot"></i> Model: Gemini 1.5 Flash</span>
+                        <span>Data analizy: <strong>{{ car.ai_valuation_data }}</strong></span>
+                        <span>Próba rynkowa: <strong>{{ ai.sample_size }}</strong></span>
+                    </div>
+                    <div class="mt-2 text-muted small fst-italic">
+                        "{{ ai.market_info }}"
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <h5 class="fw-bold mb-3">Szczegóły Techniczne</h5>
+            <div class="row row-cols-2 row-cols-md-3 g-3 mb-5">
+                <div class="col">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="bi bi-calendar"></i> Rok</span>
+                        <span class="spec-val">{{ car.rok }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="bi bi-speedometer2"></i> Przebieg</span>
+                        <span class="spec-val">{{ car.przebieg }} km</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="bi bi-fuel-pump"></i> Paliwo</span>
+                        <span class="spec-val">{{ car.paliwo }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="bi bi-gear-wide"></i> Skrzynia</span>
+                        <span class="spec-val">{{ car.skrzynia }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="bi bi-car-front"></i> Nadwozie</span>
+                        <span class="spec-val">{{ car.nadwozie }}</span>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="bi bi-lightning-charge"></i> Pojemność</span>
+                        <span class="spec-val">{{ car.pojemnosc }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-5">
+                <div class="col-md-6">
+                    <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-cv w-100 py-3 rounded-4 shadow-sm">
+                        <i class="bi bi-shield-check me-2"></i> Sprawdź historię (VIN)
+                        <div class="small fw-normal opacity-75">Raport wypadkowy CarVertical</div>
                     </a>
                 </div>
-                <div class="thumb-scroll d-flex gap-3 mt-3 overflow-auto pb-2">
-                    <img src="{{ car.img }}" class="thumb-item active" onclick="updateGallery('{{ car.img }}', this)">
-                    {% for image in car.images %}
-                        <a href="{{ image.image_path }}" data-pswp-width="1200" data-pswp-height="800" target="_blank" style="display:none"></a>
-                        <img src="{{ image.image_path }}" class="thumb-item" onclick="updateGallery('{{ image.image_path }}', this)">
-                    {% endfor %}
+                <div class="col-md-6">
+                    <a href="https://mubi.pl" target="_blank" class="btn btn-mubi w-100 py-3 rounded-4 shadow-sm">
+                        <i class="bi bi-piggy-bank me-2"></i> Oblicz Ubezpieczenie
+                        <div class="small fw-normal opacity-75">Porównywarka Mubi</div>
+                    </a>
                 </div>
             </div>
 
-            <div class="gemini-ad-banner shadow-sm mt-4">
-                <div class="row align-items-center">
-                    <div class="col-md-2 text-center d-none d-md-block">
-                        <i class="bi bi-stars fs-1 text-warning"></i>
-                    </div>
-                    <div class="col-md-10">
-                        <h5 class="fw-bold mb-1">Moc Google Gemini 3.0 Live</h5>
-                        <p class="small mb-0 opacity-75">To ogłoszenie zostało zweryfikowane pod kątem uczciwości ceny i stanu technicznego przez najbardziej zaawansowane AI na świecie. Kupuj bez obaw na Giełdzie Radom!</p>
-                    </div>
-                </div>
+            <h5 class="fw-bold mb-3">Opis Pojazdu</h5>
+            
+            {% if "Skan AI" in car.opis or "AI:" in car.opis %}
+            <div class="desc-box ai-desc">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-stars"></i> Komentarz Asystenta AI</h6>
+                <p style="white-space: pre-line;">{{ car.opis }}</p>
             </div>
+            {% else %}
+            <div class="desc-box">
+                <p class="text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ car.opis }}</p>
+            </div>
+            {% endif %}
 
-            <div class="gemini-card shadow-sm">
-                <div class="gemini-header">
-                    <span><i class="bi bi-robot me-2"></i> RAPORT EKSPERCKI AI</span>
-                    <span class="badge bg-white text-dark small">Live Analysis 2026</span>
-                </div>
-                <div class="gemini-scroll-box">
-                    {% if "[Analiza" in car.opis %}
-                        <p class="lead fw-bold text-dark">{{ car.opis.split('[Analiza')[0] }}</p>
-                        <hr class="my-4">
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="spinner-grow spinner-grow-sm text-danger"></span>
-                            <span class="text-danger fw-bold small">WNIOSKI WIZUALNE I TECHNICZNE AI:</span>
-                        </div>
-                        <div class="ai-content">
-                            {{ car.opis.split('[Analiza')[1].replace('AI]:', '').strip() | safe }}
-                        </div>
-                    {% else %}
-                        <p class="lead">{{ car.opis }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="ai-chat-box mt-4 shadow-sm">
-                <h6 class="fw-bold mb-3"><i class="bi bi-chat-left-dots-fill text-primary me-2"></i>Zapytaj Gemini o ten pojazd:</h6>
-                <div class="input-group">
-                    <input type="text" id="userAiQuery" class="form-control border-0 shadow-none" placeholder="np. Jakie są typowe usterki tego modelu?">
-                    <button class="btn btn-primary px-4 fw-bold" onclick="askGemini()">ANALIZUJ</button>
-                </div>
-                <div id="aiResponse" class="mt-3 p-3 bg-white rounded-4 shadow-sm border-start border-4 border-primary" style="display:none;">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <div class="spinner-border spinner-border-sm text-primary" id="aiSpinner"></div>
-                        <strong class="small text-primary">ODPOWIEDŹ GEMINI:</strong>
-                    </div>
-                    <span id="aiResponseText" class="small text-dark"></span>
-                </div>
-            </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="price-card shadow">
-                <div class="market-valuation mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small fw-bold text-muted">Status ceny (AI):</span>
-                        <span id="priceLabel" class="badge rounded-pill bg-secondary px-3">Analizowanie...</span>
+            <div class="card border-0 shadow-lg rounded-4 sticky-card overflow-hidden">
+                <div class="card-body p-4">
+                    <h5 class="text-muted small fw-bold text-uppercase mb-2">Cena Całkowita</h5>
+                    <h2 class="text-danger fw-900 display-5 mb-4">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} <small class="fs-4 text-dark">PLN</small></h2>
+                    
+                    <div class="d-grid gap-2 mb-4">
+                        <button class="btn btn-dark btn-lg rounded-pill fw-bold py-3" onclick="togglePhone(this, '{{ car.telefon }}')">
+                            <i class="bi bi-telephone-fill me-2"></i> Pokaż Telefon
+                        </button>
+                        <a href="sms:{{ car.telefon }}" class="btn btn-outline-dark rounded-pill fw-bold">
+                            <i class="bi bi-chat-dots me-2"></i> Wyślij SMS
+                        </a>
                     </div>
 
-                    <div class="progress mb-2" style="height: 14px; background-color: #eee; border-radius: 20px;">
-                        <div id="priceBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <span id="sampleSizeInfo" class="text-muted" style="font-size: 0.7rem;">Czekam na dane...</span>
-                        <span id="valuationDate" class="text-muted" style="font-size: 0.7rem;"></span>
-                    </div>
-                    <div id="marketComment" class="mt-3 p-2 rounded bg-light small text-muted border-start border-3 border-danger" style="display:none;"></div>
-                </div>
-
-                <hr>
-
-                <h1 class="fw-bold h2 mb-1">{{ car.marka }}</h1>
-                <h3 class="text-muted h5 mb-3">{{ car.model }}</h3>
-                
-                <div class="d-flex align-items-center gap-2 mb-4">
-                    <i class="bi bi-geo-alt-fill text-danger"></i>
-                    <span class="fw-bold">{{ car.zrodlo }} (Radom i okolice)</span>
-                </div>
-
-                <div class="bg-light p-3 rounded-4 mb-4 text-center">
-                    <span class="text-muted d-block small mb-1">Cena brutto:</span>
-                    <h2 class="fw-bold text-danger m-0" style="font-family: 'Anton'; letter-spacing: 1px;">
-                        {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN
-                    </h2>
-                </div>
-
-                <div class="specs-grid row g-2 mb-4">
-                    <div class="col-6">
-                        <div class="p-2 border rounded-3 text-center">
-                            <small class="text-muted d-block">Rok</small>
-                            <strong class="small">{{ car.rok }}</strong>
+                    <div class="bg-light p-3 rounded-3 mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-white p-2 rounded-circle shadow-sm">
+                                <i class="bi bi-person-fill fs-3 text-secondary"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Sprzedający</h6>
+                                <small class="text-muted">Użytkownik Giełdy</small>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="p-2 border rounded-3 text-center">
-                            <small class="text-muted d-block">Przebieg</small>
-                            <strong class="small">{{ "{:,.0f}".format(car.przebieg or 0).replace(',', ' ') }} km</strong>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="p-2 border rounded-3 text-center">
-                            <small class="text-muted d-block">Paliwo</small>
-                            <strong class="small">{{ car.paliwo or '---' }}</strong>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="p-2 border rounded-3 text-center">
-                            <small class="text-muted d-block">Skrzynia</small>
-                            <strong class="small">{{ car.skrzynia or '---' }}</strong>
-                        </div>
-                    </div>
-                </div>
 
-                <a href="tel:{{ car.telefon }}" class="btn btn-danger w-100 py-3 fw-bold fs-5 mb-4 shadow rounded-pill">
-                    <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ TERAZ
-                </a>
+                    <hr>
+                    
+                    <div class="text-center text-muted small">
+                        <div class="mb-2"><i class="bi bi-shield-lock"></i> <strong>Bezpieczne zakupy</strong></div>
+                        <p class="mb-0 opacity-75">Nie wysyłaj pieniędzy przed obejrzeniem auta. Spotkaj się w bezpiecznym miejscu w Radomiu.</p>
+                    </div>
 
-                <div class="partners-section">
-                    <p class="text-center small fw-bold text-uppercase text-muted mb-3" style="font-size: 0.65rem;">Weryfikacja i Finansowanie</p>
-                    <a href="https://www.carvertical.com/pl" target="_blank" class="partner-btn cv-btn">
-                        <i class="bi bi-shield-check"></i> Sprawdź Historię VIN
-                    </a>
-                    <a href="https://mubi.pl" target="_blank" class="partner-btn mubi-btn">
-                        <i class="bi bi-cash-stack"></i> Tanie Ubezpieczenie
-                    </a>
+                    <div class="mt-4 pt-3 border-top text-center text-muted" style="font-size: 0.75rem;">
+                        <div>ID Ogłoszenia: #{{ car.id }}</div>
+                        <div>Wyświetleń: <strong>{{ car.wyswietlenia }}</strong></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script type="module">
-    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
-    const lightbox = new PhotoSwipeLightbox({
-        gallery: '#car-gallery',
-        children: 'a',
-        pswpModule: () => import('https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js')
-    });
-    lightbox.init();
+<footer class="mt-5 py-4 bg-dark text-white text-center">
+    <p class="mb-0 small opacity-50">&copy; 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
+</footer>
 
-    // Galeria
-    window.updateGallery = function(src, thumb) {
-        const mainImg = document.getElementById('mainDisplayImg');
-        if (mainImg) {
-            mainImg.src = src;
-            mainImg.parentElement.href = src;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fslightbox/3.3.1/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Prosta funkcja ukrywająca numer przed botami
+    function togglePhone(btn, number) {
+        if(btn.innerText.includes('Pokaż')) {
+            btn.innerHTML = `<i class="bi bi-telephone-fill me-2"></i> ${number}`;
+            btn.classList.replace('btn-dark', 'btn-success');
         }
-        document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-    };
-
-    // Czat AI
-    window.askGemini = function() {
-        const query = document.getElementById('userAiQuery').value;
-        const resBox = document.getElementById('aiResponse');
-        const resText = document.getElementById('aiResponseText');
-        const spinner = document.getElementById('aiSpinner');
-
-        if(!query) return;
-        resBox.style.display = 'block';
-        resText.innerText = ' Myślę... analizuję dane techniczne...';
-        spinner.style.display = 'inline-block';
-
-        fetch('/api/analyze-car', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                query: query, 
-                car_id: "{{ car.id }}"
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            spinner.style.display = 'none';
-            resText.innerText = data.analysis || data.answer;
-        })
-        .catch(err => {
-            spinner.style.display = 'none';
-            resText.innerText = "Chwilowy brak połączenia z Gemini.";
-        });
-    };
-
-    // Automatyczna Wycena Rynkowa (Cache 7 dni)
-    document.addEventListener('DOMContentLoaded', function() {
-        fetch('/api/check-price-valuation', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ car_id: "{{ car.id }}" })
-        })
-        .then(res => res.json())
-        .then(data => {
-            const bar = document.getElementById('priceBar');
-            const label = document.getElementById('priceLabel');
-            const dateSpan = document.getElementById('valuationDate');
-            const sampleSize = document.getElementById('sampleSizeInfo');
-            const comment = document.getElementById('marketComment');
-
-            if (bar && data.score) {
-                bar.style.width = data.score + '%';
-                bar.className = `progress-bar bg-${data.color} progress-bar-striped progress-bar-animated`;
-                label.innerText = data.label;
-                label.className = `badge rounded-pill bg-${data.color} px-3 shadow-sm`;
-                dateSpan.innerText = "Data: " + data.date;
-                sampleSize.innerHTML = `<i class="bi bi-search me-1"></i>Baza: <strong>${data.sample_size}</strong> ofert`;
-                
-                if(data.market_info) {
-                    comment.innerText = data.market_info;
-                    comment.style.display = 'block';
-                }
-            }
-        })
-        .catch(err => console.error("Błąd wyceny AI"));
-    });
+    }
 </script>
 
-{% endblock %}
+</body>
+</html>
