@@ -12,13 +12,19 @@
         .navbar { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-bottom: 2px solid var(--radom-red); }
         .car-card { background-color: var(--card-dark); border: 1px solid #333; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); }
+        
+        /* Formularz - Kategorie */
         .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .cat-item input { display: none; }
         .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 10px; cursor: pointer; font-size: 0.7rem; text-align: center; color: var(--text-grey); transition: 0.2s; }
         .cat-item input:checked + .cat-label { background: #3a1517; border-color: var(--radom-red); color: var(--radom-red); font-weight: bold; }
+        
         .form-control, .form-select { background-color: #2c2c2c; border: 1px solid #444; color: white; }
         .form-control:focus { background-color: #333; border-color: var(--radom-red); color: white; }
+        
+        /* Panel Admina */
         .admin-box { background: #251806; border: 1px solid #b88a14; border-left: 5px solid #ffc107; }
+        
         @media(max-width: 576px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
@@ -44,7 +50,9 @@
             <h2 class="fw-bold mb-0 text-white">Twoje Ogłoszenia</h2>
             <div class="d-flex align-items-center gap-2 mt-1">
                 <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-geo-alt"></i> {{ current_user.lokalizacja }}</span>
-                <span class="badge bg-dark border border-secondary text-secondary">Limit AI: <span class="text-white">{{ 15 - current_user.ai_requests_today }}/5</span></span>
+                <span class="badge bg-dark border border-secondary text-secondary">
+                    Gemini 3.0 Pro: <span class="text-white fw-bold">{{ 50 - current_user.ai_requests_today }}/50</span>
+                </span>
             </div>
         </div>
         <button class="btn btn-danger rounded-pill px-4 py-2 shadow-lg fw-bold" data-bs-toggle="modal" data-bs-target="#dodajModal">
@@ -78,7 +86,7 @@
                         <div class="col-6"><i class="bi bi-calendar3"></i> {{ car.rok }}r.</div>
                         <div class="col-6"><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</div>
                         <div class="col-6"><i class="bi bi-speedometer2"></i> {{ car.przebieg }}</div>
-                        <div class="col-6"><i class="bi bi-eye"></i> {{ car.wyswietlenia }}</div>
+                        <div class="col-6"><i class="bi bi-eye"></i> {{ car.views or 0 }}</div>
                     </div>
 
                     <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
@@ -116,7 +124,7 @@
                     <img src="{{ fav.car.img }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px;">
                     <div class="overflow-hidden">
                         <a href="/ogloszenie/{{ fav.car.id }}" class="fw-bold text-white text-decoration-none d-block text-truncate">{{ fav.car.marka }} {{ fav.car.model }}</a>
-                        <small class="text-danger fw-bold">{{ fav.car.cena|int }} PLN</small>
+                        <small class="text-danger fw-bold">{{ "{:,.0f}".format(fav.car.cena).replace(',', ' ') }} PLN</small>
                     </div>
                     <a href="/toggle_favorite/{{ fav.car.id }}" class="ms-auto btn btn-sm btn-outline-secondary border-0"><i class="bi bi-x-lg"></i></a>
                 </div>
@@ -126,11 +134,11 @@
     </div>
     {% endif %}
 
-    {% if current_user.id == 1 or current_user.username == 'admin' %}
+    {% if current_user.username == 'admin' %}
     <div class="card admin-box shadow-sm mb-5">
         <div class="card-header bg-transparent border-warning text-warning fw-bold d-flex justify-content-between">
-            <span><i class="bi bi-shield-lock-fill"></i> PANEL ADMINISTRATORA</span>
-            <span class="badge bg-warning text-dark">ROOT</span>
+            <span><i class="bi bi-shield-lock-fill"></i> PANEL ADMINISTRATORA 2026</span>
+            <span class="badge bg-warning text-dark">ROOT ACCESS</span>
         </div>
         <div class="card-body text-white">
             <h6 class="fw-bold text-muted mb-3 text-uppercase small">Kopie Zapasowe</h6>
@@ -138,8 +146,9 @@
                 <div class="col-md-6"><a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold"><i class="bi bi-database"></i> BAZA SQL</a></div>
                 <div class="col-md-6"><a href="{{ url_for('full_backup') }}" class="btn btn-warning text-dark w-100 fw-bold"><i class="bi bi-archive-fill"></i> CAŁOŚĆ (ZIP)</a></div>
             </div>
-            <div class="mt-3 pt-2 border-top border-secondary small text-white-50">
-                Aut w bazie: <strong>{{ cars|length }}</strong>
+            <div class="mt-3 pt-2 border-top border-secondary small text-white-50 d-flex justify-content-between">
+                <span>Aut w bazie: <strong>{{ cars|length }}</strong></span>
+                <span>Użytkowników: <strong>{{ user_count }}</strong></span>
             </div>
         </div>
     </div>
@@ -160,14 +169,14 @@
                     <div class="text-center bg-black bg-opacity-50 border border-secondary p-3 rounded-3 mb-4 position-relative overflow-hidden mt-2">
                         <div class="position-relative" style="z-index: 2;">
                             <i class="bi bi-camera-fill fs-1 text-danger"></i>
-                            <h6 class="mt-2 text-white">Szybkie dodawanie AI</h6>
-                            <p class="small text-muted mb-2">Zrób zdjęcie - my wypełnimy resztę!</p>
+                            <h6 class="mt-2 text-white">Gemini 3.0 Vision</h6>
+                            <p class="small text-muted mb-2">Zrób zdjęcie, a AI wypełni formularz.</p>
                             <label class="btn btn-light rounded-pill px-4 fw-bold shadow">
                                 <i class="bi bi-magic me-2"></i> SKANUJ APARATEM
                                 <input type="file" name="scan_image" accept="image/*" capture="environment" hidden onchange="scanCar(this)">
                             </label>
                             <div id="scanLoader" class="mt-2 small text-warning" style="display:none;">
-                                <span class="spinner-border spinner-border-sm me-1"></span> Analizuję zdjęcie...
+                                <span class="spinner-border spinner-border-sm me-1"></span> Gemini analizuje pojazd...
                             </div>
                         </div>
                     </div>
@@ -185,7 +194,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="small fw-bold text-muted mb-1">ZDJĘCIA (PIERWSZE BĘDZIE GŁÓWNE)</label>
+                        <label class="small fw-bold text-muted mb-1">ZDJĘCIA (Max 15)</label>
                         <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
                     </div>
 
@@ -202,8 +211,8 @@
                     </div>
                     
                     <div class="mt-3 p-2 border border-warning rounded bg-warning bg-opacity-10 position-relative">
-                        <div class="small fw-bold text-warning"><i class="bi bi-star-fill"></i> PROMOWANIE (Wkrótce)</div>
-                        <div class="d-flex justify-content-between small text-white-50"><span>Pakiet GOLD (14 dni)</span><span>19 PLN</span></div>
+                        <div class="small fw-bold text-warning"><i class="bi bi-star-fill"></i> PROMOWANIE</div>
+                        <div class="d-flex justify-content-between small text-white-50"><span>Pakiet GOLD (14 dni)</span><span>W cenie subskrypcji</span></div>
                     </div>
 
                 </div>
@@ -243,7 +252,7 @@
                         if(sel.options[i].text === d.paliwo_sugestia) sel.selectedIndex = i;
                     }
                 }
-                alert('✅ Auto rozpoznane!');
+                alert('✅ Gemini 3.0 rozpoznało pojazd!');
             } else {
                 alert('⚠️ Nie udało się rozpoznać. Spróbuj lepsze zdjęcie.');
             }
