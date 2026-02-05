@@ -1,375 +1,240 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Panel Użytkownika - Giełda Radom</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twój Profil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --radom-red: #ce2b37; 
-            --radom-dark: #1a1a1a;
-            --gemini-grad: linear-gradient(135deg, #4285f4 0%, #9b72f3 100%);
+        body { background: #f4f7f6; }
+        .navbar { background: #1a1a1a; border-bottom: 3px solid #ce2b37; }
+        .car-card { border: none; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .cat-item input { display: none; }
+        .cat-label { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 70px; background: white; border: 1px solid #ddd; border-radius: 10px;
+            cursor: pointer; font-size: 0.7rem; text-align: center;
         }
-        body { font-family: 'Inter', sans-serif; background: #f4f7f6; display: flex; flex-direction: column; min-height: 100vh; }
-        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-
-        /* TŁO NAGŁÓWKA */
-        .profile-header { 
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/static/czerwiec_tlo.jpg');
-            background-size: cover;
-            background-position: center;
-            padding: 4rem 0; 
-            border-bottom: 5px solid var(--radom-red);
-            margin-bottom: 2rem; 
-            color: white;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-        }
-
-        .car-card { border: none; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: 0.3s; background: white; overflow: hidden; position: relative; }
-        .car-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-        .expiry-badge { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; backdrop-filter: blur(4px); z-index: 10; }
-
-        .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; font-size: 0.85rem; color: #555; }
-        .spec-item { display: flex; align-items: center; gap: 6px; }
-
-        /* MINIATURY ZDJĘĆ */
-        #imagePreviewContainer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .preview-img { width: 100%; height: 80px; object-fit: cover; border-radius: 10px; border: 2px solid #ddd; }
-
-        .category-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .category-item { flex: 1; max-width: 100px; position: relative; }
-        .category-item input { position: absolute; opacity: 0; cursor: pointer; }
-        .category-label { display: flex; flex-direction: column; align-items: center; padding: 10px; background: #f8f9fa; border: 2px solid #eee; border-radius: 15px; cursor: pointer; transition: 0.2s; text-align: center; color: #333; }
-        .category-item input:checked + .category-label { border-color: var(--radom-red); background: #fff5f5; color: var(--radom-red); font-weight: bold; }
-
-        .btn-ai { background: var(--gemini-grad); color: white; border: none; border-radius: 50px; padding: 5px 15px; font-size: 0.8rem; font-weight: 600; transition: 0.2s; }
-        .online-dot { height: 10px; width: 10px; background: #28a745; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px #28a745; margin-right: 5px; }
-
-        footer { background: var(--radom-dark); color: #aaa; padding: 40px 0; margin-top: auto; border-top: 4px solid var(--radom-red); }
-        footer a { color: #ccc; text-decoration: none; transition: 0.2s; }
+        .cat-item input:checked + .cat-label { background: #fff5f5; border-color: #ce2b37; color: #ce2b37; font-weight: bold; }
+        @media(max-width: 576px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        /* ADMIN PANEL STYLE */
+        .admin-box { border-left: 5px solid #ffc107; background: #fff; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-dark p-3 shadow">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-            <div class="d-flex gap-3 align-items-center text-white">
-                <div class="d-none d-md-block text-end">
-                    <span class="d-block small text-white-50">Zalogowany jako</span>
-                    <span class="fw-bold">{{ current_user.username }}</span>
-                </div>
-                <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill px-4 fw-bold">Wyloguj</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="profile-header">
-        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
-            <div>
-                <h1 class="fw-900 mb-2 display-5">Panel Sterowania</h1>
-                <p class="fs-5 mb-0 opacity-75"><i class="bi bi-geo-alt-fill text-danger"></i> {{ current_user.lokalizacja }} &nbsp;|&nbsp; <i class="bi bi-eye"></i> {{ cars|sum(attribute='wyswietlenia') }} wyświetleń</p>
-            </div>
-            <button class="btn btn-danger btn-lg rounded-pill px-5 py-3 shadow-lg fw-bold border-2 border-white" data-bs-toggle="modal" data-bs-target="#dodajModal">
-                <i class="bi bi-plus-lg"></i> DODAJ OGŁOSZENIE
-            </button>
+<nav class="navbar navbar-dark p-3 mb-4">
+    <div class="container d-flex justify-content-between">
+        <a class="navbar-brand fw-bold" href="/">Giełda Radom</a>
+        <div class="d-flex gap-2 align-items-center text-white">
+            <span class="small">{{ current_user.username }}</span>
+            <a href="/logout" class="btn btn-outline-light btn-sm rounded-pill">Wyloguj</a>
         </div>
     </div>
+</nav>
 
-    <div class="container mb-5">
-        
-        <h3 class="fw-bold mb-4 ps-3 border-start border-danger border-5">Twoje Aktywne Ogłoszenia</h3>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-            {% for car in cars %}
-            <div class="col">
-                <div class="card car-card h-100">
-                    <div class="position-relative">
-    <img src="{{ car.img }}" class="card-img-top" style="height: 220px; object-fit: cover;">
+<div class="container mb-5">
     
-    {# OBLICZENIA CZASU #}
-    {% set dni_od_dodania = (now - car.data_dodania).days %}
-    {% set pozostalo_dni = 30 - dni_od_dodania %}
-    
-    <div class="expiry-badge {% if pozostalo_dni <= 3 %}bg-danger{% endif %}">
-        <i class="bi bi-clock"></i> 
-        {% if pozostalo_dni > 0 %}
-            {{ pozostalo_dni }} dni
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Twoje Ogłoszenia</h2>
+            <small class="text-muted">Limit AI na dziś: {{ 5 - current_user.ai_requests_today }}/5</small>
+        </div>
+        <button class="btn btn-danger rounded-pill px-4 shadow" data-bs-toggle="modal" data-bs-target="#dodajModal">
+            <i class="bi bi-plus-lg"></i> DODAJ
+        </button>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+        {% for car in cars %}
+        <div class="col">
+            <div class="card car-card h-100">
+                <div class="position-relative">
+                    <img src="{{ car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                    
+                    {% set dni = (now - car.data_dodania).days %}
+                    {% set left = 30 - dni %}
+                    <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-dark{% endif %} bg-opacity-75 rounded-pill">
+                        {% if left > 0 %}{{ left }} dni{% else %}WYGASŁO{% endif %}
+                    </span>
+                    
+                    {% if car.is_promoted %}
+                    <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white">GOLD</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="fw-bold text-truncate">{{ car.marka }} {{ car.model }}</h5>
+                    <h4 class="text-danger fw-bold">{{ car.cena|int }} PLN</h4>
+                    
+                    <div class="row g-1 small text-muted mb-3">
+                        <div class="col-6">{{ car.rok }}r.</div>
+                        <div class="col-6">{{ car.paliwo }}</div>
+                        <div class="col-6">{{ car.przebieg }} km</div>
+                        <div class="col-6"><i class="bi bi-eye"></i> {{ car.wyswietlenia }}</div>
+                    </div>
+
+                    <div class="mt-auto pt-3 border-top d-grid gap-2">
+                        <a href="/edytuj/{{ car.id }}" class="btn btn-light btn-sm fw-bold">Edytuj</a>
+                        <div class="d-flex gap-2">
+                            <form action="/odswiez/{{ car.id }}" method="POST" class="w-50">
+                                <button class="btn btn-success btn-sm w-100 fw-bold">Odśwież</button>
+                            </form>
+                            <form action="/usun/{{ car.id }}" method="POST" class="w-50" onsubmit="return confirm('Usunąć?')">
+                                <button class="btn btn-outline-danger btn-sm w-100 fw-bold">Usuń</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% else %}
-            Ostatnie godziny!
-        {% endif %}
-    </div>
-</div>
-
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h5>
-                        <h3 class="text-danger fw-800 mb-3">{{ car.cena|int }} PLN</h3>
-                        
-                        <div class="spec-grid">
-                            <div class="spec-item"><i class="bi bi-calendar3 text-danger"></i> {{ car.rok }}r.</div>
-                            <div class="spec-item"><i class="bi bi-speedometer2 text-danger"></i> {{ car.przebieg }} km</div>
-                            <div class="spec-item"><i class="bi bi-fuel-pump text-danger"></i> {{ car.paliwo }}</div>
-                        </div>
-
-                        <div class="d-flex gap-2 mt-4 pt-3 border-top">
-                            <a href="/edytuj/{{ car.id }}" class="btn btn-outline-primary btn-sm flex-grow-1 rounded-pill fw-bold">Edytuj</a>
-                            <form action="/odswiez/{{ car.id }}" method="POST" class="flex-grow-1">
-                                <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold">Odśwież</button>
-                            </form>
-                            <form action="/usun/{{ car.id }}" method="POST" class="flex-grow-1" onsubmit="return confirm('Usunąć?')">
-                                <button class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-bold">Usuń</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="col-12 text-muted py-3">Brak aktywnych ogłoszeń. Kliknij przycisk u góry, aby dodać.</div>
-            {% endfor %}
-        </div>
-
-        {% if favorites %}
-        <h3 class="fw-bold mb-4 ps-3 border-start border-warning border-5 mt-5">Obserwowane <i class="bi bi-heart-fill text-danger"></i></h3>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-            {% for fav in favorites %}
-            <div class="col">
-                <div class="card car-card h-100 border-0 shadow-sm">
-                    <img src="{{ fav.car.img }}" class="card-img-top" style="height: 180px; object-fit: cover;">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-truncate">{{ fav.car.marka }} {{ fav.car.model }}</h6>
-                        <p class="text-danger fw-bold fs-5 mb-3">{{ fav.car.cena|int }} PLN</p>
-                        <a href="/ogloszenie/{{ fav.car.id }}" class="btn btn-dark btn-sm w-100 rounded-pill">Zobacz szczegóły</a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if current_user.id == 1 %}
-        <div class="card border-0 shadow rounded-4 mt-5 overflow-hidden">
-            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold"><i class="bi bi-shield-lock-fill text-warning"></i> Admin Panel</h5>
-                <div>
-                    <a href="{{ url_for('backup_db') }}" class="btn btn-outline-light btn-sm rounded-pill me-1">Kopia SQL</a>
-                    
-                    <a href="{{ url_for('full_backup') }}" class="btn btn-success btn-sm rounded-pill me-2 fw-bold"><i class="bi bi-file-earmark-zip-fill"></i> FULL ZIP</a>
-                    
-                    <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearLogs()"><i class="bi bi-eraser"></i> Czyść logi</button>
-                </div>
-            </div>
-            <div class="card-body p-4 bg-white">
-                <div class="row text-center align-items-center">
-                    <div class="col-md-2 mb-3 mb-md-0">
-                        <h6 class="text-muted small fw-bold">AKTYWNI</h6>
-                        <h2 class="fw-800 text-success mb-0"><span class="online-dot"></span>{{ stats.users_online }}</h2>
-                    </div>
-                    <div class="col-md-2 mb-3 mb-md-0 border-start">
-                        <h6 class="text-muted small fw-bold">KONTA</h6>
-                        <h2 class="fw-800 text-primary mb-0">{{ stats.total_users }}</h2>
-                    </div>
-                    <div class="col-md-2 mb-3 mb-md-0 border-start">
-                        <h6 class="text-muted small fw-bold">BŁĘDY AI</h6>
-                       <h2 class="fw-800 text-danger mb-0" id="errCount">{{ stats.ai_errors|default(0) }}</h2>
-
-                    </div>
-                    <div class="col-md-6 border-start">
-                        <h6 class="text-start small fw-bold text-muted ps-2 mb-2">DZIENNIK ZDARZEŃ (LIVE)</h6>
-                      <div id="logConsole" class="bg-dark text-info p-2 rounded text-start font-monospace small" style="height: 85px; overflow-y: auto;">
-    {% if stats.logs %}
-        {% for log in stats.logs %}
-            {{ log | safe }}<br>
+        <div class="col-12 text-center text-muted py-5">Brak aut. Kliknij DODAJ, aby wystawić pierwsze.</div>
         {% endfor %}
-    {% else %}
-        <span class="text-secondary">[{{ now.strftime('%H:%M:%S') }}]</span> Brak nowych zdarzeń.<br>
+    </div>
+
+    {% if favorites %}
+    <h4 class="fw-bold mb-3 border-start border-danger border-4 ps-2">Obserwowane</h4>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        {% for fav in favorites %}
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-2 d-flex align-items-center gap-3">
+                    <img src="{{ fav.car.img }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                    <div>
+                        <a href="/ogloszenie/{{ fav.car.id }}" class="fw-bold text-dark text-decoration-none d-block">{{ fav.car.marka }} {{ fav.car.model }}</a>
+                        <small class="text-danger fw-bold">{{ fav.car.cena|int }} PLN</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% endif %}
+
+    {% if current_user.id == 1 %}
+    <div class="card admin-box shadow-sm mb-5">
+        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between">
+            <span><i class="bi bi-shield-lock-fill text-warning"></i> ADMIN PANEL</span>
+            <span class="badge bg-warning text-dark">ID: 1</span>
+        </div>
+        <div class="card-body">
+            <h6 class="fw-bold text-muted mb-3">Zarządzanie Systemem</h6>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{{ url_for('backup_db') }}" class="btn btn-outline-dark w-100 fw-bold">
+                        <i class="bi bi-database-down"></i> Pobierz SQL
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('full_backup') }}" class="btn btn-success w-100 fw-bold">
+                        <i class="bi bi-file-earmark-zip"></i> Pełny Backup (ZIP)
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-danger w-100 fw-bold" onclick="alert('Logi wyczyszczone (symulacja)')">
+                        <i class="bi bi-trash"></i> Czyść Logi
+                    </button>
+                </div>
+            </div>
+            
+            <hr>
+            <p class="small text-muted mb-0">
+                Liczba aut w bazie: <strong>{{ cars|length }}</strong> (Twoje) | 
+                Wersja systemu: <strong>v2.0 (Gemini Flash)</strong>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 
-                            <span class="text-secondary">[{{ now.strftime('%H:%M:%S') }}]</span> System admina gotowy.<br>
+<div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow">
+            <div class="modal-header border-0">
+                <h5 class="fw-bold">Dodaj Ogłoszenie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4 pt-0">
+                    
+                    <div class="text-center bg-dark text-white p-3 rounded-3 mb-4 position-relative overflow-hidden">
+                        <div class="position-relative" style="z-index: 2;">
+                            <i class="bi bi-camera fs-1"></i>
+                            <h6 class="mt-2">Masz auto przed sobą?</h6>
+                            <label class="btn btn-light rounded-pill px-4 fw-bold shadow mt-2">
+                                <i class="bi bi-magic text-danger"></i> SKANUJ APARATEM
+                                <input type="file" name="scan_image" accept="image/*" capture="environment" hidden onchange="scanCar(this)">
+                            </label>
+                            <div id="scanLoader" class="mt-2 small text-warning" style="display:none;">Analizuję...</div>
                         </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-4">
+                        <hr class="flex-grow-1"><span class="px-2 small text-muted fw-bold">LUB RĘCZNIE</span><hr class="flex-grow-1">
+                    </div>
+
+                    <div class="cat-grid mb-3">
+                        <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c2" value="Ciezarowe" onchange="adj()"><label for="c2" class="cat-label"><i class="bi bi-truck"></i>Bus/TIR</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c3" value="Skuter" onchange="adj()"><label for="c3" class="cat-label"><i class="bi bi-scooter"></i>Moto</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c4" value="Rower" onchange="adj()"><label for="c4" class="cat-label"><i class="bi bi-bicycle"></i>Rower</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c5" value="Inne" onchange="adj()"><label for="c5" class="cat-label"><i class="bi bi-grid"></i>Inne</label></div>
+                    </div>
+
+                    <div class="mb-3"><label class="small fw-bold">Zdjęcia (Max 10)</label><input type="file" name="zdjecia" class="form-control" multiple></div>
+
+                    <div class="row g-2">
+                        <div class="col-6"><label class="small fw-bold">Marka</label><input type="text" name="marka" class="form-control" required></div>
+                        <div class="col-6"><label class="small fw-bold">Model</label><input type="text" name="model" class="form-control" required></div>
+                        <div class="col-4"><label class="small fw-bold">Rok</label><input type="number" name="rok" class="form-control"></div>
+                        <div class="col-4"><label class="small fw-bold">Cena</label><input type="number" name="cena" class="form-control" required></div>
+                        <div class="col-4 tech"><label class="small fw-bold">Przebieg</label><input type="number" name="przebieg" class="form-control"></div>
+                        <div class="col-6 tech"><label class="small fw-bold">Paliwo</label><select name="paliwo" class="form-select"><option>Benzyna</option><option>Diesel</option><option>LPG</option></select></div>
+                        <div class="col-6 tech"><label class="small fw-bold">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manual</option><option>Automat</option></select></div>
+                        <div class="col-12"><label class="small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
+                        <div class="col-12"><label class="small fw-bold">Opis</label><textarea name="opis" class="form-control" rows="3"></textarea></div>
+                    </div>
+                    
+                    <div class="mt-3 p-2 border border-warning rounded bg-light opacity-50 position-relative">
+                        <div class="small fw-bold text-warning"><i class="bi bi-star-fill"></i> PROMOWANIE (Wkrótce)</div>
+                        <div class="d-flex justify-content-between small"><span>Pakiet GOLD</span><span>19 PLN</span></div>
                     </div>
                 </div>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="modal fade" id="dodajModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold" id="modalTitle"><i class="bi bi-magic"></i> Nowe Ogłoszenie AI</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="/dodaj" method="POST" enctype="multipart/form-data">
-                    <div class="modal-body p-4">
-                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 mb-4 border">
-                            <span class="small fw-bold text-muted">Twój dzienny limit AI:</span>
-                            <span id="aiLimitBadge" class="badge bg-primary rounded-pill px-3 py-2 fs-6">
-                                {{ 5 - current_user.ai_requests_today }} / 5
-                            </span>
-                        </div>
-
-                        <div class="category-selector">
-                            <div class="category-item"><input type="radio" name="typ" id="t1" value="Osobowe" checked onchange="toggleBike()"><label class="category-label" for="t1"><i class="bi bi-car-front fs-4"></i><span>Osobowe</span></label></div>
-                            <div class="category-item"><input type="radio" name="typ" id="t2" value="Dostawcze" onchange="toggleBike()"><label class="category-label" for="t2"><i class="bi bi-truck fs-4"></i><span>Busy</span></label></div>
-                            <div class="category-item"><input type="radio" name="typ" id="t3" value="Rowery" onchange="toggleBike()"><label class="category-label" for="t3"><i class="bi bi-bicycle fs-4"></i><span>Rower</span></label></div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Zdjęcia pojazdu (Max 9 szt.)</label>
-                            <input type="file" name="zdjecia" id="imgInput" class="form-control" multiple accept="image/*">
-                            <div class="form-text mt-2" id="uploadStatus">Wybierz zdjęcia, a AI automatycznie uzupełni dane!</div>
-                            <div id="imagePreviewContainer"></div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6"><label class="small fw-bold">Marka</label><input type="text" name="marka" id="aiMarka" class="form-control" required></div>
-                            <div class="col-md-6"><label class="small fw-bold">Model</label><input type="text" name="model" id="aiModel" class="form-control" required></div>
-                            <div class="col-md-4"><label class="small fw-bold">Rok</label><input type="number" name="rok" id="aiRok" class="form-control"></div>
-                            <div class="col-md-4"><label class="small fw-bold">Przebieg</label><input type="number" name="przebieg" id="aiPrzebieg" class="form-control"></div>
-                            <div class="col-md-4"><label class="small fw-bold">Cena</label><input type="number" name="cena" class="form-control border-danger" required></div>
-                            <div class="col-md-6"><label class="small fw-bold">Paliwo</label><select name="paliwo" id="aiPaliwo" class="form-select"><option value="Benzyna">Benzyna</option><option value="Diesel">Diesel</option><option value="LPG">LPG</option><option value="Hybryda">Hybryda</option><option value="Elektryczny">Elektryczny</option><option value="Siła mięśni">Siła mięśni</option></select></div>
-                            <div class="col-md-6"><label class="small fw-bold">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select></div>
-                            <div class="col-md-6"><label class="small fw-bold">Nadwozie</label><select name="nadwozie" class="form-select"><option>Sedan</option><option>Kombi</option><option>SUV</option><option>Hatchback</option><option>Coupe</option><option>Inne</option></select></div>
-                            <div class="col-md-6"><label class="small fw-bold">Silnik</label><input type="text" name="pojemnosc" class="form-control"></div>
-                            <div class="col-12"><label class="small fw-bold">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
-
-                            <div class="col-12 mt-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="fw-bold">Opis</label>
-                                    <button type="button" class="btn-ai shadow-sm" onclick="generateDesc()"><i class="bi bi-stars"></i> Generuj Opis</button>
-                                </div>
-                                <textarea name="opis" id="aiOpis" class="form-control rounded-4 p-3" rows="6"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 p-4">
-                        <button type="submit" class="btn btn-danger w-100 rounded-pill fw-bold shadow" id="submitBtn">OPUBLIKUJ</button>
-                    </div>
-                </form>
-            </div>
+                <div class="modal-footer border-0 pt-0"><button class="btn btn-danger w-100 rounded-pill fw-bold">WYSTAW</button></div>
+            </form>
         </div>
     </div>
+</div>
 
-    <footer>
-        <div class="container text-center text-white-50">
-            <p>© 2026 Giełda Radom AI</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleBike() {
-            const typ = document.querySelector('input[name="typ"]:checked').value;
-            const paliwo = document.getElementById('aiPaliwo');
-            if(typ === 'Rowery') paliwo.value = 'Siła mięśni';
-            else if(paliwo.value === 'Siła mięśni') paliwo.value = 'Benzyna';
-        }
-
-        function clearLogs() {
-            const console = document.getElementById('logConsole');
-            if(console) console.innerHTML = '<span class="text-success">[SYSTEM] Logi wyczyszczone.</span><br>';
-            const err = document.getElementById('errCount');
-            if(err) err.innerText = '0';
-        }
-
-        async function generateDesc() {
-            const btn = document.querySelector('.btn-ai');
-            const marka = document.getElementById('aiMarka').value;
-            const model = document.getElementById('aiModel').value;
-            const opisPole = document.getElementById('aiOpis');
-            
-            if(!marka || !model) { alert("Wpisz markę i model!"); return; }
-
-            const stary = opisPole.value.split('✍️ TWÓJ OPIS:')[1] || "";
-            btn.innerHTML = '⏳ Piszę...';
-            
-            try {
-                const res = await fetch('/api/generate-description', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({marka, model, rok: document.getElementById('aiRok').value, przebieg: document.getElementById('aiPrzebieg').value})
-                });
-                const data = await res.json();
-                opisPole.value = `✨ OPIS AI:\n${data.description}\n\n__________________________\n✍️ TWÓJ OPIS:${stary}`;
-            } finally { btn.innerHTML = '<i class="bi bi-stars"></i> Generuj Opis'; }
-        }
-
-        // --- OBSŁUGA PLIKÓW I STATUSU "CZEKAJ" ---
-        document.getElementById('imgInput').addEventListener('change', async function(e) {
-            const files = e.target.files;
-            const container = document.getElementById('imagePreviewContainer');
-            const title = document.getElementById('modalTitle');
-            const status = document.getElementById('uploadStatus');
-            const submitBtn = document.getElementById('submitBtn');
-
-            container.innerHTML = '';
-            
-            if(files.length > 0) {
-                // 1. ZMIANA STATUSU NA "CZEKAJ"
-                title.innerHTML = '<span class="spinner-border spinner-border-sm text-warning"></span> CZEKAJ... Analizuję';
-                title.classList.add('text-warning');
-                status.innerHTML = '<b class="text-warning">⏳ Przetwarzanie... Proszę czekać.</b>';
-                submitBtn.disabled = true; // Blokada przycisku
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function adj(){
+        const v = document.querySelector('input[name="typ"]:checked').value;
+        const h = (v==='Rower'||v==='Inne');
+        document.querySelectorAll('.tech').forEach(e=>e.style.display=h?'none':'block');
+    }
+    async function scanCar(input){
+        if(!input.files[0]) return;
+        document.getElementById('scanLoader').style.display='block';
+        const fd = new FormData(); fd.append('scan_image', input.files[0]);
+        try {
+            const r = await fetch('/api/analyze-car', {method:'POST', body:fd});
+            const d = await r.json();
+            if(d.marka){
+                document.querySelector('[name="marka"]').value=d.marka;
+                document.querySelector('[name="model"]').value=d.model;
+                document.querySelector('[name="rok"]').value=d.rok_sugestia||'';
+                document.querySelector('[name="opis"]').value=`Skan AI: ${d.marka} ${d.model}, ${d.kolor}.\n${d.opis_wizualny}`;
+                alert('Rozpoznano!');
             }
-
-            if(files.length > 9) {
-                alert("Maksymalnie 9 zdjęć!");
-                this.value = '';
-                title.innerHTML = 'Nowe Ogłoszenie AI';
-                title.classList.remove('text-warning');
-                status.innerText = 'Wybierz zdjęcia, a AI automatycznie uzupełni dane!';
-                submitBtn.disabled = false;
-                return;
-            }
-
-            // Podgląd
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    const img = document.createElement('img');
-                    img.src = ev.target.result;
-                    img.className = 'preview-img';
-                    container.appendChild(img);
-                }
-                reader.readAsDataURL(file);
-            });
-
-            // WYSYŁKA DO AI
-            if(files.length > 0) {
-                const formData = new FormData();
-                formData.append('image', files[0]);
-
-                try {
-                    const res = await fetch('/api/analyze-car', { method: 'POST', body: formData });
-                    const data = await res.json();
-
-                    if(res.ok && data.marka) {
-                        document.getElementById('aiMarka').value = data.marka;
-                        document.getElementById('aiModel').value = data.model;
-                        document.getElementById('aiOpis').value = `🤖 ANALIZA:\n${data.sugestia}\n\n__________________________\n`;
-                        
-                        // SUKCES - ODBLOKOWANIE
-                        title.innerHTML = '✅ Gotowe! Sprawdź dane';
-                        title.classList.remove('text-warning');
-                        title.classList.add('text-success');
-                        status.innerHTML = '<b class="text-success">Zdjęcie przeanalizowane pomyślnie!</b>';
-                    } else {
-                        // BŁĄD/LIMIT
-                        title.innerHTML = '⚠️ Wpisz dane ręcznie';
-                        title.classList.remove('text-warning');
-                        status.innerText = 'AI nie rozpoznało auta lub limit wyczerpany.';
-                    }
-                } catch(err) {
-                    title.innerHTML = 'Błąd połączenia';
-                } finally {
-                    // ZAWSZE ODBLOKUJ PRZYCISK NA KONIEC
-                    submitBtn.disabled = false;
-                }
-            }
-        });
-    </script>
+        } catch(e){alert('Błąd AI');}
+        document.getElementById('scanLoader').style.display='none';
+    }
+</script>
 </body>
 </html>
