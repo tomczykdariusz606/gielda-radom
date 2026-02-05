@@ -2,158 +2,142 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Autoryzacja AI - Giełda Radom</title>
-    
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaloguj się - Giełda Radom</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; --glass: rgba(255, 255, 255, 0.95); }
+        :root { --radom-red: #ce2b37; --glass: rgba(255, 255, 255, 0.95); }
         
         body {
             font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
             background-color: #000;
-            /* Upewnij się, że plik radom_hero.png istnieje w static dla spójności */
-            background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover; background-position: center;
-            height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center;
-            overflow: hidden; position: relative;
+            position: relative; overflow: hidden;
         }
 
-        /* Nakładka dla czytelności */
-        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(206, 43, 55, 0.2) 100%); z-index: 1; }
-        
-        .bg-text { position: absolute; font-family: 'Anton', sans-serif; font-size: 18vw; color: rgba(255, 255, 255, 0.03); white-space: nowrap; z-index: 0; user-select: none; transform: rotate(-5deg); pointer-events: none; }
-
-        .login-container { position: relative; z-index: 10; width: 100%; max-width: 440px; padding: 20px; }
-        
-        /* Glassmorphism Card */
-        .glass-card { 
-            background: var(--glass); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 35px; 
-            border: 1px solid rgba(255, 255, 255, 0.3); 
-            padding: 50px; 
-            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+        .overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(26,26,26,0.9) 100%);
+            z-index: 1;
         }
 
-        .logo-area i { font-size: 3.5rem; color: var(--radom-red); filter: drop-shadow(0 0 15px rgba(206, 43, 55, 0.4)); }
-        
-        .form-label-modern { font-size: 0.75rem; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 10px; }
+        .bg-text {
+            position: absolute;
+            font-family: 'Anton', sans-serif;
+            font-size: 18vw;
+            color: rgba(255, 255, 255, 0.04);
+            white-space: nowrap;
+            z-index: 0;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            pointer-events: none;
+            text-transform: uppercase;
+        }
 
-        .form-control-modern { 
-            background: #f8f9fa; 
-            border: 2px solid transparent; 
-            border-radius: 18px; 
-            padding: 14px 20px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .login-card {
+            position: relative; z-index: 10;
+            width: 100%; max-width: 400px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .form-control-modern {
+            background: #f0f2f5;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
             font-weight: 500;
+            transition: 0.3s;
         }
+        .form-control-modern:focus {
+            background: white;
+            border-color: var(--radom-red);
+            box-shadow: 0 0 0 4px rgba(206, 43, 55, 0.15);
+            outline: none;
+        }
+
+        .btn-radom {
+            background: linear-gradient(135deg, var(--radom-red), #a31f28);
+            color: white; border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-radom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(206, 43, 55, 0.3);
+            color: white;
+        }
+
+        .brand-icon { font-size: 3rem; color: var(--radom-red); margin-bottom: 1rem; display: inline-block; }
         
-        .form-control-modern:focus { 
-            background: white; 
-            border-color: var(--radom-red); 
-            box-shadow: 0 10px 25px rgba(206, 43, 55, 0.1); 
-            outline: none; 
-        }
-
-        .btn-radom { 
-            background: var(--radom-red); 
-            color: white; 
-            border: none; 
-            border-radius: 18px; 
-            padding: 16px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 1.5px; 
-            transition: all 0.4s; 
-            width: 100%;
-            box-shadow: 0 10px 30px rgba(206, 43, 55, 0.3);
-        }
-        
-        .btn-radom:hover { 
-            background: #b02029; 
-            transform: translateY(-4px); 
-            box-shadow: 0 15px 35px rgba(206, 43, 55, 0.4);
-        }
-
-        .alert-modern { 
-            background: #fff5f5; 
-            border: none;
-            border-left: 5px solid var(--radom-red); 
-            color: #821a1f; 
-            border-radius: 15px; 
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .forgot-link { text-decoration: none; font-size: 0.75rem; color: #888; font-weight: 700; transition: 0.3s; text-transform: uppercase; }
-        .forgot-link:hover { color: var(--radom-red); }
-
-        .back-to-home {
-            position: absolute; top: -60px; left: 0;
-            color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;
-            opacity: 0.7; transition: 0.3s;
-        }
-        .back-to-home:hover { opacity: 1; transform: translateX(-5px); }
+        .link-muted { color: #666; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
+        .link-muted:hover { color: var(--radom-red); }
     </style>
 </head>
 <body>
 
-<div class="overlay"></div>
-<div class="bg-text">RADOM 76</div>
+    <div class="overlay"></div>
+    <div class="bg-text">RADOM 76</div>
 
-<div class="login-container">
-    <a href="/" class="back-to-home"><i class="bi bi-arrow-left me-2"></i> Wróć na giełdę</a>
+    <div class="container d-flex justify-content-center">
+        <div class="login-card text-center">
+            
+            <i class="bi bi-speedometer2 brand-icon"></i>
+            <h2 class="fw-bold mb-1">Witaj ponownie</h2>
+            <p class="text-muted small mb-4">Zaloguj się do Giełdy Radom</p>
 
-    <div class="glass-card">
-        <div class="text-center mb-5 logo-area">
-            <i class="bi bi-speedometer2"></i>
-            <h2 class="fw-800 mt-3 mb-1 text-dark" style="letter-spacing: -1.5px; font-family: 'Anton';">GIEŁDA RADOM <span class="text-danger">AI</span></h2>
-            <p class="text-muted small fw-bold text-uppercase" style="letter-spacing: 2px;">System Autoryzacji</p>
-        </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} py-2 small rounded-3 mb-3 shadow-sm border-0">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-modern mb-4 shadow-sm animate__animated animate__shakeX">
-                        <i class="bi bi-shield-lock-fill me-2"></i> {{ message }}
+            <form method="POST">
+                <div class="mb-3 text-start">
+                    <label class="form-label small fw-bold text-muted ms-1">Login</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-transparent ps-0"><i class="bi bi-person text-secondary"></i></span>
+                        <input type="text" name="username" class="form-control form-control-modern" placeholder="Twój login" required>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <form method="POST">
-            <div class="mb-3">
-                <label class="form-label-modern">Login / ID Użytkownika</label>
-                <input type="text" name="username" class="form-control form-control-modern" placeholder="Wpisz swój login" required>
-            </div>
-
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <label class="form-label-modern mb-0">Hasło Dostępowe</label>
-                    <a href="{{ url_for('reset_request') }}" class="forgot-link">Zapomniałeś?</a>
                 </div>
-                <input type="password" name="password" class="form-control form-control-modern" placeholder="••••••••" required>
+
+                <div class="mb-2 text-start">
+                    <label class="form-label small fw-bold text-muted ms-1">Hasło</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0 bg-transparent ps-0"><i class="bi bi-lock text-secondary"></i></span>
+                        <input type="password" name="password" class="form-control form-control-modern" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="text-end mb-4">
+                    <a href="{{ url_for('reset_request') }}" class="link-muted small">Zapomniałeś hasła?</a>
+                </div>
+
+                <button type="submit" class="btn btn-radom w-100 mb-3 shadow">ZALOGUJ SIĘ</button>
+            </form>
+
+            <div class="border-top pt-3 mt-2">
+                <p class="text-muted small mb-1">Nie masz jeszcze konta?</p>
+                <a href="{{ url_for('register') }}" class="fw-bold text-decoration-none text-dark hover-red">Zarejestruj się za darmo</a>
             </div>
-
-            <button type="submit" class="btn-radom mb-4">
-                Uruchom Panel <i class="bi bi-unlock-fill ms-2"></i>
-            </button>
-        </form>
-
-        <div class="text-center border-top pt-4">
-            <p class="small text-muted mb-2 fw-semibold">Nowy w systemie?</p>
-            <a href="/register" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-800 text-uppercase" style="font-size: 0.7rem; border-width: 2px;">
-                Utwórz konto w bazie
-            </a>
         </div>
     </div>
-</div>
 
 </body>
 </html>
