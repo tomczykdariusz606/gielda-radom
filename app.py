@@ -347,7 +347,7 @@ def edytuj(id):
 @login_required
 def generuj_opis_ai():
     if not model_ai or not check_ai_limit(): return jsonify({"opis": "Brak AI/Limit"}), 429
-    data = request.json
+    data = datetime.utcnow()
     try:
         prompt = f"Opisz auto: {data.get('marka')} {data.get('model')}, {data.get('rok')}, {data.get('cena')} PLN. Krótko, handlowo."
         resp = model_ai.generate_content(prompt)
