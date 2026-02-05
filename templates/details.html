@@ -1,282 +1,172 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
     
-    <meta name="description" content="Sprzedam {{ car.marka }} {{ car.model }}, Rok {{ car.rok }}, Cena {{ car.cena }} PLN. Zobacz ofertę na Giełdzie Radom.">
+    <title>{{ car.marka }} {{ car.model }} ({{ car.rok }}r.) - Giełda Radom</title>
+    <meta name="description" content="Sprawdź ogłoszenie: {{ car.marka }} {{ car.model }}, rocznik {{ car.rok }}, cena {{ car.cena }} PLN. Lokalizacja: {{ car.zrodlo }}. Giełda Radom z weryfikacją Gemini AI.">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/fslightbox/3.3.1/index.min.css" rel="stylesheet">
-
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; }
-        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-        
-        /* GALERIA */
-        .carousel-item { height: 60vh; background: #000; position: relative; }
-        .carousel-item img { object-fit: contain; width: 100%; height: 100%; }
-        @media (max-width: 768px) { .carousel-item { height: 40vh; } }
-
-        /* PASEK AI */
-        .ai-box { background: #fff; border: 1px solid #e0e0e0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .progress-stacked { height: 20px; border-radius: 10px; overflow: hidden; background: #eee; }
-
-        /* KAFELKI PARAMETRÓW */
-        .spec-box { background: white; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #f0f0f0; transition: 0.2s; }
-        .spec-box:hover { transform: translateY(-2px); border-color: #ddd; }
-        .spec-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
-        .spec-val { font-weight: 700; color: #333; font-size: 1.1rem; }
-
-        /* PRZYCISKI ZEWNĘTRZNE */
-        .btn-cv { background: #1a237e; color: white; border: none; font-weight: 700; }
-        .btn-mubi { background: #00c853; color: white; border: none; font-weight: 700; }
-
-        /* OPISY */
-        .desc-box { background: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .ai-desc { background: linear-gradient(to right, #f8f9fa, #fff); border-left: 4px solid #4285f4; }
-        
-        /* STICKY SIDEBAR */
-        .sticky-card { position: sticky; top: 90px; }
-        
-        /* ULUBIONE */
-        .fav-btn-lg { 
-            position: absolute; top: 20px; right: 20px; 
-            background: white; border-radius: 50%; width: 50px; height: 50px; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
-            z-index: 100; transition: 0.2s; cursor: pointer; text-decoration: none;
-        }
-        .fav-btn-lg:hover { transform: scale(1.1); }
+        body { background-color: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 0; }
+        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid #ce2b37; }
+        .gallery-img { height: 400px; object-fit: cover; border-radius: 12px; }
+        .spec-box { background: #2c2c2c; border-radius: 10px; padding: 15px; text-align: center; border: 1px solid #444; transition: 0.2s; }
+        .spec-box:hover { border-color: #ce2b37; background: #333; }
+        .price-tag { color: #ce2b37; font-weight: 800; font-size: 2.5rem; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark p-3 sticky-top shadow">
+<nav class="navbar navbar-dark p-3 mb-4">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-        <a href="/" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-arrow-left"></i> Powrót</a>
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-arrow-left"></i> Wróć na Giełdę</a>
+        <div class="d-flex gap-2">
+            {% if current_user.is_authenticated and (current_user.id == car.user_id or current_user.username == 'admin') %}
+                <a href="/edytuj/{{ car.id }}" class="btn btn-warning btn-sm fw-bold">EDYTUJ</a>
+                <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Na pewno usunąć?')">
+                    <button class="btn btn-dark btn-sm border-secondary text-danger">USUŃ</button>
+                </form>
+            {% endif %}
+            <span class="badge bg-secondary d-flex align-items-center">ID: {{ car.id }}</span>
+        </div>
     </div>
 </nav>
 
-<div class="position-relative bg-dark">
-    {% if current_user.is_authenticated %}
-    <a href="{{ url_for('toggle_favorite', car_id=car.id) }}" class="fav-btn-lg">
-        <i class="bi {{ 'bi-heart-fill text-danger' if car.id in current_user.favorites|map(attribute='car_id') else 'bi-heart text-dark' }}"></i>
-    </a>
-    {% endif %}
-
-    <div id="carCarousel" class="carousel slide" data-bs-ride="false" data-bs-touch="true">
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <a data-fslightbox="gallery" href="{{ car.img }}">
-                    <img src="{{ car.img }}" class="d-block w-100" alt="Main Photo">
-                </a>
-            </div>
-            {% for img in car.images %}
-            <div class="carousel-item">
-                <a data-fslightbox="gallery" href="{{ img.image_path }}">
-                    <img src="{{ img.image_path }}" class="d-block w-100" alt="Photo {{ loop.index }}">
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon bg-dark rounded-circle p-4 bg-opacity-50"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon bg-dark rounded-circle p-4 bg-opacity-50"></span>
-        </button>
-        
-        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3">
-            <span class="badge bg-dark bg-opacity-75 fs-6 px-3 py-2 rounded-pill border border-secondary">
-                <i class="bi bi-zoom-in me-1"></i> Kliknij zdjęcie aby powiększyć
-            </span>
-        </div>
-    </div>
-</div>
-
-<div class="container py-4">
-    <div class="row g-4">
+<div class="container mb-5">
+    <div class="row g-5">
         
         <div class="col-lg-8">
             
-            <div class="d-flex justify-content-between align-items-start mb-4">
-                <div>
-                    <h1 class="fw-800 display-6 mb-1">{{ car.marka }} {{ car.model }}</h1>
-                    <div class="text-muted d-flex gap-3 align-items-center">
-                        <span><i class="bi bi-geo-alt-fill text-danger"></i> {{ car.zrodlo }}</span>
-                        <span><i class="bi bi-calendar-check"></i> Dodano: {{ car.data_dodania.strftime('%d.%m.%Y') }}</span>
+            <div id="carGallery" class="carousel slide mb-4 shadow-lg rounded-4 overflow-hidden" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="{{ car.img }}" class="d-block w-100 gallery-img">
                     </div>
+                    {% for img in car.images %}
+                    {% if img.image_path != car.img %}
+                    <div class="carousel-item">
+                        <img src="{{ img.image_path }}" class="d-block w-100 gallery-img">
+                    </div>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                <div class="text-end d-lg-none">
-                    <h2 class="text-danger fw-bold mb-0">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</h2>
-                </div>
+                {% if car.images|length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#carGallery" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carGallery" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                {% endif %}
             </div>
 
             {% if car.ai_label %}
-                {% set ai = car.ai_label | from_json %}
-                {% if ai %}
-                <div class="ai-box mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-stars text-primary"></i> Analiza Rynkowa AI</h5>
-                        <span class="badge bg-{{ ai.color }} fs-6">{{ ai.label }}</span>
-                    </div>
-                    
-                    <div class="progress" style="height: 25px; border-radius: 12px;">
-                        <div class="progress-bar bg-{{ ai.color }} progress-bar-striped progress-bar-animated" 
-                             role="progressbar" style="width: {{ ai.score }}%">
-                             {{ ai.score }}/100 pkt atrakcyjności
+            {% set ai = car.ai_label|from_json %}
+            {% if ai %}
+            <div class="alert alert-{{ ai.color }} d-flex align-items-center shadow-sm border-0 mb-4" role="alert">
+                <i class="bi bi-stars fs-3 me-3"></i>
+                <div>
+                    <strong class="d-block text-uppercase">{{ ai.label }}</strong>
+                    <small>{{ ai.market_info }} (Analiza na podst. {{ ai.sample_size }})</small>
+                </div>
+                <div class="ms-auto fw-bold fs-4">{{ ai.score }}/100</div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <div class="card bg-dark border-secondary mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold text-white mb-3">Opis Pojazdu</h5>
+                    <p class="text-muted" style="white-space: pre-line; font-size: 1.05rem;">{{ car.opis }}</p>
+                </div>
+            </div>
+
+            <div class="card mb-4 border-0 shadow-lg overflow-hidden position-relative" style="background: linear-gradient(135deg, #111 0%, #222 100%); border: 1px solid #333;">
+                <div class="card-body position-relative py-4">
+                    <div style="position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(66,133,244,0.2) 0%, rgba(0,0,0,0) 70%); filter: blur(50px);"></div>
+                    <div style="position: absolute; bottom: -50%; left: -10%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(219,68,55,0.2) 0%, rgba(0,0,0,0) 70%); filter: blur(50px);"></div>
+
+                    <div class="row align-items-center position-relative" style="z-index: 1;">
+                        <div class="col-md-9">
+                            <h4 class="fw-bold text-white mb-2">
+                                <i class="bi bi-google me-2"></i>Powered by <span style="background: -webkit-linear-gradient(0deg, #4285F4, #EA4335, #FBBC05, #34A853); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Gemini 3.0</span>
+                            </h4>
+                            <p class="text-white-50 mb-0 small">
+                                Ten pojazd został zweryfikowany przez najnowszy model AI. Opis oraz sugerowana cena bazują na analizie tysięcy ofert rynkowych.
+                                Kupuj świadomie z technologią przyszłości.
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-end d-none d-md-block">
+                             <i class="bi bi-cpu text-white opacity-25" style="font-size: 3.5rem;"></i>
                         </div>
                     </div>
-                    
-                    <div class="d-flex justify-content-between mt-3 text-muted small border-top pt-2">
-                        <span><i class="bi bi-robot"></i> Model: Gemini 1.5 Flash</span>
-                        <span>Data analizy: <strong>{{ car.ai_valuation_data }}</strong></span>
-                        <span>Próba rynkowa: <strong>{{ ai.sample_size }}</strong></span>
-                    </div>
-                    <div class="mt-2 text-muted small fst-italic">
-                        "{{ ai.market_info }}"
-                    </div>
-                </div>
-                {% endif %}
-            {% endif %}
-
-            <h5 class="fw-bold mb-3">Szczegóły Techniczne</h5>
-            <div class="row row-cols-2 row-cols-md-3 g-3 mb-5">
-                <div class="col">
-                    <div class="spec-box">
-                        <span class="spec-label"><i class="bi bi-calendar"></i> Rok</span>
-                        <span class="spec-val">{{ car.rok }}</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="spec-box">
-                        <span class="spec-label"><i class="bi bi-speedometer2"></i> Przebieg</span>
-                        <span class="spec-val">{{ car.przebieg }} km</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="spec-box">
-                        <span class="spec-label"><i class="bi bi-fuel-pump"></i> Paliwo</span>
-                        <span class="spec-val">{{ car.paliwo }}</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="spec-box">
-                        <span class="spec-label"><i class="bi bi-gear-wide"></i> Skrzynia</span>
-                        <span class="spec-val">{{ car.skrzynia }}</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="spec-box">
-                        <span class="spec-label"><i class="bi bi-car-front"></i> Nadwozie</span>
-                        <span class="spec-val">{{ car.nadwozie }}</span>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="spec-box">
-                        <span class="spec-label"><i class="bi bi-lightning-charge"></i> Pojemność</span>
-                        <span class="spec-val">{{ car.pojemnosc }}</span>
-                    </div>
                 </div>
             </div>
-
-            <div class="row g-3 mb-5">
-                <div class="col-md-6">
-                    <a href="https://www.carvertical.com/pl" target="_blank" class="btn btn-cv w-100 py-3 rounded-4 shadow-sm">
-                        <i class="bi bi-shield-check me-2"></i> Sprawdź historię (VIN)
-                        <div class="small fw-normal opacity-75">Raport wypadkowy CarVertical</div>
-                    </a>
-                </div>
-                <div class="col-md-6">
-                    <a href="https://mubi.pl" target="_blank" class="btn btn-mubi w-100 py-3 rounded-4 shadow-sm">
-                        <i class="bi bi-piggy-bank me-2"></i> Oblicz Ubezpieczenie
-                        <div class="small fw-normal opacity-75">Porównywarka Mubi</div>
-                    </a>
-                </div>
-            </div>
-
-            <h5 class="fw-bold mb-3">Opis Pojazdu</h5>
-            
-            {% if "Skan AI" in car.opis or "AI:" in car.opis %}
-            <div class="desc-box ai-desc">
-                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-stars"></i> Komentarz Asystenta AI</h6>
-                <p style="white-space: pre-line;">{{ car.opis }}</p>
-            </div>
-            {% else %}
-            <div class="desc-box">
-                <p class="text-secondary" style="white-space: pre-line; line-height: 1.6;">{{ car.opis }}</p>
-            </div>
-            {% endif %}
 
         </div>
 
         <div class="col-lg-4">
-            <div class="card border-0 shadow-lg rounded-4 sticky-card overflow-hidden">
-                <div class="card-body p-4">
-                    <h5 class="text-muted small fw-bold text-uppercase mb-2">Cena Całkowita</h5>
-                    <h2 class="text-danger fw-900 display-5 mb-4">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} <small class="fs-4 text-dark">PLN</small></h2>
-                    
-                    <div class="d-grid gap-2 mb-4">
-                        <button class="btn btn-dark btn-lg rounded-pill fw-bold py-3" onclick="togglePhone(this, '{{ car.telefon }}')">
-                            <i class="bi bi-telephone-fill me-2"></i> Pokaż Telefon
-                        </button>
-                        <a href="sms:{{ car.telefon }}" class="btn btn-outline-dark rounded-pill fw-bold">
-                            <i class="bi bi-chat-dots me-2"></i> Wyślij SMS
+            <div class="sticky-top" style="top: 20px;">
+                
+                <h2 class="fw-bold mb-0 text-white">{{ car.marka }} {{ car.model }}</h2>
+                <div class="price-tag mb-3">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
+
+                <div class="d-grid gap-2 mb-4">
+                    <button class="btn btn-success btn-lg fw-bold rounded-pill shadow">
+                        <i class="bi bi-telephone-fill me-2"></i> {{ car.telefon }}
+                    </button>
+                    {% if current_user.is_authenticated %}
+                        <a href="/toggle_favorite/{{ car.id }}" class="btn btn-outline-secondary rounded-pill">
+                            {% if car in current_user.favorites|map(attribute='car') %}
+                                <i class="bi bi-heart-fill text-danger me-2"></i> Usuń z ulubionych
+                            {% else %}
+                                <i class="bi bi-heart me-2"></i> Dodaj do ulubionych
+                            {% endif %}
                         </a>
-                    </div>
+                    {% endif %}
+                </div>
 
-                    <div class="bg-light p-3 rounded-3 mb-3">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="bg-white p-2 rounded-circle shadow-sm">
-                                <i class="bi bi-person-fill fs-3 text-secondary"></i>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold mb-0">Sprzedający</h6>
-                                <small class="text-muted">Użytkownik Giełdy</small>
-                            </div>
-                        </div>
-                    </div>
+                <div class="row g-2 mb-4">
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-calendar3 d-block text-danger mb-1"></i>{{ car.rok }}r.</div></div>
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-speedometer2 d-block text-danger mb-1"></i>{{ car.przebieg }} km</div></div>
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-fuel-pump d-block text-danger mb-1"></i>{{ car.paliwo }}</div></div>
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-gear-wide d-block text-danger mb-1"></i>{{ car.skrzynia or '-' }}</div></div>
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-car-front d-block text-danger mb-1"></i>{{ car.nadwozie or '-' }}</div></div>
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-hdd-network d-block text-danger mb-1"></i>{{ car.pojemnosc or '-' }}</div></div>
+                </div>
 
-                    <hr>
-                    
-                    <div class="text-center text-muted small">
-                        <div class="mb-2"><i class="bi bi-shield-lock"></i> <strong>Bezpieczne zakupy</strong></div>
-                        <p class="mb-0 opacity-75">Nie wysyłaj pieniędzy przed obejrzeniem auta. Spotkaj się w bezpiecznym miejscu w Radomiu.</p>
+                <div class="card bg-dark border-secondary shadow-sm mb-3">
+                    <div class="card-header bg-transparent border-secondary text-white fw-bold small">
+                        <i class="bi bi-geo-alt-fill text-danger me-2"></i> Lokalizacja
                     </div>
-
-                    <div class="mt-4 pt-3 border-top text-center text-muted" style="font-size: 0.75rem;">
-                        <div>ID Ogłoszenia: #{{ car.id }}</div>
-                        <div>Wyświetleń: <strong>{{ car.wyswietlenia }}</strong></div>
+                    <div class="overflow-hidden bg-white" style="height: 250px; border-radius: 0 0 10px 10px;">
+                        <iframe 
+                            width="100%" 
+                            height="100%" 
+                            frameborder="0" 
+                            style="border:0; filter: invert(90%) hue-rotate(180deg);" 
+                            src="https://maps.google.com/maps?q={{ car.zrodlo }}&t=&z=13&ie=UTF8&iwloc=&output=embed">
+                        </iframe>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-white-50 small">
+                        Miasto: <strong>{{ car.zrodlo }}</strong>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
-<footer class="mt-5 py-4 bg-dark text-white text-center">
-    <p class="mb-0 small opacity-50">&copy; 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
+<footer class="mt-5 py-4 border-top border-secondary text-center text-muted small bg-black bg-opacity-25">
+    <div class="container d-flex justify-content-center gap-3 mb-2">
+        <a href="/regulamin" class="text-decoration-none text-muted hover-white">Regulamin</a>
+        <a href="/polityka" class="text-decoration-none text-muted hover-white">Prywatność</a>
+        <a href="/kontakt" class="text-decoration-none text-muted hover-white">Kontakt</a>
+    </div>
+    © 2026 Giełda Radom. Wszystkie prawa zastrzeżone. <br>
+    <span class="opacity-50">Powered by Gemini 3.0 & Flask</span>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fslightbox/3.3.1/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    // Prosta funkcja ukrywająca numer przed botami
-    function togglePhone(btn, number) {
-        if(btn.innerText.includes('Pokaż')) {
-            btn.innerHTML = `<i class="bi bi-telephone-fill me-2"></i> ${number}`;
-            btn.classList.replace('btn-dark', 'btn-success');
-        }
-    }
-</script>
-
 </body>
 </html>
