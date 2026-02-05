@@ -43,7 +43,7 @@
         <div class="d-flex gap-2">
             {% if current_user.is_authenticated %}
                 <a href="/profil" class="btn btn-outline-light rounded-pill btn-sm fw-bold">Moje Konto</a>
-                <a href="/dodaj" class="btn btn-danger rounded-pill btn-sm fw-bold px-3">+ DODAJ</a>
+                <a href="/profil" class="btn btn-danger rounded-pill btn-sm fw-bold px-3">+ DODAJ</a>
             {% else %}
                 <a href="/login" class="btn btn-outline-light rounded-pill btn-sm">Logowanie</a>
             {% endif %}
