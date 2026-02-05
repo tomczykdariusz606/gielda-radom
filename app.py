@@ -1,4 +1,4 @@
-import os
+mport os
 import uuid
 import zipfile
 import io
@@ -213,61 +213,33 @@ def index():
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
-    # 1. NAJPIERW pobieramy auto z bazy (to musi być na górze!)
     car = Car.query.get_or_404(car_id)
-    
-    # 2. Licznik wyświetleń (naprawiony)
-    if car.views is None: 
-        car.views = 0
-    car.views += 1
-    
-    # (Dla bezpieczeństwa aktualizujemy też stary licznik, jeśli istnieje)
-    try:
-        car.wyswietlenia = (car.wyswietlenia or 0) + 1
-    except:
-        pass
-
-    # 3. Logika AI: Sprawdzamy czy wycena nie jest przestarzała (starsza niż 3 dni)
     should_update = False
     if not car.ai_valuation_data or not car.ai_label:
         should_update = True
     else:
         try:
-            # Używamy daty bez czasu, żeby uniknąć błędów formatowania
-            val_data = json.loads(car.ai_valuation_data) if isinstance(car.ai_valuation_data, str) else {}
-            # Tutaj uproszczona logika - jeśli brak danych, aktualizuj
-            should_update = False 
-        except: 
-            should_update = True
-            
-    # Jeśli trzeba, uruchamiamy wycenę w tle
+            last_check = datetime.strptime(car.ai_valuation_data, "%Y-%m-%d")
+            if (datetime.now() - last_check).days >= 3:
+                should_update = True
+        except: should_update = True
     if should_update and model_ai:
-        try:
-            update_market_valuation(car)
-        except Exception as e:
-            print(f"Błąd aktualizacji wyceny: {e}")
-
-    # 4. Zapisujemy wszystko raz na końcu
+        update_market_valuation(car)
+    car.wyswietlenia = (car.wyswietlenia or 0) + 1
     db.session.commit()
-    
-    # 5. Wyświetlamy szablon (używamy utcnow dla bezpieczeństwa stref czasowych)
-    return render_template('details.html', car=car, now=datetime.utcnow())
-
+    return render_template('details.html', car=car, now=datetime.now(timezone.utc))
 
 @app.route('/profil')
 @login_required
 def profil():
+    # Admin widzi wszystko
     if current_user.username == 'admin':
-        # Admin widzi wszystko + statystyki
-        cars = Car.query.all()
-        user_count = User.query.count()
-        total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
+        cars = Car.query.order_by(Car.data_dodania.desc()).all()
     else:
-        cars = Car.query.filter_by(user_id=current_user.id).all()
-        user_count = 0
-        total_views = 0
+        cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
         
-    return render_template('profil.html', cars=cars, user_count=user_count, total_views=total_views)
+    favorites = Favorite.query.filter_by(user_id=current_user.id).all()
+    return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.now(timezone.utc))
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
@@ -544,4 +516,4 @@ def generuj_opis_ai():
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000
