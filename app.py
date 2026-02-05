@@ -16,27 +16,27 @@ import google.generativeai as genai
 from flask_mail import Mail, Message
 
 # --- IMPORT TWOICH SEKRETÓW ---
-try:
-    import sekrety
-    # Przypisanie zmiennych z pliku sekrety.py
-    GEMINI_KEY = sekrety.GEMINI_KEY
-    MAIL_PWD = sekrety.MAIL_PWD
-    SECRET_KEY_APP = sekrety.SECRET_KEY
-except ImportError:
-    print("❌ BŁĄD: Brak pliku sekrety.py! Funkcje AI i Email nie będą działać.")
-    GEMINI_KEY = None
-    MAIL_PWD = None
-    SECRET_KEY_APP = 'awaryjny_klucz_jesli_brak_pliku'
+import sekrety
+    # Przypisanie zmiennych z pliku # --- KONFIGURACJA POCZTY ---
+app.config['MAIL_SERVER'] = 'poczta.o2.pl'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'dariusztom@go2.pl'
+app.config['MAIL_PASSWORD'] = sekrety.MAIL_PWD
+app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
+mail = Mail(app)
 
-app = Flask(__name__)
-app.secret_key = SECRET_KEY_APP
-
-# --- KONFIGURACJA ---
+# --- KONFIGURACJA GEMINI AI ---
+genai.configure(api_key=sekrety.GEMINI_KEY)
+model_ai = genai.GenerativeModel('gemini-3-flash-preview')
+# --- KONFIGURACJA APLIKACJI ---
+app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
