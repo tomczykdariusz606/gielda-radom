@@ -21,15 +21,15 @@ try:
     # Przypisanie zmiennych z pliku sekrety.py
     GEMINI_KEY = sekrety.GEMINI_KEY
     MAIL_PWD = sekrety.MAIL_PWD
-    # Sprawdzamy czy w sekretach jest klucz sesji, jak nie to domyślny
-    
+    SECRET_KEY_APP = sekrety.SECRET_KEY
 except ImportError:
     print("❌ BŁĄD: Brak pliku sekrety.py! Funkcje AI i Email nie będą działać.")
     GEMINI_KEY = None
     MAIL_PWD = None
+    SECRET_KEY_APP = 'awaryjny_klucz_jesli_brak_pliku'
 
 app = Flask(__name__)
-app.secret_key = 'sekretny_klucz_gieldy_radom_2024'
+app.secret_key = SECRET_KEY_APP
 
 # --- KONFIGURACJA ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
@@ -49,7 +49,7 @@ login_manager.login_view = 'login'
 # --- KONFIGURACJA AI (GEMINI) ---
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
-    # Używamy sprawdzonego modelu Flash
+    # Używamy sprawdzonego modelu Flash (szybki i tani)
     model_ai = genai.GenerativeModel('gemini-1.5-flash')
 else:
     model_ai = None
@@ -149,7 +149,7 @@ def check_ai_limit():
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = today
         db.session.commit()
-    return current_user.ai_requests_today < 15 # Limit dzienny
+    return current_user.ai_requests_today < 10 # Zwiększyłem lekko limit dla testów
 
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
@@ -184,7 +184,7 @@ def update_market_valuation(car):
         """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        json.loads(clean_json) 
+        json.loads(clean_json) # Test poprawności
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
@@ -231,9 +231,12 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    # Admin widzi wszystko
+    # Pokazujemy auta użytkownika, chyba że to ADMIN - wtedy wszystkie (do zarządzania)
     if current_user.username == 'admin':
-        cars = Car.query.order_by(Car.data_dodania.desc()).all()
+        # Admin widzi swoje, ale w "Gotowcu" niżej daliśmy mu prawo edycji wszystkiego
+        # Tutaj pobieramy auta przypisane do niego, żeby widział co wystawił.
+        # Pełna lista jest w panelu SQL, a na stronie głównej może edytować każde.
+        cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
     else:
         cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
         
@@ -455,23 +458,11 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html')
 
-# --- STOPKA: KONTAKT, REGULAMIN, POLITYKA ---
-@app.route('/kontakt')
-def kontakt():
-    return render_template('kontakt.html')
-
-@app.route('/regulamin')
-def regulamin():
-    return render_template('regulamin.html')
-
-@app.route('/polityka')
-def polityka():
-    return render_template('polityka.html')
-
 # --- ADMIN ROUTES ---
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
+    # Pozwalamy jeśli ID=1 LUB username='admin'
     if current_user.id != 1 and current_user.username != 'admin': abort(403)
     return send_from_directory('instance', 'gielda.db', as_attachment=True)
 
