@@ -1,231 +1,183 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title>Edycja Ogłoszenia - Giełda Radom AI</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edycja Ogłoszenia - Giełda Radom</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --radom-red: #ce2b37;
-            --radom-dark: #1a1a1a;
-            --gemini-grad: linear-gradient(135deg, #4285f4 0%, #9b72f3 100%);
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f4f7f6;
-            min-height: 100vh;
-            padding: 40px 0;
-        }
-        .edit-card {
-            background: white;
-            border-radius: 30px;
-            border: none;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .edit-header {
-            background: var(--radom-dark);
-            color: white;
-            padding: 40px;
-            text-align: center;
-            border-bottom: 5px solid var(--radom-red);
-        }
-        .form-label { font-weight: 700; font-size: 0.85rem; color: #444; text-transform: uppercase; margin-bottom: 8px; }
-        .form-control, .form-select {
-            border-radius: 12px;
-            padding: 12px 15px;
-            border: 2px solid #eee;
-            transition: 0.3s;
-        }
-        .form-control:focus { border-color: var(--radom-red); box-shadow: none; background: #fff8f8; }
+        body { background: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #1a1a1a; border-bottom: 3px solid #ce2b37; }
         
-        .img-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 20px;
-            border: 2px dashed #ddd;
+        .edit-card { border: none; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); background: white; }
+        
+        /* Miniaturki do usuwania */
+        .img-edit-container { position: relative; width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
+        .img-edit-container img { width: 100%; height: 100%; object-fit: cover; }
+        .btn-delete-img { 
+            position: absolute; top: 0; right: 0; 
+            background: rgba(220, 53, 69, 0.9); color: white; 
+            border: none; width: 24px; height: 24px; 
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
         }
-        .img-wrapper {
-            position: relative;
-            aspect-ratio: 4/3;
+        .btn-delete-img:hover { background: red; }
+
+        /* Kafelki Kategorii (Mniejsze niż w profilu) */
+        .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 20px; }
+        .cat-item input { display: none; }
+        .cat-label { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 60px; background: #f8f9fa; border: 1px solid #eee; border-radius: 8px;
+            cursor: pointer; font-size: 0.7rem; text-align: center; color: #666; transition: 0.2s;
         }
-        .img-wrapper img {
-            width: 100%; height: 100%; object-fit: cover; border-radius: 12px;
-        }
-        .del-badge {
-            position: absolute; top: -5px; right: -5px;
-            background: var(--radom-red); color: white;
-            border: none; border-radius: 50%; width: 25px; height: 25px;
-            font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .btn-ai-gen {
-            background: var(--gemini-grad); color: white;
-            border: none; border-radius: 50px; padding: 5px 15px;
-            font-size: 0.75rem; font-weight: 600;
-        }
-        .btn-save {
-            background: var(--radom-red); color: white;
-            border: none; border-radius: 50px; padding: 15px 40px;
-            font-weight: 800; transition: 0.3s;
-        }
-        .btn-save:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(206, 43, 55, 0.3); color: white; }
+        .cat-label i { font-size: 1.2rem; margin-bottom: 2px; }
+        .cat-item input:checked + .cat-label { background: #fff5f5; border-color: #ce2b37; color: #ce2b37; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container" style="max-width: 900px;">
-    <div class="edit-card">
-        <div class="edit-header">
-            <h2 class="fw-800 mb-1">Edytuj Ogłoszenie</h2>
-            <p class="mb-0 opacity-75">Zaktualizuj dane swojego {{ car.marka }} {{ car.model }}</p>
-        </div>
+<nav class="navbar navbar-dark p-3 sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+        <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-arrow-left"></i> Anuluj</a>
+    </div>
+</nav>
 
-        <div class="p-4 p-md-5">
-            <form method="POST" enctype="multipart/form-data">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label class="form-label">Marka</label>
-                        <input type="text" name="marka" id="editMarka" class="form-control" value="{{ car.marka }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Model</label>
-                        <input type="text" name="model" id="editModel" class="form-control" value="{{ car.model }}" required>
-                    </div>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="edit-card p-4 p-md-5">
+                
+                <h3 class="fw-bold mb-4">Edytuj Ogłoszenie</h3>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Cena (PLN)</label>
-                        <input type="number" name="cena" class="form-control" value="{{ car.cena|int }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Rok produkcji</label>
-                        <input type="number" name="rok" id="editRok" class="form-control" value="{{ car.rok }}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Przebieg (km)</label>
-                        <input type="number" name="przebieg" id="editPrzebieg" class="form-control" value="{{ car.przebieg or 0 }}" required>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Paliwo</label>
-                        <select name="paliwo" class="form-select">
-                            <option value="Benzyna" {% if car.paliwo == 'Benzyna' %}selected{% endif %}>Benzyna</option>
-                            <option value="Diesel" {% if car.paliwo == 'Diesel' %}selected{% endif %}>Diesel</option>
-                            <option value="LPG" {% if car.paliwo == 'LPG' %}selected{% endif %}>LPG</option>
-                            <option value="Hybryda" {% if car.paliwo == 'Hybryda' %}selected{% endif %}>Hybryda</option>
-                            <option value="Elektryczny" {% if car.paliwo == 'Elektryczny' %}selected{% endif %}>Elektryczny</option>
-                            <option value="Siła mięśni" {% if car.paliwo == 'Siła mięśni' %}selected{% endif %}>Siła mięśni</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Skrzynia</label>
-                        <select name="skrzynia" class="form-select">
-                            <option value="Manualna" {% if car.skrzynia == 'Manualna' %}selected{% endif %}>Manualna</option>
-                            <option value="Automatyczna" {% if car.skrzynia == 'Automatyczna' %}selected{% endif %}>Automatyczna</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Nadwozie</label>
-                        <select name="nadwozie" class="form-select">
-                            <option value="Sedan" {% if car.nadwozie == 'Sedan' %}selected{% endif %}>Sedan</option>
-                            <option value="Kombi" {% if car.nadwozie == 'Kombi' %}selected{% endif %}>Kombi</option>
-                            <option value="SUV" {% if car.nadwozie == 'SUV' %}selected{% endif %}>SUV</option>
-                            <option value="Hatchback" {% if car.nadwozie == 'Hatchback' %}selected{% endif %}>Hatchback</option>
-                            <option value="Coupe" {% if car.nadwozie == 'Coupe' %}selected{% endif %}>Coupe</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Pojemność silnika</label>
-                        <input type="text" name="pojemnosc" class="form-control" value="{{ car.pojemnosc or '' }}" placeholder="np. 2.0 TDI">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Telefon kontaktowy</label>
-                        <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between mb-2">
-                            <label class="form-label mb-0">Opis pojazdu</label>
-                            <button type="button" class="btn-ai-gen" onclick="restyleDescription()">
-                                <i class="bi bi-magic"></i> Popraw opis przez AI
+                <div class="mb-4 p-3 bg-light rounded-3 border">
+                    <label class="small fw-bold text-muted mb-2">ZARZĄDZAJ ZDJĘCIAMI</label>
+                    <div class="d-flex flex-wrap gap-2" id="galleryContainer">
+                        <div class="img-edit-container">
+                            <img src="{{ car.img }}">
+                            <div class="position-absolute bottom-0 w-100 bg-dark bg-opacity-75 text-white text-center small" style="font-size: 0.6rem;">GŁÓWNE</div>
+                        </div>
+                        
+                        {% for img in car.images %}
+                        {% if img.image_path != car.img %} <div class="img-edit-container" id="img-box-{{ img.id }}">
+                            <img src="{{ img.image_path }}">
+                            <button type="button" class="btn-delete-img" onclick="deletePhoto({{ img.id }})">
+                                <i class="bi bi-x"></i>
                             </button>
                         </div>
-                        <textarea name="opis" id="editOpis" class="form-control" rows="6" required>{{ car.opis }}</textarea>
-                    </div>
-
-                    <div class="col-12 mt-4">
-                        <label class="form-label d-block">Zarządzaj Galerią</label>
-                        <div class="img-grid mb-3">
-                            {% if car.images %}
-                                {% for img in car.images %}
-                                <div class="img-wrapper" id="img-{{ img.id }}">
-                                    <img src="{{ img.image_path }}">
-                                    <button type="button" class="del-badge" onclick="deletePhoto({{ img.id }})">
-                                        <i class="bi bi-x"></i>
-                                    </button>
-                                </div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
-                        <div class="form-text">Dodaj nowe zdjęcia, aby rozbudować galerię.</div>
-                    </div>
-
-                    <div class="col-12 d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
-                        <a href="/profil" class="text-decoration-none text-muted fw-bold">
-                            <i class="bi bi-arrow-left"></i> Powrót
-                        </a>
-                        <button type="submit" class="btn btn-save">
-                            ZAPISZ ZMIANY
-                        </button>
+                        {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
-            </form>
+
+                <form action="/edytuj/{{ car.id }}" method="POST" enctype="multipart/form-data">
+                    
+                    <label class="small fw-bold text-muted mb-2">ZMIEŃ KATEGORIĘ</label>
+                    <div class="cat-grid">
+                        <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" {% if car.typ=='Osobowe' %}checked{% endif %} onchange="adjust()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c2" value="Ciezarowe" {% if car.typ=='Ciezarowe' %}checked{% endif %} onchange="adjust()"><label for="c2" class="cat-label"><i class="bi bi-truck"></i>Bus/TIR</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c3" value="Skuter" {% if car.typ=='Skuter' %}checked{% endif %} onchange="adjust()"><label for="c3" class="cat-label"><i class="bi bi-scooter"></i>Moto</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c4" value="Rower" {% if car.typ=='Rower' %}checked{% endif %} onchange="adjust()"><label for="c4" class="cat-label"><i class="bi bi-bicycle"></i>Rower</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c5" value="Inne" {% if car.typ=='Inne' %}checked{% endif %} onchange="adjust()"><label for="c5" class="cat-label"><i class="bi bi-grid"></i>Inne</label></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">Dodaj nowe zdjęcia</label>
+                        <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Marka</label>
+                            <input type="text" name="marka" class="form-control" value="{{ car.marka }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold">Model</label>
+                            <input type="text" name="model" class="form-control" value="{{ car.model }}" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="small fw-bold">Cena (PLN)</label>
+                            <input type="number" name="cena" class="form-control border-danger" value="{{ car.cena|int }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small fw-bold">Rok</label>
+                            <input type="number" name="rok" class="form-control" value="{{ car.rok }}">
+                        </div>
+                        
+                        <div class="col-md-4 tech-field">
+                            <label class="small fw-bold">Przebieg</label>
+                            <input type="number" name="przebieg" class="form-control" value="{{ car.przebieg }}">
+                        </div>
+                        <div class="col-md-6 tech-field">
+                            <label class="small fw-bold">Paliwo</label>
+                            <select name="paliwo" class="form-select">
+                                <option {% if car.paliwo=='Benzyna' %}selected{% endif %}>Benzyna</option>
+                                <option {% if car.paliwo=='Diesel' %}selected{% endif %}>Diesel</option>
+                                <option {% if car.paliwo=='LPG' %}selected{% endif %}>LPG</option>
+                                <option {% if car.paliwo=='Hybryda' %}selected{% endif %}>Hybryda</option>
+                                <option {% if car.paliwo=='Elektryczny' %}selected{% endif %}>Elektryczny</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 tech-field">
+                            <label class="small fw-bold">Skrzynia</label>
+                            <select name="skrzynia" class="form-select">
+                                <option {% if car.skrzynia=='Manualna' %}selected{% endif %}>Manualna</option>
+                                <option {% if car.skrzynia=='Automatyczna' %}selected{% endif %}>Automatyczna</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="small fw-bold">Telefon</label>
+                            <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="small fw-bold">Opis</label>
+                            <textarea name="opis" class="form-control" rows="6">{{ car.opis }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex gap-3">
+                        <button type="submit" class="btn btn-success flex-grow-1 py-3 fw-bold rounded-pill">ZAPISZ ZMIANY</button>
+                    </div>
+
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function deletePhoto(photoId) {
-    if(confirm('Usunąć to zdjęcie?')) {
-        fetch(`/usun_zdjecie/${photoId}`, { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) document.getElementById(`img-${photoId}`).remove();
-        });
+    // 1. Ukrywanie pól dla rowerów
+    function adjust() {
+        const v = document.querySelector('input[name="typ"]:checked').value;
+        const hide = (v === 'Rower' || v === 'Inne');
+        document.querySelectorAll('.tech-field').forEach(el => el.style.display = hide ? 'none' : 'block');
     }
-}
+    // Uruchom na starcie
+    adjust();
 
-async function restyleDescription() {
-    const btn = document.querySelector('.btn-ai-gen');
-    const marka = document.getElementById('editMarka').value;
-    const model = document.getElementById('editModel').value;
-    const currentOpis = document.getElementById('editOpis').value;
-
-    btn.innerHTML = '✨ Przetwarzam...';
-    try {
-        const res = await fetch('/api/generate-description', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                marka, model, 
-                rok: document.getElementById('editRok').value,
-                przebieg: document.getElementById('editPrzebieg').value,
-                current_text: currentOpis 
-            })
-        });
-        const data = await res.json();
-        document.getElementById('editOpis').value = data.description;
-    } finally {
-        btn.innerHTML = '<i class="bi bi-magic"></i> Popraw opis przez AI';
+    // 2. Usuwanie zdjęć (AJAX)
+    async function deletePhoto(imgId) {
+        if(!confirm("Usunąć to zdjęcie?")) return;
+        
+        try {
+            const res = await fetch(`/usun_zdjecie/${imgId}`, { method: 'POST' });
+            const data = await res.json();
+            
+            if(data.success) {
+                document.getElementById(`img-box-${imgId}`).remove();
+            } else {
+                alert(data.message || "Błąd usuwania");
+            }
+        } catch(e) {
+            alert("Błąd połączenia");
+        }
     }
-}
 </script>
 
 </body>
