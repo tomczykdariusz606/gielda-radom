@@ -1,119 +1,65 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edycja Ogłoszenia - Giełda Radom</title>
+    <title>Edytuj Ogłoszenie</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: #1a1a1a; border-bottom: 3px solid #ce2b37; }
-        
-        .edit-card { border: none; border-radius: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); background: white; }
-        
-        /* Miniaturki do usuwania */
-        .img-edit-container { position: relative; width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
-        .img-edit-container img { width: 100%; height: 100%; object-fit: cover; }
-        .btn-delete-img { 
-            position: absolute; top: 0; right: 0; 
-            background: rgba(220, 53, 69, 0.9); color: white; 
-            border: none; width: 24px; height: 24px; 
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s;
-        }
-        .btn-delete-img:hover { background: red; }
-
-        /* Kafelki Kategorii (Mniejsze niż w profilu) */
-        .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 20px; }
-        .cat-item input { display: none; }
-        .cat-label { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 60px; background: #f8f9fa; border: 1px solid #eee; border-radius: 8px;
-            cursor: pointer; font-size: 0.7rem; text-align: center; color: #666; transition: 0.2s;
-        }
-        .cat-label i { font-size: 1.2rem; margin-bottom: 2px; }
-        .cat-item input:checked + .cat-label { background: #fff5f5; border-color: #ce2b37; color: #ce2b37; font-weight: bold; }
+        body { background-color: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 40px; }
+        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid #ce2b37; }
+        .edit-box { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 30px; }
+        .form-control, .form-select { background: #2c2c2c; border: 1px solid #444; color: white; }
+        .form-control:focus { background: #333; border-color: #ce2b37; box-shadow: none; color: white; }
+        .btn-ai { background: linear-gradient(45deg, #ce2b37, #ff6b6b); border: none; color: white; font-weight: bold; }
+        .img-preview { width: 100px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #444; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark p-3 sticky-top shadow-sm">
+<nav class="navbar navbar-dark p-3 mb-4">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-        <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-arrow-left"></i> Anuluj</a>
+        <a class="navbar-brand fw-bold" href="/profil"><i class="bi bi-arrow-left"></i> Wróć do Profilu</a>
+        <span class="text-muted small">Edycja: {{ car.marka }} {{ car.model }}</span>
     </div>
 </nav>
 
-<div class="container py-5">
+<div class="container">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="edit-card p-4 p-md-5">
+            <div class="edit-box shadow-lg">
+                <h3 class="fw-bold mb-4 text-white">Edytuj Ogłoszenie</h3>
                 
-                <h3 class="fw-bold mb-4">Edytuj Ogłoszenie</h3>
-
-                <div class="mb-4 p-3 bg-light rounded-3 border">
-                    <label class="small fw-bold text-muted mb-2">ZARZĄDZAJ ZDJĘCIAMI</label>
-                    <div class="d-flex flex-wrap gap-2" id="galleryContainer">
-                        <div class="img-edit-container">
-                            <img src="{{ car.img }}">
-                            <div class="position-absolute bottom-0 w-100 bg-dark bg-opacity-75 text-white text-center small" style="font-size: 0.6rem;">GŁÓWNE</div>
-                        </div>
-                        
-                        {% for img in car.images %}
-                        {% if img.image_path != car.img %} <div class="img-edit-container" id="img-box-{{ img.id }}">
-                            <img src="{{ img.image_path }}">
-                            <button type="button" class="btn-delete-img" onclick="deletePhoto({{ img.id }})">
-                                <i class="bi bi-x"></i>
-                            </button>
-                        </div>
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-
                 <form action="/edytuj/{{ car.id }}" method="POST" enctype="multipart/form-data">
                     
-                    <label class="small fw-bold text-muted mb-2">ZMIEŃ KATEGORIĘ</label>
-                    <div class="cat-grid">
-                        <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" {% if car.typ=='Osobowe' %}checked{% endif %} onchange="adjust()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label></div>
-                        <div class="cat-item"><input type="radio" name="typ" id="c2" value="Ciezarowe" {% if car.typ=='Ciezarowe' %}checked{% endif %} onchange="adjust()"><label for="c2" class="cat-label"><i class="bi bi-truck"></i>Bus/TIR</label></div>
-                        <div class="cat-item"><input type="radio" name="typ" id="c3" value="Skuter" {% if car.typ=='Skuter' %}checked{% endif %} onchange="adjust()"><label for="c3" class="cat-label"><i class="bi bi-scooter"></i>Moto</label></div>
-                        <div class="cat-item"><input type="radio" name="typ" id="c4" value="Rower" {% if car.typ=='Rower' %}checked{% endif %} onchange="adjust()"><label for="c4" class="cat-label"><i class="bi bi-bicycle"></i>Rower</label></div>
-                        <div class="cat-item"><input type="radio" name="typ" id="c5" value="Inne" {% if car.typ=='Inne' %}checked{% endif %} onchange="adjust()"><label for="c5" class="cat-label"><i class="bi bi-grid"></i>Inne</label></div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small">Dodaj nowe zdjęcia</label>
-                        <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
-                    </div>
-
-                    <div class="row g-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="small fw-bold">Marka</label>
-                            <input type="text" name="marka" class="form-control" value="{{ car.marka }}" required>
+                            <label class="small text-muted">Marka</label>
+                            <input type="text" name="marka" id="i_marka" class="form-control" value="{{ car.marka }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="small fw-bold">Model</label>
-                            <input type="text" name="model" class="form-control" value="{{ car.model }}" required>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label class="small fw-bold">Cena (PLN)</label>
-                            <input type="number" name="cena" class="form-control border-danger" value="{{ car.cena|int }}" required>
+                            <label class="small text-muted">Model</label>
+                            <input type="text" name="model" id="i_model" class="form-control" value="{{ car.model }}" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="small fw-bold">Rok</label>
-                            <input type="number" name="rok" class="form-control" value="{{ car.rok }}">
+                            <label class="small text-muted">Rok</label>
+                            <input type="number" name="rok" id="i_rok" class="form-control" value="{{ car.rok }}">
                         </div>
-                        
-                        <div class="col-md-4 tech-field">
-                            <label class="small fw-bold">Przebieg</label>
-                            <input type="number" name="przebieg" class="form-control" value="{{ car.przebieg }}">
+                        <div class="col-md-4">
+                            <label class="small text-muted">Przebieg (km)</label>
+                            <input type="number" name="przebieg" id="i_przebieg" class="form-control" value="{{ car.przebieg }}">
                         </div>
-                        <div class="col-md-6 tech-field">
-                            <label class="small fw-bold">Paliwo</label>
-                            <select name="paliwo" class="form-select">
+                        <div class="col-md-4">
+                            <label class="small text-muted">Cena (PLN)</label>
+                            <input type="number" name="cena" id="i_cena" class="form-control border-danger text-danger fw-bold" value="{{ car.cena|int }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4 p-3 bg-black bg-opacity-25 rounded-3">
+                        <div class="col-6 col-md-4">
+                            <label class="small text-muted">Paliwo</label>
+                            <select name="paliwo" id="i_paliwo" class="form-select">
                                 <option {% if car.paliwo=='Benzyna' %}selected{% endif %}>Benzyna</option>
                                 <option {% if car.paliwo=='Diesel' %}selected{% endif %}>Diesel</option>
                                 <option {% if car.paliwo=='LPG' %}selected{% endif %}>LPG</option>
@@ -121,62 +67,118 @@
                                 <option {% if car.paliwo=='Elektryczny' %}selected{% endif %}>Elektryczny</option>
                             </select>
                         </div>
-                        <div class="col-md-6 tech-field">
-                            <label class="small fw-bold">Skrzynia</label>
+                        <div class="col-6 col-md-4">
+                            <label class="small text-muted">Skrzynia</label>
                             <select name="skrzynia" class="form-select">
                                 <option {% if car.skrzynia=='Manualna' %}selected{% endif %}>Manualna</option>
                                 <option {% if car.skrzynia=='Automatyczna' %}selected{% endif %}>Automatyczna</option>
                             </select>
                         </div>
-
-                        <div class="col-12">
-                            <label class="small fw-bold">Telefon</label>
-                            <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
+                        <div class="col-6 col-md-4">
+                            <label class="small text-muted">Silnik (np. 1.9 TDI)</label>
+                            <input type="text" name="pojemnosc" id="i_pojemnosc" class="form-control" value="{{ car.pojemnosc or '' }}">
                         </div>
-
-                        <div class="col-12">
-                            <label class="small fw-bold">Opis</label>
-                            <textarea name="opis" class="form-control" rows="6">{{ car.opis }}</textarea>
+                        <div class="col-6 col-md-4">
+                            <label class="small text-muted">Typ Nadwozia</label>
+                            <select name="nadwozie" class="form-select">
+                                <option {% if car.nadwozie=='Sedan' %}selected{% endif %}>Sedan</option>
+                                <option {% if car.nadwozie=='Kombi' %}selected{% endif %}>Kombi</option>
+                                <option {% if car.nadwozie=='Hatchback' %}selected{% endif %}>Hatchback</option>
+                                <option {% if car.nadwozie=='SUV' %}selected{% endif %}>SUV</option>
+                                <option {% if car.nadwozie=='Coupe' %}selected{% endif %}>Coupe</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                             <label class="small text-muted">Telefon</label>
+                             <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-top d-flex gap-3">
-                        <button type="submit" class="btn btn-success flex-grow-1 py-3 fw-bold rounded-pill">ZAPISZ ZMIANY</button>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <label class="small text-muted fw-bold">OPIS POJAZDU</label>
+                            <button type="button" class="btn btn-sm btn-ai rounded-pill px-3 shadow" onclick="generujOpis()">
+                                <i class="bi bi-stars"></i> Napisz opis za mnie (AI)
+                            </button>
+                        </div>
+                        <textarea name="opis" id="opisArea" class="form-control" rows="6">{{ car.opis }}</textarea>
+                        <div id="aiLoader" class="small text-warning mt-2" style="display:none;">
+                            <span class="spinner-border spinner-border-sm me-1"></span> Gemini AI pisze opis... Chwilka...
+                        </div>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="small text-muted mb-2">Zarządzaj zdjęciami</label>
+                        <div class="d-flex gap-2 flex-wrap mb-3">
+                            <div class="position-relative">
+                                <img src="{{ car.img }}" class="img-preview border-danger">
+                                <span class="position-absolute top-0 start-0 badge bg-danger text-white scale-75">GŁÓWNE</span>
+                            </div>
+                            {% for img in car.images %}
+                            {% if img.image_path != car.img %}
+                            <div class="position-relative" id="img-{{ img.id }}">
+                                <img src="{{ img.image_path }}" class="img-preview">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 px-1 m-1 rounded-circle" onclick="usunZdjecie({{ img.id }})">&times;</button>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
+                        <div class="form-text text-muted">Dodaj nowe zdjęcia, aby uzupełnić galerię.</div>
+                    </div>
+
+                    <hr class="border-secondary my-4">
+                    
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-pill fs-5">ZAPISZ ZMIANY</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // 1. Ukrywanie pól dla rowerów
-    function adjust() {
-        const v = document.querySelector('input[name="typ"]:checked').value;
-        const hide = (v === 'Rower' || v === 'Inne');
-        document.querySelectorAll('.tech-field').forEach(el => el.style.display = hide ? 'none' : 'block');
-    }
-    // Uruchom na starcie
-    adjust();
+    async function generujOpis() {
+        // Pobieramy dane z formularza
+        const data = {
+            marka: document.getElementById('i_marka').value,
+            model: document.getElementById('i_model').value,
+            rok: document.getElementById('i_rok').value,
+            przebieg: document.getElementById('i_przebieg').value,
+            cena: document.getElementById('i_cena').value,
+            paliwo: document.getElementById('i_paliwo').value,
+            pojemnosc: document.getElementById('i_pojemnosc').value
+        };
 
-    // 2. Usuwanie zdjęć (AJAX)
-    async function deletePhoto(imgId) {
-        if(!confirm("Usunąć to zdjęcie?")) return;
+        const loader = document.getElementById('aiLoader');
+        const area = document.getElementById('opisArea');
+        
+        loader.style.display = 'block';
         
         try {
-            const res = await fetch(`/usun_zdjecie/${imgId}`, { method: 'POST' });
-            const data = await res.json();
-            
-            if(data.success) {
-                document.getElementById(`img-box-${imgId}`).remove();
+            const resp = await fetch('/api/generuj-opis', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await resp.json();
+            if(result.opis) {
+                // Efekt pisania
+                area.value = result.opis;
             } else {
-                alert(data.message || "Błąd usuwania");
+                alert('Błąd: ' + result.error);
             }
         } catch(e) {
-            alert("Błąd połączenia");
+            alert('Wystąpił błąd połączenia z AI.');
         }
+        loader.style.display = 'none';
+    }
+
+    async function usunZdjecie(id) {
+        if(!confirm('Usunąć to zdjęcie?')) return;
+        const r = await fetch('/usun_zdjecie/'+id, {method:'POST'});
+        const d = await r.json();
+        if(d.success) document.getElementById('img-'+id).remove();
+        else alert(d.message || 'Błąd usuwania');
     }
 </script>
 
