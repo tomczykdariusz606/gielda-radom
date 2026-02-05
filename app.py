@@ -49,10 +49,10 @@ if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
     # Używamy Twojego płatnego modelu 3.0 Pro
     try:
-        model_ai = genai.GenerativeModel('gemini-3-pro-preview')
+        model_ai = genai.GenerativeModel('Gemini 2.5 Flash-Lite')
     except:
-        # Fallback gdyby nazwa w API była inna, ale celujemy w 3.0
-        model_ai = genai.GenerativeModel('gemini-3.0')
+        # Fallback gdyby nazwa w API była inna, ale celujemy w 3.0 Flash
+        model_ai = genai.GenerativeModel('gemini-3.0 Flash')
 else:
     model_ai = None
 
