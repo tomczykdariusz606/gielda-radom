@@ -20,7 +20,7 @@ try:
     import sekrety
     GEMINI_KEY = sekrety.GEMINI_KEY
     MAIL_PWD = sekrety.MAIL_PWD
-    SECRET_KEY_APP = getattr(sekrety, 'SECRET_KEY', 'sekretny_klucz_gieldy_radom_2026')
+    SECRET_KEY_APP = getattr(sekrety, 'SECRET_KEY', 'sekretny_klucz_gieldy_radom_2024')
 except ImportError:
     GEMINI_KEY = None
     MAIL_PWD = None
