@@ -489,6 +489,30 @@ def full_backup():
                 zf.write(os.path.join(root, file), os.path.join('uploads', file))
     memory_file.seek(0)
     return send_file(memory_file, download_name='backup_full.zip', as_attachment=True)
+# --- NOWA FUNKCJA: Generowanie opisu w edycji ---
+@app.route('/api/generuj-opis', methods=['POST'])
+@login_required
+def generuj_opis_ai():
+    if not model_ai: return jsonify({"opis": "Błąd: AI niedostępne"}), 500
+    if not check_ai_limit(): return jsonify({"opis": "Limit AI na dziś wyczerpany!"}), 429
+    
+    data = request.json
+    prompt = f"""
+    Napisz profesjonalne, zachęcające ogłoszenie sprzedaży auta.
+    Dane: {data.get('marka')} {data.get('model')}, Rok: {data.get('rok')}, 
+    Silnik: {data.get('pojemnosc')} {data.get('paliwo')}, Przebieg: {data.get('przebieg')} km.
+    Cena: {data.get('cena')} PLN.
+    
+    Styl: Konkretny, handlowy, podkreślający zalety. Użyj punktorów.
+    Nie zmyślaj wyposażenia, skup się na tym co podałem i ogólnym stanie.
+    """
+    try:
+        resp = model_ai.generate_content(prompt)
+        current_user.ai_requests_today += 1
+        db.session.commit()
+        return jsonify({"opis": resp.text.strip()})
+    except Exception as e:
+        return jsonify({"opis": f"Błąd generowania: {e}"}), 500
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
