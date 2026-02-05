@@ -1,154 +1,97 @@
 <!DOCTYPE html>
-<html lang=”pl” data-bs-theme=”dark”>
+<html lang="pl" data-bs-theme="dark">
 <head>
-    <meta charset=”UTF-8”>
-    <meta name=”viewport” content=”width=device-width, initial-scale=1.0”>
-    <title>Twój Profil – Dark Edition</title>
-    <link href=https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css rel=”stylesheet”>
-    <link rel=”stylesheet” href=https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twój Profil - Giełda Radom</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        :root {
-            --radom-red: #ce2b37;
-            --bg-dark: #121212;
-            --card-dark: #1e1e1e;
-            --text-grey: #b0b3b8;
-        }
-
-        Body { 
-            Background-color: var(--bg-dark); 
-            Color: #e4e6eb; 
-            Font-family: ‘Segoe UI’, sans-serif;
-        }
-
-        .navbar { 
-            Background: rgba(0, 0, 0, 0.8); 
-            Backdrop-filter: blur(10px); 
-            Border-bottom: 2px solid var(--radom-red); 
-        }
-
-        /* CIEMNE KARTY */
-        .car-card { 
-            Background-color: var(--card-dark); 
-            Border: 1px solid #333; 
-            Border-radius: 16px; 
-            Overflow: hidden; 
-            Box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            Transition: transform 0.2s;
-        }
+        :root { --radom-red: #ce2b37; --bg-dark: #121212; --card-dark: #1e1e1e; --text-grey: #b0b3b8; }
+        body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border-bottom: 2px solid var(--radom-red); }
+        .car-card { background-color: var(--card-dark); border: 1px solid #333; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); }
-
-        /* KATEGORIE W FORMULARZU */
         .cat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .cat-item input { display: none; }
-        .cat-label { 
-            Display: flex; flex-direction: column; align-items: center; justify-content: center;
-            Height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 10px;
-            Cursor: pointer; font-size: 0.7rem; text-align: center; color: var(--text-grey); transition: 0.2s;
-        }
-        .cat-item input:checked + .cat-label { 
-            Background: #3a1517; border-color: var(--radom-red); color: var(--radom-red); font-weight: bold; 
-        }
-
-        /* FORMULARZE */
-        .form-control, .form-select {
-            Background-color: #2c2c2c;
-            Border: 1px solid #444;
-            Color: white;
-        }
-        .form-control:focus, .form-select:focus {
-            Background-color: #333;
-            Border-color: var(--radom-red);
-            Box-shadow: 0 0 0 0.25rem rgba(206, 43, 55, 0.25);
-            Color: white;
-        }
-
-        /* MODAL */
-        .modal-content { background-color: var(--card-dark); border: 1px solid #444; }
-        .modal-header, .modal-footer { border-color: #333; }
-        .btn-close { filter: invert(1); }
-
-        /* ADMIN PANEL */
-        .admin-box { 
-            Background: #251806; /* Ciemny pomarańcz */ 
-            Border: 1px solid #b88a14; 
-            Border-left: 5px solid #ffc107; 
-        }
-
-        /* RESPANSYWNOŚĆ */
+        .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 10px; cursor: pointer; font-size: 0.7rem; text-align: center; color: var(--text-grey); transition: 0.2s; }
+        .cat-item input:checked + .cat-label { background: #3a1517; border-color: var(--radom-red); color: var(--radom-red); font-weight: bold; }
+        .form-control, .form-select { background-color: #2c2c2c; border: 1px solid #444; color: white; }
+        .form-control:focus { background-color: #333; border-color: var(--radom-red); color: white; }
+        .admin-box { background: #251806; border: 1px solid #b88a14; border-left: 5px solid #ffc107; }
         @media(max-width: 576px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
 <body>
 
-<nav class=”navbar navbar-dark p-3 mb-4 sticky-top”>
-    <div class=”container d-flex justify-content-between”>
-        <a class=”navbar-brand fw-bold” href=”/”><i class=”bi bi-speedometer2 text-danger”></i> Giełda Radom</a>
-        <div class=”d-flex gap-3 align-items-center text-white”>
-            <div class=”d-none d-md-block text-end lh-1”>
-                <span class=”d-block small text-muted”>Zalogowany jako</span>
-                <span class=”fw-bold text-white”>{{ current_user.username }}</span>
+<nav class="navbar navbar-dark p-3 mb-4 sticky-top">
+    <div class="container d-flex justify-content-between">
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
+        <div class="d-flex gap-3 align-items-center text-white">
+            <div class="d-none d-md-block text-end lh-1">
+                <span class="d-block small text-muted">Zalogowany jako</span>
+                <span class="fw-bold text-white">{{ current_user.username }}</span>
             </div>
-            <a href=”/logout” class=”btn btn-outline-danger btn-sm rounded-pill px-3”>Wyloguj</a>
+            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Wyloguj</a>
         </div>
     </div>
 </nav>
 
-<div class=”container mb-5”>
+<div class="container mb-5">
     
-    <div class=”d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3”>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h2 class=”fw-bold mb-0 text-white”>Twoje Ogłoszenia</h2>
-            <div class=”d-flex align-items-center gap-2 mt-1”>
-                <span class=”badge bg-dark border border-secondary text-secondary”>
-                    <i class=”bi bi-geo-alt”></i> {{ current_user.lokalizacja }}
-                </span>
-                <span class=”badge bg-dark border border-secondary text-secondary”>
-                    Limit AI: <span class=”text-white”>{{ 5 – current_user.ai_requests_today }}/5</span>
-                </span>
+            <h2 class="fw-bold mb-0 text-white">Twoje Ogłoszenia</h2>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge bg-dark border border-secondary text-secondary"><i class="bi bi-geo-alt"></i> {{ current_user.lokalizacja }}</span>
+                <span class="badge bg-dark border border-secondary text-secondary">Limit AI: <span class="text-white">{{ 15 - current_user.ai_requests_today }}/5</span></span>
             </div>
         </div>
-        <button class=”btn btn-danger rounded-pill px-4 py-2 shadow-lg fw-bold” data-bs-toggle=”modal” data-bs-target=”#dodajModal”>
-            <i class=”bi bi-plus-lg me-1”></i> DODAJ AUTO
+        <button class="btn btn-danger rounded-pill px-4 py-2 shadow-lg fw-bold" data-bs-toggle="modal" data-bs-target="#dodajModal">
+            <i class="bi bi-plus-lg me-1"></i> DODAJ AUTO
         </button>
     </div>
 
-    <div class=”row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5”>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
         {% for car in cars %}
-        <div class=”col”>
-            <div class=”card car-card h-100”>
-                <div class=”position-relative”>
-                    <img src=”{{ car.img }}” class=”card-img-top” style=”height: 190px; object-fit: cover; opacity: 0.9;”>
+        <div class="col">
+            <div class="card car-card h-100">
+                <div class="position-relative">
+                    <img src="{{ car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
                     
-                    {% set dni = (now – car.data_dodania).days %}
-                    {% set left = 30 – dni %}
-                    <span class=”position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary”>
+                    {% set dni = (now - car.data_dodania).days %}
+                    {% set left = 30 - dni %}
+                    <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">
                         {% if left > 0 %}{{ left }} dni{% else %}WYGASŁO{% endif %}
                     </span>
                     
                     {% if car.is_promoted %}
-                    <span class=”position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow”>GOLD</span>
+                    <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow fw-bold">GOLD</span>
                     {% endif %}
                 </div>
                 
-                <div class=”card-body d-flex flex-column”>
-                    <h5 class=”fw-bold text-truncate text-white mb-1”>{{ car.marka }} {{ car.model }}</h5>
-                    <h4 class=”text-danger fw-800”>{{ „{:,.0f}”.format(car.cena).replace(‘,’, ‘ ‘) }} PLN</h4>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="fw-bold text-truncate text-white mb-1">{{ car.marka }} {{ car.model }}</h5>
+                    <h4 class="text-danger fw-800">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</h4>
                     
-                    <div class=”row g-2 small text-muted mb-3 mt-1”>
-                        <div class=”col-6”><i class=”bi bi-calendar3”></i> {{ car.rok }}r.</div>
-                        <div class=”col-6”><i class=”bi bi-fuel-pump”></i> {{ car.paliwo }}</div>
-                        <div class=”col-6”><i class=”bi bi-speedometer2”></i> {{ car.przebieg }}</div>
-                        <div class=”col-6”><i class=”bi bi-eye”></i> {{ car.wyswietlenia }}</div>
+                    <div class="row g-2 small text-muted mb-3 mt-1">
+                        <div class="col-6"><i class="bi bi-calendar3"></i> {{ car.rok }}r.</div>
+                        <div class="col-6"><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</div>
+                        <div class="col-6"><i class="bi bi-speedometer2"></i> {{ car.przebieg }}</div>
+                        <div class="col-6"><i class="bi bi-eye"></i> {{ car.wyswietlenia }}</div>
                     </div>
 
-                    <div class=”mt-auto pt-3 border-top border-secondary d-grid gap-2”>
-                        <a href=”/edytuj/{{ car.id }}” class=”btn btn-outline-light btn-sm fw-bold”>Edytuj</a>
-                        <div class=”d-flex gap-2”>
-                            <form action=”/odswiez/{{ car.id }}” method=”POST” class=”w-50”>
-                                <button class=”btn btn-success btn-sm w-100 fw-bold text-white”>Odśwież</button>
+                    <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
+                        <div class="d-flex gap-2">
+                             <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-info btn-sm w-50 fw-bold"><i class="bi bi-eye"></i> Podgląd</a>
+                             <a href="/edytuj/{{ car.id }}" class="btn btn-outline-light btn-sm w-50 fw-bold">Edytuj</a>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <form action="/odswiez/{{ car.id }}" method="POST" class="w-50">
+                                <button class="btn btn-success btn-sm w-100 fw-bold text-white">Odśwież</button>
                             </form>
-                            <form action=”/usun/{{ car.id }}” method=”POST” class=”w-50” onsubmit=”return confirm(‘Usunąć bezpowrotnie?’)”>
-                                <button class=”btn btn-dark btn-sm w-100 fw-bold border-secondary text-danger”>Usuń</button>
+                            <form action="/usun/{{ car.id }}" method="POST" class="w-50" onsubmit="return confirm('Usunąć bezpowrotnie?')">
+                                <button class="btn btn-dark btn-sm w-100 fw-bold border-secondary text-danger">Usuń</button>
                             </form>
                         </div>
                     </div>
@@ -156,27 +99,26 @@
             </div>
         </div>
         {% else %}
-        <div class=”col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25”>
-            <i class=”bi bi-car-front fs-1 mb-3 d-block opacity-25”></i>
-            <h4 class=”text-white”>Pusto w garażu...</h4>
+        <div class="col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25">
+            <h4 class="text-white">Pusto w garażu...</h4>
             <p>Kliknij czerwony przycisk u góry, aby wystawić pierwsze auto.</p>
         </div>
         {% endfor %}
     </div>
 
     {% if favorites %}
-    <h4 class=”fw-bold mb-3 text-white border-start border-danger border-4 ps-3”>Obserwowane <i class=”bi bi-heart-fill text-danger ms-1”></i></h4>
-    <div class=”row row-cols-1 row-cols-md-3 g-4 mb-5”>
+    <h4 class="fw-bold mb-3 text-white border-start border-danger border-4 ps-3">Obserwowane <i class="bi bi-heart-fill text-danger ms-1"></i></h4>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
         {% for fav in favorites %}
-        <div class=”col”>
-            <div class=”card border-secondary bg-dark shadow-sm”>
-                <div class=”card-body p-2 d-flex align-items-center gap-3”>
-                    <img src=”{{ fav.car.img }}” style=”width: 70px; height: 70px; object-fit: cover; border-radius: 8px;”>
-                    <div class=”overflow-hidden”>
-                        <a href=”/ogloszenie/{{ fav.car.id }}” class=”fw-bold text-white text-decoration-none d-block text-truncate”>{{ fav.car.marka }} {{ fav.car.model }}</a>
-                        <small class=”text-danger fw-bold”>{{ fav.car.cena|int }} PLN</small>
+        <div class="col">
+            <div class="card border-secondary bg-dark shadow-sm">
+                <div class="card-body p-2 d-flex align-items-center gap-3">
+                    <img src="{{ fav.car.img }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px;">
+                    <div class="overflow-hidden">
+                        <a href="/ogloszenie/{{ fav.car.id }}" class="fw-bold text-white text-decoration-none d-block text-truncate">{{ fav.car.marka }} {{ fav.car.model }}</a>
+                        <small class="text-danger fw-bold">{{ fav.car.cena|int }} PLN</small>
                     </div>
-                    <a href=”/toggle_favorite/{{ fav.car.id }}” class=”ms-auto btn btn-sm btn-outline-secondary border-0”><i class=”bi bi-x-lg”></i></a>
+                    <a href="/toggle_favorite/{{ fav.car.id }}" class="ms-auto btn btn-sm btn-outline-secondary border-0"><i class="bi bi-x-lg"></i></a>
                 </div>
             </div>
         </div>
@@ -184,28 +126,20 @@
     </div>
     {% endif %}
 
-    {% if current_user.id == 1 %}
-    <div class=”card admin-box shadow-sm mb-5”>
-        <div class=”card-header bg-transparent border-warning text-warning fw-bold d-flex justify-content-between”>
-            <span><i class=”bi bi-shield-lock-fill”></i> PANEL ADMINISTRATORA</span>
-            <span class=”badge bg-warning text-dark”>ROOT</span>
+    {% if current_user.id == 1 or current_user.username == 'admin' %}
+    <div class="card admin-box shadow-sm mb-5">
+        <div class="card-header bg-transparent border-warning text-warning fw-bold d-flex justify-content-between">
+            <span><i class="bi bi-shield-lock-fill"></i> PANEL ADMINISTRATORA</span>
+            <span class="badge bg-warning text-dark">ROOT</span>
         </div>
-        <div class=”card-body text-white”>
-            <h6 class=”fw-bold text-muted mb-3 text-uppercase small”>Kopie Zapasowe</h6>
-            <div class=”row g-3”>
-                <div class=”col-md-6”>
-                    <a href=”{{ url_for(‘backup_db’) }}” class=”btn btn-outline-warning w-100 fw-bold”>
-                        <i class=”bi bi-database”></i> Pobierz BAZĘ SQL
-                    </a>
-                </div>
-                <div class=”col-md-6”>
-                    <a href=”{{ url_for(‘full_backup’) }}” class=”btn btn-warning text-dark w-100 fw-bold”>
-                        <i class=”bi bi-archive-fill”></i> Pobierz CAŁOŚĆ (ZIP)
-                    </a>
-                </div>
+        <div class="card-body text-white">
+            <h6 class="fw-bold text-muted mb-3 text-uppercase small">Kopie Zapasowe</h6>
+            <div class="row g-3">
+                <div class="col-md-6"><a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold"><i class="bi bi-database"></i> BAZA SQL</a></div>
+                <div class="col-md-6"><a href="{{ url_for('full_backup') }}" class="btn btn-warning text-dark w-100 fw-bold"><i class="bi bi-archive-fill"></i> CAŁOŚĆ (ZIP)</a></div>
             </div>
-            <div class=”mt-3 pt-2 border-top border-secondary small text-white-50”>
-                Stan systemu: <strong>OK</strong> | Aut w bazie: <strong>{{ cars|length }}</strong>
+            <div class="mt-3 pt-2 border-top border-secondary small text-white-50">
+                Aut w bazie: <strong>{{ cars|length }}</strong>
             </div>
         </div>
     </div>
@@ -213,113 +147,111 @@
 
 </div>
 
-<div class=”modal fade” id=”dodajModal” tabindex=”-1” data-bs-backdrop=”static”>
-    <div class=”modal-dialog modal-dialog-centered modal-lg”>
-        <div class=”modal-content shadow-lg rounded-4”>
-            <div class=”modal-header border-secondary”>
-                <h5 class=”fw-bold text-white”>Dodaj Ogłoszenie</h5>
-                <button type=”button” class=”btn-close btn-close-white” data-bs-dismiss=”modal”></button>
+<div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg rounded-4">
+            <div class="modal-header border-secondary">
+                <h5 class="fw-bold text-white">Dodaj Ogłoszenie</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action=”/dodaj” method=”POST” enctype=”multipart/form-data”>
-                <div class=”modal-body p-4 pt-2”>
+            <form action="/dodaj" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4 pt-2">
                     
-                    <div class=”text-center bg-black bg-opacity-50 border border-secondary p-3 rounded-3 mb-4 position-relative overflow-hidden mt-2”>
-                        <div class=”position-relative” style=”z-index: 2;”>
-                            <i class=”bi bi-camera-fill fs-1 text-danger”></i>
-                            <h6 class=”mt-2 text-white”>Leniwy? Zrób zdjęcie!</h6>
-                            <p class=”small text-muted mb-2”>AI rozpozna markę, model i kolor.</p>
-                            <label class=”btn btn-light rounded-pill px-4 fw-bold shadow”>
-                                <i class=”bi bi-magic me-2”></i> SKANUJ APARATEM
-                                <input type=”file” name=”scan_image” accept=”image/*” capture=”environment” hidden onchange=”scanCar(this)”>
+                    <div class="text-center bg-black bg-opacity-50 border border-secondary p-3 rounded-3 mb-4 position-relative overflow-hidden mt-2">
+                        <div class="position-relative" style="z-index: 2;">
+                            <i class="bi bi-camera-fill fs-1 text-danger"></i>
+                            <h6 class="mt-2 text-white">Szybkie dodawanie AI</h6>
+                            <p class="small text-muted mb-2">Zrób zdjęcie - my wypełnimy resztę!</p>
+                            <label class="btn btn-light rounded-pill px-4 fw-bold shadow">
+                                <i class="bi bi-magic me-2"></i> SKANUJ APARATEM
+                                <input type="file" name="scan_image" accept="image/*" capture="environment" hidden onchange="scanCar(this)">
                             </label>
-                            <div id=”scanLoader” class=”mt-2 small text-warning” style=”display:none;”>
-                                <span class=”spinner-border spinner-border-sm me-1”></span> Analizuję zdjęcie...
+                            <div id="scanLoader" class="mt-2 small text-warning" style="display:none;">
+                                <span class="spinner-border spinner-border-sm me-1"></span> Analizuję zdjęcie...
                             </div>
                         </div>
                     </div>
 
-                    <div class=”d-flex align-items-center mb-4”>
-                        <hr class=”flex-grow-1 border-secondary”><span class=”px-3 small text-muted fw-bold”>LUB RĘCZNIE</span><hr class=”flex-grow-1 border-secondary”>
+                    <div class="d-flex align-items-center mb-4">
+                        <hr class="flex-grow-1 border-secondary"><span class="px-3 small text-muted fw-bold">LUB RĘCZNIE</span><hr class="flex-grow-1 border-secondary">
                     </div>
 
-                    <div class=”cat-grid mb-3”>
-                        <div class=”cat-item”><input type=”radio” name=”typ” id=”c1” value=”Osobowe” checked onchange=”adj()”><label for=”c1” class=”cat-label”><i class=”bi bi-car-front”></i>Osobowe</label></div>
-                        <div class=”cat-item”><input type=”radio” name=”typ” id=”c2” value=”Ciezarowe” onchange=”adj()”><label for=”c2” class=”cat-label”><i class=”bi bi-truck”></i>Bus/TIR</label></div>
-                        <div class=”cat-item”><input type=”radio” name=”typ” id=”c3” value=”Skuter” onchange=”adj()”><label for=”c3” class=”cat-label”><i class=”bi bi-scooter”></i>Moto</label></div>
-                        <div class=”cat-item”><input type=”radio” name=”typ” id=”c4” value=”Rower” onchange=”adj()”><label for=”c4” class=”cat-label”><i class=”bi bi-bicycle”></i>Rower</label></div>
-                        <div class=”cat-item”><input type=”radio” name=”typ” id=”c5” value=”Inne” onchange=”adj()”><label for=”c5” class=”cat-label”><i class=”bi bi-grid”></i>Inne</label></div>
+                    <div class="cat-grid mb-3">
+                        <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c2" value="Ciezarowe" onchange="adj()"><label for="c2" class="cat-label"><i class="bi bi-truck"></i>Bus/TIR</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c3" value="Skuter" onchange="adj()"><label for="c3" class="cat-label"><i class="bi bi-scooter"></i>Moto</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c4" value="Rower" onchange="adj()"><label for="c4" class="cat-label"><i class="bi bi-bicycle"></i>Rower</label></div>
+                        <div class="cat-item"><input type="radio" name="typ" id="c5" value="Inne" onchange="adj()"><label for="c5" class="cat-label"><i class="bi bi-grid"></i>Inne</label></div>
                     </div>
 
-                    <div class=”mb-3”>
-                        <label class=”small fw-bold text-muted mb-1”>ZDJĘCIA (MAX 10)</label>
-                        <input type=”file” name=”zdjecia” class=”form-control” multiple accept=”image/*”>
+                    <div class="mb-3">
+                        <label class="small fw-bold text-muted mb-1">ZDJĘCIA (PIERWSZE BĘDZIE GŁÓWNE)</label>
+                        <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
                     </div>
 
-                    <div class=”row g-2”>
-                        <div class=”col-6”><label class=”small fw-bold text-muted”>Marka</label><input type=”text” name=”marka” class=”form-control” required></div>
-                        <div class=”col-6”><label class=”small fw-bold text-muted”>Model</label><input type=”text” name=”model” class=”form-control” required></div>
-                        <div class=”col-4”><label class=”small fw-bold text-muted”>Rok</label><input type=”number” name=”rok” class=”form-control”></div>
-                        <div class=”col-4”><label class=”small fw-bold text-muted”>Cena (PLN)</label><input type=”number” name=”cena” class=”form-control border-danger text-danger fw-bold” required></div>
-                        <div class=”col-4 tech”><label class=”small fw-bold text-muted”>Przebieg</label><input type=”number” name=”przebieg” class=”form-control”></div>
-                        <div class=”col-6 tech”><label class=”small fw-bold text-muted”>Paliwo</label><select name=”paliwo” class=”form-select”><option>Benzyna</option><option>Diesel</option><option>LPG</option><option>Hybryda</option><option>Elektryczny</option></select></div>
-                        <div class=”col-6 tech”><label class=”small fw-bold text-muted”>Skrzynia</label><select name=”skrzynia” class=”form-select”><option>Manualna</option><option>Automatyczna</option></select></div>
-                        <div class=”col-12”><label class=”small fw-bold text-muted”>Telefon</label><input type=”text” name=”telefon” class=”form-control” required></div>
-                        <div class=”col-12”><label class=”small fw-bold text-muted”>Opis</label><textarea name=”opis” class=”form-control” rows=”3”></textarea></div>
+                    <div class="row g-2">
+                        <div class="col-6"><label class="small fw-bold text-muted">Marka</label><input type="text" name="marka" class="form-control" required></div>
+                        <div class="col-6"><label class="small fw-bold text-muted">Model</label><input type="text" name="model" class="form-control" required></div>
+                        <div class="col-4"><label class="small fw-bold text-muted">Rok</label><input type="number" name="rok" class="form-control"></div>
+                        <div class="col-4"><label class="small fw-bold text-muted">Cena (PLN)</label><input type="number" name="cena" class="form-control border-danger text-danger fw-bold" required></div>
+                        <div class="col-4 tech"><label class="small fw-bold text-muted">Przebieg</label><input type="number" name="przebieg" class="form-control"></div>
+                        <div class="col-6 tech"><label class="small fw-bold text-muted">Paliwo</label><select name="paliwo" class="form-select"><option>Benzyna</option><option>Diesel</option><option>LPG</option><option>Hybryda</option><option>Elektryczny</option></select></div>
+                        <div class="col-6 tech"><label class="small fw-bold text-muted">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select></div>
+                        <div class="col-12"><label class="small fw-bold text-muted">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
+                        <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3"></textarea></div>
                     </div>
                     
-                    <div class=”mt-3 p-2 border border-warning rounded bg-warning bg-opacity-10 position-relative”>
-                        <div class=”small fw-bold text-warning”><i class=”bi bi-star-fill”></i> PROMOWANIE (Wkrótce)</div>
-                        <div class=”d-flex justify-content-between small text-white-50”><span>Pakiet GOLD (14 dni)</span><span>19 PLN</span></div>
+                    <div class="mt-3 p-2 border border-warning rounded bg-warning bg-opacity-10 position-relative">
+                        <div class="small fw-bold text-warning"><i class="bi bi-star-fill"></i> PROMOWANIE (Wkrótce)</div>
+                        <div class="d-flex justify-content-between small text-white-50"><span>Pakiet GOLD (14 dni)</span><span>19 PLN</span></div>
                     </div>
+
                 </div>
-                <div class=”modal-footer border-secondary pt-0”>
-                    <button class=”btn btn-danger w-100 rounded-pill fw-bold py-2”>WYSTAW OGŁOSZENIE</button>
+                <div class="modal-footer border-secondary pt-0">
+                    <button class="btn btn-danger w-100 rounded-pill fw-bold py-2">WYSTAW OGŁOSZENIE</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<script src=https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    Function adj(){
-        Const v = document.querySelector(‘input[name=”typ”]:checked’).value;
-        Const h = (v===’Rower’||v===’Inne’);
-        Document.querySelectorAll(‘.tech’).forEach(e=>e.style.display=h?’none’:’block’);
+    function adj(){
+        const v = document.querySelector('input[name="typ"]:checked').value;
+        const h = (v==='Rower'||v==='Inne');
+        document.querySelectorAll('.tech').forEach(e=>e.style.display=h?'none':'block');
     }
-    Async function scanCar(input){
-        If(!input.files[0]) return;
-        Document.getElementById(‘scanLoader’).style.display=’block’;
-        Const fd = new FormData(); fd.append(‘scan_image’, input.files[0]);
-        Try {
-            Const r = await fetch(‘/api/analyze-car’, {method:’POST’, body:fd});
-            Const d = await r.json();
-            If(d.marka){
-                Document.querySelector(‘[name=”marka”]’).value=d.marka;
-                Document.querySelector(‘[name=”model”]’).value=d.model;
-                Document.querySelector(‘[name=”rok”]’).value=d.rok_sugestia||’’;
+    async function scanCar(input){
+        if(!input.files[0]) return;
+        document.getElementById('scanLoader').style.display='block';
+        const fd = new FormData(); fd.append('scan_image', input.files[0]);
+        try {
+            const r = await fetch('/api/analyze-car', {method:'POST', body:fd});
+            const d = await r.json();
+            if(d.marka){
+                document.querySelector('[name="marka"]').value=d.marka;
+                document.querySelector('[name="model"]').value=d.model;
+                document.querySelector('[name="rok"]').value=d.rok_sugestia||'';
                 
-                // Opis
-                Const desc = `Skan AI: ${d.marka} ${d.model}, ${d.kolor}.\n${d.opis_wizualny}\nNadwozie: ${d.typ_nadwozia}`;
-                Document.querySelector(‘[name=”opis”]’).value = desc;
+                const desc = `Skan AI: ${d.marka} ${d.model}, ${d.kolor}.\n${d.opis_wizualny}\nNadwozie: ${d.typ_nadwozia}`;
+                document.querySelector('[name="opis"]').value = desc;
 
-                // Próba ustawienia paliwa
-                If(d.paliwo_sugestia) {
-                    Const sel = document.querySelector(‘[name=”paliwo”]’);
-                    For(let i=0; i<sel.options.length; i++){
-                        If(sel.options[i].text === d.paliwo_sugestia) sel.selectedIndex = i;
+                if(d.paliwo_sugestia) {
+                    const sel = document.querySelector('[name="paliwo"]');
+                    for(let i=0; i<sel.options.length; i++){
+                        if(sel.options[i].text === d.paliwo_sugestia) sel.selectedIndex = i;
                     }
                 }
-
-                Alert(‘✅ Auto rozpoznane!’);
+                alert('✅ Auto rozpoznane!');
             } else {
-                Alert(‘⚠️ Nie udało się rozpoznać. Spróbuj lepsze zdjęcie.’);
+                alert('⚠️ Nie udało się rozpoznać. Spróbuj lepsze zdjęcie.');
             }
         } catch(e){
-            Console.error(e);
-            Alert(‘⚠️ Błąd połączenia z AI.’);
+            console.error(e);
+            alert('⚠️ Błąd połączenia z AI.');
         }
-        Document.getElementById(‘scanLoader’).style.display=’none’;
+        document.getElementById('scanLoader').style.display='none';
     }
 </script>
 </body>
