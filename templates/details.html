@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>{{ car.marka }} {{ car.model }} ({{ car.rok }}r.) - Giełda Radom</title>
-    <meta name="description" content="Sprawdź ogłoszenie: {{ car.marka }} {{ car.model }}, rocznik {{ car.rok }}. Cena: {{ car.cena }} PLN. Lokalizacja: {{ car.zrodlo }}. Weryfikacja Gemini AI.">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
 
     <style>
@@ -18,21 +16,27 @@
         
         /* Galeria */
         .gallery-container { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .gallery-img { height: 400px; object-fit: cover; cursor: zoom-in; width: 100%; }
+        .gallery-img { height: 450px; object-fit: cover; cursor: zoom-in; width: 100%; }
         
+        /* Specyfikacja */
         .spec-box { background: #2c2c2c; border-radius: 10px; padding: 15px; text-align: center; border: 1px solid #444; transition: 0.2s; }
         .spec-box:hover { border-color: #ce2b37; background: #333; }
-        .price-tag { color: #ce2b37; font-weight: 800; font-size: 2.5rem; }
         
-        /* Wskaźnik kliknięcia */
-        .zoom-hint { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; }
+        .price-tag { color: #ce2b37; font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; }
+        
+        /* Wskaźnik zoomu */
+        .zoom-hint { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; z-index: 5; }
+
+        /* Pasek Gemini */
+        .gemini-bar-container { background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        .gemini-progress { height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin: 8px 0; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark p-3 mb-4">
+<nav class="navbar navbar-dark p-3 mb-4 sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-arrow-left"></i> Wróć na Giełdę</a>
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-arrow-left"></i> Wróć</a>
         <div class="d-flex gap-2 align-items-center">
             {% if current_user.is_authenticated and (current_user.id == car.user_id or current_user.username == 'admin') %}
                 <a href="/edytuj/{{ car.id }}" class="btn btn-warning btn-sm fw-bold">EDYTUJ</a>
@@ -40,7 +44,7 @@
                     <button class="btn btn-dark btn-sm border-secondary text-danger">USUŃ</button>
                 </form>
             {% endif %}
-            <span class="badge bg-secondary">ID: {{ car.id }}</span>
+            <span class="badge bg-secondary opacity-50">ID: {{ car.id }}</span>
         </div>
     </div>
 </nav>
@@ -56,7 +60,7 @@
                         
                         <div class="carousel-item active">
                             <a href="{{ car.img }}" data-pswp-width="1200" data-pswp-height="900" target="_blank">
-                                <img src="{{ car.img }}" class="d-block w-100 gallery-img" alt="Główne zdjęcie">
+                                <img src="{{ car.img }}" class="d-block w-100 gallery-img" alt="Main">
                             </a>
                         </div>
 
@@ -64,77 +68,74 @@
                         {% if img.image_path != car.img %}
                         <div class="carousel-item">
                             <a href="{{ img.image_path }}" data-pswp-width="1200" data-pswp-height="900" target="_blank">
-                                <img src="{{ img.image_path }}" class="d-block w-100 gallery-img" alt="Zdjęcie pojazdu">
+                                <img src="{{ img.image_path }}" class="d-block w-100 gallery-img" alt="Foto">
                             </a>
                         </div>
                         {% endif %}
                         {% endfor %}
                     </div>
                     
-                    {% if car.images|length > 0 %} <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                    {% if car.images|length > 0 %} 
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
                     <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
                     {% endif %}
                     
-                    <div class="zoom-hint text-white"><i class="bi bi-arrows-fullscreen"></i> Kliknij, by powiększyć</div>
+                    <div class="zoom-hint text-white"><i class="bi bi-hand-index-thumb"></i> Dotknij, by powiększyć</div>
                 </div>
             </div>
 
             {% if car.ai_label %}
             {% set ai = car.ai_label|from_json %}
             {% if ai %}
-            <div class="alert alert-{{ ai.color }} d-flex align-items-center shadow-sm border-0 mb-4" role="alert">
-                <i class="bi bi-stars fs-3 me-3"></i>
-                <div>
-                    <strong class="d-block text-uppercase">{{ ai.label }}</strong>
-                    <small>{{ ai.market_info }}</small>
+            <div class="gemini-bar-container">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold text-{{ ai.color }} text-uppercase"><i class="bi bi-stars"></i> {{ ai.label }}</span>
+                    <span class="fw-bold text-white">{{ ai.score }}/100</span>
                 </div>
-                <div class="ms-auto fw-bold fs-4">{{ ai.score }}/100</div>
+                
+                <div class="gemini-progress">
+                    <div class="progress-bar bg-{{ ai.color }}" style="width: {{ ai.score }}%; height: 100%;"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between text-muted small mt-2">
+                    <span><i class="bi bi-calendar-check me-1"></i>Analiza: {{ car.ai_valuation_data }}</span>
+                    <span><i class="bi bi-bar-chart-fill me-1"></i>Próba: {{ ai.sample_size or 'Live Data' }}</span>
+                </div>
+                
+                {% if ai.market_info %}
+                <div class="mt-2 text-white-50 small border-top border-secondary pt-2">
+                    <i class="bi bi-info-circle me-1"></i> {{ ai.market_info }}
+                </div>
+                {% endif %}
             </div>
             {% endif %}
             {% endif %}
 
             <div class="card bg-dark border-secondary mb-4">
                 <div class="card-body">
-                    <h5 class="fw-bold text-white mb-3">Opis Pojazdu</h5>
-                    <p class="text-muted" style="white-space: pre-line; font-size: 1.05rem;">{{ car.opis }}</p>
-                </div>
-            </div>
-
-            <div class="card mb-4 border-0 shadow-lg overflow-hidden position-relative" style="background: linear-gradient(135deg, #111 0%, #222 100%); border: 1px solid #333;">
-                <div class="card-body position-relative py-4">
-                    <div style="position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(66,133,244,0.2) 0%, rgba(0,0,0,0) 70%); filter: blur(50px);"></div>
-                    <div style="position: absolute; bottom: -50%; left: -10%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(219,68,55,0.2) 0%, rgba(0,0,0,0) 70%); filter: blur(50px);"></div>
-
-                    <div class="row align-items-center position-relative" style="z-index: 1;">
-                        <div class="col-md-9">
-                            <h4 class="fw-bold text-white mb-2"><i class="bi bi-google me-2"></i>Powered by Gemini 3.0</h4>
-                            <p class="text-white-50 mb-0 small">Zweryfikowane przez najnowsze AI. Bezpieczne zakupy.</p>
-                        </div>
-                        <div class="col-md-3 text-end d-none d-md-block">
-                             <i class="bi bi-cpu text-white opacity-25" style="font-size: 3.5rem;"></i>
-                        </div>
-                    </div>
+                    <h5 class="fw-bold text-white mb-3">Opis</h5>
+                    <p class="text-white-50" style="white-space: pre-line; font-size: 1.05rem;">{{ car.opis }}</p>
                 </div>
             </div>
 
         </div>
 
         <div class="col-lg-4">
-            <div class="sticky-top" style="top: 20px;">
+            <div class="sticky-top" style="top: 80px;">
                 
                 <h2 class="fw-bold mb-0 text-white">{{ car.marka }} {{ car.model }}</h2>
                 <div class="price-tag mb-3">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
 
                 <div class="d-grid gap-2 mb-4">
-                    <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow">
+                    <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3">
                         <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
                     </a>
                     {% if current_user.is_authenticated %}
                         <a href="/toggle_favorite/{{ car.id }}" class="btn btn-outline-secondary rounded-pill">
                             {% if car in current_user.favorites|map(attribute='car') %}
-                                <i class="bi bi-heart-fill text-danger me-2"></i> Usuń z ulubionych
+                                <i class="bi bi-heart-fill text-danger me-2"></i> Obserwujesz
                             {% else %}
-                                <i class="bi bi-heart me-2"></i> Dodaj do ulubionych
+                                <i class="bi bi-heart me-2"></i> Obserwuj
                             {% endif %}
                         </a>
                     {% endif %}
@@ -154,12 +155,18 @@
                         <i class="bi bi-geo-alt-fill text-danger me-2"></i> Lokalizacja
                     </div>
                     <div class="overflow-hidden bg-white" style="height: 250px; border-radius: 0 0 10px 10px;">
-                        <iframe width="100%" height="100%" frameborder="0" style="border:0; filter: invert(90%) hue-rotate(180deg);" 
-                            src="https://maps.google.com/maps?q={{ car.zrodlo }}&t=&z=13&ie=UTF8&iwloc=&output=embed">
-                        </iframe>
+                        {% if car.latitude and car.longitude %}
+                            <iframe width="100%" height="100%" frameborder="0" style="border:0; filter: invert(90%) hue-rotate(180deg);" 
+                                src="https://maps.google.com/maps?q={{ car.latitude }},{{ car.longitude }}&z=14&output=embed">
+                            </iframe>
+                        {% else %}
+                            <iframe width="100%" height="100%" frameborder="0" style="border:0; filter: invert(90%) hue-rotate(180deg);" 
+                                src="https://maps.google.com/maps?q={{ car.zrodlo }}&t=&z=12&ie=UTF8&iwloc=&output=embed">
+                            </iframe>
+                        {% endif %}
                     </div>
                     <div class="card-footer bg-transparent border-0 text-white-50 small">
-                        Miasto: <strong>{{ car.zrodlo }}</strong>
+                        Lokalizacja: <strong>{{ car.zrodlo }}</strong>
                     </div>
                 </div>
 
@@ -169,11 +176,6 @@
 </div>
 
 <footer class="mt-5 py-4 border-top border-secondary text-center text-muted small bg-black bg-opacity-25">
-    <div class="container d-flex justify-content-center gap-3 mb-2">
-        <a href="/regulamin" class="text-decoration-none text-muted">Regulamin</a>
-        <a href="/polityka" class="text-decoration-none text-muted">Prywatność</a>
-        <a href="/kontakt" class="text-decoration-none text-muted">Kontakt</a>
-    </div>
     © 2026 Giełda Radom.
 </footer>
 
@@ -183,7 +185,7 @@
     import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
     import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
 
-    // 1. Automatyczne wykrywanie rozmiarów zdjęć (żeby zoom działał idealnie)
+    // 1. Ustalanie rozmiarów zdjęć dla płynnego zoomu
     document.querySelectorAll('#pswp-gallery a').forEach(link => {
         const img = new Image();
         img.src = link.href;
@@ -193,15 +195,24 @@
         }
     });
 
-    // 2. Inicjalizacja Galerii
+    // 2. Konfiguracja PhotoSwipe (Gesty + Zamykanie)
     const lightbox = new PhotoSwipeLightbox({
         gallery: '#pswp-gallery',
         children: 'a',
         pswpModule: PhotoSwipe,
-        zoom: true,           // Włącza Zoom
-        wheelToZoom: true,    // Zoom kółkiem myszy
-        pinchToClose: false   // Zapobiega przypadkowemu zamknięciu przy zoomie
+        
+        // --- GESTY I STEROWANIE ---
+        zoom: true,                 // Pozwól na zoom
+        wheelToZoom: true,          // Zoom kółkiem myszy
+        
+        pinchToClose: true,         // USZCZYPNIJ ŻEBY ZAMKNĄĆ (Gest mobilny)
+        closeOnVerticalDrag: true,  // PRZESUŃ W DÓŁ ŻEBY ZAMKNĄĆ (Gest mobilny)
+        
+        clickToCloseNonZoomable: false, // Kliknięcie nie zamyka od razu (standard galerii)
+        bgOpacity: 0.9,             // Ciemniejsze tło przy otwarciu
+        padding: { top: 20, bottom: 20, left: 0, right: 0 }, // Marginesy
     });
+    
     lightbox.init();
 </script>
 
