@@ -3,73 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giełda Radom - Auta Używane z AI</title>
-    
-    <meta name="description" content="Giełda Radom - Najnowocześniejsza giełda w Polsce. Sprawdź auta używane, motocykle i części. Weryfikacja ofert przez Gemini AI 3.0. Bezpieczne kupowanie.">
-    <meta name="keywords" content="giełda radom, samochody radom, auta używane, sprzedam auto, gemini ai, motocykle radom, części samochodowe">
-    <meta name="author" content="Giełda Radom">
-    <meta name="robots" content="index, follow">
-    
-    <meta property="og:title" content="Giełda Radom - Auta z Weryfikacją AI">
-    <meta property="og:description" content="Kupuj i sprzedawaj bezpiecznie. Jedyna giełda z systemem Gemini AI.">
-    <meta property="og:image" content="https://placehold.co/1200x630/ce2b37/ffffff?text=Gielda+Radom+AI">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:type" content="website">
-
+    <title>Giełda Radom - Auta Używane</title>
+    <meta name="description" content="Giełda Radom - Auta używane, motocykle, części. Weryfikacja Gemini AI.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #0f0f0f; }
-        body { background-color: var(--bg-dark); color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 60px; }
+        body { 
+            background-color: var(--bg-dark); 
+            color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 60px;
+            /* TŁO ZE ZDJĘCIA */
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
         
-        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .navbar { background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; }
         
-        /* HERO */
+        /* HERO SECTION */
         .hero-wrap { 
-            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-            padding: 50px 0; border-bottom: 1px solid #333; position: relative;
+            padding: 80px 0; text-align: center; position: relative;
         }
 
-        /* BANER AI */
+        /* GEMINI BANNER */
         .ai-banner {
-            background: linear-gradient(90deg, rgba(206, 43, 55, 0.1) 0%, rgba(0,0,0,0.3) 100%);
-            border: 1px solid var(--radom-red); border-left: 5px solid var(--radom-red);
-            padding: 15px 25px; border-radius: 12px; margin-bottom: 30px; display: inline-block;
-            box-shadow: 0 0 15px rgba(206, 43, 55, 0.2);
+            display: inline-block; background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 20px; border-radius: 50px; margin-bottom: 20px;
+            font-size: 0.9rem; color: #fff;
         }
-        .ai-glow { text-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
-        /* WYSZUKIWARKA */
-        .search-box-custom {
-            background: #1c1c1c; border: 1px solid #333; border-radius: 15px; padding: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 900px; margin: 0 auto;
+        /* WYSZUKIWARKA "PILL" STYLE (Ze zdjęcia) */
+        .search-pill-container {
+            background: white; border-radius: 50px; padding: 5px;
+            display: flex; align-items: center; max-width: 600px; margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        .form-control-dark { background: transparent; border: none; color: white; font-size: 1.1rem; height: 50px; }
-        .form-control-dark:focus { background: transparent; color: white; box-shadow: none; border: none; }
+        .search-input {
+            border: none; background: transparent; height: 50px; width: 100%;
+            padding-left: 20px; font-size: 1.1rem; color: #333; outline: none;
+        }
+        .search-input::placeholder { color: #888; }
         
-        .btn-adv { background: #333; color: #ccc; border: 1px solid #444; height: 50px; border-radius: 10px; font-weight: 600; padding: 0 20px; transition: 0.3s; }
-        .btn-adv:hover { background: #444; color: white; border-color: #666; }
-        .btn-search { background: var(--radom-red); color: white; border: none; height: 50px; border-radius: 10px; font-weight: 700; padding: 0 30px; letter-spacing: 1px; transition: 0.3s; }
-        .btn-search:hover { background: #b01b25; transform: scale(1.05); box-shadow: 0 0 15px rgba(206, 43, 55, 0.4); }
+        /* Przycisk Filtry (ikona suwaków) */
+        .btn-filters-icon {
+            border: none; background: #f0f0f0; color: #555; width: 45px; height: 45px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin-right: 5px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-filters-icon:hover { background: #e0e0e0; color: var(--radom-red); }
 
-        /* KATEGORIE */
-        .cat-bar { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-        .cat-pill { background: #222; border: 1px solid #333; color: #aaa; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
-        .cat-pill:hover { border-color: var(--radom-red); color: white; background: #2a2a2a; }
+        /* Przycisk Szukaj (Czerwony) */
+        .btn-search-pill {
+            background: var(--radom-red); color: white; border: none;
+            padding: 0 35px; height: 50px; border-radius: 40px;
+            font-weight: bold; font-size: 1.1rem; transition: 0.2s;
+        }
+        .btn-search-pill:hover { background: #b01b25; transform: scale(1.02); }
 
+        /* Rozwijany panel filtrów */
+        .advanced-filters {
+            margin-top: 15px; background: rgba(0,0,0,0.85); border-radius: 15px; padding: 20px;
+            max-width: 600px; margin-left: auto; margin-right: auto; text-align: left;
+            border: 1px solid #333;
+        }
+        .form-select-dark { background: #333; border: 1px solid #555; color: white; }
+
+        /* KARTY */
         .car-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
-        .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+        .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); }
         
-        .filter-panel { background: #161616; border-top: 1px solid #333; padding-top: 20px; margin-top: 15px; }
-        .form-select-dark { background: #2a2a2a; border: 1px solid #444; color: white; }
-
-        /* COOKIES */
-        #cookieConsent { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: #111; border-top: 2px solid var(--radom-red); 
-            padding: 20px; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
-        }
+        /* FOOTER */
+        .seo-footer { background: #111; color: #777; padding: 40px 0; border-top: 1px solid #333; margin-top: 50px; }
+        
+        #cookieConsent { position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 2px solid var(--radom-red); padding: 15px; z-index: 9999; display: none; }
     </style>
 </head>
 <body>
@@ -80,7 +87,7 @@
         <div class="d-flex gap-2">
             {% if current_user.is_authenticated %}
                 <a href="/profil" class="btn btn-outline-light rounded-pill btn-sm fw-bold">Konto</a>
-                <a href="/profil" class="btn btn-danger rounded-pill btn-sm fw-bold px-4 shadow">+ DODAJ</a>
+                <a href="/profil" class="btn btn-danger rounded-pill btn-sm fw-bold px-4">+ DODAJ</a>
             {% else %}
                 <a href="/login" class="btn btn-outline-light rounded-pill btn-sm">Logowanie</a>
             {% endif %}
@@ -88,203 +95,121 @@
     </div>
 </nav>
 
-<div class="hero-wrap text-center">
+<div class="hero-wrap">
     <div class="container">
         
         <div class="ai-banner">
-            <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-stars fs-3 text-warning ai-glow"></i>
-                <div class="text-start">
-                    <h5 class="m-0 fw-bold text-white">GEMINI 3.0 AI</h5>
-                    <small class="text-white-50" style="font-size: 0.75rem;">JEDYNA TAKA GIEŁDA W POLSCE</small>
-                </div>
-            </div>
+            <i class="bi bi-stars text-warning me-2"></i> 
+            <strong>Gemini 3.0 AI</strong> - Jedyna taka giełda w Polsce
         </div>
 
-        <h2 class="fw-bold mb-4 text-white">Znajdź swoje wymarzone auto</h2>
+        <h1 class="fw-bold text-white mb-2 display-5">Znajdź auto w Radomiu</h1>
+        <p class="text-white-50 mb-4">Lokalny rynek. Solidna tradycja. Nowoczesne podejście.</p>
 
         <form action="/" method="get">
-            <div class="search-box-custom">
-                <div class="d-flex flex-column flex-md-row gap-2">
-                    <div class="flex-grow-1 position-relative d-flex align-items-center bg-black bg-opacity-25 rounded px-2 border border-secondary border-opacity-25">
-                        <i class="bi bi-search text-muted ms-2"></i>
-                        <input type="text" name="q" class="form-control form-control-dark" 
-                               placeholder="Wpisz np. Opel Astra, Rower Kross, Części..." 
-                               value="{{ request.args.get('q', '') }}">
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-adv d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
-                            <i class="bi bi-sliders"></i> <span class="d-none d-md-inline">Filtry</span>
-                        </button>
-                        <button class="btn btn-search shadow">SZUKAJ</button>
-                    </div>
-                </div>
+            <div class="search-pill-container">
+                <i class="bi bi-search text-muted ms-3 fs-5"></i>
+                <input type="text" name="q" class="search-input" placeholder="Jaki samochód? (np. Audi, Rower, Części...)" value="{{ request.args.get('q', '') }}">
+                
+                <button type="button" class="btn-filters-icon" data-bs-toggle="collapse" data-bs-target="#advFilters" title="Filtry">
+                    <i class="bi bi-sliders2"></i>
+                </button>
+                
+                <button class="btn-search-pill">Szukaj</button>
+            </div>
 
-                <div class="collapse" id="advancedFilters">
-                    <div class="filter-panel row g-2 text-start">
-                        <div class="col-6 col-md-3">
-                            <label class="small text-muted mb-1 ms-1">Kategoria</label>
-                            <select name="typ" class="form-select form-select-dark">
-                                <option value="">Wszystkie</option>
-                                <option value="Osobowe" {% if request.args.get('typ')=='Osobowe' %}selected{% endif %}>Osobowe</option>
-                                <option value="SUV" {% if request.args.get('typ')=='SUV' %}selected{% endif %}>SUV</option>
-                                <option value="Ciezarowe" {% if request.args.get('typ')=='Ciezarowe' %}selected{% endif %}>Dostawcze</option>
-                                <option value="Skuter" {% if request.args.get('typ')=='Skuter' %}selected{% endif %}>Motocykle</option>
-                                <option value="Rower" {% if request.args.get('typ')=='Rower' %}selected{% endif %}>Rowery</option>
-                                <option value="Inne" {% if request.args.get('typ')=='Inne' %}selected{% endif %} class="fw-bold text-warning">★ INNE / CZĘŚCI</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="small text-muted mb-1 ms-1">Paliwo</label>
-                            <select name="paliwo" class="form-select form-select-dark">
-                                <option value="">Dowolne</option>
-                                <option value="Benzyna" {% if request.args.get('paliwo')=='Benzyna' %}selected{% endif %}>Benzyna</option>
-                                <option value="Diesel" {% if request.args.get('paliwo')=='Diesel' %}selected{% endif %}>Diesel</option>
-                                <option value="LPG" {% if request.args.get('paliwo')=='LPG' %}selected{% endif %}>LPG</option>
-                                <option value="Hybryda" {% if request.args.get('paliwo')=='Hybryda' %}selected{% endif %}>Hybryda</option>
-                                <option value="Elektryczny" {% if request.args.get('paliwo')=='Elektryczny' %}selected{% endif %}>Elektryczny</option>
-                            </select>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="small text-muted mb-1 ms-1">Cena do (PLN)</label>
-                            <input type="number" name="max_cena" class="form-control form-control-dark border border-secondary border-opacity-25" placeholder="np. 50000" value="{{ request.args.get('max_cena', '') }}">
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="small text-muted mb-1 ms-1">Rok od</label>
-                            <input type="number" name="min_rok" class="form-control form-control-dark border border-secondary border-opacity-25" placeholder="np. 2015" value="{{ request.args.get('min_rok', '') }}">
-                        </div>
+            <div class="collapse" id="advFilters">
+                <div class="advanced-filters row g-2">
+                    <div class="col-6">
+                        <label class="small text-muted">Kategoria</label>
+                        <select name="typ" class="form-select form-select-dark btn-sm">
+                            <option value="">Wszystkie</option>
+                            <option value="Osobowe">Osobowe</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Ciezarowe">Dostawcze</option>
+                            <option value="Rower">Rower</option>
+                            <option value="Inne" class="text-warning">Inne / Części</option>
+                        </select>
                     </div>
+                    <div class="col-6">
+                        <label class="small text-muted">Paliwo</label>
+                        <select name="paliwo" class="form-select form-select-dark btn-sm">
+                            <option value="">Wszystkie</option>
+                            <option value="Benzyna">Benzyna</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="LPG">LPG</option>
+                        </select>
+                    </div>
+                    <div class="col-6"><input type="number" name="min_rok" class="form-control form-select-dark btn-sm" placeholder="Rok od"></div>
+                    <div class="col-6"><input type="number" name="max_cena" class="form-control form-select-dark btn-sm" placeholder="Cena do"></div>
                 </div>
             </div>
         </form>
 
-        <div class="cat-bar">
-            <a href="/?typ=Osobowe" class="cat-pill">Osobowe</a>
-            <a href="/?typ=SUV" class="cat-pill">SUV</a>
-            <a href="/?typ=Ciezarowe" class="cat-pill">Bus</a>
-            <a href="/?typ=Rower" class="cat-pill">Rowery</a>
-            <a href="/?typ=Inne" class="cat-pill border-warning text-warning">Inne / Części</a>
-        </div>
     </div>
 </div>
 
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
-        <h4 class="fw-bold text-white mb-0">Najnowsze Oferty</h4>
-        <span class="text-muted small">Wyników: {{ cars|length }}</span>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-white mb-0">Dostępne Samochody</h4>
+        <span class="text-muted small">Znaleziono: {{ cars|length }} ofert</span>
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
         {% for car in cars %}
         <div class="col">
-            <div class="card car-card h-100 shadow-sm">
-                {% if current_user.is_authenticated %}
-                <a href="/toggle_favorite/{{ car.id }}" class="btn btn-sm btn-dark bg-opacity-50 text-white rounded-circle position-absolute top-0 end-0 m-2 border-0" style="width: 35px; height: 35px; z-index: 10; display: flex; align-items: center; justify-content: center;">
-                    <i class="bi {% if car in current_user.favorites|map(attribute='car') %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
-                </a>
-                {% endif %}
+            <div class="card car-card h-100">
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 240px; object-fit: cover;">
+                        <img src="{{ car.img }}" class="card-img-top" style="height: 220px; object-fit: cover;">
                         {% if car.is_promoted %}
-                        <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>
+                        <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border fw-bold">GOLD</span>
                         {% endif %}
                         <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
-                            <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
-                            <div class="d-flex justify-content-between align-items-center px-1">
-                                <span class="text-white-50 small">{{ car.rok }}r.</span>
+                            <h5 class="fw-bold text-white mb-0">{{ car.marka }} {{ car.model }}</h5>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-white-50">{{ car.rok }}r.</small>
                                 <span class="text-danger fw-bold">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</span>
                             </div>
                         </div>
                     </div>
                 </a>
-                <div class="card-body pt-3 pb-3 bg-dark">
-                    <div class="d-flex gap-2 small text-muted mb-3 align-items-center">
-                        {% if car.typ == 'Rower' or car.typ == 'Inne' %}
-                            <span><i class="bi bi-tag-fill text-secondary"></i> {{ car.typ }}</span>
-                            <span class="border-start border-secondary mx-1" style="height: 12px;"></span>
-                            <span>{{ car.opis[:35] }}...</span>
-                        {% else %}
-                            <span><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</span>
-                            <span class="border-start border-secondary mx-1" style="height: 12px;"></span>
-                            <span><i class="bi bi-speedometer2"></i> {{ car.przebieg }} km</span>
-                        {% endif %}
+                
+                {% if car.ai_label %}
+                    {% set ai = car.ai_label|from_json %}
+                    {% if ai %}
+                    <div class="bg-dark p-2 border-top border-secondary">
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-{{ ai.color }} fw-bold"><i class="bi bi-stars"></i> {{ ai.label }}</span>
+                            <span class="text-muted">{{ ai.score }}/100</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 4px;">
+                            <div class="progress-bar bg-{{ ai.color }}" style="width: {{ ai.score }}%"></div>
+                        </div>
                     </div>
-                    {% if car.ai_label %}
-                        {% set ai = car.ai_label|from_json %}
-                        {% if ai %}
-                        <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
-                            <div class="border border-secondary border-opacity-25 rounded p-2 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.05);">
-                                <span class="text-{{ ai.color }} small fw-bold text-uppercase"><i class="bi bi-stars"></i> {{ ai.label }}</span>
-                                <span class="badge bg-secondary bg-opacity-25">{{ ai.score }}/100</span>
-                            </div>
-                        </a>
-                        {% endif %}
                     {% endif %}
-                </div>
+                {% endif %}
             </div>
         </div>
         {% else %}
-        <div class="col-12 text-center py-5">
-            <i class="bi bi-search fs-1 text-muted opacity-50"></i>
-            <h4 class="mt-3 text-muted">Nic nie znaleziono...</h4>
-            <p class="text-muted">Spróbuj wpisać inne hasło.</p>
-        </div>
+        <div class="col-12 text-center py-5"><h4 class="text-muted">Brak wyników.</h4></div>
         {% endfor %}
     </div>
 </div>
 
-<div id="cookieConsent">
-    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-        <div class="text-white small">
-            <i class="bi bi-cookie me-2"></i><strong>Giełda Radom</strong> używa plików cookies oraz technologii Gemini AI w celu analizy ofert i poprawy bezpieczeństwa. 
-            <a href="/polityka" class="text-danger text-decoration-none">Polityka Prywatności</a>.
-        </div>
-        <button class="btn btn-danger rounded-pill px-4 fw-bold shadow btn-sm" onclick="acceptCookies()">Akceptuję</button>
-    </div>
-</div>
-
-<footer class="mt-5 py-5 border-top border-secondary bg-black text-secondary" style="font-size: 0.9rem;">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <h5 class="text-white fw-bold mb-3"><i class="bi bi-speedometer2 text-danger me-2"></i>Giełda Radom</h5>
-                <p>Platforma ogłoszeniowa nowej generacji. Kupuj i sprzedawaj w Radomiu: auta osobowe, ciężarowe, motocykle i rowery. Weryfikacja ofert przez <strong>Gemini AI 3.0</strong>.</p>
-            </div>
-            <div class="col-md-4 mb-4">
-                <h6 class="text-white fw-bold mb-3">Kategorie</h6>
-                <ul class="list-unstyled lh-lg">
-                    <li><a href="/?typ=Osobowe" class="text-decoration-none text-secondary hover-white">Samochody Osobowe</a></li>
-                    <li><a href="/?typ=Ciezarowe" class="text-decoration-none text-secondary hover-white">Auta Dostawcze</a></li>
-                    <li><a href="/?typ=Rower" class="text-decoration-none text-secondary hover-white">Rowery i Sport</a></li>
-                    <li><a href="/?typ=Inne" class="text-decoration-none text-secondary hover-white">Części i Akcesoria</a></li>
-                </ul>
-            </div>
-            <div class="col-md-4 mb-4">
-                <h6 class="text-white fw-bold mb-3">Informacje</h6>
-                <ul class="list-unstyled lh-lg">
-                    <li><a href="/regulamin" class="text-decoration-none text-secondary hover-white">Regulamin</a></li>
-                    <li><a href="/polityka" class="text-decoration-none text-secondary hover-white">Polityka Prywatności</a></li>
-                    <li><a href="/kontakt" class="text-decoration-none text-secondary hover-white">Kontakt</a></li>
-                    <li><a href="/sitemap.xml" class="text-decoration-none text-secondary hover-white">Mapa Strony (XML)</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="text-center pt-4 border-top border-secondary mt-2 small">
-            © 2026 Giełda Radom. Wszelkie prawa zastrzeżone.
-        </div>
+<footer class="seo-footer">
+    <div class="container text-center">
+        <p>© 2026 Giełda Radom. <a href="/sitemap.xml" class="text-muted">Mapa Strony</a> | <a href="/polityka" class="text-muted">Polityka</a></p>
     </div>
 </footer>
 
+<div id="cookieConsent">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="text-white small">Używamy cookies i AI.</div>
+        <button class="btn btn-danger btn-sm rounded-pill" onclick="document.getElementById('cookieConsent').style.display='none'">OK</button>
+    </div>
+</div>
+<script>if(!localStorage.getItem('c'))document.getElementById('cookieConsent').style.display='block'; localStorage.setItem('c','1');</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function acceptCookies() { 
-        localStorage.setItem('cookiesAccepted', 'true'); 
-        document.getElementById('cookieConsent').style.display = 'none'; 
-    }
-    if (!localStorage.getItem('cookiesAccepted')) {
-        document.getElementById('cookieConsent').style.display = 'block';
-    }
-</script>
 </body>
 </html>
