@@ -47,11 +47,8 @@ login_manager.login_view = 'login'
 # --- AI CONFIG (2026 STANDARD) ---
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
-    # Używamy Twojego płatnego modelu 3.0 Pro
-    try:
-          model_ai = model_ai = genai.GenerativeModel('Gemini 3 Flash')
-    except:
-        # Fallback gdyby nazwa w API była inna, ale celujemy w 3.0 
+    # Używamy sprawdzonego modelu Flash
+    model_ai = model_ai = genai.GenerativeModel('gemini-3-flash-preview')
 else:
     model_ai = None
 
