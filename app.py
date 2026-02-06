@@ -44,7 +44,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- AI CONFIG ---
+# --- AI CONFIG (TWÓJ MODEL) ---
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
     try:
@@ -106,7 +106,6 @@ class Car(db.Model):
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(50), default='Radom')
     
-    # GPS
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
 
@@ -166,9 +165,17 @@ def allowed_file(filename):
 def update_market_valuation(car):
     if not model_ai: return
     try:
+        # Prompt z próbą (sample_size)
         prompt = f"""
-        Jesteś ekspertem rynku. Towar: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
-        Zwróć TYLKO JSON: {{"score": 80, "label": "DOBRA CENA", "color": "success", "market_info": "Wycena AI"}}
+        Jesteś ekspertem rynku automotive 2026. Analiza: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
+        Zwróć JSON: 
+        {{
+            "score": 85, 
+            "label": "DOBRA CENA", 
+            "color": "success", 
+            "sample_size": "24 oferty",
+            "market_info": "Cena atrakcyjna na tle rynku."
+        }}
         """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
@@ -184,14 +191,13 @@ def from_json_filter(value):
     try: return json.loads(value)
     except: return None
 
-# --- TRASY (ROUTES) ---
+# --- TRASY ---
 
 @app.route('/')
 def index():
     q = request.args.get('q', '').strip()
     query = Car.query
 
-    # SMART SEARCH (Omnibox Logic)
     if q:
         terms = q.split()
         conditions = []
@@ -206,16 +212,12 @@ def index():
             conditions.append(term_condition)
         query = query.filter(and_(*conditions))
 
-    # Filtry zaawansowane
     cat = request.args.get('typ', '')
     if cat: query = query.filter(Car.typ == cat)
-    
     paliwo = request.args.get('paliwo', '')
     if paliwo: query = query.filter(Car.paliwo == paliwo)
-    
     max_cena = request.args.get('max_cena', type=float)
     if max_cena: query = query.filter(Car.cena <= max_cena)
-    
     min_rok = request.args.get('min_rok', type=int)
     if min_rok: query = query.filter(Car.rok >= min_rok)
 
@@ -229,13 +231,15 @@ def car_details(car_id):
     car.views += 1
     car.wyswietlenia = (car.wyswietlenia or 0) + 1
     
+    # LIMIT 7 DNI NA ODŚWIEŻANIE
     should_update = False
     if not car.ai_valuation_data or not car.ai_label:
         should_update = True
     else:
         try:
             last_check = datetime.strptime(car.ai_valuation_data, "%Y-%m-%d")
-            if (datetime.now() - last_check).days >= 1: should_update = True
+            # TU JEST BLOKADA 7 DNI
+            if (datetime.now() - last_check).days >= 7: should_update = True
         except: should_update = True
             
     if should_update and model_ai:
@@ -279,8 +283,7 @@ def dodaj_ogloszenie():
     try:
         lat = float(request.form.get('lat')) if request.form.get('lat') else None
         lon = float(request.form.get('lon')) if request.form.get('lon') else None
-    except:
-        lat, lon = None, None
+    except: lat, lon = None, None
 
     try:
         new_car = Car(
@@ -313,9 +316,7 @@ def api_analyze_car():
     if not file: return jsonify({"error": "Brak pliku"}), 400
     try:
         prompt = """
-        Zidentyfikuj przedmiot na zdjęciu.
-        KROK 1: Kategoria ["Osobowe", "SUV", "Ciezarowe", "Skuter", "Rower", "Inne"].
-        KROK 2: Dane (Marka/Przedmiot, Model/Cecha).
+        Zidentyfikuj przedmiot. 
         Zwróć JSON: {"kategoria": "X", "marka": "X", "model": "Y", "rok_sugestia": 2024, "paliwo_sugestia": "Benzyna", "typ_nadwozia": "Sedan", "kolor": "Czarny", "opis_wizualny": "Opis"}
         """
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": file.read()}])
@@ -443,25 +444,14 @@ def usun_zdjecie(image_id):
     db.session.commit()
     return jsonify({'success': True})
 
-# --- SEO: SITEMAP XML ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = request.url_root.rstrip('/')
-    urls = [
-        f"{base_url}/",
-        f"{base_url}/login",
-        f"{base_url}/register",
-        f"{base_url}/kontakt",
-        f"{base_url}/regulamin",
-        f"{base_url}/polityka"
-    ]
+    urls = [f"{base_url}/", f"{base_url}/login", f"{base_url}/register", f"{base_url}/kontakt"]
     cars = Car.query.order_by(Car.data_dodania.desc()).all()
-    for car in cars:
-        urls.append(f"{base_url}/ogloszenie/{car.id}")
-    
+    for car in cars: urls.append(f"{base_url}/ogloszenie/{car.id}")
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    for url in urls:
-        xml += f'  <url><loc>{url}</loc><changefreq>daily</changefreq></url>\n'
+    for url in urls: xml += f'  <url><loc>{url}</loc><changefreq>daily</changefreq></url>\n'
     xml += '</urlset>'
     return make_response(xml, 200, {'Content-Type': 'application/xml'})
 
@@ -470,9 +460,9 @@ def update_db_schema():
         try:
             conn = sqlite3.connect('instance/gielda.db')
             c = conn.cursor()
-            try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT"); print("Dodano latitude")
+            try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT");
             except: pass
-            try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT"); print("Dodano longitude")
+            try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT");
             except: pass
             conn.commit(); conn.close()
         except Exception as e: print(f"Migracja: {e}")
