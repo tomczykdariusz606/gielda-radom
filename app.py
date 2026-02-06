@@ -52,7 +52,7 @@ if GEMINI_KEY:
         model_ai = genai.GenerativeModel('Gemini 3.0-Flash')
     except:
         # Fallback gdyby nazwa w API była inna, ale celujemy w 3.0 
-        model_ai = genai.GenerativeModel('gemini-2.0-Flash')
+        model_ai = genai.GenerativeModel('gemini 1.5')
 else:
     model_ai = None
 
