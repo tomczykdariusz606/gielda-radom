@@ -6,7 +6,7 @@ import json
 import sqlite3
 from datetime import datetime, timezone
 from PIL import Image, ImageOps
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, and_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -188,17 +188,12 @@ def from_json_filter(value):
 
 @app.route('/')
 def index():
-    # INTELIGENTNE WYSZUKIWANIE (Omnibox)
     q = request.args.get('q', '').strip()
-    
-    # Podstawowe zapytanie
     query = Car.query
 
+    # SMART SEARCH (Omnibox Logic)
     if q:
-        # Rozbijamy wpisany tekst na słowa, np. "Opel Astra Benzyna" -> ["Opel", "Astra", "Benzyna"]
         terms = q.split()
-        
-        # Tworzymy listę warunków, które muszą być spełnione WSZYSTKIE naraz
         conditions = []
         for term in terms:
             term_condition = or_(
@@ -206,21 +201,25 @@ def index():
                 Car.model.icontains(term),
                 Car.paliwo.icontains(term),
                 Car.typ.icontains(term),
-                Car.rok.cast(db.String).icontains(term) # Pozwala szukać po roczniku np. "2010"
+                Car.rok.cast(db.String).icontains(term)
             )
             conditions.append(term_condition)
-        
-        # Łączymy warunki operatorem AND (musi pasować Opel I Astra I Benzyna)
         query = query.filter(and_(*conditions))
 
-    # Filtrowanie dodatkowe (jeśli kliknięto kategorię)
-    cat = request.args.get('cat', '')
-    if cat:
-        query = query.filter(Car.typ == cat)
-
-    # Sortowanie: Promowane pierwsze, potem najnowsze
-    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
+    # Filtry zaawansowane
+    cat = request.args.get('typ', '')
+    if cat: query = query.filter(Car.typ == cat)
     
+    paliwo = request.args.get('paliwo', '')
+    if paliwo: query = query.filter(Car.paliwo == paliwo)
+    
+    max_cena = request.args.get('max_cena', type=float)
+    if max_cena: query = query.filter(Car.cena <= max_cena)
+    
+    min_rok = request.args.get('min_rok', type=int)
+    if min_rok: query = query.filter(Car.rok >= min_rok)
+
+    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow())
 
 @app.route('/ogloszenie/<int:car_id>')
@@ -285,25 +284,15 @@ def dodaj_ogloszenie():
 
     try:
         new_car = Car(
-            marka=request.form.get('marka'), 
-            model=request.form.get('model'),
-            rok=int(request.form.get('rok') or 0), 
-            cena=float(request.form.get('cena') or 0),
-            typ=request.form.get('typ', 'Osobowe'),
-            opis=request.form.get('opis', ''),
-            telefon=request.form.get('telefon'), 
-            skrzynia=request.form.get('skrzynia'),
-            paliwo=request.form.get('paliwo'), 
-            nadwozie=request.form.get('nadwozie'),
-            pojemnosc=request.form.get('pojemnosc'), 
-            przebieg=int(request.form.get('przebieg') or 0),
-            img=main_img, 
-            zrodlo=current_user.lokalizacja, 
-            user_id=current_user.id,
-            data_dodania=datetime.utcnow(),
-            is_promoted=False,
-            views=0, wyswietlenia=0, ai_label=None,
-            latitude=lat, longitude=lon
+            marka=request.form.get('marka'), model=request.form.get('model'),
+            rok=int(request.form.get('rok') or 0), cena=float(request.form.get('cena') or 0),
+            typ=request.form.get('typ', 'Osobowe'), opis=request.form.get('opis', ''),
+            telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
+            paliwo=request.form.get('paliwo'), nadwozie=request.form.get('nadwozie'),
+            pojemnosc=request.form.get('pojemnosc'), przebieg=int(request.form.get('przebieg') or 0),
+            img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id,
+            data_dodania=datetime.utcnow(), is_promoted=False,
+            views=0, wyswietlenia=0, ai_label=None, latitude=lat, longitude=lon
         )
         db.session.add(new_car)
         db.session.flush()
@@ -320,7 +309,6 @@ def dodaj_ogloszenie():
 def api_analyze_car():
     if not model_ai: return jsonify({"error": "AI niedostępne"}), 500
     if not check_ai_limit(): return jsonify({"error": "Limit wyczerpany"}), 429
-    
     file = request.files.get('scan_image')
     if not file: return jsonify({"error": "Brak pliku"}), 400
     try:
@@ -335,8 +323,7 @@ def api_analyze_car():
         db.session.commit()
         txt = resp.text.replace('```json','').replace('```','').strip()
         return jsonify(json.loads(txt))
-    except Exception as e: 
-        return jsonify({"error": "Błąd analizy"}), 500
+    except Exception as e: return jsonify({"error": "Błąd analizy"}), 500
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
@@ -455,6 +442,28 @@ def usun_zdjecie(image_id):
     db.session.delete(img)
     db.session.commit()
     return jsonify({'success': True})
+
+# --- SEO: SITEMAP XML ---
+@app.route('/sitemap.xml')
+def sitemap():
+    base_url = request.url_root.rstrip('/')
+    urls = [
+        f"{base_url}/",
+        f"{base_url}/login",
+        f"{base_url}/register",
+        f"{base_url}/kontakt",
+        f"{base_url}/regulamin",
+        f"{base_url}/polityka"
+    ]
+    cars = Car.query.order_by(Car.data_dodania.desc()).all()
+    for car in cars:
+        urls.append(f"{base_url}/ogloszenie/{car.id}")
+    
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for url in urls:
+        xml += f'  <url><loc>{url}</loc><changefreq>daily</changefreq></url>\n'
+    xml += '</urlset>'
+    return make_response(xml, 200, {'Content-Type': 'application/xml'})
 
 def update_db_schema():
     with app.app_context():
