@@ -5,11 +5,10 @@ import io
 import json
 import sqlite3
 from datetime import datetime, timezone
-# ZMIANA: Import do naprawy obróconych zdjęć
 from PIL import Image, ImageOps
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -107,7 +106,7 @@ class Car(db.Model):
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(50), default='Radom')
     
-    # KOLUMNY GPS (Baza zostanie o nie uzupełniona na starcie)
+    # GPS
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
 
@@ -151,13 +150,8 @@ def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
-    
-    # --- NAPRAWA OBROTU ZDJĘCIA (EXIF FIX) ---
-    try:
-        img = ImageOps.exif_transpose(img)
-    except Exception:
-        pass 
-
+    try: img = ImageOps.exif_transpose(img)
+    except: pass 
     if img.mode in ("RGBA", "P"): img = img.convert("RGB")
     if img.width > 1200:
         w_percent = (1200 / float(img.width))
@@ -194,10 +188,39 @@ def from_json_filter(value):
 
 @app.route('/')
 def index():
+    # INTELIGENTNE WYSZUKIWANIE (Omnibox)
     q = request.args.get('q', '').strip()
-    cars_query = Car.query
-    if q: cars_query = cars_query.filter(or_(Car.marka.icontains(q), Car.model.icontains(q)))
-    cars = cars_query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
+    
+    # Podstawowe zapytanie
+    query = Car.query
+
+    if q:
+        # Rozbijamy wpisany tekst na słowa, np. "Opel Astra Benzyna" -> ["Opel", "Astra", "Benzyna"]
+        terms = q.split()
+        
+        # Tworzymy listę warunków, które muszą być spełnione WSZYSTKIE naraz
+        conditions = []
+        for term in terms:
+            term_condition = or_(
+                Car.marka.icontains(term),
+                Car.model.icontains(term),
+                Car.paliwo.icontains(term),
+                Car.typ.icontains(term),
+                Car.rok.cast(db.String).icontains(term) # Pozwala szukać po roczniku np. "2010"
+            )
+            conditions.append(term_condition)
+        
+        # Łączymy warunki operatorem AND (musi pasować Opel I Astra I Benzyna)
+        query = query.filter(and_(*conditions))
+
+    # Filtrowanie dodatkowe (jeśli kliknięto kategorię)
+    cat = request.args.get('cat', '')
+    if cat:
+        query = query.filter(Car.typ == cat)
+
+    # Sortowanie: Promowane pierwsze, potem najnowsze
+    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
+    
     return render_template('index.html', cars=cars, now=datetime.utcnow())
 
 @app.route('/ogloszenie/<int:car_id>')
@@ -254,7 +277,6 @@ def dodaj_ogloszenie():
             
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     
-    # ODCZYT GPS
     try:
         lat = float(request.form.get('lat')) if request.form.get('lat') else None
         lon = float(request.form.get('lon')) if request.form.get('lon') else None
@@ -263,13 +285,21 @@ def dodaj_ogloszenie():
 
     try:
         new_car = Car(
-            marka=request.form.get('marka'), model=request.form.get('model'),
-            rok=int(request.form.get('rok') or 0), cena=float(request.form.get('cena') or 0),
-            typ=request.form.get('typ', 'Osobowe'), opis=request.form.get('opis', ''),
-            telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
-            paliwo=request.form.get('paliwo'), nadwozie=request.form.get('nadwozie'),
-            pojemnosc=request.form.get('pojemnosc'), przebieg=int(request.form.get('przebieg') or 0),
-            img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id,
+            marka=request.form.get('marka'), 
+            model=request.form.get('model'),
+            rok=int(request.form.get('rok') or 0), 
+            cena=float(request.form.get('cena') or 0),
+            typ=request.form.get('typ', 'Osobowe'),
+            opis=request.form.get('opis', ''),
+            telefon=request.form.get('telefon'), 
+            skrzynia=request.form.get('skrzynia'),
+            paliwo=request.form.get('paliwo'), 
+            nadwozie=request.form.get('nadwozie'),
+            pojemnosc=request.form.get('pojemnosc'), 
+            przebieg=int(request.form.get('przebieg') or 0),
+            img=main_img, 
+            zrodlo=current_user.lokalizacja, 
+            user_id=current_user.id,
             data_dodania=datetime.utcnow(),
             is_promoted=False,
             views=0, wyswietlenia=0, ai_label=None,
@@ -296,7 +326,7 @@ def api_analyze_car():
     try:
         prompt = """
         Zidentyfikuj przedmiot na zdjęciu.
-        KROK 1: Kategoria ["Osobowe", "Ciezarowe", "Skuter", "Rower", "Inne"].
+        KROK 1: Kategoria ["Osobowe", "SUV", "Ciezarowe", "Skuter", "Rower", "Inne"].
         KROK 2: Dane (Marka/Przedmiot, Model/Cecha).
         Zwróć JSON: {"kategoria": "X", "marka": "X", "model": "Y", "rok_sugestia": 2024, "paliwo_sugestia": "Benzyna", "typ_nadwozia": "Sedan", "kolor": "Czarny", "opis_wizualny": "Opis"}
         """
@@ -426,31 +456,19 @@ def usun_zdjecie(image_id):
     db.session.commit()
     return jsonify({'success': True})
 
-# --- AUTOMATYCZNA MIGRACJA BAZY (DODAWANIE GPS) ---
 def update_db_schema():
     with app.app_context():
         try:
-            # Próbujemy połączyć się z bazą i dodać kolumny ręcznie SQLem
             conn = sqlite3.connect('instance/gielda.db')
             c = conn.cursor()
-            try:
-                c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT")
-                print("✅ [MIGRACJA] Dodano kolumnę latitude")
-            except:
-                pass # Kolumna już istnieje
-            
-            try:
-                c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
-                print("✅ [MIGRACJA] Dodano kolumnę longitude")
-            except:
-                pass # Kolumna już istnieje
-                
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print(f"⚠️ Migracja pominięta: {e}")
+            try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT"); print("Dodano latitude")
+            except: pass
+            try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT"); print("Dodano longitude")
+            except: pass
+            conn.commit(); conn.close()
+        except Exception as e: print(f"Migracja: {e}")
 
 if __name__ == '__main__':
-    update_db_schema() # URUCHAMIAMY MIGRACJĘ PRZED STARTEM
+    update_db_schema()
     with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000)
