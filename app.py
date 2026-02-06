@@ -5,7 +5,8 @@ import io
 import json
 import sqlite3
 from datetime import datetime, timezone
-from PIL import Image
+# ZMIANA: Import do naprawy obróconych zdjęć
+from PIL import Image, ImageOps
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
@@ -20,7 +21,6 @@ try:
     import sekrety
     GEMINI_KEY = sekrety.GEMINI_KEY
     MAIL_PWD = sekrety.MAIL_PWD
-    # TU JEST TWÓJ DZIAŁAJĄCY KLUCZ 2024
     SECRET_KEY_APP = getattr(sekrety, 'SECRET_KEY', 'sekretny_klucz_gieldy_radom_2024')
 except ImportError:
     GEMINI_KEY = None
@@ -45,11 +45,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- AI CONFIG (TWÓJ MODEL PREVIEW) ---
+# --- AI CONFIG ---
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
     try:
-        # TU JEST TWÓJ DZIAŁAJĄCY MODEL
         model_ai = genai.GenerativeModel('gemini-3-flash-preview')
     except:
         model_ai = None
@@ -65,7 +64,7 @@ app.config['MAIL_PASSWORD'] = MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = 'dariusztom@go2.pl'
 mail = Mail(app)
 
-# --- MODELE BAZY DANYCH (PEŁNE) ---
+# --- MODELE BAZY DANYCH ---
 
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -108,6 +107,10 @@ class Car(db.Model):
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(50), default='Radom')
     
+    # KOLUMNY GPS (Baza zostanie o nie uzupełniona na starcie)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+
     is_promoted = db.Column(db.Boolean, default=False)
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
@@ -148,6 +151,13 @@ def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
+    
+    # --- NAPRAWA OBROTU ZDJĘCIA (EXIF FIX) ---
+    try:
+        img = ImageOps.exif_transpose(img)
+    except Exception:
+        pass 
+
     if img.mode in ("RGBA", "P"): img = img.convert("RGB")
     if img.width > 1200:
         w_percent = (1200 / float(img.width))
@@ -163,9 +173,8 @@ def update_market_valuation(car):
     if not model_ai: return
     try:
         prompt = f"""
-        Jesteś ekspertem rynku (2026). 
-        Towar: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
-        Zwróć TYLKO JSON: {{"score": 80, "label": "DOBRA OFERTA", "color": "success", "market_info": "Analiza AI"}}
+        Jesteś ekspertem rynku. Towar: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
+        Zwróć TYLKO JSON: {{"score": 80, "label": "DOBRA CENA", "color": "success", "market_info": "Wycena AI"}}
         """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
@@ -174,7 +183,7 @@ def update_market_valuation(car):
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
-        print(f"AI Valuation Error: {e}")
+        print(f"AI Error: {e}")
 
 @app.template_filter('from_json')
 def from_json_filter(value):
@@ -245,6 +254,13 @@ def dodaj_ogloszenie():
             
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     
+    # ODCZYT GPS
+    try:
+        lat = float(request.form.get('lat')) if request.form.get('lat') else None
+        lon = float(request.form.get('lon')) if request.form.get('lon') else None
+    except:
+        lat, lon = None, None
+
     try:
         new_car = Car(
             marka=request.form.get('marka'), model=request.form.get('model'),
@@ -256,7 +272,8 @@ def dodaj_ogloszenie():
             img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id,
             data_dodania=datetime.utcnow(),
             is_promoted=False,
-            views=0, wyswietlenia=0, ai_label=None
+            views=0, wyswietlenia=0, ai_label=None,
+            latitude=lat, longitude=lon
         )
         db.session.add(new_car)
         db.session.flush()
@@ -268,7 +285,6 @@ def dodaj_ogloszenie():
         flash('Błąd bazy', 'danger')
     return redirect(url_for('profil'))
 
-# --- NOWA INTELIGENTNA FUNKCJA (ROZPOZNAJE PRZEDMIOTY) ---
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def api_analyze_car():
@@ -278,30 +294,11 @@ def api_analyze_car():
     file = request.files.get('scan_image')
     if not file: return jsonify({"error": "Brak pliku"}), 400
     try:
-        # Tuta Gemini decyduje czy to Rower, Parasol czy Auto
         prompt = """
-        Przeanalizuj zdjęcie i zidentyfikuj co jest na sprzedaż.
-        
-        KROK 1: Wybierz kategorię z listy: ["Osobowe", "Ciezarowe", "Skuter", "Rower", "Inne"].
-        - Jeśli to rower -> kategoria "Rower".
-        - Jeśli to przedmiot (np. parasol, kosiarka) -> kategoria "Inne".
-        - Jeśli to auto osobowe -> kategoria "Osobowe".
-
-        KROK 2: Wypełnij dane.
-        - Marka: Nazwa producenta lub nazwa przedmiotu (np. "Parasol").
-        - Model: Model lub cecha (np. "Ogrodowy").
-
-        Zwróć TYLKO JSON:
-        {
-            "kategoria": "X", 
-            "marka": "X", 
-            "model": "Y", 
-            "rok_sugestia": 2024, 
-            "paliwo_sugestia": "Benzyna", 
-            "typ_nadwozia": "Sedan", 
-            "kolor": "Czarny", 
-            "opis_wizualny": "Krótki opis"
-        }
+        Zidentyfikuj przedmiot na zdjęciu.
+        KROK 1: Kategoria ["Osobowe", "Ciezarowe", "Skuter", "Rower", "Inne"].
+        KROK 2: Dane (Marka/Przedmiot, Model/Cecha).
+        Zwróć JSON: {"kategoria": "X", "marka": "X", "model": "Y", "rok_sugestia": 2024, "paliwo_sugestia": "Benzyna", "typ_nadwozia": "Sedan", "kolor": "Czarny", "opis_wizualny": "Opis"}
         """
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": file.read()}])
         current_user.ai_requests_today += 1
@@ -309,7 +306,6 @@ def api_analyze_car():
         txt = resp.text.replace('```json','').replace('```','').strip()
         return jsonify(json.loads(txt))
     except Exception as e: 
-        print(f"Scan Error: {e}")
         return jsonify({"error": "Błąd analizy"}), 500
 
 @app.route('/api/generuj-opis', methods=['POST'])
@@ -317,16 +313,14 @@ def api_analyze_car():
 def generuj_opis_ai():
     if not model_ai: return jsonify({"opis": "Błąd AI"}), 500
     if not check_ai_limit(): return jsonify({"opis": "Limit wyczerpany"}), 429
-    
     data = request.json
     try:
-        prompt = f"Opisz przedmiot na sprzedaż: {data}. Styl: zachęcający."
+        prompt = f"Opisz przedmiot: {data}. Styl: zachęcający."
         resp = model_ai.generate_content(prompt)
         current_user.ai_requests_today += 1
         db.session.commit()
         return jsonify({"opis": resp.text.strip()})
-    except Exception as e:
-        return jsonify({"opis": f"Błąd: {str(e)}"}), 500
+    except: return jsonify({"opis": "Błąd generowania"}), 500
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
@@ -432,6 +426,31 @@ def usun_zdjecie(image_id):
     db.session.commit()
     return jsonify({'success': True})
 
+# --- AUTOMATYCZNA MIGRACJA BAZY (DODAWANIE GPS) ---
+def update_db_schema():
+    with app.app_context():
+        try:
+            # Próbujemy połączyć się z bazą i dodać kolumny ręcznie SQLem
+            conn = sqlite3.connect('instance/gielda.db')
+            c = conn.cursor()
+            try:
+                c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT")
+                print("✅ [MIGRACJA] Dodano kolumnę latitude")
+            except:
+                pass # Kolumna już istnieje
+            
+            try:
+                c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
+                print("✅ [MIGRACJA] Dodano kolumnę longitude")
+            except:
+                pass # Kolumna już istnieje
+                
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"⚠️ Migracja pominięta: {e}")
+
 if __name__ == '__main__':
+    update_db_schema() # URUCHAMIAMY MIGRACJĘ PRZED STARTEM
     with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000)
