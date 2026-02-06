@@ -3,54 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giełda Radom - Znajdź Swoje Auto</title>
-    <meta name="description" content="Giełda Radom - Najlepsze ogłoszenia motoryzacyjne w Radomiu. Auta używane, motocykle, rowery. Sprzedaj szybko z Gemini AI.">
-    <meta name="keywords" content="giełda radom, auta używane radom, samochody radom, sprzedam auto radom, motocykle radom">
+    <title>Giełda Radom - Luksusowe Auta z AI</title>
+    <meta name="description" content="Giełda Radom - Jedyna w Polsce giełda z weryfikacją Gemini AI 3.0. Auta, Motocykle, Rowery.">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        :root { --radom-red: #ce2b37; }
-        body { background-color: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 40px;}
-        .navbar { background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--radom-red); }
+        :root { --radom-red: #ce2b37; --bg-dark: #0f0f0f; }
+        body { background-color: var(--bg-dark); color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 60px; }
         
-        /* HERO SECTION - "MOBILE.DE STYLE" */
-        .hero-section { background: linear-gradient(180deg, #1e1e1e 0%, #121212 100%); padding: 40px 0; border-bottom: 1px solid #333; }
+        /* NAVBAR */
+        .navbar { background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 1000; }
         
-        .search-container { max-width: 700px; margin: 0 auto; position: relative; }
-        .search-input { height: 60px; font-size: 1.2rem; border-radius: 30px; padding-left: 25px; border: 2px solid #444; background: #252525; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: 0.3s; }
-        .search-input:focus { background: #333; border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206, 43, 55, 0.3); outline: none; }
+        /* HERO / SEARCH SECTION */
+        .hero-wrap { 
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); 
+            padding: 50px 0 40px 0; 
+            border-bottom: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
         
-        .search-btn { position: absolute; right: 5px; top: 5px; height: 50px; width: 50px; border-radius: 50%; border: none; background: var(--radom-red); color: white; font-size: 1.5rem; transition: 0.3s; }
-        .search-btn:hover { background: #b01b25; transform: scale(1.05); }
+        /* Animowana poświata w tle */
+        .hero-wrap::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(206, 43, 55, 0.15) 0%, rgba(0,0,0,0) 50%);
+            animation: pulse 10s infinite;
+            pointer-events: none;
+        }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
 
-        /* QUICK CATEGORIES */
-        .cat-tiles { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 25px; }
-        .cat-tile { background: #2c2c2c; border: 1px solid #444; color: #ccc; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .cat-tile:hover, .cat-tile.active { background: var(--radom-red); color: white; border-color: var(--radom-red); transform: translateY(-3px); }
+        /* BANER AI */
+        .ai-banner {
+            display: inline-flex; align-items: center; gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 25px; border-radius: 50px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(5px);
+        }
+        .ai-text {
+            background: -webkit-linear-gradient(0deg, #4285F4, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+        }
 
-        .car-card { background: #1e1e1e; border: 1px solid #333; border-radius: 12px; overflow: hidden; transition: transform 0.2s; position: relative; }
-        .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        /* SEARCH BAR LUXURY */
+        .search-container { max-width: 800px; margin: 0 auto; position: relative; z-index: 2; }
+        .search-main-input {
+            height: 65px; font-size: 1.2rem; background: #222; border: 1px solid #444; color: white;
+            border-radius: 12px; padding-left: 20px; transition: 0.3s;
+        }
+        .search-main-input:focus {
+            background: #2a2a2a; border-color: var(--radom-red); box-shadow: 0 0 20px rgba(206, 43, 55, 0.2); outline: none;
+        }
         
-        .fav-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; z-index: 10; cursor: pointer; text-decoration: none; transition: 0.3s; }
-        .fav-btn:hover { background: white; color: var(--radom-red); }
-        .fav-active { background: white; color: var(--radom-red); }
+        .btn-search-main {
+            height: 65px; padding: 0 40px; font-weight: bold; font-size: 1.1rem;
+            background: var(--radom-red); border: none; color: white; border-radius: 12px;
+            transition: 0.3s;
+        }
+        .btn-search-main:hover { background: #b01b25; transform: scale(1.02); }
         
-        .seo-footer { background: #1a1a1a; padding: 40px 0; margin-top: 60px; border-top: 1px solid #333; color: #777; font-size: 0.85rem; }
-        .seo-footer h5 { color: #ddd; margin-bottom: 15px; font-weight: bold; }
-        .seo-footer a { color: #999; text-decoration: none; transition: 0.2s; }
-        .seo-footer a:hover { color: var(--radom-red); }
+        .btn-advanced {
+            height: 65px; background: #333; color: #ccc; border: 1px solid #444; border-radius: 12px;
+            font-weight: 600; transition: 0.3s; width: 100%;
+        }
+        .btn-advanced:hover, .btn-advanced[aria-expanded="true"] { background: #444; color: white; border-color: #666; }
+
+        /* FILTRY ROZWIJANE */
+        .advanced-panel {
+            background: #1c1c1c; border: 1px solid #333; border-radius: 12px; margin-top: 15px; padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .filter-select { background: #2a2a2a; border: 1px solid #444; color: white; height: 50px; }
+        .filter-select:focus { background: #333; border-color: var(--radom-red); color: white; }
+
+        /* KARTY */
+        .car-card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; }
+        .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+        
+        /* GEMINI BADGE */
+        .gemini-badge {
+            font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
+            background: linear-gradient(90deg, rgba(66,133,244,0.1) 0%, rgba(219,68,55,0.1) 100%);
+            border: 1px solid #333; color: #ccc; padding: 5px 10px; border-radius: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark sticky-top py-3">
+<nav class="navbar navbar-dark py-3">
     <div class="container d-flex justify-content-between align-items-center">
         <a class="navbar-brand fw-bold fs-4" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
         <div class="d-flex gap-2">
             {% if current_user.is_authenticated %}
-                <a href="/profil" class="btn btn-outline-light rounded-pill btn-sm fw-bold">Moje Konto</a>
-                <a href="/profil" class="btn btn-danger rounded-pill btn-sm fw-bold px-3">+ DODAJ</a>
+                <a href="/profil" class="btn btn-outline-light rounded-pill btn-sm fw-bold">Konto</a>
+                <a href="/profil" class="btn btn-danger rounded-pill btn-sm fw-bold px-4">+ DODAJ</a>
             {% else %}
                 <a href="/login" class="btn btn-outline-light rounded-pill btn-sm">Logowanie</a>
             {% endif %}
@@ -58,30 +111,97 @@
     </div>
 </nav>
 
-<div class="hero-section text-center">
-    <div class="container">
-        <h2 class="fw-bold mb-4 text-white">Czego szukasz dzisiaj?</h2>
+<div class="hero-wrap text-center">
+    <div class="container search-container">
         
-        <form action="/" method="get" class="search-container">
-            <input type="text" name="q" class="form-control search-input" placeholder="Wpisz np. Opel Astra, BMW Diesel, Rower..." value="{{ request.args.get('q', '') }}">
-            <button class="search-btn shadow"><i class="bi bi-search"></i></button>
-        </form>
-
-        <div class="cat-tiles">
-            <a href="/?cat=Osobowe" class="cat-tile shadow-sm"><i class="bi bi-car-front-fill"></i> Osobowe</a>
-            <a href="/?cat=SUV" class="cat-tile shadow-sm"><i class="bi bi-jeep"></i> SUV</a>
-            <a href="/?cat=Ciezarowe" class="cat-tile shadow-sm"><i class="bi bi-truck"></i> Dostawcze</a>
-            <a href="/?cat=Skuter" class="cat-tile shadow-sm"><i class="bi bi-scooter"></i> Moto</a>
-            <a href="/?cat=Rower" class="cat-tile shadow-sm"><i class="bi bi-bicycle"></i> Rowery</a>
-            <a href="/?q=Okazja" class="cat-tile shadow-sm border-danger text-danger"><i class="bi bi-fire"></i> Okazje</a>
+        <div class="ai-banner shadow-lg">
+            <i class="bi bi-stars fs-4" style="color: #cbadff;"></i>
+            <div>
+                <span class="ai-text d-block">GEMINI 3.0 AI</span>
+                <small class="text-white-50" style="font-size: 0.75rem;">JEDYNA TAKA GIEŁDA W POLSCE</small>
+            </div>
         </div>
+
+        <h1 class="fw-bold mb-4 text-white display-6">Znajdź, sprawdź, kup.</h1>
+
+        <form action="/" method="get">
+            <div class="row g-2">
+                <div class="col-12 col-md-7">
+                    <input type="text" name="q" class="form-control search-main-input" 
+                           placeholder="Wpisz np. Opel Astra 2015, Rower Kross..." 
+                           value="{{ request.args.get('q', '') }}">
+                </div>
+                
+                <div class="col-4 col-md-2">
+                    <button class="btn btn-advanced" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                        <i class="bi bi-sliders"></i> <span class="d-none d-md-inline">Filtry</span>
+                    </button>
+                </div>
+
+                <div class="col-8 col-md-3">
+                    <button class="btn btn-search-main w-100 shadow">SZUKAJ</button>
+                </div>
+            </div>
+
+            <div class="collapse" id="advancedFilters">
+                <div class="advanced-panel text-start">
+                    <div class="row g-3">
+                        <div class="col-12 mb-2 pb-2 border-bottom border-secondary">
+                            <span class="text-muted small text-uppercase fw-bold ls-1">Kategorie</span>
+                        </div>
+                        
+                        <div class="col-6 col-md-4">
+                            <label class="small text-muted mb-1">Rodzaj Pojazdu / Przedmiotu</label>
+                            <select name="typ" class="form-select filter-select">
+                                <option value="">Wszystkie</option>
+                                <option value="Osobowe" {% if request.args.get('typ')=='Osobowe' %}selected{% endif %}>Auta Osobowe</option>
+                                <option value="SUV" {% if request.args.get('typ')=='SUV' %}selected{% endif %}>SUV / Terenowe</option>
+                                <option value="Ciezarowe" {% if request.args.get('typ')=='Ciezarowe' %}selected{% endif %}>Dostawcze / Bus</option>
+                                <option value="Skuter" {% if request.args.get('typ')=='Skuter' %}selected{% endif %}>Motocykle / Quady</option>
+                                <option value="Rower" {% if request.args.get('typ')=='Rower' %}selected{% endif %}>Rowery</option>
+                                <option value="Inne" {% if request.args.get('typ')=='Inne' %}selected{% endif %} class="fw-bold text-warning">★ INNE / CZĘŚCI</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6 col-md-4">
+                            <label class="small text-muted mb-1">Paliwo</label>
+                            <select name="paliwo" class="form-select filter-select">
+                                <option value="">Dowolne</option>
+                                <option value="Benzyna" {% if request.args.get('paliwo')=='Benzyna' %}selected{% endif %}>Benzyna</option>
+                                <option value="Diesel" {% if request.args.get('paliwo')=='Diesel' %}selected{% endif %}>Diesel</option>
+                                <option value="LPG" {% if request.args.get('paliwo')=='LPG' %}selected{% endif %}>LPG</option>
+                                <option value="Hybryda" {% if request.args.get('paliwo')=='Hybryda' %}selected{% endif %}>Hybryda</option>
+                                <option value="Elektryczny" {% if request.args.get('paliwo')=='Elektryczny' %}selected{% endif %}>Elektryczny</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-6 col-md-2">
+                            <label class="small text-muted mb-1">Rok Od</label>
+                            <input type="number" name="min_rok" class="form-control filter-select" placeholder="np. 2010" value="{{ request.args.get('min_rok', '') }}">
+                        </div>
+                         <div class="col-6 col-md-2">
+                            <label class="small text-muted mb-1">Cena Do (PLN)</label>
+                            <input type="number" name="max_cena" class="form-control filter-select" placeholder="np. 50000" value="{{ request.args.get('max_cena', '') }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <div class="d-flex justify-content-center gap-2 mt-4 flex-wrap">
+            <a href="/?typ=Osobowe" class="badge bg-dark border border-secondary text-decoration-none text-light p-2 px-3 fw-normal">Osobowe</a>
+            <a href="/?typ=SUV" class="badge bg-dark border border-secondary text-decoration-none text-light p-2 px-3 fw-normal">SUV</a>
+            <a href="/?typ=Rower" class="badge bg-dark border border-secondary text-decoration-none text-light p-2 px-3 fw-normal">Rowery</a>
+            <a href="/?typ=Inne" class="badge bg-dark border border-secondary text-decoration-none text-warning p-2 px-3 fw-normal">Inne / Części</a>
+        </div>
+
     </div>
 </div>
 
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold text-white mb-0">Najnowsze ogłoszenia</h4>
-        <span class="text-muted small">Znaleziono: {{ cars|length }}</span>
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-2">
+        <h4 class="fw-bold text-white mb-0">Najnowsze Oferty</h4>
+        <span class="text-muted small">Wyników: {{ cars|length }}</span>
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
@@ -90,32 +210,35 @@
             <div class="card car-card h-100 shadow-sm">
                 
                 {% if current_user.is_authenticated %}
-                <a href="/toggle_favorite/{{ car.id }}" class="fav-btn {% if car in current_user.favorites|map(attribute='car') %}fav-active{% endif %}">
-                    <i class="bi bi-heart-fill"></i>
+                <a href="/toggle_favorite/{{ car.id }}" class="fav-btn" style="position: absolute; top:10px; right:10px; z-index:10;">
+                    <i class="bi {% if car in current_user.favorites|map(attribute='car') %}bi-heart-fill text-danger{% else %}bi-heart text-white{% endif %}"></i>
                 </a>
                 {% endif %}
 
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 220px; object-fit: cover;">
+                        <img src="{{ car.img }}" class="card-img-top" style="height: 240px; object-fit: cover;">
+                        
                         {% if car.is_promoted %}
                         <span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>
                         {% endif %}
-                        <span class="position-absolute bottom-0 end-0 m-2 badge bg-black bg-opacity-75 rounded-pill border border-secondary">
-                            {{ car.rok }}r.
-                        </span>
+                        
+                        <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+                            <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
+                            <div class="d-flex justify-content-between align-items-center px-1">
+                                <span class="text-white-50 small">{{ car.rok }}r.</span>
+                                <span class="text-danger fw-bold">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</span>
+                            </div>
+                        </div>
                     </div>
                 </a>
                 
-                <div class="card-body pb-2">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="fw-bold text-white mb-0 text-truncate" style="max-width: 65%;">{{ car.marka }} {{ car.model }}</h5>
-                        <h5 class="text-danger fw-800">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</h5>
-                    </div>
-                    
+                <div class="card-body pt-3 pb-3 bg-dark">
                     <div class="d-flex gap-2 small text-muted mb-3 align-items-center">
                         {% if car.typ == 'Rower' or car.typ == 'Inne' %}
-                            <span><i class="bi bi-tag-fill"></i> {{ car.typ }}</span>
+                            <span><i class="bi bi-tag-fill text-secondary"></i> {{ car.typ }}</span>
+                            <span class="border-start border-secondary mx-1" style="height: 12px;"></span>
+                            <span>{{ car.opis[:30] }}...</span>
                         {% else %}
                             <span><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</span>
                             <span class="border-start border-secondary mx-1" style="height: 12px;"></span>
@@ -127,9 +250,9 @@
                         {% set ai = car.ai_label|from_json %}
                         {% if ai %}
                         <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
-                            <div class="alert alert-{{ ai.color }} p-2 mb-0 d-flex justify-content-between align-items-center ai-bar-mini border-0 shadow-sm">
-                                <span><i class="bi bi-stars me-1"></i> {{ ai.label }}</span>
-                                <span class="badge bg-black bg-opacity-25">{{ ai.score }}/100</span>
+                            <div class="gemini-badge">
+                                <span class="text-{{ ai.color }}"><i class="bi bi-stars"></i> {{ ai.label }}</span>
+                                <span>{{ ai.score }}/100</span>
                             </div>
                         </a>
                         {% endif %}
@@ -139,43 +262,42 @@
         </div>
         {% else %}
         <div class="col-12 text-center py-5">
-            <i class="bi bi-search fs-1 text-muted"></i>
-            <h4 class="mt-3 text-muted">Nie znaleziono ogłoszeń.</h4>
-            <p class="text-muted">Spróbuj wpisać inne hasło (np. "Audi" zamiast "Audi A4").</p>
+            <i class="bi bi-search fs-1 text-muted opacity-50"></i>
+            <h4 class="mt-3 text-muted">Brak wyników.</h4>
+            <p class="text-muted">Spróbuj zmienić filtry lub wpisać inne hasło.</p>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<footer class="seo-footer">
+<footer class="mt-5 py-5 border-top border-secondary bg-black text-secondary" style="font-size: 0.9rem;">
     <div class="container">
         <div class="row">
             <div class="col-md-4 mb-4">
-                <h5>O Giełdzie Radom</h5>
-                <p>Jesteśmy lokalnym liderem ogłoszeń motoryzacyjnych. Dzięki technologii Gemini AI 3.0 pomagamy kupować i sprzedawać auta, motocykle oraz rowery szybciej i bezpieczniej.</p>
+                <h5 class="text-white fw-bold mb-3"><i class="bi bi-speedometer2 text-danger me-2"></i>Giełda Radom</h5>
+                <p>Pierwsza w Polsce platforma handlowa zintegrowana z <strong>Gemini AI 3.0</strong>. Weryfikujemy ceny, rozpoznajemy pojazdy i dbamy o bezpieczeństwo.</p>
             </div>
             <div class="col-md-4 mb-4">
-                <h5>Szybkie Linki</h5>
-                <ul class="list-unstyled">
-                    <li><a href="/?cat=Osobowe">Auta Osobowe Radom</a></li>
-                    <li><a href="/?cat=Ciezarowe">Dostawcze i Bus</a></li>
-                    <li><a href="/?cat=Rower">Rowery Używane</a></li>
-                    <li><a href="/regulamin">Regulamin Serwisu</a></li>
-                    <li><a href="/polityka">Polityka Prywatności</a></li>
+                <h6 class="text-white fw-bold mb-3">Na skróty</h6>
+                <ul class="list-unstyled lh-lg">
+                    <li><a href="/?typ=Osobowe" class="text-decoration-none text-secondary hover-white">Samochody Osobowe</a></li>
+                    <li><a href="/?typ=Ciezarowe" class="text-decoration-none text-secondary hover-white">Dostawcze</a></li>
+                    <li><a href="/?typ=Rower" class="text-decoration-none text-secondary hover-white">Rowery i Sport</a></li>
+                    <li><a href="/?typ=Inne" class="text-decoration-none text-secondary hover-white">Części i Inne</a></li>
                 </ul>
             </div>
             <div class="col-md-4 mb-4">
-                <h5>Kontakt</h5>
-                <p><i class="bi bi-envelope me-2"></i> kontakt@gieldaradom.pl</p>
-                <p><i class="bi bi-geo-alt me-2"></i> Radom, Polska</p>
+                <h6 class="text-white fw-bold mb-3">Kontakt</h6>
+                <p>Radom, ul. Handlowa 1</p>
+                <p>Email: kontakt@gieldaradom.pl</p>
                 <div class="mt-3">
-                    <a href="#" class="me-3 fs-5"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="me-3 fs-5"><i class="bi bi-instagram"></i></a>
+                    <button class="btn btn-outline-secondary btn-sm rounded-circle me-2"><i class="bi bi-facebook"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm rounded-circle"><i class="bi bi-instagram"></i></button>
                 </div>
             </div>
         </div>
-        <div class="text-center pt-4 border-top border-secondary mt-3">
-            © 2026 Giełda Radom. Powered by Google Gemini 3.0.
+        <div class="text-center pt-4 border-top border-secondary mt-2 small">
+            © 2026 Giełda Radom. Wszelkie prawa zastrzeżone.
         </div>
     </div>
 </footer>
