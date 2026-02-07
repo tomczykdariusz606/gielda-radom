@@ -467,12 +467,24 @@ def edytuj(id):
             car.pojemnosc = request.form.get('pojemnosc')
             car.telefon = request.form.get('telefon')
             car.opis = request.form.get('opis')
+          files = request.files.getlist('zdjecia')
+            for file in files:
+                if file and allowed_file(file.filename):
+                    # Używamy tej samej funkcji optymalizacji co przy dodawaniu
+                    filename = save_optimized_image(file)
+                    # Tworzymy ścieżkę URL
+                    path = url_for('static', filename='uploads/' + filename)
+                    # Dodajemy wpis do bazy
+                    new_img = CarImage(image_path=path, car_id=car.id)
+                    db.session.add(new_img)
             
-            db.session.commit()
-            flash('Zmiany zostały zapisane!', 'success')
+                        db.session.commit()
+            flash('Zapisano zmiany i dodano zdjęcia!', 'success')
             return redirect('/profil')
+            
         except Exception as e:
-            flash(f'Błąd zapisu: {e}', 'danger')
+            print(f"Błąd edycji: {e}")
+            flash('Wystąpił błąd podczas zapisu.', 'danger')
             
     return render_template('edytuj.html', car=car)
 
