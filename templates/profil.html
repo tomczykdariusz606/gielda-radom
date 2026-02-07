@@ -68,6 +68,52 @@
     </div>
 </div>
 
+    {% if current_user.username == 'admin' or current_user.id == 1 %}
+    <div class="card admin-box shadow-lg mb-5 border-0" style="background: linear-gradient(145deg, #1a1a1a, #000); border-left: 5px solid #ffc107;">
+        <div class="card-header bg-transparent border-warning d-flex justify-content-between align-items-center pt-3 pb-2">
+            <h5 class="text-warning mb-0 fw-bold" style="letter-spacing: 1px;"><i class="bi bi-shield-lock-fill me-2"></i> CENTRUM DOWODZENIA</h5>
+            <span class="badge bg-warning text-dark shadow fw-bold">ROOT ADMIN</span>
+        </div>
+        <div class="card-body text-white">
+            
+            <div class="row g-3 mb-4 text-center">
+                <div class="col-4">
+                    <div class="p-3 rounded-3 border border-secondary bg-dark bg-opacity-50">
+                        <h3 class="fw-bold text-white mb-0">{{ user_count }}</h3>
+                        <small class="text-secondary text-uppercase fw-bold" style="font-size:0.65rem;">WSZYSTKIE KONTA</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
+                        <h3 class="fw-bold text-success mb-0">{{ online_count }}</h3>
+                        <small class="text-success text-uppercase fw-bold" style="font-size:0.65rem;">ONLINE TERAZ</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-3 rounded-3 border border-info bg-info bg-opacity-10">
+                        <h3 class="fw-bold text-info mb-0">{{ total_views }}</h3>
+                        <small class="text-info text-uppercase fw-bold" style="font-size:0.65rem;">WYŚWIETLENIA</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
+                <label class="small text-muted fw-bold mb-2 text-uppercase"><i class="bi bi-save me-1"></i> System Backup</label>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2">
+                        <i class="bi bi-database-down me-1"></i> BAZA SQL
+                    </a>
+                    <a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark">
+                        <i class="bi bi-archive-fill me-1"></i> PEŁNY ZIP
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+
+
 <div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary">
