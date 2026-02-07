@@ -343,21 +343,40 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    user_count = 0; online_count = 0; total_views = 0
+    user_count = 0
+    online_count = 0
+    total_views = 0
+    all_users = [] # Nowa zmienna dla listy
     
+    # --- LOGIKA ADMINA ---
     if current_user.username == 'admin' or current_user.id == 1:
         cars = Car.query.order_by(Car.data_dodania.desc()).all()
-        # STATYSTYKI DLA ADMINA
-        user_count = User.query.count()
-        # Użytkownicy aktywni w ostatnich 5 minutach
-        active_since = datetime.utcnow() - timedelta(minutes=5)
-        online_count = User.query.filter(User.last_seen >= active_since).count()
+        
+        # Pobieramy WSZYSTKICH użytkowników do listy
+        all_users = User.query.all() 
+        user_count = len(all_users)
+        
+        try:
+            active_since = datetime.utcnow() - timedelta(minutes=5)
+            online_count = User.query.filter(User.last_seen >= active_since).count()
+        except: online_count = 1
         total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
+
+    # --- LOGIKA ZWYKŁEGO UŻYTKOWNIKA ---
     else:
         cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
         
     favorites = Favorite.query.filter_by(user_id=current_user.id).all()
-    return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.utcnow(), user_count=user_count, online_count=online_count, total_views=total_views)
+    
+    return render_template('profil.html', 
+                           cars=cars, 
+                           favorites=favorites, 
+                           now=datetime.utcnow(), 
+                           user_count=user_count, 
+                           online_count=online_count, 
+                           total_views=total_views,
+                           all_users=all_users) # Przekazujemy listę do HTML
+
 
 
 @app.route('/dodaj', methods=['POST'])
