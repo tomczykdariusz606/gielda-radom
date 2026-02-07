@@ -3,13 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giełda Radom - AI & Auta</title>
-    
-    <meta name="description" content="Giełda Radom - Najlepsze ogłoszenia motoryzacyjne. Auta używane, motocykle, części. Weryfikacja ofert przez Gemini AI 3.0. Bezpieczne kupowanie lokalnie.">
-    <meta name="keywords" content="radom giełda, auta radom, sprzedam opla radom, motocykle, gemini ai, samochody używane">
-    <meta name="robots" content="index, follow">
-    <meta property="og:title" content="Giełda Radom - Znajdź Auto z AI">
-    <meta property="og:description" content="Sprawdzone oferty. Skaner AI. Lokalny rynek.">
+    <title>Giełda Radom - Pierwsza w Polsce Giełda AI</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -24,12 +18,40 @@
         }
         
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-        .hero-wrap { padding: 80px 0; text-align: center; position: relative; }
         
+        /* HERO SECTION */
+        .hero-wrap { padding: 80px 0; text-align: center; position: relative; }
+
+        /* SZKLANY BANER (GLASSMORPHISM + ANIMACJA) */
+        .glass-banner {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 40px;
+            border-radius: 50px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(206, 43, 55, 0.15);
+            animation: glow-pulse 3s infinite alternate;
+        }
+        
+        @keyframes glow-pulse {
+            0% { border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 0 20px rgba(66, 133, 244, 0.2); }
+            100% { border-color: rgba(206, 43, 55, 0.5); box-shadow: 0 0 40px rgba(206, 43, 55, 0.4); }
+        }
+
+        .ai-title {
+            font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+            background: -webkit-linear-gradient(0deg, #fff, #ce2b37);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* WYSZUKIWARKA "PILL" */
         .search-pill-container {
             background: white; border-radius: 50px; padding: 5px;
             display: flex; align-items: center; max-width: 700px; margin: 0 auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7);
         }
         .search-input { border: none; background: transparent; height: 55px; width: 100%; padding-left: 20px; font-size: 1.1rem; color: #333; outline: none; }
         
@@ -37,15 +59,17 @@
         .btn-filters-icon:hover { background: #e0e0e0; color: var(--radom-red); }
         
         .btn-search-pill { background: var(--radom-red); color: white; border: none; padding: 0 40px; height: 50px; border-radius: 40px; font-weight: bold; font-size: 1.1rem; transition: 0.2s; }
-        .btn-search-pill:hover { background: #b01b25; transform: scale(1.02); }
+        .btn-search-pill:hover { background: #b01b25; transform: scale(1.05); }
         
-        .advanced-filters { margin-top: 15px; background: rgba(0,0,0,0.85); border-radius: 15px; padding: 20px; max-width: 700px; margin-left: auto; margin-right: auto; text-align: left; border: 1px solid #333; backdrop-filter: blur(10px); }
-        .form-select-dark, .form-control-dark { background: #333; border: 1px solid #555; color: white; }
+        /* FILTRY */
+        .advanced-filters { margin-top: 15px; background: rgba(10, 10, 10, 0.9); border-radius: 15px; padding: 20px; max-width: 700px; margin-left: auto; margin-right: auto; text-align: left; border: 1px solid #333; backdrop-filter: blur(10px); }
+        .form-select-dark, .form-control-dark { background: #222; border: 1px solid #444; color: white; }
         
+        /* KARTY */
         .car-card { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
-        .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); }
+        .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
         
-        .lang-btn { text-decoration: none; font-size: 1.2rem; margin-left: 5px; opacity: 0.7; }
+        .lang-btn { text-decoration: none; font-size: 1.2rem; margin-left: 5px; opacity: 0.7; transition: 0.2s; }
         .lang-btn:hover { opacity: 1; transform: scale(1.2); }
         
         #cookieConsent { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10, 10, 10, 0.95); border-top: 2px solid var(--radom-red); padding: 20px; z-index: 9999; display: none; }
@@ -78,9 +102,17 @@
 
 <div class="hero-wrap">
     <div class="container">
-        <div class="d-inline-block bg-white bg-opacity-10 border border-white border-opacity-25 rounded-pill px-3 py-1 mb-3 text-white small text-uppercase fw-bold">
-            <i class="bi bi-stars text-warning me-1"></i> Gemini 3.0 AI
+        
+        <div class="glass-banner">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-robot fs-2 text-white"></i>
+                <div class="text-start lh-1">
+                    <div class="ai-title">PIERWSZA W POLSCE</div>
+                    <div class="text-white-50 small mt-1">ANALIZA EKSPERCKA GEMINI 3.0 AI</div>
+                </div>
+            </div>
         </div>
+
         <h1 class="fw-bold text-white mb-2 display-5">{{ t['hero_h1'] }}</h1>
         <p class="text-white-50 mb-4">{{ t['hero_p'] }}</p>
 
@@ -106,14 +138,8 @@
                             <option value="">{{ t['all'] }}</option><option value="Manualna">{{ t['man'] }}</option><option value="Automatyczna">{{ t['auto'] }}</option>
                         </select>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <label class="small text-muted mb-1">{{ t['mileage'] }}</label>
-                        <input type="number" name="max_przebieg" class="form-control form-control-dark btn-sm" placeholder="km">
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <label class="small text-muted mb-1">{{ t['price'] }}</label>
-                        <input type="number" name="max_cena" class="form-control form-control-dark btn-sm" placeholder="PLN">
-                    </div>
+                    <div class="col-6 col-md-3"><label class="small text-muted mb-1">{{ t['mileage'] }}</label><input type="number" name="max_przebieg" class="form-control form-control-dark btn-sm" placeholder="km"></div>
+                    <div class="col-6 col-md-3"><label class="small text-muted mb-1">{{ t['price'] }}</label><input type="number" name="max_cena" class="form-control form-control-dark btn-sm" placeholder="PLN"></div>
                 </div>
             </div>
         </form>
@@ -146,7 +172,7 @@
                 <div class="card-body pt-3 pb-3">
                     <div class="d-flex gap-2 small text-muted mb-2">
                         {% if car.typ=='Rower' or car.typ=='Inne' %}<span>{{ car.typ }}</span>
-                        {% else %}<span>{{ car.paliwo }}</span><span>{{ car.przebieg }} km</span><span>{{ car.skrzynia }}</span>{% endif %}
+                        {% else %}<span>{{ car.paliwo }}</span><span class="border-start border-secondary mx-1"></span><span>{{ car.przebieg }} km</span>{% endif %}
                     </div>
                     {% if car.ai_label %}{% set ai = car.ai_label|from_json %}{% if ai %}
                     <div class="bg-black bg-opacity-25 p-2 rounded border border-secondary border-opacity-25">
