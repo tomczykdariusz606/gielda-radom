@@ -620,6 +620,31 @@ def usun_konto():
     except Exception as e:
         flash(f'Błąd podczas usuwania konta: {e}', 'danger')
         return redirect('/profil')
+@app.route('/admin/usun_user/<int:user_id>', methods=['POST'])
+@login_required
+def admin_delete_user(user_id):
+    # Sprawdzenie czy to admin
+    if current_user.username != 'admin' and current_user.id != 1:
+        flash('Brak uprawnień!', 'danger')
+        return redirect('/')
+    
+    user_to_delete = User.query.get_or_404(user_id)
+    
+    # Zabezpieczenie przed usunięciem samego siebie (Admina)
+    if user_to_delete.id == current_user.id:
+        flash('Nie możesz usunąć konta Administratora!', 'warning')
+        return redirect('/profil')
+
+    try:
+        nazwa = user_to_delete.username
+        db.session.delete(user_to_delete)
+        db.session.commit()
+        flash(f'Konto użytkownika {nazwa} zostało usunięte przez Admina.', 'success')
+    except Exception as e:
+        flash(f'Błąd: {e}', 'danger')
+        
+    return redirect('/profil')
+
 
 
 if __name__ == '__main__':
