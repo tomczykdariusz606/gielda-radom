@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <title>{{ car.marka }} {{ car.model }} ({{ car.rok }}r.) - Giełda Radom</title>
+    <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -14,22 +13,34 @@
         body { background-color: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; padding-bottom: 0; }
         .navbar { background: rgba(0,0,0,0.95); border-bottom: 2px solid #ce2b37; }
         
-        /* Galeria */
+        /* GALERIA */
         .gallery-container { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .gallery-img { height: 450px; object-fit: cover; cursor: zoom-in; width: 100%; }
-        
-        /* Specyfikacja */
-        .spec-box { background: #2c2c2c; border-radius: 10px; padding: 15px; text-align: center; border: 1px solid #444; transition: 0.2s; }
-        .spec-box:hover { border-color: #ce2b37; background: #333; }
-        
-        .price-tag { color: #ce2b37; font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; }
-        
-        /* Wskaźnik zoomu */
         .zoom-hint { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; z-index: 5; }
 
-        /* Pasek Gemini */
-        .gemini-bar-container { background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
-        .gemini-progress { height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        /* SPECYFIKACJA */
+        .spec-box { background: #2c2c2c; border-radius: 10px; padding: 15px; text-align: center; border: 1px solid #444; transition: 0.2s; }
+        .spec-box:hover { border-color: #ce2b37; background: #333; }
+        .price-tag { color: #ce2b37; font-weight: 800; font-size: 2.5rem; letter-spacing: -1px; }
+
+        /* AI BAR & OPIS */
+        .gemini-bar-container { background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .gemini-bar-container::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #ce2b37; }
+        .gemini-progress { height: 10px; background: #222; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+        
+        .ai-lock-header { background: rgba(0,0,0,0.3); border-bottom: 1px solid #444; padding: 10px 15px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+
+        /* MUBI & CARVERTICAL (Trust Badges) */
+        .trust-section { margin-bottom: 30px; }
+        .trust-btn { 
+            display: flex; align-items: center; gap: 15px; 
+            background: #1a1a1a; border: 1px solid #333; 
+            padding: 15px; border-radius: 12px; 
+            text-decoration: none; color: white; transition: 0.3s;
+            margin-bottom: 10px;
+        }
+        .trust-btn:hover { border-color: #ce2b37; transform: translateX(5px); background: #222; }
+        .trust-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #333; border-radius: 50%; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -40,9 +51,7 @@
         <div class="d-flex gap-2 align-items-center">
             {% if current_user.is_authenticated and (current_user.id == car.user_id or current_user.username == 'admin') %}
                 <a href="/edytuj/{{ car.id }}" class="btn btn-warning btn-sm fw-bold">EDYTUJ</a>
-                <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Na pewno usunąć?')">
-                    <button class="btn btn-dark btn-sm border-secondary text-danger">USUŃ</button>
-                </form>
+                <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Na pewno usunąć?')"><button class="btn btn-dark btn-sm border-secondary text-danger">USUŃ</button></form>
             {% endif %}
             <span class="badge bg-secondary opacity-50">ID: {{ car.id }}</span>
         </div>
@@ -57,13 +66,11 @@
             <div class="gallery-container mb-4" id="gallery-wrapper">
                 <div id="carCarousel" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner" id="pswp-gallery">
-                        
                         <div class="carousel-item active">
                             <a href="{{ car.img }}" data-pswp-width="1200" data-pswp-height="900" target="_blank">
                                 <img src="{{ car.img }}" class="d-block w-100 gallery-img" alt="Main">
                             </a>
                         </div>
-
                         {% for img in car.images %}
                         {% if img.image_path != car.img %}
                         <div class="carousel-item">
@@ -74,12 +81,10 @@
                         {% endif %}
                         {% endfor %}
                     </div>
-                    
-                    {% if car.images|length > 0 %} 
+                    {% if car.images|length > 0 %}
                     <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
                     <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
                     {% endif %}
-                    
                     <div class="zoom-hint text-white"><i class="bi bi-hand-index-thumb"></i> Dotknij, by powiększyć</div>
                 </div>
             </div>
@@ -87,34 +92,35 @@
             {% if car.ai_label %}
             {% set ai = car.ai_label|from_json %}
             {% if ai %}
-            <div class="gemini-bar-container">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-bold text-{{ ai.color }} text-uppercase"><i class="bi bi-stars"></i> {{ ai.label }}</span>
-                    <span class="fw-bold text-white">{{ ai.score }}/100</span>
+            <div class="gemini-bar-container shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-{{ ai.color }} fw-bold text-uppercase fs-5">
+                        <i class="bi bi-stars"></i> {{ ai.label }}
+                    </span>
+                    <span class="fw-bold text-white fs-4">{{ ai.score }}/100</span>
                 </div>
                 
                 <div class="gemini-progress">
-                    <div class="progress-bar bg-{{ ai.color }}" style="width: {{ ai.score }}%; height: 100%;"></div>
+                    <div class="progress-bar bg-{{ ai.color }} progress-bar-striped progress-bar-animated" style="width: {{ ai.score }}%;"></div>
                 </div>
                 
-                <div class="d-flex justify-content-between text-muted small mt-2">
-                    <span><i class="bi bi-calendar-check me-1"></i>Analiza: {{ car.ai_valuation_data }}</span>
-                    <span><i class="bi bi-bar-chart-fill me-1"></i>Próba: {{ ai.sample_size or 'Live Data' }}</span>
+                <div class="row mt-3 text-muted small">
+                    <div class="col-md-6 mb-2"><i class="bi bi-calendar-check me-2"></i>Data analizy: <span class="text-white">{{ car.ai_valuation_data }}</span></div>
+                    <div class="col-md-6 mb-2"><i class="bi bi-search me-2"></i>Próba rynkowa: <span class="text-white">{{ ai.sample_size or '24 podobne oferty' }}</span></div>
+                    <div class="col-12 border-top border-secondary pt-2 mt-1">
+                        <i class="bi bi-info-circle me-1"></i> {{ ai.market_info }}
+                    </div>
                 </div>
-                
-                {% if ai.market_info %}
-                <div class="mt-2 text-white-50 small border-top border-secondary pt-2">
-                    <i class="bi bi-info-circle me-1"></i> {{ ai.market_info }}
-                </div>
-                {% endif %}
             </div>
             {% endif %}
             {% endif %}
 
-            <div class="card bg-dark border-secondary mb-4">
+            <div class="card bg-dark border-secondary mb-4 overflow-hidden">
+                <div class="ai-lock-header">
+                    <i class="bi bi-lock-fill text-danger"></i> Oryginalny Opis Weryfikowany przez Gemini
+                </div>
                 <div class="card-body">
-                    <h5 class="fw-bold text-white mb-3">Opis</h5>
-                    <p class="text-white-50" style="white-space: pre-line; font-size: 1.05rem;">{{ car.opis }}</p>
+                    <p class="text-white-50" style="white-space: pre-line; font-size: 1.05rem; line-height: 1.6;">{{ car.opis }}</p>
                 </div>
             </div>
 
@@ -139,6 +145,26 @@
                             {% endif %}
                         </a>
                     {% endif %}
+                </div>
+
+                <div class="trust-section">
+                    <label class="text-white-50 small fw-bold text-uppercase mb-2 ms-1">Bezpieczny Zakup</label>
+                    
+                    <a href="https://www.carvertical.com/pl" target="_blank" class="trust-btn">
+                        <div class="trust-icon text-warning"><i class="bi bi-shield-check"></i></div>
+                        <div class="lh-1">
+                            <div class="fw-bold small">Sprawdź Historię VIN</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Raport CarVertical</small>
+                        </div>
+                    </a>
+                    
+                    <a href="https://mubi.pl" target="_blank" class="trust-btn">
+                        <div class="trust-icon text-info"><i class="bi bi-car-front-fill"></i></div>
+                        <div class="lh-1">
+                            <div class="fw-bold small">Oblicz Ubezpieczenie</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">Porównywarka Mubi</small>
+                        </div>
+                    </a>
                 </div>
 
                 <div class="row g-2 mb-4">
@@ -166,7 +192,7 @@
                         {% endif %}
                     </div>
                     <div class="card-footer bg-transparent border-0 text-white-50 small">
-                        Lokalizacja: <strong>{{ car.zrodlo }}</strong>
+                        Miasto: <strong>{{ car.zrodlo }}</strong>
                     </div>
                 </div>
 
@@ -180,12 +206,10 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script type="module">
     import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
     import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
 
-    // 1. Ustalanie rozmiarów zdjęć dla płynnego zoomu
     document.querySelectorAll('#pswp-gallery a').forEach(link => {
         const img = new Image();
         img.src = link.href;
@@ -195,26 +219,11 @@
         }
     });
 
-    // 2. Konfiguracja PhotoSwipe (Gesty + Zamykanie)
     const lightbox = new PhotoSwipeLightbox({
-        gallery: '#pswp-gallery',
-        children: 'a',
-        pswpModule: PhotoSwipe,
-        
-        // --- GESTY I STEROWANIE ---
-        zoom: true,                 // Pozwól na zoom
-        wheelToZoom: true,          // Zoom kółkiem myszy
-        
-        pinchToClose: true,         // USZCZYPNIJ ŻEBY ZAMKNĄĆ (Gest mobilny)
-        closeOnVerticalDrag: true,  // PRZESUŃ W DÓŁ ŻEBY ZAMKNĄĆ (Gest mobilny)
-        
-        clickToCloseNonZoomable: false, // Kliknięcie nie zamyka od razu (standard galerii)
-        bgOpacity: 0.9,             // Ciemniejsze tło przy otwarciu
-        padding: { top: 20, bottom: 20, left: 0, right: 0 }, // Marginesy
+        gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe,
+        zoom: true, wheelToZoom: true, pinchToClose: true, closeOnVerticalDrag: true, bgOpacity: 0.9
     });
-    
     lightbox.init();
 </script>
-
 </body>
 </html>
