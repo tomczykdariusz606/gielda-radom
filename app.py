@@ -417,11 +417,27 @@ def dodaj_ogloszenie():
 
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
-def api_analyze_car():
-    if not model_ai: return jsonify({"error": "AI unavailable"}), 500
-    if not check_ai_limit(): return jsonify({"error": "Limit"}), 429
+def analyze_car():
+    # --- 1. SPRAWDZANIE DATY I RESET LICZNIKA ---
+    dzisiaj = datetime.utcnow().date()
+    
+    # Jeśli data w bazie jest stara (np. wczorajsza), resetujemy licznik
+    if current_user.last_ai_request_date != dzisiaj:
+        current_user.ai_requests_today = 0
+        current_user.last_ai_request_date = dzisiaj
+        db.session.commit()
+
+    # --- 2. SPRAWDZENIE LIMITU (MAX 6) ---
+    LIMIT = 6
+    if current_user.ai_requests_today >= LIMIT:
+        return jsonify({
+            "error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"
+        }), 429
+
+    # --- 3. POBRANIE PLIKU ---
     file = request.files.get('scan_image')
-    if not file: return jsonify({"error": "Brak pliku"}), 400
+    if not file:
+        return jsonify({"error": "Brak pliku"}), 400
     try:
         # PROMPT EKSPERCKI (OPIS + DANE)
         prompt = """
@@ -441,8 +457,12 @@ def api_analyze_car():
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": file.read()}])
         current_user.ai_requests_today += 1
         db.session.commit()
-        return jsonify(json.loads(resp.text.replace('```json','').replace('```','').strip()))
-    except: return jsonify({"error": "Błąd analizy"}), 500
+
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"Błąd AI: {e}")
+        return jsonify({"error": "Nie udało się przeanalizować zdjęcia. Spróbuj wyraźniejsze ujęcie."}), 500
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
