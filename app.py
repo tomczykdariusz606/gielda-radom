@@ -44,6 +44,14 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# --- ŚLEDZENIE AKTYWNOŚCI (ONLINE) ---
+@app.before_request
+def update_last_seen():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
+
+
 # --- TŁUMACZENIA (SŁOWNIK PEŁNY) ---
 TRANSLATIONS = {
     'pl': {
@@ -117,6 +125,7 @@ class User(UserMixin, db.Model):
     lokalizacja = db.Column(db.String(100), default='Radom')
     ai_requests_today = db.Column(db.Integer, default=0)
     last_ai_request_date = db.Column(db.Date, default=datetime.utcnow().date())
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     cars = db.relationship('Car', backref='owner', lazy=True, cascade="all, delete-orphan")
     favorites = db.relationship('Favorite', backref='user', lazy=True, cascade="all, delete-orphan")
     def get_reset_token(self): return Serializer(app.config['SECRET_KEY']).dumps({'user_id': self.id})
@@ -477,6 +486,8 @@ def update_db():
         try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
         except: pass
 
+try: c.execute("ALTER TABLE user ADD COLUMN last_seen TIMESTAMP")
+        except: pass
 if __name__ == '__main__':
     update_db()
     with app.app_context(): db.create_all()
