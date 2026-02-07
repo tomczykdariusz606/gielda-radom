@@ -449,21 +449,33 @@ def reset_token(token): return render_template('reset_token.html')
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
-    if car.user_id != current_user.id and current_user.username != 'admin': return redirect('/')
+    
+    # Sprawdzenie czy to właściciel lub admin
+    if car.user_id != current_user.id and current_user.username != 'admin': 
+        flash('Brak uprawnień do edycji tego ogłoszenia.', 'danger')
+        return redirect('/')
+        
     if request.method == 'POST':
-        car.cena = request.form.get('cena')
-        car.opis = request.form.get('opis')
-        car.marka = request.form.get('marka')
-        car.model = request.form.get('model')
-        car.rok = request.form.get('rok')
-        car.telefon = request.form.get('telefon')
-        car.przebieg = request.form.get('przebieg')
-        car.paliwo = request.form.get('paliwo')
-        car.skrzynia = request.form.get('skrzynia')
-        car.pojemnosc = request.form.get('pojemnosc')
-        db.session.commit()
-        return redirect('/profil')
+        try:
+            car.marka = request.form.get('marka')
+            car.model = request.form.get('model')
+            car.cena = float(request.form.get('cena'))
+            car.rok = int(request.form.get('rok'))
+            car.przebieg = int(request.form.get('przebieg'))
+            car.paliwo = request.form.get('paliwo')
+            car.skrzynia = request.form.get('skrzynia')
+            car.pojemnosc = request.form.get('pojemnosc')
+            car.telefon = request.form.get('telefon')
+            car.opis = request.form.get('opis')
+            
+            db.session.commit()
+            flash('Zmiany zostały zapisane!', 'success')
+            return redirect('/profil')
+        except Exception as e:
+            flash(f'Błąd zapisu: {e}', 'danger')
+            
     return render_template('edytuj.html', car=car)
+
 
 @app.route('/admin/backup-db')
 @login_required
