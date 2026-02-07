@@ -276,9 +276,22 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all() if current_user.username != 'admin' else Car.query.order_by(Car.data_dodania.desc()).all()
+    user_count = 0; online_count = 0; total_views = 0
+    
+    if current_user.username == 'admin' or current_user.id == 1:
+        cars = Car.query.order_by(Car.data_dodania.desc()).all()
+        # STATYSTYKI DLA ADMINA
+        user_count = User.query.count()
+        # Użytkownicy aktywni w ostatnich 5 minutach
+        active_since = datetime.utcnow() - timedelta(minutes=5)
+        online_count = User.query.filter(User.last_seen >= active_since).count()
+        total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
+    else:
+        cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
+        
     favorites = Favorite.query.filter_by(user_id=current_user.id).all()
-    return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.utcnow())
+    return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.utcnow(), user_count=user_count, online_count=online_count, total_views=total_views)
+
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
