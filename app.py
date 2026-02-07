@@ -4,7 +4,7 @@ import zipfile
 import io
 import json
 import sqlite3
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from PIL import Image, ImageOps
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, make_response
 from flask_sqlalchemy import SQLAlchemy
@@ -46,9 +46,9 @@ login_manager.login_view = 'login'
 
 # --- TŁUMACZENIA ---
 TRANSLATIONS = {
-    'pl': {'search_ph': 'Wpisz np. Audi A4...', 'btn_search': 'SZUKAJ', 'filters': 'Filtry', 'cat': 'Kategoria', 'fuel': 'Paliwo', 'gear': 'Skrzynia', 'year': 'Rok od', 'price': 'Cena do', 'mileage': 'Przebieg do', 'add': 'DODAJ AUTO', 'login': 'Logowanie', 'logout': 'Wyloguj', 'hero_h1': 'Znajdź auto w Radomiu', 'hero_p': 'Lokalny rynek. Weryfikacja AI.', 'all': 'Wszystkie', 'man': 'Manualna', 'auto': 'Automatyczna', 'available': 'Dostępne Oferty', 'found': 'Znaleziono'},
-    'en': {'search_ph': 'E.g. Audi A4...', 'btn_search': 'SEARCH', 'filters': 'Filters', 'cat': 'Category', 'fuel': 'Fuel', 'gear': 'Gearbox', 'year': 'Year from', 'price': 'Price to', 'mileage': 'Mileage to', 'add': 'ADD CAR', 'login': 'Login', 'logout': 'Logout', 'hero_h1': 'Find car in Radom', 'hero_p': 'Local market. AI Verified.', 'all': 'All', 'man': 'Manual', 'auto': 'Automatic', 'available': 'Available Offers', 'found': 'Found'},
-    'de': {'search_ph': 'Z.B. Audi A4...', 'btn_search': 'SUCHEN', 'filters': 'Filter', 'cat': 'Kategorie', 'fuel': 'Kraftstoff', 'gear': 'Getriebe', 'year': 'Baujahr ab', 'price': 'Preis bis', 'mileage': 'KM bis', 'add': 'AUTO HINZUFÜGEN', 'login': 'Anmelden', 'logout': 'Abmelden', 'hero_h1': 'Finde Auto in Radom', 'hero_p': 'Lokaler Markt. AI geprüft.', 'all': 'Alle', 'man': 'Schaltgetriebe', 'auto': 'Automatik', 'available': 'Verfügbare Angebote', 'found': 'Gefunden'}
+    'pl': {'search_ph': 'Wpisz np. Audi A4...', 'btn_search': 'SZUKAJ', 'filters': 'Filtry', 'cat': 'Kategoria', 'fuel': 'Paliwo', 'gear': 'Skrzynia', 'year': 'Rok od', 'price': 'Cena do', 'mileage': 'Przebieg do', 'add': 'DODAJ AUTO', 'login': 'Logowanie', 'logout': 'Wyloguj', 'hero_h1': 'Znajdź auto w Radomiu', 'hero_p': 'Lokalny rynek. Weryfikacja AI.', 'all': 'Wszystkie', 'man': 'Manualna', 'auto': 'Automatyczna', 'available': 'Dostępne Oferty', 'found': 'Znaleziono', 'account': 'Konto'},
+    'en': {'search_ph': 'E.g. Audi A4...', 'btn_search': 'SEARCH', 'filters': 'Filters', 'cat': 'Category', 'fuel': 'Fuel', 'gear': 'Gearbox', 'year': 'Year from', 'price': 'Price to', 'mileage': 'Mileage to', 'add': 'ADD CAR', 'login': 'Login', 'logout': 'Logout', 'hero_h1': 'Find car in Radom', 'hero_p': 'Local market. AI Verified.', 'all': 'All', 'man': 'Manual', 'auto': 'Automatic', 'available': 'Available Offers', 'found': 'Found', 'account': 'Account'},
+    'de': {'search_ph': 'Z.B. Audi A4...', 'btn_search': 'SUCHEN', 'filters': 'Filter', 'cat': 'Kategorie', 'fuel': 'Kraftstoff', 'gear': 'Getriebe', 'year': 'Baujahr ab', 'price': 'Preis bis', 'mileage': 'KM bis', 'add': 'AUTO HINZUFÜGEN', 'login': 'Anmelden', 'logout': 'Abmelden', 'hero_h1': 'Finde Auto in Radom', 'hero_p': 'Lokaler Markt. AI geprüft.', 'all': 'Alle', 'man': 'Schaltgetriebe', 'auto': 'Automatik', 'available': 'Verfügbare Angebote', 'found': 'Gefunden', 'account': 'Konto'}
 }
 
 @app.context_processor
@@ -154,10 +154,16 @@ def save_optimized_image(file):
     img.save(filepath, "WEBP", quality=80)
     return filename
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 def update_market_valuation(car):
     if not model_ai: return
     try:
-        prompt = f"""Ekspert rynku 2026. Analiza: {car.marka} {car.model}, {car.rok}, {car.cena} PLN. Zwróć JSON: {{"score": 85, "label": "DOBRA CENA", "color": "success", "sample_size": "24 oferty", "market_info": "Cena OK."}}"""
+        prompt = f"""
+        Ekspert rynku 2026. Analiza: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
+        Zwróć JSON: {{"score": 85, "label": "DOBRA CENA", "color": "success", "sample_size": "24 oferty", "market_info": "Cena atrakcyjna."}}
+        """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         json.loads(clean_json)
@@ -205,6 +211,7 @@ def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     if car.views is None: car.views = 0
     car.views += 1
+    car.wyswietlenia = (car.wyswietlenia or 0) + 1
     
     # LOGIKA 7 DNI DLA AI
     should_update = False
@@ -234,9 +241,9 @@ def dodaj_ogloszenie():
     saved_paths = []
     if 'scan_image' in request.files and request.files['scan_image'].filename != '':
         f = request.files['scan_image']
-        if '.' in f.filename: saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(f)))
+        if allowed_file(f.filename): saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(f)))
     for file in files[:15]:
-        if '.' in file.filename: saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
+        if allowed_file(file.filename): saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     
     try: lat = float(request.form.get('lat')) 
@@ -267,11 +274,45 @@ def api_analyze_car():
     if not model_ai: return jsonify({"error": "AI unavailable"}), 500
     if not check_ai_limit(): return jsonify({"error": "Limit"}), 429
     file = request.files.get('scan_image')
-    prompt = """Rozpoznaj: Kategoria (Osobowe/Rower/Inne), Marka, Model. JSON: {"kategoria":"X","marka":"X","model":"X", "rok_sugestia":2020}"""
-    resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": file.read()}])
-    current_user.ai_requests_today += 1
-    db.session.commit()
-    return jsonify(json.loads(resp.text.replace('```json','').replace('```','').strip()))
+    if not file: return jsonify({"error": "Brak pliku"}), 400
+    try:
+        prompt = """Rozpoznaj: Kategoria (Osobowe/Rower/Inne), Marka, Model. JSON: {"kategoria":"X","marka":"X","model":"X", "rok_sugestia":2020}"""
+        resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": file.read()}])
+        current_user.ai_requests_today += 1
+        db.session.commit()
+        return jsonify(json.loads(resp.text.replace('```json','').replace('```','').strip()))
+    except: return jsonify({"error": "Błąd analizy"}), 500
+
+@app.route('/api/generuj-opis', methods=['POST'])
+@login_required
+def generuj_opis_ai():
+    if not model_ai: return jsonify({"opis": "Błąd AI"}), 500
+    if not check_ai_limit(): return jsonify({"opis": "Limit wyczerpany"}), 429
+    data = request.json
+    try:
+        prompt = f"Opisz przedmiot: {data}. Styl: zachęcający."
+        resp = model_ai.generate_content(prompt)
+        current_user.ai_requests_today += 1
+        db.session.commit()
+        return jsonify({"opis": resp.text.strip()})
+    except: return jsonify({"opis": "Błąd generowania"}), 500
+
+@app.route('/usun/<int:car_id>', methods=['POST'])
+@login_required
+def delete_car(car_id):
+    c = Car.query.get(car_id)
+    if c and (c.user_id == current_user.id or current_user.username=='admin'):
+        db.session.delete(c); db.session.commit()
+    return redirect('/profil')
+
+@app.route('/odswiez/<int:car_id>', methods=['POST'])
+@login_required
+def refresh_car(car_id):
+    c = Car.query.get(car_id)
+    if c and (c.user_id == current_user.id or current_user.username=='admin'):
+        c.data_dodania = datetime.utcnow()
+        db.session.commit()
+    return redirect('/profil')
 
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
@@ -282,7 +323,7 @@ def toggle_favorite(car_id):
     db.session.commit()
     return redirect(request.referrer)
 
-# --- SEO ROUTES (SITEMAP & ROBOTS) ---
+# --- SEO ROUTES ---
 @app.route('/sitemap.xml')
 def sitemap():
     base = request.url_root.rstrip('/')
@@ -328,28 +369,53 @@ def polityka(): return render_template('polityka.html')
 def reset_request(): return render_template('reset_request.html')
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token): return render_template('reset_token.html')
+
+# --- EDYCJA I BACKUP (PEŁNE) ---
 @app.route('/edytuj/<int:id>', methods=['GET','POST'])
 @login_required
-def edytuj(id): return redirect('/profil') # Uproszczone dla skrótu
-@app.route('/usun/<int:car_id>', methods=['POST'])
-@login_required
-def delete_car(car_id):
-    c = Car.query.get(car_id)
-    if c and (c.user_id == current_user.id or current_user.username=='admin'):
-        db.session.delete(c); db.session.commit()
-    return redirect('/profil')
-@app.route('/odswiez/<int:car_id>', methods=['POST'])
-@login_required
-def refresh_car(car_id):
-    c = Car.query.get(car_id)
-    if c: c.data_dodania = datetime.utcnow(); db.session.commit()
-    return redirect('/profil')
+def edytuj(id):
+    car = Car.query.get_or_404(id)
+    if car.user_id != current_user.id and current_user.username != 'admin': return redirect('/')
+    if request.method == 'POST':
+        car.cena = request.form.get('cena')
+        car.opis = request.form.get('opis')
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.rok = request.form.get('rok')
+        car.telefon = request.form.get('telefon')
+        car.przebieg = request.form.get('przebieg')
+        car.paliwo = request.form.get('paliwo')
+        car.skrzynia = request.form.get('skrzynia')
+        car.pojemnosc = request.form.get('pojemnosc')
+        db.session.commit()
+        return redirect('/profil')
+    return render_template('edytuj.html', car=car)
+
 @app.route('/admin/backup-db')
 @login_required
-def backup_db(): return send_from_directory('instance', 'gielda.db', as_attachment=True)
+def backup_db():
+    if current_user.username != 'admin': abort(403)
+    return send_from_directory('instance', 'gielda.db', as_attachment=True)
+
 @app.route('/admin/full-backup')
 @login_required
-def full_backup(): return "Backup"
+def full_backup():
+    if current_user.username != 'admin': abort(403)
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        if os.path.exists('instance/gielda.db'): zf.write('instance/gielda.db', 'gielda.db')
+        for root, dirs, files in os.walk('static/uploads'):
+            for file in files: zf.write(os.path.join(root, file), os.path.join('uploads', file))
+    memory_file.seek(0)
+    return send_file(memory_file, download_name='backup_full.zip', as_attachment=True)
+
+@app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
+@login_required
+def usun_zdjecie(image_id):
+    img = CarImage.query.get_or_404(image_id)
+    db.session.delete(img)
+    db.session.commit()
+    return jsonify({'success': True})
 
 def update_db():
     with app.app_context():
