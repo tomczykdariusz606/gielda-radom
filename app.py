@@ -450,24 +450,28 @@ def reset_token(token): return render_template('reset_token.html')
 def edytuj(id):
     car = Car.query.get_or_404(id)
     
-    # Sprawdzenie czy to właściciel lub admin
-    if car.user_id != current_user.id and current_user.username != 'admin': 
-        flash('Brak uprawnień do edycji tego ogłoszenia.', 'danger')
+    # Zabezpieczenie: tylko właściciel lub admin
+    if car.user_id != current_user.id and current_user.username != 'admin':
+        flash('Brak uprawnień.', 'danger') 
         return redirect('/')
         
     if request.method == 'POST':
         try:
+            # 1. Zapis danych tekstowych
             car.marka = request.form.get('marka')
             car.model = request.form.get('model')
-            car.cena = float(request.form.get('cena'))
-            car.rok = int(request.form.get('rok'))
-            car.przebieg = int(request.form.get('przebieg'))
+            car.cena = float(request.form.get('cena') or 0)
+            car.rok = int(request.form.get('rok') or 0)
+            car.przebieg = int(request.form.get('przebieg') or 0)
             car.paliwo = request.form.get('paliwo')
             car.skrzynia = request.form.get('skrzynia')
             car.pojemnosc = request.form.get('pojemnosc')
+            car.nadwozie = request.form.get('nadwozie')
             car.telefon = request.form.get('telefon')
             car.opis = request.form.get('opis')
-          files = request.files.getlist('zdjecia')
+            
+            # 2. OBSŁUGA NOWYCH ZDJĘĆ (TEGO BRAKOWAŁO)
+            files = request.files.getlist('zdjecia')
             for file in files:
                 if file and allowed_file(file.filename):
                     # Używamy tej samej funkcji optymalizacji co przy dodawaniu
@@ -478,7 +482,7 @@ def edytuj(id):
                     new_img = CarImage(image_path=path, car_id=car.id)
                     db.session.add(new_img)
             
-                        db.session.commit()
+            db.session.commit()
             flash('Zapisano zmiany i dodano zdjęcia!', 'success')
             return redirect('/profil')
             
@@ -487,6 +491,7 @@ def edytuj(id):
             flash('Wystąpił błąd podczas zapisu.', 'danger')
             
     return render_template('edytuj.html', car=car)
+
 
 
 @app.route('/admin/backup-db')
