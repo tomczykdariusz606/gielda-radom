@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Załóż konto - Giełda Radom</title>
+    <title>Zaloguj - Giełda Radom</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Anton&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
+
     <style>
         :root { --radom-red: #ce2b37; --glass: rgba(255, 255, 255, 0.95); }
-        
+
         body {
             font-family: 'Inter', sans-serif;
             margin: 0; padding: 0; min-height: 100vh;
@@ -23,154 +23,125 @@
 
         .overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(26,26,26,0.9) 100%);
+            background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(26,26,26,0.95) 100%);
             z-index: 1;
         }
 
         .bg-text {
             position: absolute;
             font-family: 'Anton', sans-serif;
-            font-size: 18vw;
-            color: rgba(255, 255, 255, 0.04);
+            font-size: 20vw;
+            color: rgba(255, 255, 255, 0.03);
             white-space: nowrap;
             z-index: 0;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%) rotate(-5deg);
             pointer-events: none;
-            text-transform: uppercase;
+            user-select: none;
         }
 
         .login-card {
             position: relative; z-index: 10;
-            width: 100%; max-width: 450px; /* Nieco szersza niż login */
+            width: 100%; max-width: 400px;
             background: var(--glass);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             padding: 2.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             margin: 20px;
         }
 
-        .form-control-modern, .form-select-modern {
-            background: #f0f2f5;
-            border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 0.8rem 1rem;
-            font-weight: 500;
-            transition: 0.3s;
-            width: 100%;
-        }
-        .form-control-modern:focus, .form-select-modern:focus {
+        .google-badge {
             background: white;
-            border-color: var(--radom-red);
-            box-shadow: 0 0 0 4px rgba(206, 43, 55, 0.15);
-            outline: none;
+            border: 1px solid #e1e1e1;
+            border-radius: 50px;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #444;
+            display: inline-flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-control-modern {
+            background: #f0f2f5; border: 2px solid transparent; border-radius: 12px;
+            padding: 0.9rem; font-weight: 500; transition: 0.3s;
+        }
+        .form-control-modern:focus {
+            background: white; border-color: var(--radom-red);
+            box-shadow: 0 0 0 4px rgba(206, 43, 55, 0.15); outline: none;
         }
 
         .btn-radom {
-            background: linear-gradient(135deg, var(--radom-red), #a31f28);
-            color: white; border: none;
-            border-radius: 12px;
-            padding: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: linear-gradient(135deg, var(--radom-red), #911620);
+            color: white; border: none; border-radius: 12px;
+            padding: 1rem; font-weight: 800; letter-spacing: 0.5px;
+            width: 100%; transition: transform 0.2s, box-shadow 0.2s;
         }
         .btn-radom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(206, 43, 55, 0.3);
-            color: white;
+            box-shadow: 0 10px 25px rgba(206, 43, 55, 0.4); color: white;
         }
-
-        .brand-icon { font-size: 3rem; color: var(--radom-red); margin-bottom: 1rem; display: inline-block; }
-        .hover-red:hover { color: var(--radom-red) !important; transition: 0.2s; }
+        .text-red { color: var(--radom-red); }
     </style>
 </head>
 <body>
 
     <div class="overlay"></div>
-    <div class="bg-text">CZERWIEC 76</div>
+    <div class="bg-text">RADOM 76</div>
 
-    <div class="container d-flex justify-content-center">
-        <div class="login-card text-center">
-            
-            <i class="bi bi-person-plus-fill brand-icon"></i>
-            <h2 class="fw-bold mb-1">Dołącz do nas</h2>
-            <p class="text-muted small mb-4">Lokalna społeczność motoryzacyjna</p>
+    <div class="login-card text-center">
+        
+        <div class="google-badge">
+            <i class="bi bi-google"></i>
+            <span class="text-secondary">|</span>
+            <i class="bi bi-stars text-warning"></i>
+            <span>Powered by Gemini</span>
+        </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} py-2 small rounded-3 mb-3 border-0 shadow-sm text-start">
-                            <i class="bi bi-info-circle me-1"></i> {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+        <h3 class="fw-bold mb-1">Witaj ponownie</h3>
+        <p class="text-muted small mb-4">Zaloguj się do Giełdy Radom</p>
 
-            <form method="POST">
-                
-                <div class="mb-3 text-start">
-                    <label class="form-label small fw-bold text-muted ms-1">Nazwa Użytkownika</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-transparent ps-0"><i class="bi bi-person text-secondary"></i></span>
-                        <input type="text" name="username" class="form-control form-control-modern" placeholder="np. JanKowalski" required>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} py-2 small rounded-3 mb-3 border-0 shadow-sm text-start">
+                        <i class="bi bi-info-circle me-1"></i> {{ message }}
                     </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-3 text-start">
+                <div class="input-group">
+                    <span class="input-group-text border-0 bg-transparent ps-1"><i class="bi bi-person fs-5 text-secondary"></i></span>
+                    <input type="text" name="username" class="form-control form-control-modern" placeholder="Login" required>
                 </div>
-
-                <div class="mb-3 text-start">
-                    <label class="form-label small fw-bold text-muted ms-1">Adres Email</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-transparent ps-0"><i class="bi bi-envelope text-secondary"></i></span>
-                        <input type="email" name="email" class="form-control form-control-modern" placeholder="twoj@email.pl" required>
-                    </div>
-                </div>
-
-                <div class="mb-3 text-start">
-                    <label class="form-label small fw-bold text-muted ms-1">Dzielnica / Okolice</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-transparent ps-0"><i class="bi bi-geo-alt text-secondary"></i></span>
-                        <select name="location" class="form-select form-select-modern" required>
-                            <option value="" disabled selected>Wybierz skąd jesteś...</option>
-                            <optgroup label="Radom - Dzielnice">
-                                <option value="Radom - Śródmieście">Śródmieście</option>
-                                <option value="Radom - Ustronie">Ustronie</option>
-                                <option value="Radom - Michałów">Michałów</option>
-                                <option value="Radom - Gołębiów">Gołębiów</option>
-                                <option value="Radom - Południe">Południe</option>
-                                <option value="Radom - Borki">Borki</option>
-                                <option value="Radom - Zamłynie">Zamłynie</option>
-                                <option value="Radom - Idalin">Idalin</option>
-                            </optgroup>
-                            <optgroup label="Okolice">
-                                <option value="Pionki">Pionki</option>
-                                <option value="Iłża">Iłża</option>
-                                <option value="Skaryszew">Skaryszew</option>
-                                <option value="Szydłowiec">Szydłowiec</option>
-                                <option value="Jedlińsk">Jedlińsk</option>
-                                <option value="Zakrzew">Zakrzew</option>
-                                <option value="Inna">Inna miejscowość</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-4 text-start">
-                    <label class="form-label small fw-bold text-muted ms-1">Hasło</label>
-                    <div class="input-group">
-                        <span class="input-group-text border-0 bg-transparent ps-0"><i class="bi bi-shield-lock text-secondary"></i></span>
-                        <input type="password" name="password" class="form-control form-control-modern" placeholder="Minimum 6 znaków" required>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-radom w-100 mb-3 shadow">ZAŁÓŻ KONTO</button>
-            </form>
-
-            <div class="border-top pt-3 mt-2">
-                <p class="text-muted small mb-1">Masz już konto?</p>
-                <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none text-dark hover-red">Wróć do logowania</a>
             </div>
+
+            <div class="mb-4 text-start">
+                <div class="input-group">
+                    <span class="input-group-text border-0 bg-transparent ps-1"><i class="bi bi-key fs-5 text-secondary"></i></span>
+                    <input type="password" name="password" class="form-control form-control-modern" placeholder="Hasło" required>
+                </div>
+                <div class="text-end mt-2">
+                    <a href="/reset_password" class="text-decoration-none small text-muted">Zapomniałeś hasła?</a>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-radom shadow mb-3">ZALOGUJ SIĘ</button>
+        </form>
+
+        <div class="border-top pt-3 mt-2">
+            <p class="text-muted small mb-1">Nowy w mieście?</p>
+            <a href="{{ url_for('register') }}" class="fw-bold text-decoration-none text-red">Załóż darmowe konto</a>
+        </div>
+        
+        <div class="mt-4">
+            <a href="/" class="text-muted small text-decoration-none opacity-75"><i class="bi bi-arrow-left"></i> Powrót na giełdę</a>
         </div>
     </div>
 
