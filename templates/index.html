@@ -86,17 +86,45 @@
 </nav>
 
 <div class="hero-wrap">
-    <div class="container">
-        
-        <div class="glass-banner">
-            <i class="bi bi-robot text-white me-2 fs-5"></i> 
-            <strong class="text-white text-uppercase tracking-wider">Gemini AI Analysis</strong>
-            <span class="text-white-50 ms-2 d-none d-md-inline">| Pierwsza w Polsce</span>
+    <div class="container mb-5">
+        <div class="ai-hero-banner overflow-hidden position-relative">
+            <div class="ai-hero-bg"></div>
+            
+            <div class="row align-items-center position-relative" style="z-index: 2;">
+                <div class="col-lg-7 mb-4 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3 partner-badge">
+                        <i class="bi bi-google fs-3 me-2"></i>
+                        <span class="fs-4 me-2 fw-light text-white-50">+</span>
+                        <i class="bi bi-stars fs-3 me-2 text-warning"></i>
+                        <span class="fw-bold fs-4 tracking-wider text-white">GEMINI 3.0 PRO</span>
+                    </div>
+                    <h1 class="display-5 fw-bolder text-white mb-3 lh-sm" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                        REWOLUCJA AI <br>NA POLSKIM RYNKU
+                    </h1>
+                    <p class="lead text-white-50 mb-4" style="max-width: 600px;">
+                        Platforma stworzona we współpracy z Google. Profesjonalne wyceny i recenzje oparte na realnych próbkach danych z polskich giełd.
+                    </p>
+                </div>
+                
+                <div class="col-lg-5">
+                    <div class="game-changer-box p-4 rounded-4">
+                        <div class="d-flex align-items-center mb-3">
+                             <span class="badge bg-danger fs-6 fw-bold px-3 py-2 shadow-sm me-2">GAME CHANGER</span>
+                             <span class="text-white fw-bold small text-uppercase ls-1">Tylko na Giełdzie Radom</span>
+                        </div>
+                        <h3 class="text-white fw-bold mb-3">
+                            <i class="bi bi-camera-fill text-danger me-2"></i> Skanuj i Analizuj
+                        </h3>
+                        <p class="text-white opacity-75 mb-0">
+                            Prawdopodobnie <strong>jedyny w Polsce</strong> system tworzenia ogłoszeń i automatycznej analizy AI <strong>jednym przyciskiem aparatu</strong>!
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <h1 class="fw-bold text-white mb-2 display-5">{{ t['hero_h1'] }}</h1>
-        <p class="text-white-50 mb-4">{{ t['hero_p'] }}</p>
-
+    <div class="container" style="position: relative; z-index: 10;">
         <form action="/" method="get">
             <div class="search-pill-container">
                 <i class="bi bi-search text-muted ms-3 fs-5"></i>
@@ -126,6 +154,42 @@
         </form>
     </div>
 </div>
+
+<style>
+    .hero-wrap { padding: 40px 0 80px 0; }
+
+    .ai-hero-banner {
+        background: rgba(20, 20, 20, 0.8);
+        border-radius: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 40px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        backdrop-filter: blur(10px);
+    }
+
+    .ai-hero-bg {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(206,43,55,0.15) 0%, rgba(0,0,0,0) 70%);
+        animation: pulse-ai 10s infinite alternate;
+        z-index: 1; opacity: 0.6;
+    }
+    @keyframes pulse-ai { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.2) rotate(5deg); } }
+
+    .partner-badge {
+        background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px;
+        border: 1px solid rgba(255,255,255,0.1); display: inline-flex;
+    }
+
+    .game-changer-box {
+        background: linear-gradient(145deg, rgba(40,40,40,0.9), rgba(10,10,10,0.9));
+        border: 1px solid var(--radom-red);
+        box-shadow: 0 10px 30px rgba(206, 43, 55, 0.2);
+        transition: 0.3s;
+    }
+    .game-changer-box:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(206, 43, 55, 0.4); }
+    .ls-1 { letter-spacing: 1px; }
+</style>
+
 
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary bg-black bg-opacity-50 p-3 rounded">
