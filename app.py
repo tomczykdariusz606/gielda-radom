@@ -493,15 +493,26 @@ def usun_zdjecie(image_id):
 
 def update_db():
     with app.app_context():
-        c = sqlite3.connect('instance/gielda.db').cursor()
+        # Poprawione połączenie, żeby zapisać zmiany (commit)
+        conn = sqlite3.connect('instance/gielda.db')
+        c = conn.cursor()
+        
+        # Stare kolumny
         try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT")
         except: pass
         try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
         except: pass
-
-try: c.execute("ALTER TABLE user ADD COLUMN last_seen TIMESTAMP")
+        
+        # --- TO MUSI BYĆ TUTAJ, W ŚRODKU FUNKCJI ---
+        try: c.execute("ALTER TABLE user ADD COLUMN last_seen TIMESTAMP")
         except: pass
+        
+        # Zatwierdzenie zmian w bazie
+        conn.commit()
+        conn.close()
+
 if __name__ == '__main__':
     update_db()
     with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000)
+
