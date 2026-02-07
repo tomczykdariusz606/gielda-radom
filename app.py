@@ -428,11 +428,19 @@ def analyze_car():
         db.session.commit()
 
     # --- 2. SPRAWDZENIE LIMITU (MAX 6) ---
-    LIMIT = 6
+        # --- 2. SPRAWDZENIE LIMITU ---
+    
+    # Dla Admina (ID 1 lub login 'admin') limit to 500, dla reszty 6
+    if current_user.username == 'admin' or current_user.id == 1:
+        LIMIT = 500
+    else:
+        LIMIT = 6
+        
     if current_user.ai_requests_today >= LIMIT:
         return jsonify({
             "error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"
         }), 429
+
 
     # --- 3. POBRANIE PLIKU ---
     file = request.files.get('scan_image')
