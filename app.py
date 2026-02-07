@@ -606,6 +606,21 @@ def update_db():
         # Zatwierdzenie zmian w bazie
         conn.commit()
         conn.close()
+@app.route('/usun_konto', methods=['POST'])
+@login_required
+def usun_konto():
+    try:
+        # Usuwamy użytkownika (dzięki cascade="all, delete-orphan" w modelu,
+        # SQL sam usunie też wszystkie auta tego użytkownika i zdjęcia z bazy)
+        db.session.delete(current_user)
+        db.session.commit()
+        logout_user()
+        flash('Twoje konto oraz wszystkie ogłoszenia zostały trwale usunięte.', 'info')
+        return redirect('/')
+    except Exception as e:
+        flash(f'Błąd podczas usuwania konta: {e}', 'danger')
+        return redirect('/profil')
+
 
 if __name__ == '__main__':
     update_db()
