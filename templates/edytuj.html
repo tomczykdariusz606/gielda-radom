@@ -100,18 +100,26 @@
                         <div class="col-md-6">
                             <label class="small text-muted mb-1">Model</label>
                             <input type="text" name="model" id="i_model" class="form-control" value="{{ car.model }}" required>
-                        </div>
-                        <div class="col-md-4">
+                        </div>                
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-success">
+                                <i class="bi bi-shield-lock"></i> Numer VIN (Opcjonalne)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark border-secondary text-success">
+                                    <i class="bi bi-upc-scan"></i>
+                                </span>
+                                <input type="text" class="form-control text-uppercase" name="vin" 
+                                       placeholder="Wpisz 17 znaków..." maxlength="17" 
+                                       value="{{ car.vin or '' }}">
+                            </div>
+                            <div class="col-md-4">
                             <label class="small text-muted mb-1">Rok produkcji</label>
                             <input type="number" name="rok" id="i_rok" class="form-control" value="{{ car.rok }}">
-                        </div>
-                        <div class="mb-3">
-    <label class="form-label fw-bold">Numer VIN (Opcjonalne)</label>
-    <div class="input-group">
-        <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
-        <input type="text" class="form-control" name="vin" placeholder="ABC1234567890..." maxlength="17" style="text-transform: uppercase;">
-    </div>
-    <div class="form-text text-muted">Podanie VIN zwiększa zaufanie kupujących o 80%.</div>
+                            </div>
+                            <div class="form-text text-white-50 small">
+                                * Widoczny tylko dla zalogowanych. Buduje zaufanie.
+                            </div>
                         </div>
 
                         <div class="col-md-4">
