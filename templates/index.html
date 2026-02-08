@@ -300,5 +300,75 @@
     function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookieConsent').style.display = 'none'; }
     if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookieConsent').style.display = 'block'; }
 </script>
+<div id="video-intro-layer" class="video-overlay">
+    <video id="introVid" muted playsinline autoplay>
+        <source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4">
+    </video>
+    <button id="skipBtn" onclick="finishIntro()">POMIŃ >></button>
+</div>
+
+<style>
+    /* PEŁNY EKRAN, CZARNE TŁO */
+    .video-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #000; z-index: 99999;
+        display: flex; align-items: center; justify-content: center;
+        transition: opacity 0.8s ease-out;
+    }
+
+    /* WIDEO NA CAŁY EKRAN (BEZ PASKÓW) */
+    #introVid {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover; /* Ważne: wypełnia ekran, nie rozciąga */
+    }
+
+    /* DYSKRETNY PRZYCISK POMIŃ */
+    #skipBtn {
+        position: absolute; bottom: 30px; right: 30px;
+        background: transparent; color: rgba(255,255,255,0.5);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 5px 15px; font-size: 0.7rem; border-radius: 20px;
+        cursor: pointer; z-index: 100000;
+    }
+
+    /* KLASA UKRYWANIA */
+    .intro-fade-out { opacity: 0; pointer-events: none; }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const overlay = document.getElementById('video-intro-layer');
+        const video = document.getElementById('introVid');
+        
+        // 1. CZY JUŻ WIDZIAŁ? (SessionStorage - raz na otwarcie przeglądarki)
+        if (sessionStorage.getItem('seenVideoIntro')) {
+            overlay.style.display = 'none'; // Ukryj natychmiast
+        } else {
+            // 2. JEŚLI NIE WIDZIAŁ -> ODPAL FILM
+            // Ważne: Przeglądarki wymagają 'muted' do autoplay
+            video.muted = true; 
+            video.play().catch(error => {
+                // Jeśli przeglądarka zablokuje autoplay, od razu ukryj intro
+                console.log("Autoplay zablokowany:", error);
+                finishIntro();
+            });
+
+            // 3. JAK SIĘ SKOŃCZY -> UKRYJ
+            video.onended = function() {
+                finishIntro();
+            };
+        }
+    });
+
+    function finishIntro() {
+        const overlay = document.getElementById('video-intro-layer');
+        overlay.classList.add('intro-fade-out'); // Rozpocznij zanikanie
+        
+        setTimeout(() => {
+            overlay.style.display = 'none'; // Usuń całkowicie
+            sessionStorage.setItem('seenVideoIntro', 'true'); // Zapamiętaj
+        }, 800); // Czekaj tyle ile trwa animacja CSS (0.8s)
+    }
+</script>
 </body>
 </html>
