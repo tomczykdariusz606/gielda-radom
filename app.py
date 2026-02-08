@@ -215,6 +215,7 @@ class Car(db.Model):
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     is_promoted = db.Column(db.Boolean, default=False)
+vin = db.Column(db.String(20), nullable=True) 
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
     skrzynia = db.Column(db.String(20))
@@ -402,7 +403,7 @@ def dodaj_ogloszenie():
         marka=request.form.get('marka'), model=request.form.get('model'),
         rok=int(request.form.get('rok') or 0), cena=float(request.form.get('cena') or 0),
         typ=request.form.get('typ', 'Osobowe'), opis=request.form.get('opis', ''),
-        telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
+        vin=request.form.get('vin'), telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
         paliwo=request.form.get('paliwo'), nadwozie=request.form.get('nadwozie'),
         pojemnosc=request.form.get('pojemnosc'), przebieg=int(request.form.get('przebieg') or 0),
         img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id,
@@ -599,6 +600,7 @@ def edytuj(id):
             # 1. Zapis danych tekstowych
             car.marka = request.form.get('marka')
             car.model = request.form.get('model')
+            car.vin = request.form.get('vin')
             car.cena = float(request.form.get('cena') or 0)
             car.rok = int(request.form.get('rok') or 0)
             car.przebieg = int(request.form.get('przebieg') or 0)
@@ -661,23 +663,25 @@ def usun_zdjecie(image_id):
 
 def update_db():
     with app.app_context():
-        # Poprawione połączenie, żeby zapisać zmiany (commit)
         conn = sqlite3.connect('instance/gielda.db')
         c = conn.cursor()
-        
-        # Stare kolumny
+
+        # Stare migracje
         try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT")
         except: pass
         try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
         except: pass
-        
-        # --- TO MUSI BYĆ TUTAJ, W ŚRODKU FUNKCJI ---
         try: c.execute("ALTER TABLE user ADD COLUMN last_seen TIMESTAMP")
         except: pass
-        
-        # Zatwierdzenie zmian w bazie
+
+        # --- NOWA MIGRACJA VIN ---
+        try: c.execute("ALTER TABLE car ADD COLUMN vin TEXT")
+        except: pass
+        # -------------------------
+
         conn.commit()
         conn.close()
+
 @app.route('/usun_konto', methods=['POST'])
 @login_required
 def usun_konto():
