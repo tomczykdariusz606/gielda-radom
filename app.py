@@ -420,49 +420,73 @@ def dodaj_ogloszenie():
 def analyze_car():
     # --- 1. SPRAWDZANIE DATY I RESET LICZNIKA ---
     dzisiaj = datetime.utcnow().date()
-    
-    # Jeśli data w bazie jest stara (np. wczorajsza), resetujemy licznik
+
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
 
-    # --- 2. SPRAWDZENIE LIMITU (MAX 6) ---
-        # --- 2. SPRAWDZENIE LIMITU ---
-    
+    # --- 2. SPRAWDZENIE LIMITU ---
     # Dla Admina (ID 1 lub login 'admin') limit to 500, dla reszty 6
     if current_user.username == 'admin' or current_user.id == 1:
         LIMIT = 500
     else:
         LIMIT = 6
-        
+
     if current_user.ai_requests_today >= LIMIT:
         return jsonify({
             "error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"
         }), 429
 
-
     # --- 3. POBRANIE PLIKU ---
     file = request.files.get('scan_image')
     if not file:
         return jsonify({"error": "Brak pliku"}), 400
+
     try:
-        # PROMPT EKSPERCKI (OPIS + DANE)
+        image_data = file.read()
+
+        # --- 4. INTELIGENTNY PROMPT (SAMOCHÓD vs PRZEDMIOT) ---
         prompt = """
-        Przeanalizuj zdjęcie pojazdu.
-        Zwróć JSON:
+        Przeanalizuj to zdjęcie. Masz dwa tryby działania:
+
+        TRYB 1: JEŚLI TO POJAZD (Samochód, Motocykl, Ciężarówka, Rower):
+        - Zachowuj się jak EKSPERT MOTORYZACYJNY.
+        - Kategoria: wybierz jedną z (Osobowe, SUV, Ciezarowe, Skuter, Rower).
+        - Opis: Profesjonalny, marketingowy opis dla kupującego auto (podkreśl alufelgi, stan, LEDy itp.).
+        - Wypełnij: rok, paliwo, nadwozie.
+
+        TRYB 2: JEŚLI TO INNY PRZEDMIOT (np. Część, Elektronika, Mebel, Narzędzie):
+        - Kategoria: ustaw sztywno "Inne".
+        - Marka: Podaj producenta (np. "Samsung", "Bosch", "IKEA").
+        - Model: Podaj nazwę modelu lub typ przedmiotu (np. "Wiertarka udarowa", "Galaxy S24").
+        - Pola motoryzacyjne (paliwo, nadwozie) zostaw puste.
+        - Opis: Krótki opis sprzedażowy tego przedmiotu.
+
+        Zwróć TYLKO czysty JSON (bez markdown):
         {
-            "kategoria": "Osobowe" lub "SUV" lub "Rower",
+            "kategoria": "String",
             "marka": "String",
             "model": "String",
-            "rok_sugestia": 2020,
-            "paliwo_sugestia": "Benzyna",
-            "typ_nadwozia": "Sedan",
-            "kolor": "Czarny",
-            "opis_wizualny": "Napisz profesjonalny, marketingowy opis tego auta dla kupującego. Podkreśl widoczne cechy (np. alufelgi, stan lakieru, światła LED)."
+            "rok_sugestia": Integer lub null,
+            "paliwo_sugestia": "String" lub null,
+            "typ_nadwozia": "String" lub null,
+            "kolor": "String",
+            "opis_wizualny": "String"
         }
         """
-        resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": file.read()}])
+        
+        # Wywołanie Gemini
+        resp = model_ai.generate_content([
+            prompt, 
+            {"mime_type": file.mimetype, "data": image_data}
+        ])
+        
+        # --- 5. PARSOWANIE (NAPRAWIONE) ---
+        text_response = resp.text.replace('```json', '').replace('```', '').strip()
+        data = json.loads(text_response)
+
+        # Zliczamy zużycie dopiero po sukcesie
         current_user.ai_requests_today += 1
         db.session.commit()
 
@@ -471,6 +495,7 @@ def analyze_car():
     except Exception as e:
         print(f"Błąd AI: {e}")
         return jsonify({"error": "Nie udało się przeanalizować zdjęcia. Spróbuj wyraźniejsze ujęcie."}), 500
+
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
