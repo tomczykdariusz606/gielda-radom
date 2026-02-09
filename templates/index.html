@@ -1,55 +1,31 @@
 <!DOCTYPE html>
 <html lang="{{ lang }}" data-bs-theme="dark">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
 
-  gtag('config', 'AW-17939880807');
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <title>Giełda Radom - Auta z Weryfikacją AI | Busy, Rowery, Części</title>
     <meta name="description" content="Najnowocześniejsza giełda w Radomiu (26-600). Darmowe ogłoszenia: auta, busy, rowery. Jedyna platforma z analizą ekspercką Google Gemini 3.0. Skanuj auto telefonem i sprawdź realną wycenę.">
-    <meta name="keywords" content="giełda radom, samochody używane radom, sprzedam auto radom, giełda samochodowa 26-600, wycena auta AI, gemini auto scanner, darmowe ogłoszenia radom, busy radom, rowery używane, komis radom, czerwiec 76 radom, mubi, carvertical">
-    <meta name="author" content="Giełda Radom Team">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://gieldaradom.pl/">
-
+    
     <meta property="og:title" content="Giełda Radom - Rewolucja AI w Handlu Autami">
-    <meta property="og:description" content="Sprzedajesz? Zrób zdjęcie, a AI napisze opis i wyceni auto! Kupujesz? Zobacz raport ekspercki Gemini. Sprawdź oferty z Twojej okolicy.">
+    <meta property="og:description" content="Sprzedajesz? Zrób zdjęcie, a AI napisze opis i wyceni auto! Kupujesz? Zobacz raport ekspercki Gemini.">
     <meta property="og:image" content="{{ url_for('static', filename='radom_hero.png') }}">
     <meta property="og:url" content="https://gieldaradom.pl/">
     <meta property="og:type" content="website">
-
-    <meta name="geo.region" content="PL-MZ">
-    <meta name="geo.placename" content="Radom">
-    <meta name="geo.position" content="51.4027;21.1471">
-    <meta name="ICBM" content="51.4027, 21.1471">
 
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "AutoDealer",
-      "name": "Giełda Radom",
-      "image": "https://gieldaradom.pl/static/radom_hero.png",
-      "description": "Lokalna platforma ogłoszeniowa z AI Gemini.",
-      "address": { "@type": "PostalAddress", "addressLocality": "Radom", "postalCode": "26-600", "addressCountry": "PL" },
-      "url": "https://gieldaradom.pl",
-      "priceRange": "$$"
-    }
-    </script>
-
-    
-       <style>
+    <style>
         :root { --radom-red: #ce2b37; --bg-dark: #0f0f0f; }
         body { 
             background-color: var(--bg-dark); 
@@ -58,10 +34,9 @@
             background-size: cover; background-position: center; background-attachment: fixed;
         }
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-        
-        /* --- NOWY BANER (GAME CHANGER) --- */
-        .hero-wrap { padding: 40px 0 80px 0; }
 
+        /* HERO & AI BANNER */
+        .hero-wrap { padding: 40px 0 80px 0; }
         .ai-hero-banner {
             background: rgba(20, 20, 20, 0.8);
             border-radius: 30px;
@@ -69,23 +44,17 @@
             padding: 40px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             backdrop-filter: blur(10px);
-            overflow: hidden;
+            overflow: hidden; position: relative;
         }
-
         .ai-hero-bg {
             position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: radial-gradient(circle, rgba(206,43,55,0.15) 0%, rgba(0,0,0,0) 70%);
             animation: pulse-ai 10s infinite alternate;
-            z-index: 1; opacity: 0.6;
-            pointer-events: none;
+            z-index: 1; opacity: 0.6; pointer-events: none;
         }
         @keyframes pulse-ai { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.2) rotate(5deg); } }
-
-        .partner-badge {
-            background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px;
-            border: 1px solid rgba(255,255,255,0.1); display: inline-flex;
-        }
-
+        
+        .partner-badge { background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); display: inline-flex; }
         .game-changer-box {
             background: linear-gradient(145deg, rgba(40,40,40,0.9), rgba(10,10,10,0.9));
             border: 1px solid var(--radom-red);
@@ -93,35 +62,46 @@
             transition: 0.3s;
         }
         .game-changer-box:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(206, 43, 55, 0.4); }
-        .ls-1 { letter-spacing: 1px; }
 
-        /* --- STARA WYSZUKIWARKA (MUSI TU BYĆ!) --- */
+        /* WYSZUKIWARKA */
         .search-pill-container {
             background: white; border-radius: 50px; padding: 5px;
             display: flex; align-items: center; max-width: 700px; margin: 0 auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; z-index: 10;
         }
         .search-input { border: none; background: transparent; height: 55px; width: 100%; padding-left: 20px; font-size: 1.1rem; color: #333; outline: none; }
-        
         .btn-filters-icon { border: none; background: #f0f0f0; color: #555; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 5px; cursor: pointer; transition: 0.2s; }
         .btn-filters-icon:hover { background: #e0e0e0; color: var(--radom-red); }
-        
         .btn-search-pill { background: var(--radom-red); color: white; border: none; padding: 0 40px; height: 50px; border-radius: 40px; font-weight: bold; font-size: 1.1rem; transition: 0.2s; }
         .btn-search-pill:hover { background: #b01b25; transform: scale(1.05); }
-        
+
         .advanced-filters { margin-top: 15px; background: rgba(15, 15, 15, 0.95); border-radius: 15px; padding: 20px; max-width: 700px; margin-left: auto; margin-right: auto; text-align: left; border: 1px solid #333; backdrop-filter: blur(10px); }
         .form-select-dark, .form-control-dark { background: #222; border: 1px solid #444; color: white; }
-        
-        /* INNE DROBNE */
+
+        /* KARTY SAMOCHODÓW */
         .car-card { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
         .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
-        
         .lang-btn { text-decoration: none; font-size: 1.3rem; margin-left: 8px; opacity: 0.7; transition: 0.2s; }
         .lang-btn:hover { opacity: 1; transform: scale(1.2); }
-        
-        #cookieConsent { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10, 10, 10, 0.95); border-top: 2px solid var(--radom-red); padding: 20px; z-index: 9999; display: none; }
         .seo-footer { background: #050505; color: #777; padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; font-size: 0.9rem; }
         .seo-footer a { color: #999; text-decoration: none; } .seo-footer a:hover { color: var(--radom-red); }
+
+        /* INTRO VIDEO */
+        .video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 99999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease-out;
+        }
+        #introVid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        #skipBtn {
+            position: absolute; bottom: 30px; right: 30px;
+            background: transparent; color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 5px 15px; font-size: 0.7rem; border-radius: 20px;
+            cursor: pointer; z-index: 100000;
+        }
+        .intro-fade-out { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -133,8 +113,8 @@
         </a>
 
         <div class="d-flex gap-2 align-items-center">
-            
-            <div class="me-2 d-none d-sm-block"> <a href="/set_lang/pl" class="lang-btn">🇵🇱</a>
+            <div class="me-2 d-none d-sm-block"> 
+                <a href="/set_lang/pl" class="lang-btn">🇵🇱</a>
                 <a href="/set_lang/en" class="lang-btn">🇬🇧</a>
                 <a href="/set_lang/de" class="lang-btn">🇩🇪</a>
             </div>
@@ -150,12 +130,11 @@
     </div>
 </nav>
 
-
 <div class="hero-wrap">
     <div class="container mb-5">
         <div class="ai-hero-banner overflow-hidden position-relative">
             <div class="ai-hero-bg"></div>
-            
+
             <div class="row align-items-center position-relative" style="z-index: 2;">
                 <div class="col-lg-7 mb-4 mb-lg-0">
                     <div class="d-flex align-items-center mb-3 partner-badge">
@@ -171,7 +150,7 @@
                         Platforma stworzona we współpracy z Google. Profesjonalne wyceny i recenzje oparte na realnych próbkach danych z polskich giełd.
                     </p>
                 </div>
-                
+
                 <div class="col-lg-5">
                     <div class="game-changer-box p-4 rounded-4">
                         <div class="d-flex align-items-center mb-3">
@@ -221,42 +200,6 @@
     </div>
 </div>
 
-<style>
-    .hero-wrap { padding: 40px 0 80px 0; }
-
-    .ai-hero-banner {
-        background: rgba(20, 20, 20, 0.8);
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 40px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        backdrop-filter: blur(10px);
-    }
-
-    .ai-hero-bg {
-        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-        background: radial-gradient(circle, rgba(206,43,55,0.15) 0%, rgba(0,0,0,0) 70%);
-        animation: pulse-ai 10s infinite alternate;
-        z-index: 1; opacity: 0.6;
-    }
-    @keyframes pulse-ai { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.2) rotate(5deg); } }
-
-    .partner-badge {
-        background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px;
-        border: 1px solid rgba(255,255,255,0.1); display: inline-flex;
-    }
-
-    .game-changer-box {
-        background: linear-gradient(145deg, rgba(40,40,40,0.9), rgba(10,10,10,0.9));
-        border: 1px solid var(--radom-red);
-        box-shadow: 0 10px 30px rgba(206, 43, 55, 0.2);
-        transition: 0.3s;
-    }
-    .game-changer-box:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(206, 43, 55, 0.4); }
-    .ls-1 { letter-spacing: 1px; }
-</style>
-
-
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary bg-black bg-opacity-50 p-3 rounded">
         <h4 class="fw-bold text-white mb-0">{{ t['available'] }}</h4>
@@ -300,69 +243,47 @@
     </div>
 </div>
 
-<div id="cookieConsent"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"><div class="text-white small"><i class="bi bi-cookie me-2 text-danger"></i>Cookies & AI. <a href="/polityka" class="text-secondary text-decoration-underline">Polityka</a>.</div><button class="btn btn-danger rounded-pill px-4 fw-bold shadow btn-sm" onclick="acceptCookies()">OK</button></div></div>
+<div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
+    <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+        <span class="text-light small">
+            🍪 <strong>Ta strona używa plików cookies</strong> w celu analizy ruchu i obsługi logowania. 
+            Korzystając ze strony, zgadzasz się na ich użycie.
+        </span>
+        <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">
+            ROZUMIEM I AKCEPTUJĘ
+        </button>
+    </div>
+</div>
 
 <footer class="seo-footer"><div class="container"><div class="row"><div class="col-md-4 mb-4"><h5 class="text-white">Giełda Radom</h5><p>Lokalny lider. Weryfikacja <strong>Gemini AI</strong>.</p></div><div class="col-md-4 mb-4"><h5 class="text-white">Linki</h5><ul class="list-unstyled lh-lg"><li><a href="/?typ=Osobowe">Samochody</a></li><li><a href="/?typ=Ciezarowe">Dostawcze</a></li><li><a href="/?typ=Rower">Rowery</a></li></ul></div><div class="col-md-4 mb-4"><h5 class="text-white">Pomoc</h5><ul class="list-unstyled lh-lg"><li><a href="/regulamin">Regulamin</a></li><li><a href="/polityka">Polityka</a></li><li><a href="/kontakt">Kontakt</a></li><li><a href="/sitemap.xml">Sitemap</a></li></ul></div></div><div class="text-center pt-4 border-top border-secondary mt-2 small text-muted">© 2026 Giełda Radom.</div></div></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookieConsent').style.display = 'none'; }
-    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookieConsent').style.display = 'block'; }
-</script>
-<div id="video-intro-layer" class="video-overlay">
-    <video id="introVid" muted playsinline autoplay>
-        <source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4">
-    </video>
-    <button id="skipBtn" onclick="finishIntro()">POMIŃ >></button>
-</div>
-
-<style>
-    /* PEŁNY EKRAN, CZARNE TŁO */
-    .video-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: #000; z-index: 99999;
-        display: flex; align-items: center; justify-content: center;
-        transition: opacity 0.8s ease-out;
-    }
-
-    /* WIDEO NA CAŁY EKRAN (BEZ PASKÓW) */
-    #introVid {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        object-fit: cover; /* Ważne: wypełnia ekran, nie rozciąga */
-    }
-
-    /* DYSKRETNY PRZYCISK POMIŃ */
-    #skipBtn {
-        position: absolute; bottom: 30px; right: 30px;
-        background: transparent; color: rgba(255,255,255,0.5);
-        border: 1px solid rgba(255,255,255,0.3);
-        padding: 5px 15px; font-size: 0.7rem; border-radius: 20px;
-        cursor: pointer; z-index: 100000;
-    }
-
-    /* KLASA UKRYWANIA */
-    .intro-fade-out { opacity: 0; pointer-events: none; }
-</style>
 
 <script>
+    // COOKIES
+    if (!localStorage.getItem('cookiesAccepted')) {
+        document.getElementById('cookie-banner').style.display = 'block';
+    }
+
+    function acceptCookies() {
+        localStorage.setItem('cookiesAccepted', 'true');
+        document.getElementById('cookie-banner').style.display = 'none';
+    }
+
+    // INTRO VIDEO
     document.addEventListener("DOMContentLoaded", function() {
         const overlay = document.getElementById('video-intro-layer');
         const video = document.getElementById('introVid');
-        
-        // 1. CZY JUŻ WIDZIAŁ? (SessionStorage - raz na otwarcie przeglądarki)
+
         if (sessionStorage.getItem('seenVideoIntro')) {
-            overlay.style.display = 'none'; // Ukryj natychmiast
+            overlay.style.display = 'none'; 
         } else {
-            // 2. JEŚLI NIE WIDZIAŁ -> ODPAL FILM
-            // Ważne: Przeglądarki wymagają 'muted' do autoplay
             video.muted = true; 
             video.play().catch(error => {
-                // Jeśli przeglądarka zablokuje autoplay, od razu ukryj intro
                 console.log("Autoplay zablokowany:", error);
                 finishIntro();
             });
 
-            // 3. JAK SIĘ SKOŃCZY -> UKRYJ
             video.onended = function() {
                 finishIntro();
             };
@@ -371,13 +292,20 @@
 
     function finishIntro() {
         const overlay = document.getElementById('video-intro-layer');
-        overlay.classList.add('intro-fade-out'); // Rozpocznij zanikanie
-        
+        overlay.classList.add('intro-fade-out'); 
         setTimeout(() => {
-            overlay.style.display = 'none'; // Usuń całkowicie
-            sessionStorage.setItem('seenVideoIntro', 'true'); // Zapamiętaj
-        }, 800); // Czekaj tyle ile trwa animacja CSS (0.8s)
+            overlay.style.display = 'none'; 
+            sessionStorage.setItem('seenVideoIntro', 'true');
+        }, 800);
     }
 </script>
+
+<div id="video-intro-layer" class="video-overlay">
+    <video id="introVid" muted playsinline autoplay>
+        <source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4">
+    </video>
+    <button id="skipBtn" onclick="finishIntro()">POMIŃ >></button>
+</div>
+
 </body>
 </html>
