@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
-    
+
     <meta name="description" content="Sprawdź ofertę: {{ car.marka }} {{ car.model }}, cena {{ car.cena }} PLN. Lokalizacja: {{ car.zrodlo }}. Zweryfikowane przez Gemini AI.">
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.css">
@@ -16,11 +16,11 @@
         .navbar { background: rgba(0,0,0,0.95); border-bottom: 2px solid #ce2b37; }
         .gallery-img { height: 450px; object-fit: cover; width: 100%; cursor: zoom-in; }
         .spec-box { background: #2c2c2c; padding: 15px; border-radius: 12px; border: 1px solid #444; text-align: center; }
-        
+
         /* AI BAR */
         .gemini-bar { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid #444; margin-bottom: 20px; }
         .gemini-progress { height: 10px; background: #222; border-radius: 5px; overflow: hidden; margin: 10px 0; }
-        
+
         /* TRUST BADGES (MUBI / CARVERTICAL) */
         .trust-badge { 
             display: flex; align-items: center; gap: 15px; 
@@ -48,7 +48,7 @@
 
 <div class="container mb-5">
     <div class="row g-5">
-        
+
         <div class="col-lg-8">
             <div class="mb-4 rounded overflow-hidden shadow-lg" id="gallery-wrapper">
                 <div id="carCarousel" class="carousel slide">
@@ -81,7 +81,7 @@
             </div>
         </div>
 
-                <div class="col-lg-4">
+        <div class="col-lg-4">
             <div class="sticky-top" style="top: 80px;">
                 <h2 class="fw-bold mb-0 text-white">{{ car.marka }} {{ car.model }}</h2>
                 <div class="fs-1 fw-bold text-danger mb-3">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
@@ -117,7 +117,7 @@
                 <div class="card bg-dark border-success border-opacity-25 mb-4 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title text-success small fw-bold text-uppercase mb-3"><i class="bi bi-shield-check me-2"></i>Zweryfikowany VIN</h5>
-                        
+
                         <div class="input-group mb-3">
                             <span class="input-group-text bg-black border-secondary text-white-50"><i class="bi bi-upc-scan"></i></span>
                             <input type="text" class="form-control bg-black border-secondary text-white fw-bold text-center" value="{{ car.vin }}" readonly>
@@ -134,7 +134,7 @@
                 </div>
                 {% endif %}
 
-                                <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card bg-dark border-secondary shadow-sm">
                     <div class="card-header bg-transparent border-secondary text-white fw-bold small"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Lokalizacja</div>
                     <div class="overflow-hidden bg-white" style="height: 250px;">
                         {% if car.latitude and car.longitude %}
@@ -146,12 +146,8 @@
                         {% endif %}
                     </div>
                 </div>
-             </div> 
-            </div>
- </div>
 
-
-<footer class="mt-5 py-4 border-top border-secondary text-center text-muted small">© 2026 Giełda Radom.</footer>
+            </div> </div> </div> </div> <footer class="mt-5 py-4 border-top border-secondary text-center text-muted small">© 2026 Giełda Radom.</footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
     import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
