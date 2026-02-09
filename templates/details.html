@@ -110,6 +110,22 @@
                     <div class="col-6"><div class="spec-box"><i class="bi bi-car-front d-block text-danger mb-1"></i>{{ car.nadwozie or '-' }}</div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-hdd-network d-block text-danger mb-1"></i>{{ car.pojemnosc or '-' }}</div></div>
                 </div>
+{% if car.vin %}
+<div class="card bg-dark border-secondary mt-3 mb-3">
+    <div class="card-body">
+        <h5 class="card-title text-success"><i class="bi bi-shield-check"></i> Zweryfikowany VIN</h5>
+        <p class="mb-2 text-muted">Sprzedający udostępnił numer nadwozia. Sprawdź historię pojazdu:</p>
+        
+        <div class="d-flex align-items-center gap-2">
+            <code class="fs-5 text-light bg-black p-2 rounded">{{ car.vin }}</code>
+            <a href="https://historiapojazdu.gov.pl" target="_blank" class="btn btn-outline-light btn-sm">
+                Sprawdź w CEPiK <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 
                 <div class="card bg-dark border-secondary shadow-sm">
                     <div class="card-header bg-transparent border-secondary text-white fw-bold small"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Lokalizacja</div>
