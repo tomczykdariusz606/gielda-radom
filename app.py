@@ -215,7 +215,7 @@ class Car(db.Model):
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     is_promoted = db.Column(db.Boolean, default=False)
-vin = db.Column(db.String(20), nullable=True) 
+    vin = db.Column(db.String(20), nullable=True) 
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
     skrzynia = db.Column(db.String(20))
