@@ -205,7 +205,7 @@
                 <h5 class="fw-bold text-white">{{ t['add'] }}</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/dodaj" method="POST" enctype="multipart/form-data">
+            <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this)">
                 <input type="hidden" name="lat" id="gps_lat">
                 <input type="hidden" name="lon" id="gps_lon">
                 
@@ -242,13 +242,20 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="small fw-bold text-muted mb-1">ZDJĘCIA</label>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="small fw-bold text-muted mb-1">ZDJĘCIA</label>
+                            <span class="small text-warning fw-bold" style="font-size: 0.7rem;">
+                                <i class="bi bi-images me-1"></i> MAX 20 SZT.
+                            </span>
+                        </div>
                         <div class="input-group">
                             <input type="file" name="zdjecia" class="form-control" multiple accept="image/*" id="fileInput">
                             <label class="input-group-text bg-secondary text-white" for="fileInput">Wybierz</label>
                         </div>
+                        <div class="form-text text-white-50 small mt-1">
+                            * Pierwsze wybrane zdjęcie będzie okładką ogłoszenia.
+                        </div>
                     </div>
-
                     <div class="row g-2">
                         <div class="col-6"><label class="small fw-bold text-muted">Marka</label><input type="text" name="marka" class="form-control" placeholder="np. BMW"></div>
                         <div class="col-6"><label class="small fw-bold text-muted">Model</label><input type="text" name="model" class="form-control" placeholder="np. X5"></div>
@@ -340,6 +347,19 @@
 <script>
     function adj(){ const v=document.querySelector('input[name="typ"]:checked').value; const h=(v==='Rower'||v==='Inne'); document.querySelectorAll('.tech').forEach(e=>e.style.display=h?'none':'block'); }
     function getGPS(btn){ if(!navigator.geolocation) { alert('Brak GPS'); return; } btn.innerHTML='...'; navigator.geolocation.getCurrentPosition(pos => { document.getElementById('gps_lat').value=pos.coords.latitude; document.getElementById('gps_lon').value=pos.coords.longitude; btn.className="btn btn-success w-100 btn-sm rounded-pill py-2"; btn.innerHTML="<i class='bi bi-check-lg'></i> OK"; }, err => { alert('Błąd GPS'); }); }
+    // --- EFEKT ŁADOWANIA PRZYCISKU ---
+    function loadingEfekt(form) {
+        // Znajdź przycisk w tym formularzu
+        const btn = form.querySelector('.btn-submit-fix');
+        
+        // Zmień jego wygląd
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ZAPISUJĘ... CZEKAJ!';
+        btn.style.opacity = '0.7';       // Lekko przyciemnij
+        btn.style.pointerEvents = 'none'; // Zablokuj możliwość drugiego kliknięcia
+        
+        // (Formularz wyśle się automatycznie po wykonaniu tej funkcji)
+    }
+
     async function scanCar(input){ if(!input.files[0]) return; document.getElementById('scanLoader').style.display='block'; const fd=new FormData(); fd.append('scan_image', input.files[0]); try { const r=await fetch('/api/analyze-car', {method:'POST', body:fd}); const d=await r.json(); if(d.marka){ if(d.kategoria){ let r=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(r){ r.checked=true; adj(); }} document.querySelector('[name="marka"]').value=d.marka; document.querySelector('[name="model"]').value=d.model;
 if(d.vin) document.querySelector('[name="vin"]').value=d.vin; document.querySelector('[name="rok"]').value=d.rok_sugestia||''; document.querySelector('[name="opis"]').value=d.opis_wizualny; if(d.paliwo_sugestia && d.kategoria!=='Inne' && d.kategoria!=='Rower'){ const sel=document.querySelector('[name="paliwo"]'); for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text===d.paliwo_sugestia) sel.selectedIndex=i; } } alert('✅ Gemini: '+d.marka); } else alert('⚠️ Nie rozpoznano'); } catch(e){ console.error(e); alert('⚠️ Błąd'); } document.getElementById('scanLoader').style.display='none'; }
 </script>
