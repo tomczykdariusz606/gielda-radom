@@ -103,6 +103,21 @@
         }
         .intro-fade-out { opacity: 0; pointer-events: none; }
     </style>
+    <style>
+        /* ... twoje inne style ... */
+
+        .intro-fade-out { opacity: 0; pointer-events: none; }
+
+        /* NOWY STYL DLA WIDEO PROMOCYJNEGO */
+        .promo-video-container {
+            height: 350px; /* Wysokość na komputerze (bez zmian) */
+        }
+        @media (max-width: 767px) { /* Tylko na telefonach */
+            .promo-video-container {
+                height: 500px !important; /* ZWIĘKSZAMY wysokość, żeby nie ucinało */
+            }
+        }
+    </style>
 </head>
 <body>
 
