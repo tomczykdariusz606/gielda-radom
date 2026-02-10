@@ -35,8 +35,8 @@
         }
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
-        /* HERO & AI BANNER */
-        .hero-wrap { padding: 40px 0 80px 0; }
+        /* HERO & AI BANNER (STARY - ZOSTAWIAMY) */
+        .hero-wrap { padding: 40px 0 40px 0; } /* Zmniejszyłem dolny padding, żeby wideo było bliżej */
         .ai-hero-banner {
             background: rgba(20, 20, 20, 0.8);
             border-radius: 30px;
@@ -86,7 +86,7 @@
         .seo-footer { background: #050505; color: #777; padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; font-size: 0.9rem; }
         .seo-footer a { color: #999; text-decoration: none; } .seo-footer a:hover { color: var(--radom-red); }
 
-        /* INTRO VIDEO */
+        /* INTRO VIDEO (Overlay) */
         .video-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #000; z-index: 99999;
@@ -200,6 +200,44 @@
     </div>
 </div>
 
+<div class="container mb-5">
+    <div class="row g-0 rounded-4 overflow-hidden shadow-lg border border-secondary align-items-center" 
+         style="background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);">
+        
+        <div class="col-md-5 col-lg-4 p-0 position-relative border-end border-secondary">
+            <video autoplay muted loop playsinline class="d-block w-100" style="height: 350px; object-fit: cover;">
+                <source src="{{ url_for('static', filename='promo.mp4') }}" type="video/mp4">
+            </video>
+            <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+                <span class="badge bg-danger shadow fw-bold"><i class="bi bi-play-fill"></i> AI DEMO</span>
+            </div>
+        </div>
+
+        <div class="col-md-7 col-lg-8 p-4 text-center text-md-start">
+            <h2 class="fw-bold text-white mb-3">
+                <i class="bi bi-camera-fill text-danger me-2"></i> Zrób zdjęcie = Gotowe!
+            </h2>
+            <h4 class="text-white-50 mb-4 fw-light">
+                Zobacz jak to działa. <strong class="text-white">Opis, model i dane techniczne</strong> uzupełnią się same w 3 sekundy. Za darmo.
+            </h4>
+            
+            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-start">
+                {% if current_user.is_authenticated %}
+                    <a href="/profil" class="btn btn-danger btn-lg rounded-pill fw-bold px-5 shadow-lg">
+                        <i class="bi bi-plus-lg me-2"></i> DODAJ SWOJE AUTO
+                    </a>
+                {% else %}
+                    <a href="/register" class="btn btn-danger btn-lg rounded-pill fw-bold px-5 shadow-lg">
+                        <i class="bi bi-person-plus-fill me-2"></i> ZAŁÓŻ KONTO
+                    </a>
+                    <a href="/login" class="btn btn-outline-light btn-lg rounded-pill fw-bold px-4">
+                        LOGOWANIE
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary bg-black bg-opacity-50 p-3 rounded">
         <h4 class="fw-bold text-white mb-0">{{ t['available'] }}</h4>
@@ -270,7 +308,7 @@
         document.getElementById('cookie-banner').style.display = 'none';
     }
 
-    // INTRO VIDEO
+    // INTRO VIDEO (Overlay na start)
     document.addEventListener("DOMContentLoaded", function() {
         const overlay = document.getElementById('video-intro-layer');
         const video = document.getElementById('introVid');
