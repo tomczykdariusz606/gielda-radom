@@ -77,7 +77,6 @@
         <div>
             <h2 class="fw-bold mb-0 text-white">{{ t['garage'] }}</h2>
             <div class="mt-1">
-                {# Limit dla admina i zwykłych userów #}
                 {% if current_user.username == 'admin' or current_user.id == 1 %}
                     {% set limit = 500 %}
                 {% else %}
@@ -380,12 +379,60 @@
         document.getElementById('cookie-banner').style.display = 'none';
     }
 
-    // AI SKANER
-    async function scanCar(input){ if(!input.files[0]) return; document.getElementById('scanLoader').style.display='block'; const fd=new FormData(); fd.append('scan_image', input.files[0]); try { const r=await fetch('/api/analyze-car', {method:'POST', body:fd}); const d=await r.json(); if(d.marka){ if(d.kategoria){ let r=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(r){ r.checked=true; adj(); }} document.querySelector('[name="marka"]').value=d.marka; document.querySelector('[name="model"]').value=d.model;
-if(d.vin) document.querySelector('[name="vin"]').value=d.vin; document.querySelector('[name="rok"]').value=d.rok_sugestia||''; document.querySelector('[name="opis"]').value=d.opis_wizualny; if(d.paliwo_sugestia && d.kategoria!=='Inne' && d.kategoria!=='Rower'){ const sel=document.querySelector('[name="paliwo"]'); for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text===d.paliwo_sugestia) sel.selectedIndex=i; } } alert('✅ Gemini: '+d.marka); } else alert('⚠️ Nie rozpoznano'); } catch(e){ console.error(e); alert('⚠️ Błąd'); } document.getElementById('scanLoader').style.display='none'; }
+    // SKANER AI + KOPIOWANIE ZDJĘCIA (ZAKTUALIZOWANE)
+    async function scanCar(input){ 
+        if(!input.files[0]) return; 
+
+        // 1. SKOPIUJ SKANOWANE ZDJĘCIE DO GŁÓWNEJ GALERII
+        const mainInput = document.getElementById('fileInput');
+        const dt = new DataTransfer();
+        dt.items.add(input.files[0]);
+        mainInput.files = dt.files;
+        
+        // Zmień etykietę na potwierdzenie (Z KRÓTSZYM TEKSTEM)
+        const label = document.querySelector('label[for="fileInput"]');
+        
+        // Tutaj wpisujemy Twój tekst, ale zmniejszamy czcionkę, żeby wszedł w jednej linii
+        label.innerHTML = "✅ Skan OK! Dodaj resztę"; 
+        label.style.fontSize = "0.8rem"; // Zmniejszamy czcionkę, żeby się zmieściło
+        label.style.fontWeight = "bold";
+        
+        label.classList.remove('bg-secondary');
+        label.classList.add('bg-success');
+        label.classList.add('text-white'); // Dla pewności
+
+        // 2. WYŚLIJ DO AI
+        document.getElementById('scanLoader').style.display='block'; 
+        const fd=new FormData(); 
+        fd.append('scan_image', input.files[0]);  
+        
+        try { 
+            const r=await fetch('/api/analyze-car', {method:'POST', body:fd}); 
+            const d=await r.json(); 
+            if(d.marka){ 
+                if(d.kategoria){ let r=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(r){ r.checked=true; adj(); }} 
+                document.querySelector('[name="marka"]').value=d.marka; 
+                document.querySelector('[name="model"]').value=d.model;
+                if(d.vin) document.querySelector('[name="vin"]').value=d.vin; 
+                document.querySelector('[name="rok"]').value=d.rok_sugestia||''; 
+                document.querySelector('[name="opis"]').value=d.opis_wizualny; 
+                if(d.paliwo_sugestia && d.kategoria!=='Inne' && d.kategoria!=='Rower'){ const sel=document.querySelector('[name="paliwo"]'); for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text===d.paliwo_sugestia) sel.selectedIndex=i; } } 
+                alert('✅ Gemini rozpoznał: '+d.marka); 
+            } else alert('⚠️ Nie rozpoznano'); 
+        } catch(e){ console.error(e); alert('⚠️ Błąd'); } 
+        document.getElementById('scanLoader').style.display='none'; 
+    }
 
     // --- BLOKADA NA MAX 18 ZDJĘĆ ---
     document.getElementById('fileInput').addEventListener('change', function(e) {
+        // Jeśli user wybierze ręcznie zdjęcia, resetujemy etykietę "Dodano skan" na "Wybierz"
+        const label = document.querySelector('label[for="fileInput"]');
+        if(label.innerText.includes("skan")) {
+             label.innerText = "Wybierz";
+             label.classList.remove('bg-success');
+             label.classList.add('bg-secondary');
+        }
+
         if (this.files.length > 18) {
             alert('⚠️ Wybrano za dużo zdjęć (' + this.files.length + '). System automatycznie pozostawił tylko pierwsze 18 sztuk.');
 
@@ -393,7 +440,7 @@ if(d.vin) document.querySelector('[name="vin"]').value=d.vin; document.querySele
             for (let i = 0; i < 18; i++) {
                 dt.items.add(this.files[i]);
             }
-            this.files = dt.files; // Podmieniamy listę na przyciętą
+            this.files = dt.files; 
         }
     });
 </script>
