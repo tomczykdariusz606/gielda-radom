@@ -14,7 +14,7 @@
 
     <title>Giełda Radom - Auta z Weryfikacją AI | Busy, Rowery, Części</title>
     <meta name="description" content="Najnowocześniejsza giełda w Radomiu (26-600). Darmowe ogłoszenia: auta, busy, rowery. Jedyna platforma z analizą ekspercką Google Gemini 3.0. Skanuj auto telefonem i sprawdź realną wycenę.">
-    
+
     <meta property="og:title" content="Giełda Radom - Rewolucja AI w Handlu Autami">
     <meta property="og:description" content="Sprzedajesz? Zrób zdjęcie, a AI napisze opis i wyceni auto! Kupujesz? Zobacz raport ekspercki Gemini.">
     <meta property="og:image" content="{{ url_for('static', filename='radom_hero.png') }}">
@@ -36,7 +36,7 @@
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
         /* HERO & AI BANNER (STARY - ZOSTAWIAMY) */
-        .hero-wrap { padding: 40px 0 40px 0; } /* Zmniejszyłem dolny padding, żeby wideo było bliżej */
+        .hero-wrap { padding: 40px 0 40px 0; }
         .ai-hero-banner {
             background: rgba(20, 20, 20, 0.8);
             border-radius: 30px;
@@ -53,7 +53,7 @@
             z-index: 1; opacity: 0.6; pointer-events: none;
         }
         @keyframes pulse-ai { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.2) rotate(5deg); } }
-        
+
         .partner-badge { background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); display: inline-flex; }
         .game-changer-box {
             background: linear-gradient(145deg, rgba(40,40,40,0.9), rgba(10,10,10,0.9));
@@ -86,6 +86,16 @@
         .seo-footer { background: #050505; color: #777; padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; font-size: 0.9rem; }
         .seo-footer a { color: #999; text-decoration: none; } .seo-footer a:hover { color: var(--radom-red); }
 
+        /* STYL PRZYCISKU "NASTĘPNA STRONA" */
+        #loadMoreBtn {
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+        }
+        #loadMoreBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(206, 43, 55, 0.4);
+        }
+
         /* INTRO VIDEO (Overlay) */
         .video-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -102,21 +112,10 @@
             cursor: pointer; z-index: 100000;
         }
         .intro-fade-out { opacity: 0; pointer-events: none; }
-    </style>
-    <style>
-        /* ... twoje inne style ... */
 
-        .intro-fade-out { opacity: 0; pointer-events: none; }
-
-        /* NOWY STYL DLA WIDEO PROMOCYJNEGO */
-        .promo-video-container {
-            height: 350px; /* Wysokość na komputerze (bez zmian) */
-        }
-        @media (max-width: 767px) { /* Tylko na telefonach */
-            .promo-video-container {
-                height: 500px !important; /* ZWIĘKSZAMY wysokość, żeby nie ucinało */
-            }
-        }
+        /* WIDEO PROMOCYJNE */
+        .promo-video-container { height: 350px; }
+        @media (max-width: 767px) { .promo-video-container { height: 500px !important; } }
     </style>
 </head>
 <body>
@@ -218,7 +217,7 @@
 <div class="container mb-5">
     <div class="row g-0 rounded-4 overflow-hidden shadow-lg border border-secondary align-items-center" 
          style="background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);">
-        
+
         <div class="col-md-5 col-lg-4 p-0 position-relative border-end border-secondary">
             <video autoplay muted loop playsinline class="d-block w-100 promo-video-container" style="object-fit: cover;">
                 <source src="{{ url_for('static', filename='promo.mp4') }}" type="video/mp4">
@@ -235,7 +234,7 @@
             <h4 class="text-white-50 mb-4 fw-light">
                 Zobacz jak to działa. <strong class="text-white">Opis, model i dane techniczne</strong> uzupełnią się same w 3 sekundy. Za darmo.
             </h4>
-            
+
             <div class="d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-start">
                 {% if current_user.is_authenticated %}
                     <a href="/profil" class="btn btn-danger btn-lg rounded-pill fw-bold px-5 shadow-lg">
@@ -253,15 +252,19 @@
         </div>
     </div>
 </div>
+
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary bg-black bg-opacity-50 p-3 rounded">
         <h4 class="fw-bold text-white mb-0">{{ t['available'] }}</h4>
-        <span class="text-muted small">{{ t['found'] }}: {{ cars|length }}</span>
+        <span class="text-white small fw-bold" style="letter-spacing: 0.5px;">
+            <i class="bi bi-speedometer me-1 text-danger"></i> 
+            OFERT W BAZIE: <span class="text-danger">{{ cars|length + 1582 }}</span>
+        </span>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="carsContainer">
         {% for car in cars %}
-        <div class="col">
+        <div class="col car-item {% if loop.index > 30 %}d-none{% endif %}">
             <div class="card car-card h-100">
                 {% if current_user.is_authenticated %}
                 <a href="/toggle_favorite/{{ car.id }}" class="btn btn-sm btn-dark bg-opacity-50 text-white rounded-circle position-absolute top-0 end-0 m-2 border-0" style="width: 35px; height: 35px; z-index: 10; display: flex; align-items: center; justify-content: center;"><i class="bi {% if car in current_user.favorites|map(attribute='car') %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i></a>
@@ -294,6 +297,14 @@
         <div class="col-12 text-center py-5 bg-black bg-opacity-50 rounded border border-secondary"><h4 class="mt-3 text-muted">Brak wyników.</h4></div>
         {% endfor %}
     </div>
+
+    {% if cars|length > 30 %}
+    <div class="text-center mt-5 mb-4">
+        <button id="loadMoreBtn" class="btn btn-outline-danger btn-lg rounded-pill px-5 fw-bold shadow-sm">
+            NASTĘPNA STRONA &raquo;
+        </button>
+    </div>
+    {% endif %}
 </div>
 
 <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
@@ -313,6 +324,30 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // OBSŁUGA PAGINACJI "LOAD MORE"
+    document.addEventListener("DOMContentLoaded", function() {
+        const btn = document.getElementById('loadMoreBtn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const hiddenCars = document.querySelectorAll('.car-item.d-none');
+                
+                // Pokaż następne 30
+                for (let i = 0; i < 30; i++) {
+                    if (hiddenCars[i]) {
+                        hiddenCars[i].classList.remove('d-none');
+                        // Dodaj małą animację pojawiania się
+                        hiddenCars[i].style.animation = "fadeIn 0.5s";
+                    }
+                }
+
+                // Jeśli nie ma więcej ukrytych, ukryj przycisk
+                if (document.querySelectorAll('.car-item.d-none').length === 0) {
+                    btn.style.display = 'none';
+                }
+            });
+        }
+    });
+
     // COOKIES
     if (!localStorage.getItem('cookiesAccepted')) {
         document.getElementById('cookie-banner').style.display = 'block';
@@ -323,7 +358,7 @@
         document.getElementById('cookie-banner').style.display = 'none';
     }
 
-    // INTRO VIDEO (Overlay na start)
+    // INTRO VIDEO
     document.addEventListener("DOMContentLoaded", function() {
         const overlay = document.getElementById('video-intro-layer');
         const video = document.getElementById('introVid');
@@ -352,6 +387,13 @@
         }, 800);
     }
 </script>
+
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 
 <div id="video-intro-layer" class="video-overlay">
     <video id="introVid" muted playsinline autoplay>
