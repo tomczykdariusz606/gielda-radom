@@ -96,12 +96,15 @@
                 <h2 class="fw-bold mb-0 text-white">{{ car.marka }} {{ car.model }}</h2>
                 <div class="fs-1 fw-bold text-danger mb-3">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</div>
 
-                <div class="d-grid gap-2 mb-4">
-                    <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3">
+                                <div class="d-grid gap-2 mb-4">
+                    <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3 pulse-btn">
                         <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
                     </a>
+                    <a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl. Czy oferta jest aktualna?" 
+                       class="btn btn-outline-light btn-lg fw-bold rounded-pill shadow py-2">
+                        <i class="bi bi-chat-text-fill me-2"></i> NAPISZ SMS
+                    </a>
                 </div>
-
                 <div class="mb-4">
                     <label class="text-muted small fw-bold text-uppercase mb-2 ms-1">Bezpieczny Zakup</label>
                     <a href="https://www.carvertical.com/pl/sprawdzenie-vin?vin={{ car.vin or '' }}" target="_blank" class="trust-badge">
