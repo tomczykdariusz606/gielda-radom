@@ -216,6 +216,7 @@ class Car(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     is_promoted = db.Column(db.Boolean, default=False)
     vin = db.Column(db.String(20), nullable=True) 
+    wyposazenie = db.Column(db.Text, nullable=True)
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
     skrzynia = db.Column(db.String(20))
@@ -398,6 +399,8 @@ def dodaj_ogloszenie():
     except: lat = None
     try: lon = float(request.form.get('lon')) 
     except: lon = None
+    wyposazenie_list = request.form.getlist('wyposazenie')
+    wyposazenie_str = ",".join(wyposazenie_list)
 
     new_car = Car(
         marka=request.form.get('marka'), model=request.form.get('model'),
@@ -405,6 +408,7 @@ def dodaj_ogloszenie():
         typ=request.form.get('typ', 'Osobowe'), opis=request.form.get('opis', ''),
         vin=request.form.get('vin'), telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
         paliwo=request.form.get('paliwo'), nadwozie=request.form.get('nadwozie'),
+wyposazenie=wyposazenie_str,
         pojemnosc=request.form.get('pojemnosc'), przebieg=int(request.form.get('przebieg') or 0),
         img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id,
         latitude=lat, longitude=lon, data_dodania=datetime.utcnow()
@@ -610,6 +614,8 @@ def edytuj(id):
             car.nadwozie = request.form.get('nadwozie')
             car.telefon = request.form.get('telefon')
             car.opis = request.form.get('opis')
+            wyposazenie_list = request.form.getlist('wyposazenie')
+            car.wyposazenie = ",".join(wyposazenie_list)
             
             # 2. OBSŁUGA NOWYCH ZDJĘĆ (TEGO BRAKOWAŁO)
             files = request.files.getlist('zdjecia')
