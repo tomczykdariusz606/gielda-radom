@@ -675,18 +675,20 @@ def update_db():
         # Stare migracje
         try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT")
         except: pass
-        try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
-        except: pass
-        try: c.execute("ALTER TABLE user ADD COLUMN last_seen TIMESTAMP")
-        except: pass
+        # ... inne try ...
 
         # --- NOWA MIGRACJA VIN ---
         try: c.execute("ALTER TABLE car ADD COLUMN vin TEXT")
         except: pass
-        # -------------------------
+
+        # --- WKLEJ TUTAJ ---
+        try: c.execute("ALTER TABLE car ADD COLUMN wyposazenie TEXT")
+        except: pass
+        # -------------------
 
         conn.commit()
         conn.close()
+
 
 @app.route('/usun_konto', methods=['POST'])
 @login_required
