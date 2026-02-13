@@ -457,7 +457,7 @@ def analyze_car():
 
         TRYB 1: JEŚLI TO POJAZD (Samochód, Motocykl, Ciężarówka, Rower):
         - Zachowuj się jak EKSPERT MOTORYZACYJNY.
-        - Kategoria: wybierz jedną z (Osobowe, SUV, Ciezarowe, Skuter, Rower).
+        - Kategoria: wybierz jedną z (Osobowe, SUV, Minivan, Ciezarowe, Moto/Rower).
         - Opis: Profesjonalny, marketingowy opis dla kupującego auto (podkreśl alufelgi, stan, LEDy itp.).
         - Wypełnij: rok, paliwo, nadwozie.
 
