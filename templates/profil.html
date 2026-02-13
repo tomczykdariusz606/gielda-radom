@@ -223,38 +223,34 @@
 
                 <div class="modal-body p-4 pt-2">
 
-                   <div class="cat-grid">
-    <div class="cat-item">
-        <input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()">
-        <label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label>
-    </div>
-    
-    <div class="cat-item">
-        <input type="radio" name="typ" id="c2" value="SUV" onchange="adj()">
-        <label for="c2" class="cat-label"><i class="bi bi-jeep"></i>SUV</label>
-    </div>
-    
-    <div class="cat-item">
-        <input type="radio" name="typ" id="c3" value="Minivan" onchange="adj()">
-        <label for="c3" class="cat-label"><i class="bi bi-people-fill"></i>Minivan</label>
-    </div>
+                    <div class="cat-grid">
+                        <div class="cat-item">
+                            <input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()">
+                            <label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label>
+                        </div>
+                        <div class="cat-item">
+                            <input type="radio" name="typ" id="c2" value="SUV" onchange="adj()">
+                            <label for="c2" class="cat-label"><i class="bi bi-jeep"></i>SUV</label>
+                        </div>
+                        <div class="cat-item">
+                            <input type="radio" name="typ" id="c3" value="Minivan" onchange="adj()">
+                            <label for="c3" class="cat-label"><i class="bi bi-people-fill"></i>Minivan</label>
+                        </div>
+                        <div class="cat-item">
+                            <input type="radio" name="typ" id="c4" value="Ciezarowe" onchange="adj()">
+                            <label for="c4" class="cat-label"><i class="bi bi-truck"></i>Bus</label>
+                        </div>
+                        <div class="cat-item">
+                            <input type="radio" name="typ" id="c5" value="Moto/Rower" onchange="adj()">
+                            <label for="c5" class="cat-label"><i class="bi bi-bicycle"></i>Moto/Rower</label>
+                        </div>
+                        <div class="cat-item">
+                            <input type="radio" name="typ" id="c6" value="Inne" onchange="adj()">
+                            <label for="c6" class="cat-label"><i class="bi bi-grid"></i>Inne</label>
+                        </div>
+                    </div>
 
-    <div class="cat-item">
-        <input type="radio" name="typ" id="c4" value="Ciezarowe" onchange="adj()">
-        <label for="c4" class="cat-label"><i class="bi bi-truck"></i>Bus</label>
-    </div>
-
-    <div class="cat-item">
-        <input type="radio" name="typ" id="c5" value="Moto/Rower" onchange="adj()">
-        <label for="c5" class="cat-label"><i class="bi bi-bicycle"></i>Moto/Rower</label>
-    </div>
-
-    <div class="cat-item">
-        <input type="radio" name="typ" id="c6" value="Inne" onchange="adj()">
-        <label for="c6" class="cat-label"><i class="bi bi-grid"></i>Inne</label>
-    </div>
-</div>
- class="scanner-box">
+                    <div class="scanner-box">
                         <div class="mb-3 text-gold-glow fw-bold fs-5">
                             <i class="bi bi-stars"></i> GEMINI 3.0 EXPERT <i class="bi bi-stars"></i>
                         </div>
@@ -343,7 +339,8 @@
 
                             </div>
                         </div>
-                        </div>
+
+                    </div>
 
                     <div class="mt-3">
                         <button type="button" class="btn btn-outline-success w-100 btn-sm rounded-pill py-2" onclick="getGPS(this)">
@@ -426,7 +423,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function adj(){ const v=document.querySelector('input[name="typ"]:checked').value; const h=(v==='Rower'||v==='Inne'); document.querySelectorAll('.tech').forEach(e=>e.style.display=h?'none':'block'); }
+    // POPRAWIONA FUNKCJA UKRYWANIA DANYCH
+    function adj(){ 
+        const v = document.querySelector('input[name="typ"]:checked').value; 
+        // Ukrywamy dane techniczne (paliwo, skrzynia itp.) TYLKO dla kategorii "Inne".
+        // Motocykle i Rowery (Moto/Rower) oraz Minivany MAJĄ pola techniczne.
+        const ukryj = (v === 'Inne'); 
+        
+        document.querySelectorAll('.tech').forEach(e => {
+            e.style.display = ukryj ? 'none' : 'block';
+        });
+    }
+
     function getGPS(btn){ if(!navigator.geolocation) { alert('Brak GPS'); return; } btn.innerHTML='...'; navigator.geolocation.getCurrentPosition(pos => { document.getElementById('gps_lat').value=pos.coords.latitude; document.getElementById('gps_lon').value=pos.coords.longitude; btn.className="btn btn-success w-100 btn-sm rounded-pill py-2"; btn.innerHTML="<i class='bi bi-check-lg'></i> OK"; }, err => { alert('Błąd GPS'); }); }
     
     // EFEKT ŁADOWANIA
