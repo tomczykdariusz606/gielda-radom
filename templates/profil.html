@@ -294,7 +294,34 @@
                         <div class="col-6 tech"><label class="small fw-bold text-muted">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select></div>
                         <div class="col-12"><label class="small fw-bold text-muted">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
                         <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3" placeholder="{{ t['desc_ai'] }}"></textarea></div>
-                    </div>
+
+                        <div class="col-12 mt-3">
+                            <label class="small fw-bold text-muted mb-2">WYPOSAŻENIE (Zaznacz, co posiada auto)</label>
+                            <div class="row g-2 p-3 rounded border border-secondary bg-black bg-opacity-25" style="max-height: 200px; overflow-y: auto;">
+                                
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ABS" id="w1"><label class="form-check-label small text-white" for="w1">ABS</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ESP" id="w2"><label class="form-check-label small text-white" for="w2">ESP / Kontrola trakcji</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Poduszki powietrzne" id="w3"><label class="form-check-label small text-white" for="w3">Poduszki powietrzne</label></div></div>
+
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja" id="w4"><label class="form-check-label small text-white" for="w4">Klimatyzacja</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja automatyczna" id="w5"><label class="form-check-label small text-white" for="w5">Klimatronik</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Skórzana tapicerka" id="w6"><label class="form-check-label small text-white" for="w6">Skórzana tapicerka</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewane fotele" id="w7"><label class="form-check-label small text-white" for="w7">Grzane fotele</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Tempomat" id="w8"><label class="form-check-label small text-white" for="w8">Tempomat</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="El. szyby" id="w9"><label class="form-check-label small text-white" for="w9">Elektryczne szyby</label></div></div>
+
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nawigacja" id="w10"><label class="form-check-label small text-white" for="w10">Nawigacja GPS</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Bluetooth" id="w11"><label class="form-check-label small text-white" for="w11">Bluetooth</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera cofania" id="w12"><label class="form-check-label small text-white" for="w12">Kamera cofania</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujniki parkowania" id="w13"><label class="form-check-label small text-white" for="w13">Czujniki parkowania</label></div></div>
+                                
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w14"><label class="form-check-label small text-white" for="w14">Alufelgi</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Światła LED" id="w15"><label class="form-check-label small text-white" for="w15">Światła LED / Xenon</label></div></div>
+                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Hak" id="w16"><label class="form-check-label small text-white" for="w16">Hak</label></div></div>
+
+                            </div>
+                        </div>
+                        </div>
 
                     <div class="mt-3">
                         <button type="button" class="btn btn-outline-success w-100 btn-sm rounded-pill py-2" onclick="getGPS(this)">
