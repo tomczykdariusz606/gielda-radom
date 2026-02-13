@@ -99,7 +99,19 @@
                 <form action="/edytuj/{{ car.id }}" method="POST" enctype="multipart/form-data">
 
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Dane Podstawowe</label>
-                                        <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="small text-muted mb-1">Kategoria</label>
+                            <select name="typ" class="form-select bg-dark border-secondary text-white">
+                                <option value="Osobowe" {% if car.typ=='Osobowe' %}selected{% endif %}>Osobowe</option>
+                                <option value="SUV" {% if car.typ=='SUV' %}selected{% endif %}>SUV</option>
+                                <option value="Minivan" {% if car.typ=='Minivan' %}selected{% endif %}>Minivan</option>
+                                <option value="Ciezarowe" {% if car.typ=='Ciezarowe' %}selected{% endif %}>Dostawcze</option>
+                                <option value="Moto/Rower" {% if car.typ=='Moto/Rower' %}selected{% endif %}>Moto/Rower</option>
+                                <option value="Inne" {% if car.typ=='Inne' %}selected{% endif %}>Inne</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-6">
                             <label class="small text-muted mb-1">Marka</label>
                             <input type="text" name="marka" id="i_marka" class="form-control" value="{{ car.marka }}" required>
@@ -137,6 +149,7 @@
                             <input type="number" name="cena" id="i_cena" class="form-control border-danger text-danger fw-bold" value="{{ car.cena|int }}" required>
                         </div>
                     </div>
+
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Szczegóły Techniczne</label>
                     <div class="row g-3 mb-4 p-4 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25">
                         <div class="col-6 col-md-4">
@@ -167,7 +180,12 @@
                                 <option {% if car.nadwozie=='Kombi' %}selected{% endif %}>Kombi</option>
                                 <option {% if car.nadwozie=='Hatchback' %}selected{% endif %}>Hatchback</option>
                                 <option {% if car.nadwozie=='SUV' %}selected{% endif %}>SUV</option>
+                                <option {% if car.nadwozie=='Minivan' %}selected{% endif %}>Minivan</option>
                                 <option {% if car.nadwozie=='Coupe' %}selected{% endif %}>Coupe</option>
+                                <option {% if car.nadwozie=='Kabriolet' %}selected{% endif %}>Kabriolet</option>
+                                <option {% if car.nadwozie=='Pick-up' %}selected{% endif %}>Pick-up</option>
+                                <option {% if car.nadwozie=='Motocykl' %}selected{% endif %}>Motocykl</option>
+                                <option {% if car.nadwozie=='Inne' %}selected{% endif %}>Inne</option>
                             </select>
                         </div>
                         <div class="col-md-8">
@@ -175,6 +193,7 @@
                              <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
                         </div>
                     </div>
+
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Wyposażenie Pojazdu</label>
                     <div class="p-4 mb-4 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25" style="max-height: 250px; overflow-y: auto;">
                         <div class="row g-2">
