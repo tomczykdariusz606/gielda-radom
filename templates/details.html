@@ -140,7 +140,8 @@
                 </div>
             </div>
             {% endif %}
-            </div>
+
+        </div>
 
         <div class="col-lg-4">
             <div class="sticky-top" style="top: 20px; z-index: 10;">
@@ -153,10 +154,15 @@
                     <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3 pulse-btn">
                         <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
                     </a>
+                    
                     <a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl. Czy oferta jest aktualna?" 
                        class="btn btn-outline-light btn-lg fw-bold rounded-pill shadow py-2">
                         <i class="bi bi-chat-text-fill me-2"></i> NAPISZ SMS
                     </a>
+
+                    <button onclick="shareOffer()" class="btn btn-dark border-secondary btn-lg fw-bold rounded-pill shadow py-2 text-info">
+                        <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
+                    </button>
                 </div>
 
                 <div class="mb-4">
@@ -244,6 +250,21 @@
 </script>
 
 <script>
+    // FUNKCJA UDOSTĘPNIANIA (NATIVE SHARE)
+    function shareOffer() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ car.marka }} {{ car.model }} - Okazja na GiełdaRadom.pl',
+                text: 'Zobacz to auto! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN. Zweryfikowane przez AI.',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            // Fallback dla komputerów (kopiowanie linku)
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link do ogłoszenia został skopiowany do schowka! 📋 Możesz go teraz wysłać znajomemu.');
+        }
+    }
+
     // Obsługa Banera Cookies
     if (!localStorage.getItem('cookiesAccepted')) {
         document.getElementById('cookie-banner').style.display = 'block';
