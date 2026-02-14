@@ -4,9 +4,11 @@ import zipfile
 import io
 import json
 import sqlite3
+import random
+import string
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageOps
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, make_response, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, and_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -14,6 +16,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer as Serializer
 import google.generativeai as genai
 from flask_mail import Mail, Message
+# --- NOWE IMPORTY DLA GOOGLE LOGIN ---
+from authlib.integrations.flask_client import OAuth
 
 # --- IMPORT KLUCZY ---
 try:
@@ -21,15 +25,39 @@ try:
     GEMINI_KEY = sekrety.GEMINI_KEY
     MAIL_PWD = sekrety.MAIL_PWD
     SECRET_KEY_APP = getattr(sekrety, 'SECRET_KEY', 'super_tajny_klucz_gieldy')
+    # Google Keys
+    GOOGLE_ID = getattr(sekrety, 'GOOGLE_CLIENT_ID', None)
+    GOOGLE_SECRET = getattr(sekrety, 'GOOGLE_CLIENT_SECRET', None)
 except ImportError:
     GEMINI_KEY = None
     MAIL_PWD = None
     SECRET_KEY_APP = 'dev_key_2024'
+    GOOGLE_ID = None
+    GOOGLE_SECRET = None
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY_APP
 
-# --- KONFIGURACJA ---
+# --- KONFIGURACJA OAUTH (GOOGLE) ---
+oauth = OAuth(app)
+if GOOGLE_ID and GOOGLE_SECRET:
+    google = oauth.register(
+        name='google',
+        client_id=GOOGLE_ID,
+        client_secret=GOOGLE_SECRET,
+        access_token_url='https://oauth2.googleapis.com/token',
+        access_token_params=None,
+        authorize_url='https://accounts.google.com/o/oauth2/auth',
+        authorize_params=None,
+        api_base_url='https://www.googleapis.com/oauth2/v1/',
+        userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
+        client_kwargs={'scope': 'openid email profile'},
+        jwks_uri='https://www.googleapis.com/oauth2/v3/certs'
+    )
+else:
+    google = None
+
+# --- KONFIGURACJA BAZY ---
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gielda.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 UPLOAD_FOLDER = 'static/uploads'
@@ -44,117 +72,40 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- ŚLEDZENIE AKTYWNOŚCI (ONLINE) ---
+# --- ŚLEDZENIE AKTYWNOŚCI ---
 @app.before_request
 def update_last_seen():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
 
-
-# --- TŁUMACZENIA (SŁOWNIK PEŁNY) ---
+# --- TŁUMACZENIA ---
 TRANSLATIONS = {
     'pl': {
-        # --- OGÓLNE I WYSZUKIWARKA ---
         'search_ph': 'Wpisz np. Audi A4, Automat...', 'btn_search': 'SZUKAJ', 'filters': 'Filtry', 
         'cat': 'Kategoria', 'fuel': 'Paliwo', 'gear': 'Skrzynia', 'year': 'Rok od', 'price': 'Cena do', 'mileage': 'Przebieg do', 
         'all': 'Wszystkie', 'man': 'Manualna', 'auto': 'Automatyczna', 'available': 'Dostępne Oferty', 'found': 'Znaleziono',
-        
-        # --- MENU I HERO ---
         'add': 'DODAJ OGŁOSZENIE', 'login': 'Logowanie', 'logout': 'Wyloguj', 'account': 'Konto',
-        'hero_h1': 'REWOLUCJA AI NA POLSKIM RYNKU', 'hero_p': 'Platforma stworzona we współpracy z Google. Profesjonalne wyceny i recenzje.', 
-        
-        # --- GARAŻ I DODAWANIE ---
         'garage': 'Twój Garaż', 'limit': 'Limit AI', 'days_left': 'dni', 'expired': 'WYGASŁO',
-        'scan_cam': 'SKANUJ (APARAT)', 'scan_file': 'WGRAJ (PLIK)', 'desc_ai': 'Opis Generowany przez Eksperta AI',
-        'safety': 'Bezpieczny Zakup', 'add_car': 'DODAJ AUTO',
-
-        # --- LOGOWANIE I REJESTRACJA (FULL) ---
-        'join_us': 'Dołącz do nas', 'community': 'Lokalna i międzynarodowa społeczność',
-        'username': 'Nazwa Użytkownika', 'email': 'Adres Email', 'location': 'Lokalizacja',
-        'city_ph': 'Wpisz miasto (np. Radom, Berlin)', 'password': 'Hasło', 'pass_ph': 'Minimum 6 znaków',
-        'email_hint': 'Służy wyłącznie do odzyskiwania hasła. Nie wysyłamy spamu.',
-        'register_btn': 'ZAŁÓŻ KONTO', 'have_acc': 'Masz już konto?', 'back_login': 'Wróć do logowania',
-        'welcome_back': 'Witaj ponownie', 'login_desc': 'Zaloguj się do Giełdy Radom',
-        'login_btn': 'ZALOGUJ SIĘ', 'forgot_pass': 'Zapomniałeś?', 'no_acc': 'Nie masz konta?',
-        'create_acc': 'Załóż darmowe konto', 'back_home': 'Wróć na stronę główną',
-
-        # --- ODZYSKIWANIE HASŁA (NOWE) ---
-        'recover_title': 'Odzyskiwanie Hasła',
-        'recover_desc': 'Podaj swój email, a wyślemy Ci link do zmiany hasła.',
-        'send_link': 'WYŚLIJ LINK RESETUJĄCY',
-        'new_pass_title': 'Ustaw Nowe Hasło',
-        'new_pass_btn': 'ZAPISZ NOWE HASŁO',
-        'pass_confirm': 'Potwierdź hasło'
+        'scan_cam': 'SKANUJ (APARAT)', 'scan_file': 'WGRAJ (PLIK)', 'desc_ai': 'Opis Generowany przez Eksperta AI'
     },
     'en': {
-        # --- GENERAL & SEARCH ---
         'search_ph': 'E.g. Audi A4, Automatic...', 'btn_search': 'SEARCH', 'filters': 'Filters', 
         'cat': 'Category', 'fuel': 'Fuel', 'gear': 'Transmission', 'year': 'Year from', 'price': 'Price to', 'mileage': 'Mileage to', 
         'all': 'All', 'man': 'Manual', 'auto': 'Automatic', 'available': 'Available Offers', 'found': 'Found',
-        
-        # --- MENU & HERO ---
         'add': 'ADD LISTING', 'login': 'Login', 'logout': 'Logout', 'account': 'Account',
-        'hero_h1': 'AI REVOLUTION IN POLAND', 'hero_p': 'Platform created with Google. Professional valuations and reviews.', 
-        
-        # --- GARAGE & ADDING ---
         'garage': 'Your Garage', 'limit': 'AI Limit', 'days_left': 'days left', 'expired': 'EXPIRED',
-        'scan_cam': 'SCAN (CAMERA)', 'scan_file': 'UPLOAD (FILE)', 'desc_ai': 'Description Generated by AI Expert',
-        'safety': 'Safe Purchase', 'add_car': 'ADD CAR',
-
-        # --- AUTH (LOGIN/REGISTER) ---
-        'join_us': 'Join Us', 'community': 'Local and international community',
-        'username': 'Username', 'email': 'Email Address', 'location': 'Location',
-        'city_ph': 'Enter city (e.g. Radom, Berlin)', 'password': 'Password', 'pass_ph': 'Minimum 6 characters',
-        'email_hint': 'Used only for password recovery. No spam.',
-        'register_btn': 'CREATE ACCOUNT', 'have_acc': 'Already have an account?', 'back_login': 'Back to login',
-        'welcome_back': 'Welcome Back', 'login_desc': 'Log in to Giełda Radom',
-        'login_btn': 'LOG IN', 'forgot_pass': 'Forgot?', 'no_acc': 'No account?',
-        'create_acc': 'Create free account', 'back_home': 'Back to home',
-
-        # --- PASSWORD RECOVERY ---
-        'recover_title': 'Password Recovery',
-        'recover_desc': 'Enter your email and we will send you a reset link.',
-        'send_link': 'SEND RESET LINK',
-        'new_pass_title': 'Set New Password',
-        'new_pass_btn': 'SAVE NEW PASSWORD',
-        'pass_confirm': 'Confirm Password'
+        'scan_cam': 'SCAN (CAMERA)', 'scan_file': 'UPLOAD (FILE)', 'desc_ai': 'Description Generated by AI Expert'
     },
     'de': {
-        # --- ALLGEMEIN & SUCHE ---
         'search_ph': 'Z.B. Audi A4, Automatik...', 'btn_search': 'SUCHEN', 'filters': 'Filter', 
         'cat': 'Kategorie', 'fuel': 'Kraftstoff', 'gear': 'Getriebe', 'year': 'Baujahr ab', 'price': 'Preis bis', 'mileage': 'KM bis', 
         'all': 'Alle', 'man': 'Schaltgetriebe', 'auto': 'Automatik', 'available': 'Verfügbare Angebote', 'found': 'Gefunden',
-        
-        # --- MENÜ & HERO ---
         'add': 'ANZEIGE AUFGEBEN', 'login': 'Anmelden', 'logout': 'Abmelden', 'account': 'Konto',
-        'hero_h1': 'AI REVOLUTION IN POLEN', 'hero_p': 'Plattform erstellt mit Google. Professionelle Bewertungen.', 
-        
-        # --- GARAGE & HINZUFÜGEN ---
         'garage': 'Deine Garage', 'limit': 'AI Limit', 'days_left': 'Tage übrig', 'expired': 'ABGELAUFEN',
-        'scan_cam': 'SCAN (KAMERA)', 'scan_file': 'HOCHLADEN (DATEI)', 'desc_ai': 'Beschreibung vom AI-Experten',
-        'safety': 'Sicherer Kauf', 'add_car': 'AUTO HINZUFÜGEN',
-
-        # --- AUTH (LOGIN/REGISTER) ---
-        'join_us': 'Mach mit', 'community': 'Lokale und internationale Gemeinschaft',
-        'username': 'Benutzername', 'email': 'E-Mail-Adresse', 'location': 'Standort',
-        'city_ph': 'Stadt eingeben (z.B. Radom, Berlin)', 'password': 'Passwort', 'pass_ph': 'Mindestens 6 Zeichen',
-        'email_hint': 'Nur zur Passwortwiederherstellung. Kein Spam.',
-        'register_btn': 'KONTO ERSTELLEN', 'have_acc': 'Hast du schon ein Konto?', 'back_login': 'Zurück zur Anmeldung',
-        'welcome_back': 'Willkommen zurück', 'login_desc': 'Bei Giełda Radom anmelden',
-        'login_btn': 'ANMELDEN', 'forgot_pass': 'Vergessen?', 'no_acc': 'Kein Konto?',
-        'create_acc': 'Kostenloses Konto erstellen', 'back_home': 'Zurück zur Startseite',
-
-        # --- PASSWORT WIEDERHERSTELLEN ---
-        'recover_title': 'Passwort wiederherstellen',
-        'recover_desc': 'Gib deine E-Mail ein, wir senden dir einen Link.',
-        'send_link': 'LINK SENDEN',
-        'new_pass_title': 'Neues Passwort setzen',
-        'new_pass_btn': 'NEUES PASSWORT SPEICHERN',
-        'pass_confirm': 'Passwort bestätigen'
+        'scan_cam': 'SCAN (KAMERA)', 'scan_file': 'HOCHLADEN (DATEI)', 'desc_ai': 'Beschreibung vom AI-Experten'
     }
 }
-
 
 @app.context_processor
 def inject_conf_var():
@@ -168,7 +119,6 @@ def set_language(lang_code):
     resp.set_cookie('lang', lang_code, max_age=60*60*24*30)
     return resp
 
-# --- AI CONFIG ---
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
     try: model_ai = genai.GenerativeModel('gemini-3-flash-preview')
@@ -177,7 +127,7 @@ else: model_ai = None
 
 mail = Mail(app)
 
-# --- BAZA DANYCH ---
+# --- MODELE ---
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -190,6 +140,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), default='Radom')
+    google_id = db.Column(db.String(100), unique=True, nullable=True) # Nowe pole dla Google
     ai_requests_today = db.Column(db.Integer, default=0)
     last_ai_request_date = db.Column(db.Date, default=datetime.utcnow().date())
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -252,13 +203,13 @@ def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     img = Image.open(file)
-    try: img = ImageOps.exif_transpose(img) # NAPRAWA ROTACJI
+    try: img = ImageOps.exif_transpose(img)
     except: pass 
     if img.mode in ("RGBA", "P"): img = img.convert("RGB")
     if img.width > 1200:
         w_percent = (1200 / float(img.width))
         h_size = int((float(img.height) * float(w_percent)))
-        img = img.resize((1200, h_size), Image.Resampling.LANCZOS) # KOMPRESJA
+        img = img.resize((1200, h_size), Image.Resampling.LANCZOS)
     img.save(filepath, "WEBP", quality=80)
     return filename
 
@@ -268,17 +219,10 @@ def allowed_file(filename):
 def update_market_valuation(car):
     if not model_ai: return
     try:
-        # EKSPERCKA ANALIZA
         prompt = f"""
         Jesteś ekspertem rynku motoryzacyjnego. Analiza pojazdu: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
         Zwróć TYLKO JSON: 
-        {{
-            "score": 85, 
-            "label": "SUPER CENA", 
-            "color": "success", 
-            "sample_size": "28 ofert w regionie", 
-            "market_info": "Cena o 10% niższa niż średnia rynkowa dla tego rocznika."
-        }}
+        {{ "score": 85, "label": "SUPER CENA", "color": "success", "sample_size": "28 ofert w regionie", "market_info": "Cena o 10% niższa niż średnia rynkowa dla tego rocznika." }}
         """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
@@ -293,7 +237,64 @@ def from_json_filter(value):
     try: return json.loads(value)
     except: return None
 
-# --- TRASY ---
+# --- TRASY GOOGLE LOGIN ---
+@app.route('/login/google')
+def google_login():
+    if not google: return "Google Login not configured", 500
+    return google.authorize_redirect(url_for('google_callback', _external=True))
+
+@app.route('/login/google/callback')
+def google_callback():
+    if not google: return "Google Login not configured", 500
+    try:
+        token = google.authorize_access_token()
+        user_info = google.get('userinfo').json()
+        
+        email = user_info.get('email')
+        google_id = user_info.get('id')
+        name = user_info.get('name') or email.split('@')[0]
+
+        # Sprawdź czy użytkownik istnieje
+        user = User.query.filter((User.email == email) | (User.google_id == google_id)).first()
+
+        if not user:
+            # Rejestracja nowego użytkownika
+            # Generujemy losowe hasło (użytkownik loguje się przez Google, ale pole password_hash musi być)
+            random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+            
+            # Unikalność nazwy użytkownika
+            base_username = name.replace(' ', '')
+            username = base_username
+            counter = 1
+            while User.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = User(
+                username=username,
+                email=email,
+                google_id=google_id,
+                password_hash=generate_password_hash(random_pass),
+                lokalizacja='Radom'
+            )
+            db.session.add(user)
+            db.session.commit()
+            flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
+        else:
+            # Aktualizacja google_id jeśli brak
+            if not user.google_id:
+                user.google_id = google_id
+                db.session.commit()
+
+        login_user(user)
+        return redirect(url_for('profil'))
+
+    except Exception as e:
+        print(f"Google Login Error: {e}")
+        flash('Błąd logowania przez Google.', 'danger')
+        return redirect(url_for('login'))
+
+# --- TRASY APLIKACJI ---
 @app.route('/')
 def index():
     q = request.args.get('q', '').strip()
@@ -305,7 +306,6 @@ def index():
             conditions.append(or_(Car.marka.icontains(term), Car.model.icontains(term), Car.paliwo.icontains(term), Car.typ.icontains(term), Car.rok.cast(db.String).icontains(term)))
         query = query.filter(and_(*conditions))
     
-    # PEŁNE FILTRY
     cat = request.args.get('typ', '')
     if cat: query = query.filter(Car.typ == cat)
     paliwo = request.args.get('paliwo', '')
@@ -328,7 +328,6 @@ def car_details(car_id):
     if car.views is None: car.views = 0
     car.views += 1
     
-    # 7 DNI UPDATE
     should_update = False
     if not car.ai_valuation_data or not car.ai_label: should_update = True
     else:
@@ -348,49 +347,32 @@ def profil():
     user_count = 0
     online_count = 0
     total_views = 0
-    all_users = [] # Nowa zmienna dla listy
+    all_users = []
     
-    # --- LOGIKA ADMINA ---
     if current_user.username == 'admin' or current_user.id == 1:
         cars = Car.query.order_by(Car.data_dodania.desc()).all()
-        
-        # Pobieramy WSZYSTKICH użytkowników do listy
         all_users = User.query.all() 
         user_count = len(all_users)
-        
         try:
             active_since = datetime.utcnow() - timedelta(minutes=5)
             online_count = User.query.filter(User.last_seen >= active_since).count()
         except: online_count = 1
         total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
-
-    # --- LOGIKA ZWYKŁEGO UŻYTKOWNIKA ---
     else:
         cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
         
     favorites = Favorite.query.filter_by(user_id=current_user.id).all()
     
-    return render_template('profil.html', 
-                           cars=cars, 
-                           favorites=favorites, 
-                           now=datetime.utcnow(), 
-                           user_count=user_count, 
-                           online_count=online_count, 
-                           total_views=total_views,
-                           all_users=all_users) # Przekazujemy listę do HTML
-
-
+    return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.utcnow(), user_count=user_count, online_count=online_count, total_views=total_views, all_users=all_users)
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
-    # SKANER
     if 'scan_image' in request.files and request.files['scan_image'].filename != '':
         f = request.files['scan_image']
         if allowed_file(f.filename): saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(f)))
-    # GALERIA
     for file in files[:15]:
         if file and allowed_file(file.filename): saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
@@ -408,7 +390,7 @@ def dodaj_ogloszenie():
         typ=request.form.get('typ', 'Osobowe'), opis=request.form.get('opis', ''),
         vin=request.form.get('vin'), telefon=request.form.get('telefon'), skrzynia=request.form.get('skrzynia'),
         paliwo=request.form.get('paliwo'), nadwozie=request.form.get('nadwozie'),
-wyposazenie=wyposazenie_str,
+        wyposazenie=wyposazenie_str,
         pojemnosc=request.form.get('pojemnosc'), przebieg=int(request.form.get('przebieg') or 0),
         img=main_img, zrodlo=current_user.lokalizacja, user_id=current_user.id,
         latitude=lat, longitude=lon, data_dodania=datetime.utcnow()
@@ -423,84 +405,44 @@ wyposazenie=wyposazenie_str,
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
-    # --- 1. SPRAWDZANIE DATY I RESET LICZNIKA ---
     dzisiaj = datetime.utcnow().date()
-
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
 
-    # --- 2. SPRAWDZENIE LIMITU ---
-    # Dla Admina (ID 1 lub login 'admin') limit to 500, dla reszty 6
-    if current_user.username == 'admin' or current_user.id == 1:
-        LIMIT = 500
-    else:
-        LIMIT = 6
+    if current_user.username == 'admin' or current_user.id == 1: LIMIT = 500
+    else: LIMIT = 6
 
     if current_user.ai_requests_today >= LIMIT:
-        return jsonify({
-            "error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"
-        }), 429
+        return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
 
-    # --- 3. POBRANIE PLIKU ---
     file = request.files.get('scan_image')
-    if not file:
-        return jsonify({"error": "Brak pliku"}), 400
+    if not file: return jsonify({"error": "Brak pliku"}), 400
 
     try:
         image_data = file.read()
-
-        # --- 4. INTELIGENTNY PROMPT (SAMOCHÓD vs PRZEDMIOT) ---
         prompt = """
         Przeanalizuj to zdjęcie. Masz dwa tryby działania:
-
-        TRYB 1: JEŚLI TO POJAZD (Samochód, Motocykl, Ciężarówka, Rower):
+        TRYB 1: JEŚLI TO POJAZD (Samochód, Motocykl, Ciężarówka, Rower, Minivan):
         - Zachowuj się jak EKSPERT MOTORYZACYJNY.
         - Kategoria: wybierz jedną z (Osobowe, SUV, Minivan, Ciezarowe, Moto/Rower).
         - Opis: Profesjonalny, marketingowy opis dla kupującego auto (podkreśl alufelgi, stan, LEDy itp.).
         - Wypełnij: rok, paliwo, nadwozie.
-
-        TRYB 2: JEŚLI TO INNY PRZEDMIOT (np. Część, Elektronika, Mebel, Narzędzie):
-        - Kategoria: ustaw sztywno "Inne".
-        - Marka: Podaj producenta (np. "Samsung", "Bosch", "IKEA").
-        - Model: Podaj nazwę modelu lub typ przedmiotu (np. "Wiertarka udarowa", "Galaxy S24").
-        - Pola motoryzacyjne (paliwo, nadwozie) zostaw puste.
-        - Opis: Krótki opis sprzedażowy tego przedmiotu.
-
-        Zwróć TYLKO czysty JSON (bez markdown):
-        {
-            "kategoria": "String",
-            "marka": "String",
-            "model": "String",
-            "rok_sugestia": Integer lub null,
-            "paliwo_sugestia": "String" lub null,
-            "typ_nadwozia": "String" lub null,
-            "kolor": "String",
-            "opis_wizualny": "String"
-        }
+        TRYB 2: JEŚLI TO INNY PRZEDMIOT:
+        - Kategoria: "Inne". Marka: Producent. Model: Typ.
+        Zwróć TYLKO czysty JSON:
+        { "kategoria": "String", "marka": "String", "model": "String", "rok_sugestia": Integer, "paliwo_sugestia": "String", "typ_nadwozia": "String", "kolor": "String", "opis_wizualny": "String" }
         """
-        
-        # Wywołanie Gemini
-        resp = model_ai.generate_content([
-            prompt, 
-            {"mime_type": file.mimetype, "data": image_data}
-        ])
-        
-        # --- 5. PARSOWANIE (NAPRAWIONE) ---
+        resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
         data = json.loads(text_response)
-
-        # Zliczamy zużycie dopiero po sukcesie
         current_user.ai_requests_today += 1
         db.session.commit()
-
         return jsonify(data)
-
     except Exception as e:
         print(f"Błąd AI: {e}")
-        return jsonify({"error": "Nie udało się przeanalizować zdjęcia. Spróbuj wyraźniejsze ujęcie."}), 500
-
+        return jsonify({"error": "Nie udało się przeanalizować zdjęcia."}), 500
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
@@ -542,7 +484,6 @@ def toggle_favorite(car_id):
     db.session.commit()
     return redirect(request.referrer)
 
-# --- SEO ROUTES ---
 @app.route('/sitemap.xml')
 def sitemap():
     base = request.url_root.rstrip('/')
@@ -559,7 +500,6 @@ def robots():
     txt = f"User-agent: *\nAllow: /\nSitemap: {request.url_root.rstrip('/')}/sitemap.xml"
     return make_response(txt, 200, {'Content-Type': 'text/plain'})
 
-# --- AUTH & OTHER ROUTES ---
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method=='POST':
@@ -593,15 +533,10 @@ def reset_token(token): return render_template('reset_token.html')
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
-    
-    # Zabezpieczenie: tylko właściciel lub admin
     if car.user_id != current_user.id and current_user.username != 'admin':
-        flash('Brak uprawnień.', 'danger') 
-        return redirect('/')
-        
+        flash('Brak uprawnień.', 'danger'); return redirect('/')
     if request.method == 'POST':
         try:
-            # 1. Zapis danych tekstowych
             car.marka = request.form.get('marka')
             car.model = request.form.get('model')
             car.vin = request.form.get('vin')
@@ -610,6 +545,7 @@ def edytuj(id):
             car.przebieg = int(request.form.get('przebieg') or 0)
             car.paliwo = request.form.get('paliwo')
             car.skrzynia = request.form.get('skrzynia')
+            car.typ = request.form.get('typ')
             car.pojemnosc = request.form.get('pojemnosc')
             car.nadwozie = request.form.get('nadwozie')
             car.telefon = request.form.get('telefon')
@@ -617,29 +553,15 @@ def edytuj(id):
             wyposazenie_list = request.form.getlist('wyposazenie')
             car.wyposazenie = ",".join(wyposazenie_list)
             
-            # 2. OBSŁUGA NOWYCH ZDJĘĆ (TEGO BRAKOWAŁO)
             files = request.files.getlist('zdjecia')
             for file in files:
                 if file and allowed_file(file.filename):
-                    # Używamy tej samej funkcji optymalizacji co przy dodawaniu
                     filename = save_optimized_image(file)
-                    # Tworzymy ścieżkę URL
-                    path = url_for('static', filename='uploads/' + filename)
-                    # Dodajemy wpis do bazy
-                    new_img = CarImage(image_path=path, car_id=car.id)
-                    db.session.add(new_img)
-            
+                    db.session.add(CarImage(image_path=url_for('static', filename='uploads/'+filename), car_id=car.id))
             db.session.commit()
-            flash('Zapisano zmiany i dodano zdjęcia!', 'success')
-            return redirect('/profil')
-            
-        except Exception as e:
-            print(f"Błąd edycji: {e}")
-            flash('Wystąpił błąd podczas zapisu.', 'danger')
-            
+            flash('Zapisano zmiany!', 'success'); return redirect('/profil')
+        except Exception as e: print(f"Błąd edycji: {e}"); flash('Wystąpił błąd.', 'danger')
     return render_template('edytuj.html', car=car)
-
-
 
 @app.route('/admin/backup-db')
 @login_required
@@ -669,70 +591,46 @@ def usun_zdjecie(image_id):
 
 def update_db():
     with app.app_context():
-        conn = sqlite3.connect('instance/gielda.db')
+        db_path = 'instance/gielda.db' 
+        if not os.path.exists(db_path): db_path = 'gielda.db'
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
-
-        # Stare migracje
         try: c.execute("ALTER TABLE car ADD COLUMN latitude FLOAT")
         except: pass
-        # ... inne try ...
-
-        # --- NOWA MIGRACJA VIN ---
+        try: c.execute("ALTER TABLE car ADD COLUMN longitude FLOAT")
+        except: pass
+        try: c.execute("ALTER TABLE user ADD COLUMN last_seen TIMESTAMP")
+        except: pass
         try: c.execute("ALTER TABLE car ADD COLUMN vin TEXT")
         except: pass
-
-        # --- WKLEJ TUTAJ ---
         try: c.execute("ALTER TABLE car ADD COLUMN wyposazenie TEXT")
         except: pass
-        # -------------------
-
+        # --- NOWA KOLUMNA DLA GOOGLE LOGIN ---
+        try: c.execute("ALTER TABLE user ADD COLUMN google_id TEXT")
+        except: pass
         conn.commit()
         conn.close()
-
 
 @app.route('/usun_konto', methods=['POST'])
 @login_required
 def usun_konto():
     try:
-        # Usuwamy użytkownika (dzięki cascade="all, delete-orphan" w modelu,
-        # SQL sam usunie też wszystkie auta tego użytkownika i zdjęcia z bazy)
         db.session.delete(current_user)
         db.session.commit()
         logout_user()
-        flash('Twoje konto oraz wszystkie ogłoszenia zostały trwale usunięte.', 'info')
-        return redirect('/')
-    except Exception as e:
-        flash(f'Błąd podczas usuwania konta: {e}', 'danger')
-        return redirect('/profil')
+        flash('Konto usunięte.', 'info'); return redirect('/')
+    except: flash('Błąd usuwania.', 'danger'); return redirect('/profil')
+
 @app.route('/admin/usun_user/<int:user_id>', methods=['POST'])
 @login_required
 def admin_delete_user(user_id):
-    # Sprawdzenie czy to admin
-    if current_user.username != 'admin' and current_user.id != 1:
-        flash('Brak uprawnień!', 'danger')
-        return redirect('/')
-    
-    user_to_delete = User.query.get_or_404(user_id)
-    
-    # Zabezpieczenie przed usunięciem samego siebie (Admina)
-    if user_to_delete.id == current_user.id:
-        flash('Nie możesz usunąć konta Administratora!', 'warning')
-        return redirect('/profil')
-
-    try:
-        nazwa = user_to_delete.username
-        db.session.delete(user_to_delete)
-        db.session.commit()
-        flash(f'Konto użytkownika {nazwa} zostało usunięte przez Admina.', 'success')
-    except Exception as e:
-        flash(f'Błąd: {e}', 'danger')
-        
-    return redirect('/profil')
-
-
+    if current_user.username != 'admin' and current_user.id != 1: return redirect('/')
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id: return redirect('/profil')
+    db.session.delete(user); db.session.commit()
+    flash(f'Usunięto użytkownika {user.username}.', 'success'); return redirect('/profil')
 
 if __name__ == '__main__':
     update_db()
     with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000)
-
