@@ -33,7 +33,6 @@ try:
     GOOGLE_ID = getattr(sekrety, 'GOOGLE_CLIENT_ID', None)
     GOOGLE_SECRET = getattr(sekrety, 'GOOGLE_CLIENT_SECRET', None)
 except ImportError:
-    # Fallback jeśli brak pliku sekrety
     GEMINI_KEY = None
     MAIL_PWD = None
     SECRET_KEY_APP = 'dev_key_temporary'
@@ -91,7 +90,7 @@ login_manager.login_view = 'login'
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
     try:
-        model_ai = genai.GenerativeModel('gemini-2.0-flash') # Lub 'gemini-pro' zależnie od dostępności
+        model_ai = genai.GenerativeModel('gemini-2.0-flash')
     except:
         model_ai = None
 else:
@@ -107,7 +106,7 @@ def update_last_seen():
         except:
             db.session.rollback()
 
-# --- TŁUMACZENIA (Słownik) ---
+# --- TŁUMACZENIA ---
 TRANSLATIONS = {
     'pl': {
         'search_ph': 'Wpisz np. Audi A4, Automat...', 'btn_search': 'SZUKAJ', 'filters': 'Filtry', 
@@ -169,7 +168,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), default='Radom')
-    google_id = db.Column(db.String(100), unique=True, nullable=True) # Nowe pole Google
+    google_id = db.Column(db.String(100), unique=True, nullable=True)
+    avatar_url = db.Column(db.String(500), nullable=True) # NOWE POLE AVATAR
     ai_requests_today = db.Column(db.Integer, default=0)
     last_ai_request_date = db.Column(db.Date, default=datetime.utcnow().date())
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -201,8 +201,6 @@ class Car(db.Model):
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(50), default='Radom')
-    
-    # Dane techniczne
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     vin = db.Column(db.String(20), nullable=True)
@@ -212,14 +210,11 @@ class Car(db.Model):
     nadwozie = db.Column(db.String(30))
     pojemnosc = db.Column(db.String(20))
     przebieg = db.Column(db.Integer, default=0)
-    
-    # AI i Statystyki
     is_promoted = db.Column(db.Boolean, default=False)
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
     views = db.Column(db.Integer, default=0)
-    wyswietlenia = db.Column(db.Integer, default=0) # Legacy field
-    
+    wyswietlenia = db.Column(db.Integer, default=0) 
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     images = db.relationship('CarImage', backref='car', lazy=True, cascade="all, delete-orphan")
@@ -247,13 +242,10 @@ def save_optimized_image(file):
         pass
     if img.mode in ("RGBA", "P"):
         img = img.convert("RGB")
-    
-    # Resize jeśli za duże
     if img.width > 1200:
         w_percent = (1200 / float(img.width))
         h_size = int((float(img.height) * float(w_percent)))
         img = img.resize((1200, h_size), Image.Resampling.LANCZOS)
-    
     img.save(filepath, "WEBP", quality=80)
     return filename
 
@@ -276,7 +268,7 @@ def update_market_valuation(car):
         """
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        json.loads(clean_json) # Walidacja
+        json.loads(clean_json)
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
@@ -302,7 +294,7 @@ Jeśli to nie Ty prosiłeś o reset, zignoruj tę wiadomość.
 @app.route('/login/google')
 def google_login():
     if not google:
-        flash("Logowanie Google nie jest skonfigurowane (brak kluczy w sekrety.py)", "danger")
+        flash("Logowanie Google nie jest skonfigurowane.", "danger")
         return redirect(url_for('login'))
     return google.authorize_redirect(url_for('google_callback', _external=True))
 
@@ -317,15 +309,13 @@ def google_callback():
         email = user_info.get('email')
         google_id = user_info.get('id')
         name = user_info.get('name') or email.split('@')[0]
+        picture = user_info.get('picture') # Pobieramy zdjęcie z Google
 
-        # Sprawdź czy użytkownik istnieje (po emailu lub google_id)
         user = User.query.filter((User.email == email) | (User.google_id == google_id)).first()
 
         if not user:
-            # Rejestracja nowego użytkownika
+            # Nowy user
             random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-            
-            # Unikalność nazwy użytkownika
             base_username = name.replace(' ', '')
             username = base_username
             counter = 1
@@ -338,16 +328,22 @@ def google_callback():
                 email=email,
                 google_id=google_id,
                 password_hash=generate_password_hash(random_pass),
-                lokalizacja='Radom'
+                avatar_url=picture # Zapisujemy avatar
             )
             db.session.add(user)
             db.session.commit()
             flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
         else:
-            # Linkowanie konta jeśli brak google_id
+            # Aktualizujemy dane (np. jeśli zmienił zdjęcie na Google)
+            changed = False
             if not user.google_id:
                 user.google_id = google_id
-                db.session.commit()
+                changed = True
+            if picture and user.avatar_url != picture:
+                user.avatar_url = picture
+                changed = True
+            
+            if changed: db.session.commit()
 
         login_user(user)
         return redirect(url_for('profil'))
@@ -357,14 +353,11 @@ def google_callback():
         flash('Błąd logowania przez Google. Spróbuj ponownie.', 'danger')
         return redirect(url_for('login'))
 
-# --- GŁÓWNE TRASY APLIKACJI ---
-
+# --- TRASY APLIKACJI ---
 @app.route('/')
 def index():
     q = request.args.get('q', '').strip()
     query = Car.query
-    
-    # Wyszukiwanie
     if q:
         terms = q.split()
         conditions = []
@@ -378,51 +371,38 @@ def index():
             ))
         query = query.filter(and_(*conditions))
     
-    # Filtry
     cat = request.args.get('typ', '')
     if cat: query = query.filter(Car.typ == cat)
-    
     paliwo = request.args.get('paliwo', '')
     if paliwo: query = query.filter(Car.paliwo == paliwo)
-    
     skrzynia = request.args.get('skrzynia', '')
     if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
-    
     max_cena = request.args.get('max_cena', type=float)
     if max_cena: query = query.filter(Car.cena <= max_cena)
-    
     max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
-    # Sortowanie: Promowane pierwsze, potem najnowsze
     cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow())
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
-    
-    # Licznik wyświetleń
     if car.views is None: car.views = 0
     car.views += 1
     
-    # Sprawdzenie czy odświeżyć wycenę AI (co 7 dni)
     should_update = False
     if not car.ai_valuation_data or not car.ai_label:
         should_update = True
     else:
         try:
             last_check = datetime.strptime(car.ai_valuation_data, "%Y-%m-%d")
-            if (datetime.now() - last_check).days >= 7:
-                should_update = True
-        except:
-            should_update = True
+            if (datetime.now() - last_check).days >= 7: should_update = True
+        except: should_update = True
             
     if should_update and model_ai:
-        try:
-            update_market_valuation(car)
-        except:
-            pass
+        try: update_market_valuation(car)
+        except: pass
             
     db.session.commit()
     return render_template('details.html', car=car, now=datetime.utcnow())
@@ -430,7 +410,6 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    # Dane dla Admina
     user_count = 0
     online_count = 0
     total_views = 0
@@ -443,8 +422,7 @@ def profil():
         try:
             active_since = datetime.utcnow() - timedelta(minutes=5)
             online_count = User.query.filter(User.last_seen >= active_since).count()
-        except:
-            online_count = 1
+        except: online_count = 1
         total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
     else:
         cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
@@ -460,13 +438,11 @@ def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
     
-    # Obsługa zdjęcia ze skanera
     if 'scan_image' in request.files and request.files['scan_image'].filename != '':
         f = request.files['scan_image']
         if allowed_file(f.filename):
             saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(f)))
             
-    # Obsługa zdjęć z galerii
     for file in files[:15]:
         if file and allowed_file(file.filename):
             saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
@@ -477,7 +453,6 @@ def dodaj_ogloszenie():
     except: lat = None
     try: lon = float(request.form.get('lon')) 
     except: lon = None
-    
     wyposazenie_list = request.form.getlist('wyposazenie')
     wyposazenie_str = ",".join(wyposazenie_list)
 
@@ -504,12 +479,9 @@ def dodaj_ogloszenie():
         data_dodania=datetime.utcnow()
     )
     db.session.add(new_car)
-    db.session.flush() # Pobierz ID
-    
-    # Zapisz dodatkowe zdjęcia
+    db.session.flush()
     for p in saved_paths:
         db.session.add(CarImage(image_path=p, car_id=new_car.id))
-        
     db.session.commit()
     flash('Dodano ogłoszenie!', 'success')
     return redirect(url_for('profil'))
@@ -517,24 +489,18 @@ def dodaj_ogloszenie():
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
-    # Sprawdź limity
     dzisiaj = datetime.utcnow().date()
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
 
-    if current_user.username == 'admin' or current_user.id == 1:
-        LIMIT = 500
-    else:
-        LIMIT = 6
-
+    LIMIT = 500 if (current_user.username == 'admin' or current_user.id == 1) else 6
     if current_user.ai_requests_today >= LIMIT:
         return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
 
     file = request.files.get('scan_image')
-    if not file:
-        return jsonify({"error": "Brak pliku"}), 400
+    if not file: return jsonify({"error": "Brak pliku"}), 400
 
     try:
         image_data = file.read()
@@ -553,7 +519,6 @@ def analyze_car():
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
         data = json.loads(text_response)
-        
         current_user.ai_requests_today += 1
         db.session.commit()
         return jsonify(data)
@@ -566,7 +531,6 @@ def analyze_car():
 def generuj_opis_ai():
     if not model_ai: return jsonify({"opis": "Błąd AI"}), 500
     if not check_ai_limit(): return jsonify({"opis": "Limit wyczerpany"}), 429
-    
     data = request.json
     try:
         prompt = f"Opisz przedmiot: {data}. Styl: zachęcający, profesjonalny handlarz."
@@ -574,8 +538,7 @@ def generuj_opis_ai():
         current_user.ai_requests_today += 1
         db.session.commit()
         return jsonify({"opis": resp.text.strip()})
-    except:
-        return jsonify({"opis": "Błąd generowania"}), 500
+    except: return jsonify({"opis": "Błąd generowania"}), 500
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
@@ -599,14 +562,11 @@ def refresh_car(car_id):
 @login_required
 def toggle_favorite(car_id):
     fav = Favorite.query.filter_by(user_id=current_user.id, car_id=car_id).first()
-    if fav:
-        db.session.delete(fav)
-    else:
-        db.session.add(Favorite(user_id=current_user.id, car_id=car_id))
+    if fav: db.session.delete(fav)
+    else: db.session.add(Favorite(user_id=current_user.id, car_id=car_id))
     db.session.commit()
     return redirect(request.referrer)
 
-# --- REJESTRACJA I LOGOWANIE ---
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method=='POST':
@@ -637,11 +597,9 @@ def logout():
     logout_user()
     return redirect('/')
 
-# --- RESET HASŁA ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('profil'))
+    if current_user.is_authenticated: return redirect(url_for('profil'))
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
@@ -649,14 +607,12 @@ def reset_request():
             send_reset_email(user)
             flash('Wysłano email z instrukcją resetu.', 'info')
             return redirect(url_for('login'))
-        else:
-            flash('Nie ma konta z takim emailem.', 'warning')
+        else: flash('Nie ma konta z takim emailem.', 'warning')
     return render_template('reset_request.html')
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('profil'))
+    if current_user.is_authenticated: return redirect(url_for('profil'))
     user = User.verify_reset_token(token)
     if user is None:
         flash('Link jest nieprawidłowy lub wygasł.', 'warning')
@@ -669,7 +625,6 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html')
 
-# --- STRONY STATYCZNE ---
 @app.route('/kontakt')
 def kontakt(): return render_template('kontakt.html')
 @app.route('/regulamin')
@@ -677,7 +632,6 @@ def regulamin(): return render_template('regulamin.html')
 @app.route('/polityka')
 def polityka(): return render_template('polityka.html')
 
-# --- EDYCJA OGŁOSZENIA ---
 @app.route('/edytuj/<int:id>', methods=['GET','POST'])
 @login_required
 def edytuj(id):
@@ -685,7 +639,6 @@ def edytuj(id):
     if car.user_id != current_user.id and current_user.username != 'admin':
         flash('Brak uprawnień.', 'danger')
         return redirect('/')
-        
     if request.method == 'POST':
         try:
             car.marka = request.form.get('marka')
@@ -701,26 +654,21 @@ def edytuj(id):
             car.nadwozie = request.form.get('nadwozie')
             car.telefon = request.form.get('telefon')
             car.opis = request.form.get('opis')
-            
             wyposazenie_list = request.form.getlist('wyposazenie')
             car.wyposazenie = ",".join(wyposazenie_list)
-            
             files = request.files.getlist('zdjecia')
             for file in files:
                 if file and allowed_file(file.filename):
                     filename = save_optimized_image(file)
                     db.session.add(CarImage(image_path=url_for('static', filename='uploads/'+filename), car_id=car.id))
-            
             db.session.commit()
             flash('Zapisano zmiany!', 'success')
             return redirect('/profil')
         except Exception as e:
             print(f"Błąd edycji: {e}")
             flash('Wystąpił błąd podczas zapisu.', 'danger')
-            
     return render_template('edytuj.html', car=car)
 
-# --- NARZĘDZIA ADMINA ---
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
@@ -756,11 +704,9 @@ def admin_delete_user(user_id):
 @login_required
 def usun_zdjecie(image_id):
     img = CarImage.query.get_or_404(image_id)
-    # Sprawdzenie uprawnień
     car = Car.query.get(img.car_id)
     if car.user_id != current_user.id and current_user.username != 'admin':
         return jsonify({'success': False, 'message': 'Brak uprawnień'}), 403
-        
     db.session.delete(img)
     db.session.commit()
     return jsonify({'success': True})
@@ -778,15 +724,12 @@ def usun_konto():
         flash('Błąd usuwania.', 'danger')
         return redirect('/profil')
 
-# --- SITEMAP I SEO ---
 @app.route('/sitemap.xml')
 def sitemap():
     base = request.url_root.rstrip('/')
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    # Statyczne
     for p in ['', 'login', 'register', 'kontakt', 'regulamin']:
         xml += f'<url><loc>{base}/{p}</loc><changefreq>weekly</changefreq></url>\n'
-    # Dynamiczne (Auta)
     for car in Car.query.order_by(Car.data_dodania.desc()).all():
         xml += f'<url><loc>{base}/ogloszenie/{car.id}</loc><changefreq>daily</changefreq></url>\n'
     xml += '</urlset>'
@@ -813,14 +756,15 @@ def update_db():
             ("car", "vin", "TEXT"),
             ("car", "wyposazenie", "TEXT"),
             ("user", "last_seen", "TIMESTAMP"),
-            ("user", "google_id", "TEXT") # Nowe pole!
+            ("user", "google_id", "TEXT"),
+            ("user", "avatar_url", "TEXT") # <-- TUTAJ DODAŁEM NOWE POLE
         ]
         
         for table, col, dtype in columns_to_add:
             try:
                 c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
             except:
-                pass # Kolumna już istnieje
+                pass 
                 
         conn.commit()
         conn.close()
