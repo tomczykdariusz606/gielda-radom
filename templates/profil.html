@@ -1,378 +1,274 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}" data-bs-theme="dark">
+<html lang="{{ lang }}">
 <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-17939880807');
-    </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twój Profil - Giełda Radom</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>{{ t['garage'] }} - Giełda Radom</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <style>
-        :root { --radom-red: #ce2b37; --bg-dark: #121212; --card-dark: #1e1e1e; --text-grey: #b0b3b8; --premium-gold: #f0c420; }
+        :root { --radom-red: #ce2b37; --bg-dark: #f8f9fa; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); padding-bottom: 80px; }
+        .hero-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            color: white; padding: 3rem 1rem; border-radius: 0 0 30px 30px; margin-bottom: 2rem;
+            position: relative; overflow: hidden;
+        }
+        .hero-section::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}") center/cover;
+            opacity: 0.2; z-index: 0;
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 1rem;
+            text-align: center; transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-3px); background: rgba(255, 255, 255, 0.2); }
+        .limit-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .limit-fill { height: 100%; background: var(--radom-red); width: {{ (current_user.ai_requests_today / 6) * 100 }}%; }
         
-        /* STYLE PREMIUM */
-        .text-gold-glow { color: var(--premium-gold) !important; text-shadow: 0 0 15px rgba(240, 196, 32, 0.5); letter-spacing: 1px; }
-        .btn-gold-premium {
-            background: linear-gradient(135deg, #f0c420, #d4a017) !important;
-            color: #000 !important; border: none !important; font-weight: 900 !important;
-            box-shadow: 0 4px 15px rgba(240, 196, 32, 0.4) !important;
-            transition: all 0.3s ease !important; position: relative; overflow: hidden;
+        .nav-bottom {
+            position: fixed; bottom: 0; width: 100%; background: white; z-index: 1000;
+            display: flex; justify-content: space-around; padding: 12px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); border-top: 1px solid #eee;
         }
-        .btn-gold-premium:hover {
-            transform: translateY(-3px) scale(1.05) !important;
-            box-shadow: 0 8px 25px rgba(240, 196, 32, 0.7) !important;
-            background: linear-gradient(135deg, #ffd700, #e6b800) !important;
-        }
-
-        body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(10px); border-bottom: 2px solid var(--radom-red); }
-        .car-card { background-color: var(--card-dark); border: 1px solid #333; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
-        .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); }
-        .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
-        .cat-item input { display: none; }
-        .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 12px; cursor: pointer; font-size: 0.75rem; text-align: center; color: var(--text-grey); transition: 0.2s; }
-        .cat-item input:checked + .cat-label { background: #3a1517; border-color: var(--radom-red); color: white; font-weight: bold; box-shadow: 0 0 10px rgba(206, 43, 55, 0.4); }
-        .form-control, .form-select { background-color: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; }
-        .form-control:focus { background-color: #333; border-color: var(--radom-red); color: white; box-shadow: none; }
-
-        /* SKANER AI */
-        .scanner-box { border: 2px dashed var(--premium-gold); border-radius: 15px; padding: 20px; text-align: center; background: rgba(0,0,0,0.3); margin-bottom: 20px; }
-        .btn-submit-fix { background-color: var(--radom-red); color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 15px; width: 100%; border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(206, 43, 55, 0.4); margin-top: 20px; }
-        .btn-submit-fix:hover { background-color: #b01b25; transform: scale(1.02); }
+        .nav-item { text-align: center; color: #adb5bd; text-decoration: none; font-size: 0.8rem; }
+        .nav-item.active { color: var(--radom-red); font-weight: 700; }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
         
-        /* TOAST POWIADOMIENIE AI */
-        #aiToast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(240, 196, 32, 0.95); color: black;
-            padding: 15px 25px; border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            z-index: 9999; font-weight: bold; display: none;
-            text-align: center; width: 90%; max-width: 400px;
-            animation: slideUp 0.5s ease-out;
+        .car-card {
+            background: white; border-radius: 15px; overflow: hidden; margin-bottom: 1rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.03); transition: 0.2s; position: relative;
         }
-        @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
+        .car-img { height: 180px; object-fit: cover; width: 100%; }
+        .badge-status { position: absolute; top: 10px; right: 10px; padding: 5px 10px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; }
+        .badge-active { background: #d4edda; color: #155724; }
+        .badge-promoted { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        .scan-btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .scan-btn { flex: 1; border-radius: 12px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; border: 2px dashed #dee2e6; background: white; color: #495057; transition: 0.2s; cursor: pointer; }
+        .scan-btn:hover, .scan-btn.active { border-color: var(--radom-red); color: var(--radom-red); background: #fff5f5; }
+        
+        /* Styl Avatara */
+        .user-avatar {
+            width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3); box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark p-3 mb-4 sticky-top">
-    <div class="container d-flex justify-content-between">
-        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-        <div class="d-flex gap-3 align-items-center text-white">
-            <span class="d-none d-md-block small text-muted">{{ current_user.username }}</span>
-            <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">{{ t['logout'] }}</a>
-        </div>
-    </div>
-</nav>
-
-<div class="container mb-5">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show mt-3 shadow-sm border-{{ category }}" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i> <strong>{{ message }}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="hero-section">
+        <div class="hero-content container">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="{{ current_user.avatar_url or 'https://placehold.co/100?text=U' }}" class="user-avatar" alt="Avatar">
+                    
+                    <div>
+                        <h2 class="fw-bold m-0">{{ t['welcome_back'] }}, <br>{{ current_user.username }}!</h2>
+                        <small class="opacity-75">{{ t['login_desc'] }}</small>
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+                <a href="/logout" class="btn btn-sm btn-outline-light rounded-pill px-3"><i class="bi bi-box-arrow-right"></i> {{ t['logout'] }}</a>
+            </div>
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <h2 class="fw-bold mb-0 text-white">{{ t['garage'] }}</h2>
-            <div class="mt-1">
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small opacity-75">{{ t['limit'] }}</span>
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <h3 class="fw-bold m-0">{{ current_user.ai_requests_today }}/6</h3>
+                        <div class="limit-bar"><div class="limit-fill"></div></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small opacity-75">Twoje Auta</span>
+                            <i class="bi bi-car-front"></i>
+                        </div>
+                        <h3 class="fw-bold m-0">{{ cars|length }}</h3>
+                    </div>
+                </div>
+                
                 {% if current_user.username == 'admin' or current_user.id == 1 %}
-                    {% set limit = 500 %}
-                {% else %}
-                    {% set limit = 6 %}
+                <div class="col-12 mt-2">
+                    <div class="stat-card bg-dark bg-opacity-50 border-danger">
+                        <h6 class="text-danger fw-bold mb-2">ADMIN STATS</h6>
+                        <div class="d-flex justify-content-around small">
+                            <span><i class="bi bi-people"></i> {{ user_count }} Userów</span>
+                            <span><i class="bi bi-eye"></i> {{ total_views }} Wyśw.</span>
+                            <span class="text-success"><i class="bi bi-circle-fill" style="font-size: 8px;"></i> {{ online_count }} Online</span>
+                        </div>
+                        <div class="mt-2 d-flex gap-2 justify-content-center">
+                            <a href="/admin/backup-db" class="btn btn-xs btn-outline-light" style="font-size: 0.7rem;">Pobierz DB</a>
+                            <a href="/admin/full-backup" class="btn btn-xs btn-outline-warning" style="font-size: 0.7rem;">Full Backup</a>
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
-
-                {% set uzyte = current_user.ai_requests_today %}
-                {% set pozostalo = limit - uzyte %}
-                {% if pozostalo < 0 %}{% set pozostalo = 0 %}{% endif %}
-
-                <span class="badge {% if pozostalo == 0 %}bg-danger{% elif pozostalo < 3 %}bg-warning text-dark{% else %}bg-success{% endif %} border border-secondary shadow-sm" 
-                      title="Limit odnawia się codziennie">
-                    <i class="bi bi-robot me-1"></i> LIMIT AI: {{ pozostalo }}/{{ limit }}
-                </span>
-            </div>
-        </div>
-        <button class="btn btn-danger rounded-pill px-4 py-2 shadow-lg fw-bold" data-bs-toggle="modal" data-bs-target="#dodajModal">
-            <i class="bi bi-plus-lg me-1"></i> {{ t['add'] }}
-        </button>
-    </div>
-
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-        {% for car in cars %}
-        <div class="col">
-            <div class="card car-card h-100">
-                <div class="position-relative">
-                    <img src="{{ car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
-                    {% set dni = (now - car.data_dodania).days %}{% set left = 30 - dni %}
-                    <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">
-                        {% if left > 0 %}{{ left }} {{ t['days_left'] }}{% else %}{{ t['expired'] }}{% endif %}
-                    </span>
-                    {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow fw-bold">GOLD</span>{% endif %}
-                </div>
-                <div class="card-body d-flex flex-column">
-                    <h5 class="fw-bold text-truncate text-white mb-1">{{ car.marka }} {{ car.model }}</h5>
-                    <h4 class="text-danger fw-800">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</h4>
-                    <div class="row g-2 small text-muted mb-3 mt-1">
-                        <div class="col-6"><i class="bi bi-calendar3"></i> {{ car.rok }}r.</div>
-                        <div class="col-6"><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</div>
-                        <div class="col-6"><i class="bi bi-speedometer2"></i> {{ car.przebieg }}</div>
-                        <div class="col-6"><i class="bi bi-eye"></i> {{ car.views }}</div>
-                    </div>
-                    <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
-                        <div class="d-flex gap-2">
-                            <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-info btn-sm w-50 fw-bold"><i class="bi bi-eye"></i></a>
-                            <a href="/edytuj/{{ car.id }}" class="btn btn-outline-light btn-sm w-50 fw-bold"><i class="bi bi-pencil"></i></a>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <form action="/odswiez/{{ car.id }}" method="POST" class="w-50"><button class="btn btn-success btn-sm w-100 fw-bold text-white"><i class="bi bi-arrow-clockwise"></i></button></form>
-                            <form action="/usun/{{ car.id }}" method="POST" class="w-50" onsubmit="return confirm('?')"><button class="btn btn-dark btn-sm w-100 fw-bold border-secondary text-danger"><i class="bi bi-trash"></i></button></form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% else %}
-        <div class="col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25">
-            <h4 class="text-white">...</h4>
-        </div>
-        {% endfor %}
-    </div>
-
-    {% if current_user.username == 'admin' or current_user.id == 1 %}
-    <div class="card admin-box shadow-lg mb-5 border-0" style="background: linear-gradient(145deg, #1a1a1a, #000); border-left: 5px solid #ffc107;">
-        <div class="card-header bg-transparent border-warning d-flex justify-content-between align-items-center pt-3 pb-2">
-            <h5 class="text-warning mb-0 fw-bold" style="letter-spacing: 1px;"><i class="bi bi-shield-lock-fill me-2"></i> CENTRUM DOWODZENIA</h5>
-            <span class="badge bg-warning text-dark shadow fw-bold">ROOT ADMIN</span>
-        </div>
-        <div class="card-body text-white">
-            <div class="row g-3 mb-4 text-center">
-                <div class="col-4">
-                    <div class="p-3 rounded-3 border border-secondary bg-dark bg-opacity-50">
-                        <h3 class="fw-bold text-white mb-0">{{ user_count }}</h3>
-                        <small class="text-secondary text-uppercase fw-bold" style="font-size:0.65rem;">WSZYSTKIE KONTA</small>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
-                        <h3 class="fw-bold text-success mb-0">{{ online_count }}</h3>
-                        <small class="text-success text-uppercase fw-bold" style="font-size:0.65rem;">ONLINE TERAZ</small>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="p-3 rounded-3 border border-info bg-info bg-opacity-10">
-                        <h3 class="fw-bold text-info mb-0">{{ total_views }}</h3>
-                        <small class="text-info text-uppercase fw-bold" style="font-size:0.65rem;">WYŚWIETLENIA</small>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
-                <div class="mt-3 mb-3">
-                    <button class="btn btn-danger w-100 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#usersModal">
-                        <i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ UŻYTKOWNIKAMI ({{ all_users|length }})
-                    </button>
-                </div>
-
-                <label class="small text-muted fw-bold mb-2 text-uppercase"><i class="bi bi-save me-1"></i> System Backup</label>
-                <div class="d-flex gap-2">
-                    <a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2">
-                        <i class="bi bi-database-down me-1"></i> BAZA SQL
-                    </a>
-                    <a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark">
-                        <i class="bi bi-archive-fill me-1"></i> PEŁNY ZIP
-                    </a>
-                </div>
             </div>
         </div>
     </div>
-    {% endif %}
 
-    <div class="text-center mt-5 mb-4 pt-4 border-top border-secondary">
-        <p class="text-white-50 small mb-2">Zarządzanie kontem</p>
-        <form action="/usun_konto" method="POST" onsubmit="return confirm('⚠️ UWAGA!\n\nTo operacja nieodwracalna. Twoje konto oraz wszystkie Twoje ogłoszenia zostaną bezpowrotnie usunięte.\n\nCzy na pewno chcesz kontynuować?');">
-            <button class="btn btn-outline-danger btn-sm px-4 rounded-pill opacity-75">
-                <i class="bi bi-trash3-fill me-2"></i> Usuń moje konto trwale
-            </button>
-        </form>
-    </div>
-</div>
-
-<div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="fw-bold text-white">{{ t['add'] }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this)">
-                <input type="hidden" name="lat" id="gps_lat">
-                <input type="hidden" name="lon" id="gps_lon">
-
-                <div class="modal-body p-4 pt-2">
-
-                    <div class="cat-grid">
-                        <div class="cat-item">
-                            <input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()">
-                            <label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label>
-                        </div>
-                        <div class="cat-item">
-                            <input type="radio" name="typ" id="c2" value="SUV" onchange="adj()">
-                            <label for="c2" class="cat-label"><i class="bi bi-jeep"></i>SUV</label>
-                        </div>
-                        <div class="cat-item">
-                            <input type="radio" name="typ" id="c3" value="Minivan" onchange="adj()">
-                            <label for="c3" class="cat-label"><i class="bi bi-people-fill"></i>Minivan</label>
-                        </div>
-                        <div class="cat-item">
-                            <input type="radio" name="typ" id="c4" value="Ciezarowe" onchange="adj()">
-                            <label for="c4" class="cat-label"><i class="bi bi-truck"></i>Bus</label>
-                        </div>
-                        <div class="cat-item">
-                            <input type="radio" name="typ" id="c5" value="Moto/Rower" onchange="adj()">
-                            <label for="c5" class="cat-label"><i class="bi bi-bicycle"></i>Moto/Rower</label>
-                        </div>
-                        <div class="cat-item">
-                            <input type="radio" name="typ" id="c6" value="Inne" onchange="adj()">
-                            <label for="c6" class="cat-label"><i class="bi bi-grid"></i>Inne</label>
-                        </div>
+    <div class="container mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} rounded-4 shadow-sm border-0 mb-4">
+                        <i class="bi bi-info-circle me-2"></i> {{ message }}
                     </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-                    <div class="scanner-box">
-                        <div class="mb-3 text-gold-glow fw-bold fs-5">
-                            <i class="bi bi-stars"></i> GEMINI 3.0 EXPERT <i class="bi bi-stars"></i>
-                        </div>
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-5">
+            <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle-dotted me-2 text-danger"></i>{{ t['add'] }}</h5>
+            
+            <form action="/dodaj" method="POST" enctype="multipart/form-data" id="addForm">
+                
+                <div class="scan-btn-group">
+                    <label class="scan-btn" onclick="startCamera()">
+                        <i class="bi bi-camera-fill"></i> {{ t['scan_cam'] }}
+                        <input type="file" name="scan_image" id="scanInput" accept="image/*" capture="environment" hidden onchange="analyzeImage(this)">
+                    </label>
+                    <label class="scan-btn">
+                        <i class="bi bi-upload"></i> {{ t['scan_file'] }}
+                        <input type="file" id="fileInput" accept="image/*" hidden onchange="analyzeImage(this)">
+                    </label>
+                </div>
+                
+                <div id="ai-loading" class="text-center py-3 d-none">
+                    <div class="spinner-border text-danger" role="status"></div>
+                    <p class="small text-muted mt-2">Gemini AI analizuje Twój pojazd...</p>
+                </div>
 
-                        <div class="text-danger fw-bold mb-3 small" style="text-transform: uppercase; text-shadow: 0 0 5px rgba(255,0,0,0.3);">
-                            <i class="bi bi-camera-fill me-1"></i> Zrób/dodaj zdjęcie, a AI rozpozna markę i stworzy opis!
-                        </div>
-
-                        <div class="d-flex justify-content-center gap-3">
-                            <label class="btn btn-gold-premium rounded-pill px-4 py-2 shadow-lg">
-                                <i class="bi bi-camera-fill me-2 fs-5"></i> SKANUJ AUTO (AI)
-                                <input type="file" name="scan_image_cam" accept="image/*" capture="environment" hidden onchange="scanCar(this)">
-                            </label>
-
-                            <label class="btn btn-outline-light rounded-pill px-3 py-2 fw-bold">
-                                <i class="bi bi-folder-fill me-2"></i> Wgraj plik
-                                <input type="file" name="scan_image_file" accept="image/*" hidden onchange="scanCar(this)">
-                            </label>
-                        </div>
-
-                        <div id="scanLoader" class="mt-3 small text-warning fw-bold" style="display:none;">
-                            <span class="spinner-border spinner-border-sm me-1"></span> Sztuczna Inteligencja analizuje pojazd...
-                        </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Marka</label>
+                        <input type="text" name="marka" id="marka" class="form-control" required placeholder="np. BMW">
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Model</label>
+                        <input type="text" name="model" id="model" class="form-control" required placeholder="np. X5">
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Rok</label>
+                        <input type="number" name="rok" id="rok" class="form-control" placeholder="2015">
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Cena (PLN)</label>
+                        <input type="number" name="cena" class="form-control" placeholder="0">
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Przebieg</label>
+                        <input type="number" name="przebieg" class="form-control" placeholder="km">
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-muted fw-bold">Paliwo</label>
+                        <select name="paliwo" id="paliwo" class="form-select">
+                            <option value="Benzyna">Benzyna</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="LPG">LPG</option>
+                            <option value="Hybryda">Hybryda</option>
+                            <option value="Elektryk">Elektryk</option>
+                        </select>
                     </div>
                     
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <label class="small fw-bold text-muted mb-1" id="photoLabel">ZDJĘCIA</label>
-                            <span class="small text-warning fw-bold" style="font-size: 0.7rem;">
-                                <i class="bi bi-images me-1"></i> MAX 18 SZT.
-                            </span>
-                        </div>
-                        <input type="file" name="zdjecia" class="form-control" multiple accept="image/*" id="fileInput">
-                        
-                        <div class="form-text text-white-50 small mt-1">
-                            * Pierwsze wybrane zdjęcie będzie okładką ogłoszenia.
-                        </div>
-                    </div>
+                    <input type="hidden" name="typ" id="typ" value="Osobowe">
+                    <input type="hidden" name="nadwozie" id="nadwozie">
+                    <input type="hidden" name="skrzynia" id="skrzynia">
+                    <input type="hidden" name="lat" id="lat">
+                    <input type="hidden" name="lon" id="lon">
+                </div>
 
-                    <div class="row g-2">
-                        <div class="col-6"><label class="small fw-bold text-muted">Marka</label><input type="text" name="marka" class="form-control" placeholder="np. BMW"></div>
-                        <div class="col-6"><label class="small fw-bold text-muted">Model</label><input type="text" name="model" class="form-control" placeholder="np. X5"></div>
-
-                        <div class="col-12">
-                            <label class="small fw-bold text-success">Numer VIN (Opcjonalne)</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-dark border-secondary text-white">
-                                    <i class="bi bi-upc-scan"></i>
-                                </span>
-                                <input type="text" name="vin" class="form-control text-uppercase" placeholder="Wpisz numer nadwozia..." maxlength="17">
-                            </div>
-                        </div>
-
-                        <div class="col-4"><label class="small fw-bold text-muted">Rok</label><input type="number" name="rok" class="form-control"></div>
-                        <div class="col-4"><label class="small fw-bold text-muted">Cena (PLN)</label><input type="number" name="cena" class="form-control border-danger text-danger fw-bold" required></div>
-                        <div class="col-4 tech"><label class="small fw-bold text-muted">Przebieg</label><input type="number" name="przebieg" class="form-control"></div>
-                        <div class="col-6 tech"><label class="small fw-bold text-muted">Pojemność</label><input type="text" name="pojemnosc" class="form-control"></div>
-                        <div class="col-6 tech"><label class="small fw-bold text-muted">Paliwo</label><select name="paliwo" class="form-select"><option>Benzyna</option><option>Diesel</option><option>LPG</option><option>Hybryda</option><option>Elektryczny</option></select></div>
-                        <div class="col-6 tech"><label class="small fw-bold text-muted">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select></div>
-                        <div class="col-12"><label class="small fw-bold text-muted">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
-                        <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3" placeholder="{{ t['desc_ai'] }}"></textarea></div>
-
-                        <div class="col-12 mt-3">
-                            <label class="small fw-bold text-muted mb-2">WYPOSAŻENIE (Zaznacz, co posiada auto)</label>
-                            <div class="row g-2 p-3 rounded border border-secondary bg-black bg-opacity-25" style="max-height: 200px; overflow-y: auto;">
-                                
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ABS" id="w1"><label class="form-check-label small text-white" for="w1">ABS</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ESP" id="w2"><label class="form-check-label small text-white" for="w2">ESP / Kontrola trakcji</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Poduszki powietrzne" id="w3"><label class="form-check-label small text-white" for="w3">Poduszki powietrzne</label></div></div>
-
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja" id="w4"><label class="form-check-label small text-white" for="w4">Klimatyzacja</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja automatyczna" id="w5"><label class="form-check-label small text-white" for="w5">Klimatronik</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Skórzana tapicerka" id="w6"><label class="form-check-label small text-white" for="w6">Skórzana tapicerka</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewane fotele" id="w7"><label class="form-check-label small text-white" for="w7">Grzane fotele</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Tempomat" id="w8"><label class="form-check-label small text-white" for="w8">Tempomat</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="El. szyby" id="w9"><label class="form-check-label small text-white" for="w9">Elektryczne szyby</label></div></div>
-
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nawigacja" id="w10"><label class="form-check-label small text-white" for="w10">Nawigacja GPS</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Bluetooth" id="w11"><label class="form-check-label small text-white" for="w11">Bluetooth</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera cofania" id="w12"><label class="form-check-label small text-white" for="w12">Kamera cofania</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujniki parkowania" id="w13"><label class="form-check-label small text-white" for="w13">Czujniki parkowania</label></div></div>
-                                
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w14"><label class="form-check-label small text-white" for="w14">Alufelgi</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Światła LED" id="w15"><label class="form-check-label small text-white" for="w15">Światła LED / Xenon</label></div></div>
-                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Hak" id="w16"><label class="form-check-label small text-white" for="w16">Hak</label></div></div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-outline-success w-100 btn-sm rounded-pill py-2" onclick="getGPS(this)">
-                            <i class="bi bi-geo-alt-fill"></i> GPS
+                <div class="mt-3">
+                    <label class="small text-muted fw-bold">Zdjęcia (Max 15)</label>
+                    <input type="file" name="zdjecia" class="form-control" multiple accept="image/*">
+                </div>
+                
+                <div class="mt-3">
+                    <label class="small text-muted fw-bold">Opis</label>
+                    <div class="position-relative">
+                        <textarea name="opis" id="opis" class="form-control" rows="4" placeholder="Opis pojazdu..."></textarea>
+                        <button type="button" class="btn btn-sm btn-light position-absolute bottom-0 end-0 m-2 border" onclick="generateDesc()">
+                            <i class="bi bi-magic"></i> AI
                         </button>
                     </div>
                 </div>
-                <div class="modal-footer border-secondary pt-0 border-0">
-                    <button class="btn-submit-fix">{{ t['add'] }}</button>
+
+                <div class="mt-3">
+                    <label class="small text-muted fw-bold">Telefon</label>
+                    <input type="text" name="telefon" class="form-control" required placeholder="Twój numer">
                 </div>
+
+                <button type="submit" class="btn btn-danger w-100 mt-4 fw-bold py-3 rounded-3 shadow">DODAJ OGŁOSZENIE</button>
             </form>
         </div>
-    </div>
-</div>
 
-{% if current_user.username == 'admin' or current_user.id == 1 %}
-<div class="modal fade" id="usersModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark border border-secondary text-white">
-            <div class="modal-header border-secondary">
-                <h5 class="fw-bold">Baza Użytkowników</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <h5 class="fw-bold mb-3 ps-2">Twoje Aktywne Oferty</h5>
+        {% for car in cars %}
+        <div class="car-card">
+            <span class="badge-status badge-active">AKTYWNE</span>
+            <div class="row g-0">
+                <div class="col-4">
+                    <img src="{{ car.img }}" class="car-img">
+                </div>
+                <div class="col-8 p-3 d-flex flex-column justify-content-between">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ car.marka }} {{ car.model }}</h6>
+                        <small class="text-muted">{{ car.rok }} • {{ car.paliwo }}</small>
+                        <h5 class="text-danger fw-bold mt-2">{{ car.cena }} PLN</h5>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                        <a href="/edytuj/{{ car.id }}" class="btn btn-sm btn-outline-secondary flex-grow-1">Edytuj</a>
+                        <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Usunąć?');">
+                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                        <form action="/odswiez/{{ car.id }}" method="POST">
+                             <button class="btn btn-sm btn-success"><i class="bi bi-arrow-clockwise"></i></button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body p-0">
+            
+            {% if car.ai_label %}
+            <div class="bg-light p-2 small border-top d-flex align-items-center gap-2">
+                <i class="bi bi-stars text-warning"></i> 
+                <span>AI Ocena: <strong>{{ (car.ai_label|from_json).label }}</strong></span>
+            </div>
+            {% endif %}
+            
+            <div class="bg-light p-2 small border-top text-muted d-flex justify-content-between">
+               <span><i class="bi bi-eye"></i> {{ car.views }} wyświetleń</span>
+               <span>Dodano: {{ car.data_dodania.strftime('%Y-%m-%d') }}</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5 opacity-50">
+            <i class="bi bi-car-front display-1"></i>
+            <p class="mt-3">Brak ogłoszeń. Dodaj pierwsze!</p>
+        </div>
+        {% endfor %}
+        
+        {% if (current_user.username == 'admin' or current_user.id == 1) and all_users %}
+        <div class="mt-5">
+            <h5 class="fw-bold text-danger">Zarządzanie Użytkownikami (ADMIN)</h5>
+            <div class="bg-white rounded-4 shadow-sm p-3">
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover mb-0 text-center align-middle">
+                    <table class="table table-sm table-hover" style="font-size: 0.8rem;">
                         <thead>
-                            <tr class="text-secondary small text-uppercase">
+                            <tr>
                                 <th>ID</th>
-                                <th>Login</th>
+                                <th>User</th>
                                 <th>Email</th>
-                                <th>Lokalizacja</th>
+                                <th>Ostatnio</th>
                                 <th>Akcja</th>
                             </tr>
                         </thead>
@@ -380,18 +276,19 @@
                             {% for u in all_users %}
                             <tr>
                                 <td>{{ u.id }}</td>
-                                <td class="fw-bold text-white">{{ u.username }}</td>
-                                <td class="small text-muted">{{ u.email }}</td>
-                                <td class="small">{{ u.lokalizacja }}</td>
+                                <td>
+                                    {% if u.avatar_url %}
+                                    <img src="{{ u.avatar_url }}" width="20" height="20" class="rounded-circle me-1">
+                                    {% endif %}
+                                    {{ u.username }}
+                                </td>
+                                <td>{{ u.email }}</td>
+                                <td>{{ u.last_seen.strftime('%H:%M %d-%m') if u.last_seen else '-' }}</td>
                                 <td>
                                     {% if u.id != current_user.id %}
-                                    <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Czy na pewno usunąć użytkownika {{ u.username }} i jego ogłoszenia?');">
-                                        <button class="btn btn-sm btn-outline-danger border-0">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
+                                    <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Usunąć usera {{ u.username }}? To usunie też jego auta!');" class="d-inline">
+                                        <button class="btn btn-danger p-0 px-1" style="font-size: 0.7rem;">X</button>
                                     </form>
-                                    {% else %}
-                                    <span class="badge bg-warning text-dark">TY</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -401,131 +298,82 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-{% endif %}
-
-<div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
-    <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
-        <span class="text-light small">
-            🍪 <strong>Ta strona używa plików cookies</strong> w celu analizy ruchu i obsługi logowania. 
-            Korzystając ze strony, zgadzasz się na ich użycie.
-        </span>
-        <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">
-            ROZUMIEM I AKCEPTUJĘ
-        </button>
-    </div>
-</div>
-
-<div id="aiToast">
-    <i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // POPRAWIONA FUNKCJA UKRYWANIA DANYCH
-    function adj(){ 
-        const v = document.querySelector('input[name="typ"]:checked').value; 
-        // Ukrywamy dane techniczne (paliwo, skrzynia itp.) TYLKO dla kategorii "Inne".
-        // Motocykle i Rowery (Moto/Rower) oraz Minivany MAJĄ pola techniczne.
-        const ukryj = (v === 'Inne'); 
+        {% endif %}
         
-        document.querySelectorAll('.tech').forEach(e => {
-            e.style.display = ukryj ? 'none' : 'block';
+    </div>
+
+    <div class="nav-bottom">
+        <a href="/" class="nav-item">
+            <i class="bi bi-search"></i> Szukaj
+        </a>
+        <a href="/profil" class="nav-item active">
+            <i class="bi bi-speedometer2"></i> Garaż
+        </a>
+        <a href="/kontakt" class="nav-item">
+            <i class="bi bi-envelope"></i> Kontakt
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Geolokalizacja przy dodawaniu
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('lat').value = pos.coords.latitude;
+            document.getElementById('lon').value = pos.coords.longitude;
         });
-    }
 
-    function getGPS(btn){ if(!navigator.geolocation) { alert('Brak GPS'); return; } btn.innerHTML='...'; navigator.geolocation.getCurrentPosition(pos => { document.getElementById('gps_lat').value=pos.coords.latitude; document.getElementById('gps_lon').value=pos.coords.longitude; btn.className="btn btn-success w-100 btn-sm rounded-pill py-2"; btn.innerHTML="<i class='bi bi-check-lg'></i> OK"; }, err => { alert('Błąd GPS'); }); }
-    
-    // EFEKT ŁADOWANIA
-    function loadingEfekt(form) {
-        const btn = form.querySelector('.btn-submit-fix');
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ZAPISUJĘ... CZEKAJ!';
-        btn.style.opacity = '0.7';
-        btn.style.pointerEvents = 'none';
-    }
+        function analyzeImage(input) {
+            let file = input.files[0];
+            if(!file) return;
 
-    // COOKIES
-    if (!localStorage.getItem('cookiesAccepted')) {
-        document.getElementById('cookie-banner').style.display = 'block';
-    }
-    function acceptCookies() {
-        localStorage.setItem('cookiesAccepted', 'true');
-        document.getElementById('cookie-banner').style.display = 'none';
-    }
+            let formData = new FormData();
+            formData.append('scan_image', file);
 
-    // FUNKCJA ANALIZY (WSPÓLNA)
-    async function performAnalysis(file) {
-        const toast = document.getElementById('aiToast');
-        toast.style.display = 'block';
-        
-        const fd=new FormData(); 
-        fd.append('scan_image', file); 
-        
-        try { 
-            const r=await fetch('/api/analyze-car', {method:'POST', body:fd}); 
-            const d=await r.json(); 
-            if(d.marka){ 
-                if(d.kategoria){ let r=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(r){ r.checked=true; adj(); }} 
-                document.querySelector('[name="marka"]').value=d.marka; 
-                document.querySelector('[name="model"]').value=d.model;
-                if(d.vin) document.querySelector('[name="vin"]').value=d.vin; 
-                document.querySelector('[name="rok"]').value=d.rok_sugestia||''; 
-                document.querySelector('[name="opis"]').value=d.opis_wizualny; 
-                if(d.paliwo_sugestia && d.kategoria!=='Inne' && d.kategoria!=='Rower'){ const sel=document.querySelector('[name="paliwo"]'); for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text===d.paliwo_sugestia) sel.selectedIndex=i; } } 
-                
-                toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione!';
-                setTimeout(() => { toast.style.display = 'none'; }, 3000);
-            } else {
-                toast.style.display = 'none';
-            } 
-        } catch(e){ 
-            console.error(e); 
-            toast.style.display = 'none';
-        } 
-    }
+            document.getElementById('ai-loading').classList.remove('d-none');
 
-    // 1. OBSŁUGA ZŁOTEGO PRZYCISKU (SCANNER)
-    async function scanCar(input){ 
-        if(!input.files[0]) return; 
-
-        // Kopiuj do głównej galerii
-        const mainInput = document.getElementById('fileInput');
-        const dt = new DataTransfer();
-        dt.items.add(input.files[0]);
-        mainInput.files = dt.files;
-        
-        // Zmień etykietę
-        const headerLabel = document.getElementById('photoLabel');
-        headerLabel.innerHTML = 'ZDJĘCIA <span class="text-success ms-2">✅ SKAN DODANY!</span>';
-
-        // Uruchom analizę
-        performAnalysis(input.files[0]);
-    }
-
-    // 2. OBSŁUGA ZWYKŁEJ GALERII (AUTO-MAGIC)
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        // Reset napisu
-        const headerLabel = document.getElementById('photoLabel');
-        if(headerLabel.innerText.includes("SKAN")) {
-             headerLabel.innerHTML = 'ZDJĘCIA';
+            fetch('/api/analyze-car', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('ai-loading').classList.add('d-none');
+                if(data.error) {
+                    alert(data.error);
+                } else {
+                    // Auto-uzupełnianie
+                    if(data.marka && data.marka !== "String") document.getElementById('marka').value = data.marka;
+                    if(data.model && data.model !== "String") document.getElementById('model').value = data.model;
+                    if(data.rok_sugestia) document.getElementById('rok').value = data.rok_sugestia;
+                    if(data.typ_nadwozia) document.getElementById('nadwozie').value = data.typ_nadwozia;
+                    if(data.opis_wizualny) document.getElementById('opis').value = data.opis_wizualny;
+                    
+                    // Sugestia kategorii
+                    if(data.kategoria) document.getElementById('typ').value = data.kategoria;
+                }
+            })
+            .catch(e => {
+                document.getElementById('ai-loading').classList.add('d-none');
+                alert("Błąd połączenia z AI.");
+            });
         }
 
-        // Blokada 18 zdjęć
-        if (this.files.length > 18) {
-            alert('⚠️ Wybrano za dużo zdjęć (' + this.files.length + '). System automatycznie pozostawił tylko pierwsze 18 sztuk.');
-            const dt = new DataTransfer();
-            for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); }
-            this.files = dt.files; 
+        function generateDesc() {
+            let marka = document.getElementById('marka').value;
+            let model = document.getElementById('model').value;
+            if(!marka) return alert("Wpisz najpierw markę i model!");
+            
+            let btn = event.target;
+            btn.innerHTML = '<div class="spinner-border spinner-border-sm"></div>';
+            
+            fetch('/api/generuj-opis', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(marka + " " + model)
+            })
+            .then(r => r.json())
+            .then(d => {
+                document.getElementById('opis').value = d.opis;
+                btn.innerHTML = '<i class="bi bi-magic"></i> AI';
+            });
         }
-
-        // --- AUTOMATYCZNE WYWOŁANIE AI ---
-        // Sprawdź czy pole "Marka" jest puste. Jeśli tak -> Uruchom AI z pierwszego zdjęcia!
-        const markaField = document.querySelector('[name="marka"]');
-        if (this.files.length > 0 && markaField.value.trim() === "") {
-            performAnalysis(this.files[0]);
-        }
-    });
-</script>
+    </script>
 </body>
 </html>
