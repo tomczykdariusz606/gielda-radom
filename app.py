@@ -270,34 +270,58 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
     try:
-        # Zmieniamy prompt na taki, który wymusza unikalne dane
-        prompt = f"""
-        Jesteś analitykiem cen aut używanych w Polsce.
-        Analizowany pojazd: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
+        # 1. KROK: Python liczy REALNE dane z Twojej bazy (Radom i okolice)
+        # Szukamy aut tej samej marki/modelu z rocznika +/- 2 lata
+        similar_cars = Car.query.filter(
+            Car.marka == car.marka,
+            Car.model == car.model,
+            Car.rok >= car.rok - 2,
+            Car.rok <= car.rok + 2,
+            Car.id != car.id # Pomijamy to konkretne auto
+        ).all()
         
-        Zadanie:
-        1. Oszacuj, czy to dobra cena na tle rynku (bazując na swojej wiedzy o cenach tego modelu).
-        2. Wymyśl realistyczną, losową liczbę ofert konkurencyjnych (między 15 a 150), żeby wyglądało naturalnie.
-        3. Zwróć TYLKO czysty JSON w formacie:
+        liczba_lokalna = len(similar_cars)
+        
+        # Obliczamy średnią cenę w Twojej bazie (jeśli są auta)
+        if liczba_lokalna > 0:
+            srednia_cena = sum(c.cena for c in similar_cars) / liczba_lokalna
+            info_z_bazy = f"W lokalnej bazie Giełda Radom jest {liczba_lokalna} podobnych aut. Ich średnia cena to {int(srednia_cena)} PLN."
+        else:
+            info_z_bazy = "W lokalnej bazie Giełda Radom to jedyny taki egzemplarz (unikat)."
+
+        # 2. KROK: Wysyłamy te fakty do AI
+        prompt = f"""
+        Jesteś surowym ekspertem rynku aut używanych w województwie mazowieckim.
+        Analizujesz ofertę: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
+        
+        FAKTY Z BAZY DANYCH: {info_z_bazy}
+        
+        Twoje zadanie:
+        1. Jeśli cena {car.cena} jest niższa niż rynkowa -> daj wysoką ocenę (Super Cena).
+        2. Jeśli jest wyższa -> napisz wprost, że drogo.
+        3. W polu "sample_size" WPISZ PRAWDĘ. Jeśli baza lokalna jest pusta, napisz "Analiza ogólnopolska (Mazowieckie)". Jeśli są auta w bazie, napisz np. "Porównano z 3 ofertami w Radomiu".
+        
+        Zwróć TYLKO JSON:
         {{
-            "score": (liczba 1-100, gdzie 100 to super okazja),
-            "label": (np. "SUPER CENA", "DOBRA CENA", "WYSOKA CENA", "PODEJRZANA"),
-            "color": (jeden z: "success", "warning", "danger", "info"),
-            "sample_size": (np. "43 oferty w regionie" - wpisz tu swoją oszacowaną liczbę),
-            "market_info": (krótkie uzasadnienie, np. "Cena o 2000 zł niższa od średniej.")
+            "score": (liczba 1-100),
+            "label": (np. "SUPER OKAZJA", "UCZCIWA CENA", "POWYŻEJ ŚREDNIEJ", "DROGO"),
+            "color": ("success", "warning", "info" lub "danger"),
+            "sample_size": (Tutaj wpisz tekst o próbce danych),
+            "market_info": (Krótkie uzasadnienie dla klienta, np. "Tańszy o 15% od średniej w regionie" lub "Unikatowy model w Radomiu")
         }}
         """
         
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        json.loads(clean_json) # Sprawdzenie czy JSON jest poprawny
+        
+        # Walidacja JSON
+        data = json.loads(clean_json)
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
         print(f"AI Error: {e}")
-
 
 @app.template_filter('from_json')
 def from_json_filter(value):
