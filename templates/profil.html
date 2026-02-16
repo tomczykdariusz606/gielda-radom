@@ -14,13 +14,16 @@
     <title>Twój Garaż - Giełda Radom</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #121212; --card-dark: #1e1e1e; --text-grey: #b0b3b8; --premium-gold: #f0c420; }
         
-        body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Inter', sans-serif; padding-bottom: 90px; }
+        body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Segoe UI', sans-serif; padding-bottom: 90px; }
         
+        /* NAVBAR Z LOGO */
+        .navbar { background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--radom-red); }
+
         .hero-section {
             background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
             position: relative; overflow: hidden;
@@ -36,11 +39,13 @@
         }
         .hero-content { position: relative; z-index: 1; }
         
+        /* AVATAR - TERAZ Z LOGO JAKO TŁEM */
         .profile-avatar {
             width: 90px; height: 90px; border-radius: 50%;
             border: 3px solid var(--radom-red);
             box-shadow: 0 0 20px rgba(206, 43, 55, 0.3);
             object-fit: cover;
+            background: #000; /* Czarne tło pod logo */
         }
 
         .glass-stat {
@@ -95,21 +100,26 @@
 </head>
 <body class="pb-5">
 
+    <nav class="navbar navbar-dark p-3 mb-0">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
+                <img src="{{ url_for('static', filename='watermark.png') }}" alt="G" style="height: 45px; width: auto; margin-right: 10px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+                <span style="font-family: 'Inter', sans-serif; letter-spacing: 1px;">GIEŁDA <span class="text-danger">RADOM</span></span>
+            </a>
+            <a href="/logout" class="btn btn-sm btn-outline-danger rounded-pill px-3">Wyloguj</a>
+        </div>
+    </nav>
+
     <div class="hero-section">
         <div class="hero-bg"></div>
         <div class="hero-content container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <a href="/" class="text-white text-decoration-none fw-bold"><i class="bi bi-arrow-left"></i> Powrót</a>
-                <a href="/logout" class="btn btn-sm btn-outline-danger rounded-pill px-3">Wyloguj</a>
-            </div>
-
             <div class="row align-items-center">
                 <div class="col-auto">
-                    <img src="{{ current_user.avatar_url or 'https://placehold.co/100?text=U' }}" class="profile-avatar" alt="User">
+                    <img src="{{ current_user.avatar_url or url_for('static', filename='watermark.png') }}" class="profile-avatar" alt="User">
                 </div>
                 <div class="col">
                     <h5 class="text-white-50 m-0 small text-uppercase">Witaj w garażu</h5>
-                    <h2 class="fw-bold text-white m-0">{{ current_user.username }}</h2>
+                    <h2 class="fw-bold text-white m-0 text-truncate">{{ current_user.username }}</h2>
                 </div>
             </div>
 
@@ -351,7 +361,10 @@
                                 {% for u in all_users %}
                                 <tr>
                                     <td>{{ u.id }}</td>
-                                    <td class="fw-bold text-white"><img src="{{ u.avatar_url or 'https://placehold.co/100?text=U' }}" width="25" height="25" class="rounded-circle me-2" style="object-fit:cover;">{{ u.username }}</td>
+                                    <td class="fw-bold text-white">
+                                        <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" width="25" height="25" class="rounded-circle me-2" style="object-fit:cover;">
+                                        {{ u.username }}
+                                    </td>
                                     <td class="small text-muted">{{ u.email }}</td>
                                     <td>{% if u.id != current_user.id %}<form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Usunąć?');"><button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button></form>{% else %}<span class="badge bg-warning text-dark">TY</span>{% endif %}</td>
                                 </tr>
@@ -402,7 +415,6 @@
                     // OZNACZANIE CHECKBOXÓW WYPOSAŻENIA (ALUFELGI, LED)
                     if (d.wyposazenie_wykryte) {
                         d.wyposazenie_wykryte.forEach(item => {
-                            // Szukamy checkboxa, który ma taką wartość
                             let chk = document.querySelector(`input[name="wyposazenie"][value="${item}"]`);
                             if (chk) chk.checked = true;
                         });
