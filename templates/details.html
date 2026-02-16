@@ -28,7 +28,7 @@
         .gallery-img { height: 450px; object-fit: cover; width: 100%; cursor: zoom-in; }
         @media (max-width: 768px) { .gallery-img { height: 300px; } }
 
-        .spec-box { background: #2c2c2c; padding: 15px; border-radius: 12px; border: 1px solid #444; text-align: center; transition: 0.2s; }
+        .spec-box { background: #2c2c2c; padding: 15px; border-radius: 12px; border: 1px solid #444; text-align: center; transition: 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spec-box:hover { border-color: #ce2b37; transform: translateY(-2px); }
 
         /* AI BAR */
@@ -182,6 +182,10 @@
                     <div class="col-6"><div class="spec-box"><i class="bi bi-speedometer2 d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.przebieg }} km</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-fuel-pump d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.paliwo }}</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-gear-wide d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.skrzynia or '-' }}</span></div></div>
+                    
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-lightning-charge-fill d-block text-warning mb-1 fs-5"></i><span class="small fw-bold">{{ car.moc or '-' }} KM</span></div></div>
+                    <div class="col-6"><div class="spec-box"><i class="bi bi-palette-fill d-block text-info mb-1 fs-5"></i><span class="small fw-bold">{{ car.kolor or '-' }}</span></div></div>
+                    
                     <div class="col-6"><div class="spec-box"><i class="bi bi-car-front d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.nadwozie or '-' }}</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-hdd-network d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.pojemnosc or '-' }}</span></div></div>
                 </div>
