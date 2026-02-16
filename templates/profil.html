@@ -21,7 +21,6 @@
         
         body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Inter', sans-serif; padding-bottom: 90px; }
         
-        /* HEADER HERO */
         .hero-section {
             background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
             position: relative; overflow: hidden;
@@ -37,7 +36,6 @@
         }
         .hero-content { position: relative; z-index: 1; }
         
-        /* AVATAR */
         .profile-avatar {
             width: 90px; height: 90px; border-radius: 50%;
             border: 3px solid var(--radom-red);
@@ -45,7 +43,6 @@
             object-fit: cover;
         }
 
-        /* STATS */
         .glass-stat {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -56,7 +53,6 @@
         .limit-bar-bg { background: rgba(255,255,255,0.1); height: 6px; border-radius: 10px; overflow: hidden; margin-top: 8px; }
         .limit-bar-fill { background: var(--radom-red); height: 100%; transition: width 0.5s; }
 
-        /* PREMIUM STYLES */
         .text-gold-glow { color: var(--premium-gold) !important; text-shadow: 0 0 15px rgba(240, 196, 32, 0.5); letter-spacing: 1px; }
         .btn-gold-premium {
             background: linear-gradient(135deg, #f0c420, #d4a017) !important;
@@ -67,7 +63,6 @@
         .car-card { background-color: var(--card-dark); border: 1px solid #333; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); }
         
-        /* FORM & MODAL */
         .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
         .cat-item input { display: none; }
         .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 12px; cursor: pointer; font-size: 0.75rem; text-align: center; color: var(--text-grey); transition: 0.2s; }
@@ -88,7 +83,6 @@
         }
         @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
         
-        /* MENU DOLNE - POPRAWIONE */
         .nav-bottom {
             position: fixed; bottom: 0; width: 100%; background: #000; z-index: 1000;
             display: flex; justify-content: space-around; padding: 12px 0;
@@ -207,23 +201,16 @@
                 <div class="card car-card h-100 border-warning border-opacity-25">
                     <div class="position-relative">
                         <img src="{{ f_car.img }}" class="card-img-top" style="height: 160px; object-fit: cover; opacity: 0.8;">
-                        <a href="/toggle_favorite/{{ f_car.id }}" class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-circle p-2" style="cursor:pointer;">
-                            <i class="bi bi-heart-fill"></i>
-                        </a>
+                        <a href="/toggle_favorite/{{ f_car.id }}" class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-circle p-2" style="cursor:pointer;"><i class="bi bi-heart-fill"></i></a>
                     </div>
                     <div class="card-body">
                         <h6 class="fw-bold text-truncate text-white mb-1">{{ f_car.marka }} {{ f_car.model }}</h6>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-warning fw-bold">{{ "{:,.0f}".format(f_car.cena).replace(',', ' ') }} PLN</span>
-                            <a href="/ogloszenie/{{ f_car.id }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.7rem;">ZOBACZ</a>
-                        </div>
+                        <div class="d-flex justify-content-between align-items-center"><span class="text-warning fw-bold">{{ "{:,.0f}".format(f_car.cena).replace(',', ' ') }} PLN</span><a href="/ogloszenie/{{ f_car.id }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.7rem;">ZOBACZ</a></div>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10">
-                <p class="small mb-0 opacity-25">Nie obserwujesz jeszcze żadnych ogłoszeń.</p>
-            </div>
+            <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10"><p class="small mb-0 opacity-25">Nie obserwujesz jeszcze żadnych ogłoszeń.</p></div>
             {% endfor %}
         </div>
 
@@ -296,6 +283,10 @@
                             <div class="col-4"><label class="small fw-bold text-muted">Rok</label><input type="number" name="rok" class="form-control"></div>
                             <div class="col-4"><label class="small fw-bold text-muted">Cena</label><input type="number" name="cena" class="form-control border-danger text-danger fw-bold" required></div>
                             <div class="col-4 tech"><label class="small fw-bold text-muted">Przebieg</label><input type="number" name="przebieg" class="form-control"></div>
+                            
+                            <div class="col-6 tech"><label class="small fw-bold text-warning">Moc (KM)</label><input type="number" name="moc" class="form-control border-warning text-warning fw-bold" placeholder="np. 150"></div>
+                            <div class="col-6 tech"><label class="small fw-bold text-warning">Kolor</label><input type="text" name="kolor" class="form-control border-warning" placeholder="np. Czarny"></div>
+
                             <div class="col-6 tech"><label class="small fw-bold text-muted">Pojemność</label><input type="text" name="pojemnosc" class="form-control"></div>
                             <div class="col-6 tech"><label class="small fw-bold text-muted">Paliwo</label><select name="paliwo" class="form-select"><option>Benzyna</option><option>Diesel</option><option>LPG</option><option>Hybryda</option><option>Elektryczny</option></select></div>
                             <div class="col-6 tech"><label class="small fw-bold text-muted">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select></div>
@@ -334,7 +325,7 @@
                                     <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera 360" id="w22"><label class="form-check-label small text-white" for="w22">Kamera 360</label></div></div>
                                     <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujniki parkowania" id="w23"><label class="form-check-label small text-white" for="w23">Czujniki parkowania</label></div></div>
                                     <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w24"><label class="form-check-label small text-white" for="w24">Alufelgi</label></div></div>
-                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="LED" id="w25"><label class="form-check-label small text-white" for="w25">Światła LED / Xenon</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Światła LED" id="w25"><label class="form-check-label small text-white" for="w25">Światła LED / Xenon</label></div></div>
                                     <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Hak" id="w26"><label class="form-check-label small text-white" for="w26">Hak</label></div></div>
                                 </div>
                             </div>
@@ -398,10 +389,27 @@
                 const r=await fetch('/api/analyze-car', {method:'POST', body:fd}); const d=await r.json(); 
                 if(d.marka){ 
                     if(d.kategoria){ let r=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(r){ r.checked=true; adj(); }} 
-                    document.querySelector('[name="marka"]').value=d.marka; document.querySelector('[name="model"]').value=d.model;
-                    if(d.vin) document.querySelector('[name="vin"]').value=d.vin; document.querySelector('[name="rok"]').value=d.rok_sugestia||''; document.querySelector('[name="opis"]').value=d.opis_wizualny; 
+                    document.querySelector('[name="marka"]').value=d.marka; 
+                    document.querySelector('[name="model"]').value=d.model;
+                    if(d.vin) document.querySelector('[name="vin"]').value=d.vin; 
+                    document.querySelector('[name="rok"]').value=d.rok_sugestia||''; 
+                    document.querySelector('[name="opis"]').value=d.opis_wizualny;
+                    
+                    // NOWE POLA
+                    if(d.moc_sugestia) document.querySelector('[name="moc"]').value=d.moc_sugestia;
+                    if(d.kolor) document.querySelector('[name="kolor"]').value=d.kolor;
+
+                    // OZNACZANIE CHECKBOXÓW WYPOSAŻENIA (ALUFELGI, LED)
+                    if (d.wyposazenie_wykryte) {
+                        d.wyposazenie_wykryte.forEach(item => {
+                            // Szukamy checkboxa, który ma taką wartość
+                            let chk = document.querySelector(`input[name="wyposazenie"][value="${item}"]`);
+                            if (chk) chk.checked = true;
+                        });
+                    }
+
                     if(d.paliwo_sugestia && d.kategoria!=='Inne'){ const sel=document.querySelector('[name="paliwo"]'); for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text===d.paliwo_sugestia) sel.selectedIndex=i; } } 
-                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione!'; setTimeout(() => { toast.style.display = 'none'; }, 3000);
+                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane (Moc/Kolor/Opcje) uzupełnione!'; setTimeout(() => { toast.style.display = 'none'; }, 3000);
                 } else { toast.style.display = 'none'; } 
             } catch(e){ console.error(e); toast.style.display = 'none'; } 
         }
