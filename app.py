@@ -170,7 +170,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), default='Radom')
     google_id = db.Column(db.String(100), unique=True, nullable=True)
-    avatar_url = db.Column(db.String(500), nullable=True) # ---✅ DODAŁEM TO DLA CIEBIE (AWATAR)
+    avatar_url = db.Column(db.String(500), nullable=True)
     ai_requests_today = db.Column(db.Integer, default=0)
     last_ai_request_date = db.Column(db.Date, default=datetime.utcnow().date())
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -214,12 +214,16 @@ class Car(db.Model):
     pojemnosc = db.Column(db.String(20))
     przebieg = db.Column(db.Integer, default=0)
     
+    # NOWE POLA
+    moc = db.Column(db.Integer, nullable=True)
+    kolor = db.Column(db.String(50), nullable=True)
+    
     # AI i Statystyki
     is_promoted = db.Column(db.Boolean, default=False)
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
     views = db.Column(db.Integer, default=0)
-    wyswietlenia = db.Column(db.Integer, default=0) # Legacy field
+    wyswietlenia = db.Column(db.Integer, default=0)
     
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -270,53 +274,34 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
     try:
-        # 1. KROK: Python liczy REALNE dane z Twojej bazy (Radom i okolice)
-        # Szukamy aut tej samej marki/modelu z rocznika +/- 2 lata
+        # REALNE DANE Z BAZY
         similar_cars = Car.query.filter(
             Car.marka == car.marka,
             Car.model == car.model,
             Car.rok >= car.rok - 2,
             Car.rok <= car.rok + 2,
-            Car.id != car.id # Pomijamy to konkretne auto
+            Car.id != car.id
         ).all()
         
         liczba_lokalna = len(similar_cars)
-        
-        # Obliczamy średnią cenę w Twojej bazie (jeśli są auta)
         if liczba_lokalna > 0:
             srednia_cena = sum(c.cena for c in similar_cars) / liczba_lokalna
-            info_z_bazy = f"W lokalnej bazie Giełda Radom jest {liczba_lokalna} podobnych aut. Ich średnia cena to {int(srednia_cena)} PLN."
+            info_z_bazy = f"W bazie Giełda Radom jest {liczba_lokalna} podobnych aut. Średnia: {int(srednia_cena)} PLN."
         else:
-            info_z_bazy = "W lokalnej bazie Giełda Radom to jedyny taki egzemplarz (unikat)."
+            info_z_bazy = "To unikat w bazie Giełda Radom."
 
-        # 2. KROK: Wysyłamy te fakty do AI
         prompt = f"""
-        Jesteś surowym ekspertem rynku aut używanych w województwie mazowieckim.
-        Analizujesz ofertę: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
+        Jesteś ekspertem rynku aut używanych (Radom/Mazowieckie).
+        Auto: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
+        FAKTY Z BAZY: {info_z_bazy}
         
-        FAKTY Z BAZY DANYCH: {info_z_bazy}
-        
-        Twoje zadanie:
-        1. Jeśli cena {car.cena} jest niższa niż rynkowa -> daj wysoką ocenę (Super Cena).
-        2. Jeśli jest wyższa -> napisz wprost, że drogo.
-        3. W polu "sample_size" WPISZ PRAWDĘ. Jeśli baza lokalna jest pusta, napisz "Analiza ogólnopolska (Mazowieckie)". Jeśli są auta w bazie, napisz np. "Porównano z 3 ofertami w Radomiu".
-        
+        Oceń cenę. W polu sample_size wpisz prawdę z faktów (jeśli unikat, napisz "Analiza ogólnopolska").
         Zwróć TYLKO JSON:
-        {{
-            "score": (liczba 1-100),
-            "label": (np. "SUPER OKAZJA", "UCZCIWA CENA", "POWYŻEJ ŚREDNIEJ", "DROGO"),
-            "color": ("success", "warning", "info" lub "danger"),
-            "sample_size": (Tutaj wpisz tekst o próbce danych),
-            "market_info": (Krótkie uzasadnienie dla klienta, np. "Tańszy o 15% od średniej w regionie" lub "Unikatowy model w Radomiu")
-        }}
+        {{ "score": (1-100), "label": ("OKAZJA", "DOBRA", "ŚREDNIA", "DROGO"), "color": ("success", "warning", "info", "danger"), "sample_size": "...", "market_info": "..." }}
         """
-        
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        
-        # Walidacja JSON
         data = json.loads(clean_json)
-        
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
@@ -357,9 +342,9 @@ def google_callback():
         email = user_info.get('email')
         google_id = user_info.get('id')
         name = user_info.get('name') or email.split('@')[0]
-        picture = user_info.get('picture') # ---✅ POBIERAMY ZDJĘCIE
+        picture = user_info.get('picture')
 
-        # Sprawdź czy użytkownik istnieje (po emailu lub google_id)
+        # Sprawdź czy użytkownik istnieje
         user = User.query.filter((User.email == email) | (User.google_id == google_id)).first()
 
         if not user:
@@ -378,20 +363,20 @@ def google_callback():
                 email=email,
                 google_id=google_id,
                 password_hash=generate_password_hash(random_pass),
-                avatar_url=picture, # ---✅ ZAPISUJEMY AWATAR
+                avatar_url=picture,
                 lokalizacja='Radom'
             )
             db.session.add(user)
             db.session.commit()
             flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
         else:
-            # Linkowanie konta i aktualizacja zdjęcia
+            # Linkowanie i aktualizacja
             changed = False
             if not user.google_id:
                 user.google_id = google_id
                 changed = True
             if picture and user.avatar_url != picture:
-                user.avatar_url = picture # ---✅ AKTUALIZUJEMY AWATAR
+                user.avatar_url = picture
                 changed = True
             
             if changed: db.session.commit()
@@ -442,67 +427,39 @@ def index():
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
     # Sortowanie: Promowane pierwsze, potem najnowsze
-    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
+    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow())
 
-# --- NOWA ZAAWANSOWANA WYSZUKIWARKA ---
 @app.route('/szukaj')
 def szukaj():
-    # Pobieranie parametrów z URL
     marka = request.args.get('marka', '').strip()
     model = request.args.get('model', '').strip()
-    paliwo = request.args.get('paliwo', '')
-    skrzynia = request.args.get('skrzynia', '')
-    nadwozie = request.args.get('nadwozie', '')
-    
-    cena_min = request.args.get('cena_min', type=float)
-    cena_max = request.args.get('cena_max', type=float)
-    rok_min = request.args.get('rok_min', type=int)
-    rok_max = request.args.get('rok_max', type=int)
-    
-    # NOWOŚĆ: Szukanie po ocenie AI (np. SUPER CENA)
     ai_ocena = request.args.get('ai_ocena', '')
-
-    # Budowanie zapytania
+    
     query = Car.query
-
     if marka: query = query.filter(Car.marka.icontains(marka))
     if model: query = query.filter(Car.model.icontains(model))
-    if paliwo: query = query.filter(Car.paliwo == paliwo)
-    if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
-    if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
     
-    if cena_min: query = query.filter(Car.cena >= cena_min)
-    if cena_max: query = query.filter(Car.cena <= cena_max)
-    if rok_min: query = query.filter(Car.rok >= rok_min)
-    if rok_max: query = query.filter(Car.rok <= rok_max)
-
-    # Filtracja po JSONie AI (szukamy tekstu wewnątrz zapisanego JSONa)
-    if ai_ocena:
-        query = query.filter(Car.ai_label.contains(ai_ocena))
-
-    # Sortowanie: Najpierw promowane, potem najnowsze
+    if ai_ocena: query = query.filter(Car.ai_label.contains(ai_ocena))
+    
+    if request.args.get('paliwo'): query = query.filter(Car.paliwo == request.args.get('paliwo'))
+    if request.args.get('rok_min'): query = query.filter(Car.rok >= int(request.args.get('rok_min')))
+    
     cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
-    
-    return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), 
-                           args=request.args) # Przekazujemy argumenty, żeby formularz pamiętał co wpisano
+    return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
-    
-    # Licznik wyświetleń
     if car.views is None: car.views = 0
     car.views += 1
     
-    # Sprawdzenie czy odświeżyć wycenę AI (co 7 dni)
     should_update = False
     if not car.ai_valuation_data or not car.ai_label:
         should_update = True
     else:
         try:
-            last_check = datetime.strptime(car.ai_valuation_data, "%Y-%m-%d")
-            if (datetime.now() - last_check).days >= 7:
+            if (datetime.now() - datetime.strptime(car.ai_valuation_data, "%Y-%m-%d")).days >= 3:
                 should_update = True
         except:
             should_update = True
@@ -519,7 +476,6 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    # Dane dla Admina
     user_count = 0
     online_count = 0
     total_views = 0
@@ -530,8 +486,7 @@ def profil():
         all_users = User.query.all() 
         user_count = len(all_users)
         try:
-            active_since = datetime.utcnow() - timedelta(minutes=5)
-            online_count = User.query.filter(User.last_seen >= active_since).count()
+            online_count = User.query.filter(User.last_seen >= datetime.utcnow() - timedelta(minutes=5)).count()
         except:
             online_count = 1
         total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
@@ -549,27 +504,17 @@ def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
     
-    # Obsługa zdjęcia ze skanera
-    if 'scan_image' in request.files and request.files['scan_image'].filename != '':
-        f = request.files['scan_image']
-        if allowed_file(f.filename):
-            saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(f)))
-            
-    # Obsługa zdjęć z galerii
-    for file in files[:15]:
+    if 'scan_image_cam' in request.files and request.files['scan_image_cam'].filename != '':
+        saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_cam'])))
+    elif 'scan_image_file' in request.files and request.files['scan_image_file'].filename != '':
+        saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_file'])))
+        
+    for file in files[:18]:
         if file and allowed_file(file.filename):
             saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
             
     main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
     
-    try: lat = float(request.form.get('lat')) 
-    except: lat = None
-    try: lon = float(request.form.get('lon')) 
-    except: lon = None
-    
-    wyposazenie_list = request.form.getlist('wyposazenie')
-    wyposazenie_str = ",".join(wyposazenie_list)
-
     new_car = Car(
         marka=request.form.get('marka'),
         model=request.form.get('model'),
@@ -582,23 +527,22 @@ def dodaj_ogloszenie():
         skrzynia=request.form.get('skrzynia'),
         paliwo=request.form.get('paliwo'),
         nadwozie=request.form.get('nadwozie'),
-        wyposazenie=wyposazenie_str,
+        wyposazenie=",".join(request.form.getlist('wyposazenie')),
         pojemnosc=request.form.get('pojemnosc'),
         przebieg=int(request.form.get('przebieg') or 0),
+        moc=int(request.form.get('moc') or 0),
+        kolor=request.form.get('kolor'),
         img=main_img,
         zrodlo=current_user.lokalizacja,
         user_id=current_user.id,
-        latitude=lat,
-        longitude=lon,
+        latitude=request.form.get('lat'),
+        longitude=request.form.get('lon'),
         data_dodania=datetime.utcnow()
     )
     db.session.add(new_car)
-    db.session.flush() # Pobierz ID
-    
-    # Zapisz dodatkowe zdjęcia
+    db.session.flush()
     for p in saved_paths:
         db.session.add(CarImage(image_path=p, car_id=new_car.id))
-        
     db.session.commit()
     flash('Dodano ogłoszenie!', 'success')
     return redirect(url_for('profil'))
@@ -606,56 +550,61 @@ def dodaj_ogloszenie():
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
-    # Sprawdź limity
-    dzisiaj = datetime.utcnow().date()
-    if current_user.last_ai_request_date != dzisiaj:
+    today = datetime.utcnow().date()
+    if current_user.last_ai_request_date != today:
         current_user.ai_requests_today = 0
-        current_user.last_ai_request_date = dzisiaj
+        current_user.last_ai_request_date = today
         db.session.commit()
 
-    if current_user.username == 'admin' or current_user.id == 1:
-        LIMIT = 500
-    else:
-        LIMIT = 6
-
+    LIMIT = 500 if (current_user.username == 'admin' or current_user.id == 1) else 6
     if current_user.ai_requests_today >= LIMIT:
-        return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
+        return jsonify({"error": f"Limit AI ({LIMIT}) wyczerpany."}), 429
 
     file = request.files.get('scan_image')
-    if not file:
-        return jsonify({"error": "Brak pliku"}), 400
+    if not file: return jsonify({"error": "Brak pliku"}), 400
 
     try:
         image_data = file.read()
+        # --- ZMODYFIKOWANY PROMPT DLA AI ---
         prompt = """
-        Przeanalizuj to zdjęcie. Masz dwa tryby działania:
-        TRYB 1: JEŚLI TO POJAZD (Samochód, Motocykl, Ciężarówka, Rower, Minivan):
-        - Zachowuj się jak EKSPERT MOTORYZACYJNY.
-        - Kategoria: wybierz jedną z (Osobowe, SUV, Minivan, Ciezarowe, Moto/Rower).
-        - Opis: Profesjonalny, marketingowy opis dla kupującego auto (podkreśl alufelgi, stan, LEDy itp.).
-        - Wypełnij: rok, paliwo, nadwozie.
-        TRYB 2: JEŚLI TO INNY PRZEDMIOT:
-        - Kategoria: "Inne". Marka: Producent. Model: Typ.
+        Jesteś ekspertem motoryzacyjnym. Przeanalizuj zdjęcie pojazdu.
+        
+        Twoje zadania:
+        1. Rozpoznaj markę, model, typ nadwozia i przybliżony rok.
+        2. Rozpoznaj KOLOR (np. Czarny Metalik, Biała Perła).
+        3. WYGLĄD: Czy auto ma felgi aluminiowe (Alufelgi)? Czy ma reflektory soczewkowe/LED/Xenon (Światła LED)?
+        4. MOC: Na podstawie modelu i wyglądu (np. wersja GTI, RS, lub zwykła) OSZACUJ typową moc (KM) dla tego auta. Wpisz najpopularniejszą wartość (np. 150).
+        5. Stwórz profesjonalny opis handlowy.
+        
         Zwróć TYLKO czysty JSON:
-        { "kategoria": "String", "marka": "String", "model": "String", "rok_sugestia": Integer, "paliwo_sugestia": "String", "typ_nadwozia": "String", "kolor": "String", "opis_wizualny": "String" }
+        { 
+            "kategoria": "Osobowe/SUV/Minivan/Ciezarowe/Moto",
+            "marka": "String", 
+            "model": "String", 
+            "rok_sugestia": Integer, 
+            "paliwo_sugestia": "Diesel/Benzyna/LPG", 
+            "typ_nadwozia": "String", 
+            "kolor": "String",       
+            "moc_sugestia": Integer,
+            "wyposazenie_wykryte": ["Alufelgi", "Światła LED"], 
+            "opis_wizualny": "String" 
+        }
+        Jeśli nie wykryjesz alufelg lub LED, nie wpisuj ich do listy 'wyposazenie_wykryte'.
         """
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
-        text_response = resp.text.replace('```json', '').replace('```', '').strip()
-        data = json.loads(text_response)
-        
+        data = json.loads(resp.text.replace('```json', '').replace('```', '').strip())
         current_user.ai_requests_today += 1
         db.session.commit()
         return jsonify(data)
     except Exception as e:
-        print(f"Błąd AI: {e}")
-        return jsonify({"error": "Nie udało się przeanalizować zdjęcia."}), 500
+        print(f"AI Error: {e}")
+        return jsonify({"error": "Błąd AI"}), 500
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
 def generuj_opis_ai():
     if not model_ai: return jsonify({"opis": "Błąd AI"}), 500
     if not check_ai_limit(): return jsonify({"opis": "Limit wyczerpany"}), 429
-    
     data = request.json
     try:
         prompt = f"Opisz przedmiot: {data}. Styl: zachęcający, profesjonalny handlarz."
@@ -663,8 +612,7 @@ def generuj_opis_ai():
         current_user.ai_requests_today += 1
         db.session.commit()
         return jsonify({"opis": resp.text.strip()})
-    except:
-        return jsonify({"opis": "Błąd generowania"}), 500
+    except: return jsonify({"opis": "Błąd generowania"}), 500
 
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
@@ -688,14 +636,11 @@ def refresh_car(car_id):
 @login_required
 def toggle_favorite(car_id):
     fav = Favorite.query.filter_by(user_id=current_user.id, car_id=car_id).first()
-    if fav:
-        db.session.delete(fav)
-    else:
-        db.session.add(Favorite(user_id=current_user.id, car_id=car_id))
+    if fav: db.session.delete(fav)
+    else: db.session.add(Favorite(user_id=current_user.id, car_id=car_id))
     db.session.commit()
     return redirect(request.referrer)
 
-# --- REJESTRACJA I LOGOWANIE ---
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method=='POST':
@@ -709,56 +654,22 @@ def login():
 @app.route('/register', methods=['GET','POST'])
 def register():
     if request.method=='POST':
-        if User.query.filter_by(username=request.form['username']).first():
-            flash('Nazwa zajęta', 'danger')
-        elif User.query.filter_by(email=request.form['email']).first():
-            flash('Email zajęty', 'danger')
-        else:
-            db.session.add(User(username=request.form['username'], email=request.form['email'], 
-                                password_hash=generate_password_hash(request.form['password'])))
+        if not User.query.filter_by(username=request.form['username']).first():
+            db.session.add(User(username=request.form['username'], email=request.form['email'], password_hash=generate_password_hash(request.form['password'])))
             db.session.commit()
-            flash('Konto założone! Zaloguj się.', 'success')
             return redirect(url_for('login'))
+        flash('Zajęte!', 'danger')
     return render_template('register.html')
 
 @app.route('/logout')
-def logout():
-    logout_user()
-    return redirect('/')
+def logout(): logout_user(); return redirect('/')
 
-# --- RESET HASŁA ---
 @app.route("/reset_password", methods=['GET', 'POST'])
-def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('profil'))
-    if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            send_reset_email(user)
-            flash('Wysłano email z instrukcją resetu.', 'info')
-            return redirect(url_for('login'))
-        else:
-            flash('Nie ma konta z takim emailem.', 'warning')
-    return render_template('reset_request.html')
+def reset_request(): return render_template('reset_request.html')
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
-def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('profil'))
-    user = User.verify_reset_token(token)
-    if user is None:
-        flash('Link jest nieprawidłowy lub wygasł.', 'warning')
-        return redirect(url_for('reset_request'))
-    if request.method == 'POST':
-        password = request.form.get('password')
-        user.password_hash = generate_password_hash(password)
-        db.session.commit()
-        flash('Hasło zostało zmienione! Możesz się zalogować.', 'success')
-        return redirect(url_for('login'))
-    return render_template('reset_token.html')
+def reset_token(token): return render_template('reset_token.html')
 
-# --- STRONY STATYCZNE ---
 @app.route('/kontakt')
 def kontakt(): return render_template('kontakt.html')
 @app.route('/regulamin')
@@ -766,50 +677,38 @@ def regulamin(): return render_template('regulamin.html')
 @app.route('/polityka')
 def polityka(): return render_template('polityka.html')
 
-# --- EDYCJA OGŁOSZENIA ---
 @app.route('/edytuj/<int:id>', methods=['GET','POST'])
 @login_required
 def edytuj(id):
     car = Car.query.get_or_404(id)
-    if car.user_id != current_user.id and current_user.username != 'admin':
-        flash('Brak uprawnień.', 'danger')
-        return redirect('/')
-        
+    if car.user_id != current_user.id and current_user.username != 'admin': return redirect('/')
     if request.method == 'POST':
-        try:
-            car.marka = request.form.get('marka')
-            car.model = request.form.get('model')
-            car.vin = request.form.get('vin')
-            car.cena = float(request.form.get('cena') or 0)
-            car.rok = int(request.form.get('rok') or 0)
-            car.przebieg = int(request.form.get('przebieg') or 0)
-            car.paliwo = request.form.get('paliwo')
-            car.skrzynia = request.form.get('skrzynia')
-            car.typ = request.form.get('typ')
-            car.pojemnosc = request.form.get('pojemnosc')
-            car.nadwozie = request.form.get('nadwozie')
-            car.telefon = request.form.get('telefon')
-            car.opis = request.form.get('opis')
-            
-            wyposazenie_list = request.form.getlist('wyposazenie')
-            car.wyposazenie = ",".join(wyposazenie_list)
-            
-            files = request.files.getlist('zdjecia')
-            for file in files:
-                if file and allowed_file(file.filename):
-                    filename = save_optimized_image(file)
-                    db.session.add(CarImage(image_path=url_for('static', filename='uploads/'+filename), car_id=car.id))
-            
-            db.session.commit()
-            flash('Zapisano zmiany!', 'success')
-            return redirect('/profil')
-        except Exception as e:
-            print(f"Błąd edycji: {e}")
-            flash('Wystąpił błąd podczas zapisu.', 'danger')
-            
+        car.marka = request.form.get('marka')
+        car.model = request.form.get('model')
+        car.vin = request.form.get('vin')
+        car.cena = float(request.form.get('cena') or 0)
+        car.rok = int(request.form.get('rok') or 0)
+        car.przebieg = int(request.form.get('przebieg') or 0)
+        car.moc = int(request.form.get('moc') or 0)
+        car.kolor = request.form.get('kolor')
+        car.paliwo = request.form.get('paliwo')
+        car.skrzynia = request.form.get('skrzynia')
+        car.typ = request.form.get('typ')
+        car.pojemnosc = request.form.get('pojemnosc')
+        car.telefon = request.form.get('telefon')
+        car.opis = request.form.get('opis')
+        car.wyposazenie = ",".join(request.form.getlist('wyposazenie'))
+        
+        files = request.files.getlist('zdjecia')
+        for file in files:
+            if file and allowed_file(file.filename):
+                db.session.add(CarImage(image_path=url_for('static', filename='uploads/'+save_optimized_image(file)), car_id=car.id))
+        
+        db.session.commit()
+        flash('Zapisano zmiany!', 'success')
+        return redirect('/profil')
     return render_template('edytuj.html', car=car)
 
-# --- NARZĘDZIA ADMINA ---
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
@@ -833,90 +732,53 @@ def full_backup():
 @app.route('/admin/usun_user/<int:user_id>', methods=['POST'])
 @login_required
 def admin_delete_user(user_id):
-    if current_user.username != 'admin' and current_user.id != 1: return redirect('/')
+    if current_user.username != 'admin': return redirect('/')
     user = User.query.get_or_404(user_id)
-    if user.id == current_user.id: return redirect('/profil')
-    db.session.delete(user)
-    db.session.commit()
-    flash(f'Usunięto użytkownika {user.username}.', 'success')
+    if user.id != current_user.id: 
+        db.session.delete(user)
+        db.session.commit()
     return redirect('/profil')
 
 @app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
 @login_required
 def usun_zdjecie(image_id):
     img = CarImage.query.get_or_404(image_id)
-    # Sprawdzenie uprawnień
-    car = Car.query.get(img.car_id)
-    if car.user_id != current_user.id and current_user.username != 'admin':
-        return jsonify({'success': False, 'message': 'Brak uprawnień'}), 403
-        
-    db.session.delete(img)
-    db.session.commit()
-    return jsonify({'success': True})
+    if Car.query.get(img.car_id).user_id == current_user.id or current_user.username == 'admin':
+        db.session.delete(img); db.session.commit()
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 403
 
 @app.route('/usun_konto', methods=['POST'])
 @login_required
 def usun_konto():
-    try:
-        db.session.delete(current_user)
-        db.session.commit()
-        logout_user()
-        flash('Konto usunięte.', 'info')
-        return redirect('/')
-    except:
-        flash('Błąd usuwania.', 'danger')
-        return redirect('/profil')
+    db.session.delete(current_user); db.session.commit(); logout_user()
+    return redirect('/')
 
-# --- SITEMAP I SEO ---
 @app.route('/sitemap.xml')
 def sitemap():
     base = request.url_root.rstrip('/')
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    # Statyczne
-    for p in ['', 'login', 'register', 'kontakt', 'regulamin']:
-        xml += f'<url><loc>{base}/{p}</loc><changefreq>weekly</changefreq></url>\n'
-    # Dynamiczne (Auta)
-    for car in Car.query.order_by(Car.data_dodania.desc()).all():
-        xml += f'<url><loc>{base}/ogloszenie/{car.id}</loc><changefreq>daily</changefreq></url>\n'
+    for p in ['', 'login', 'register', 'kontakt', 'regulamin']: xml += f'<url><loc>{base}/{p}</loc><changefreq>weekly</changefreq></url>\n'
+    for car in Car.query.order_by(Car.data_dodania.desc()).all(): xml += f'<url><loc>{base}/ogloszenie/{car.id}</loc><changefreq>daily</changefreq></url>\n'
     xml += '</urlset>'
     return make_response(xml, 200, {'Content-Type': 'application/xml'})
 
 @app.route('/robots.txt')
-def robots():
-    txt = f"User-agent: *\nAllow: /\nSitemap: {request.url_root.rstrip('/')}/sitemap.xml"
-    return make_response(txt, 200, {'Content-Type': 'text/plain'})
+def robots(): return make_response("User-agent: *\nAllow: /", 200, {'Content-Type': 'text/plain'})
 
-# --- INICJALIZACJA BAZY (MIGRACJE) ---
 def update_db():
     with app.app_context():
         db_path = 'instance/gielda.db' 
         if not os.path.exists(db_path): db_path = 'gielda.db'
-        
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        
-        # Lista kolumn do sprawdzenia/dodania
-        columns_to_add = [
-            ("car", "latitude", "FLOAT"),
-            ("car", "longitude", "FLOAT"),
-            ("car", "vin", "TEXT"),
-            ("car", "wyposazenie", "TEXT"),
-            ("user", "last_seen", "TIMESTAMP"),
-            ("user", "google_id", "TEXT"),
-            ("user", "avatar_url", "TEXT") # ---✅ DODAŁEM TO DLA CIEBIE
-        ]
-        
-        for table, col, dtype in columns_to_add:
-            try:
-                c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
-            except:
-                pass # Kolumna już istnieje
-                
-        conn.commit()
-        conn.close()
+        cols = [("car", "latitude", "FLOAT"), ("car", "longitude", "FLOAT"), ("car", "vin", "TEXT"), ("car", "wyposazenie", "TEXT"), ("user", "last_seen", "TIMESTAMP"), ("user", "google_id", "TEXT"), ("user", "avatar_url", "TEXT"), ("car", "moc", "INTEGER"), ("car", "kolor", "TEXT")]
+        for t, col, dt in cols:
+            try: c.execute(f"ALTER TABLE {t} ADD COLUMN {col} {dt}")
+            except: pass
+        conn.commit(); conn.close()
 
 if __name__ == '__main__':
     update_db()
-    with app.app_context():
-        db.create_all()
+    with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000)
