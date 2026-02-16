@@ -19,7 +19,7 @@
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #121212; --card-dark: #1e1e1e; --text-grey: #b0b3b8; --premium-gold: #f0c420; }
         
-        body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Inter', sans-serif; padding-bottom: 90px; }
         
         /* HEADER HERO */
         .hero-section {
@@ -88,6 +88,7 @@
         }
         @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
         
+        /* MENU DOLNE - POPRAWIONE */
         .nav-bottom {
             position: fixed; bottom: 0; width: 100%; background: #000; z-index: 1000;
             display: flex; justify-content: space-around; padding: 12px 0;
@@ -196,35 +197,34 @@
                 <h5 class="text-white opacity-50">Garaż jest pusty</h5>
             </div>
             {% endfor %}
-    <h5 class="fw-bold text-white mb-3 mt-5 ps-2 border-start border-4 border-warning ps-3">OBSERWOWANE OFERTY</h5>
+        </div>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-    {% for fav in favorites %}
-    {% set f_car = fav.car %}
-    <div class="col">
-        <div class="card car-card h-100 border-warning border-opacity-25">
-            <div class="position-relative">
-                <img src="{{ f_car.img }}" class="card-img-top" style="height: 160px; object-fit: cover; opacity: 0.8;">
-                <a href="/toggle_favorite/{{ f_car.id }}" class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-circle p-2" style="cursor:pointer;">
-                    <i class="bi bi-heart-fill"></i>
-                </a>
-            </div>
-            <div class="card-body">
-                <h6 class="fw-bold text-truncate text-white mb-1">{{ f_car.marka }} {{ f_car.model }}</h6>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-warning fw-bold">{{ "{:,.0f}".format(f_car.cena).replace(',', ' ') }} PLN</span>
-                    <a href="/ogloszenie/{{ f_car.id }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.7rem;">ZOBACZ</a>
+        <h5 class="fw-bold text-white mb-3 mt-5 ps-2 border-start border-4 border-warning ps-3">OBSERWOWANE OFERTY</h5>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+            {% for fav in favorites %}
+            {% set f_car = fav.car %}
+            <div class="col">
+                <div class="card car-card h-100 border-warning border-opacity-25">
+                    <div class="position-relative">
+                        <img src="{{ f_car.img }}" class="card-img-top" style="height: 160px; object-fit: cover; opacity: 0.8;">
+                        <a href="/toggle_favorite/{{ f_car.id }}" class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-circle p-2" style="cursor:pointer;">
+                            <i class="bi bi-heart-fill"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="fw-bold text-truncate text-white mb-1">{{ f_car.marka }} {{ f_car.model }}</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-warning fw-bold">{{ "{:,.0f}".format(f_car.cena).replace(',', ' ') }} PLN</span>
+                            <a href="/ogloszenie/{{ f_car.id }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.7rem;">ZOBACZ</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    {% else %}
-    <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10">
-        <p class="small mb-0 opacity-25">Nie obserwujesz jeszcze żadnych ogłoszeń.</p>
-    </div>
-    {% endfor %}
-</div>
-
+            {% else %}
+            <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10">
+                <p class="small mb-0 opacity-25">Nie obserwujesz jeszcze żadnych ogłoszeń.</p>
+            </div>
+            {% endfor %}
         </div>
 
         {% if current_user.username == 'admin' or current_user.id == 1 %}
@@ -253,7 +253,7 @@
     </div>
 
     <div class="nav-bottom">
-        <a href="/" class="nav-item"><i class="bi bi-search"></i> szukaj</a>
+        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
         <a href="/profil" class="nav-item active"><i class="bi bi-speedometer2"></i> Garaż</a>
         <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> Kontakt</a>
     </div>
