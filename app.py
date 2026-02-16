@@ -450,23 +450,47 @@ def index():
 
 @app.route('/szukaj')
 def szukaj():
+    # Pobieramy parametry
     marka = request.args.get('marka', '').strip()
     model = request.args.get('model', '').strip()
     ai_ocena = request.args.get('ai_ocena', '')
+    paliwo = request.args.get('paliwo', '')
+    skrzynia = request.args.get('skrzynia', '')
+    nadwozie = request.args.get('nadwozie', '')
+    kolor = request.args.get('kolor', '').strip() # ---✅ NOWE
+    
+    # Liczbowe
+    cena_min = request.args.get('cena_min', type=float)
+    cena_max = request.args.get('cena_max', type=float)
+    rok_min = request.args.get('rok_min', type=int)
+    rok_max = request.args.get('rok_max', type=int)
+    moc_min = request.args.get('moc_min', type=int) # ---✅ NOWE
     
     query = Car.query
+
+    # Filtrowanie tekstowe
     if marka: query = query.filter(Car.marka.icontains(marka))
     if model: query = query.filter(Car.model.icontains(model))
-    
-    # Filtracja po AI
+    if kolor: query = query.filter(Car.kolor.icontains(kolor)) # ---✅ NOWE
     if ai_ocena: query = query.filter(Car.ai_label.contains(ai_ocena))
     
-    # ... Reszta filtrów z formularza (paliwo, rok, cena itp.) ...
-    if request.args.get('paliwo'): query = query.filter(Car.paliwo == request.args.get('paliwo'))
-    if request.args.get('rok_min'): query = query.filter(Car.rok >= int(request.args.get('rok_min')))
+    # Filtrowanie ścisłe (select)
+    if paliwo: query = query.filter(Car.paliwo == paliwo)
+    if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
+    if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
     
+    # Filtrowanie liczbowe
+    if cena_min: query = query.filter(Car.cena >= cena_min)
+    if cena_max: query = query.filter(Car.cena <= cena_max)
+    if rok_min: query = query.filter(Car.rok >= rok_min)
+    if rok_max: query = query.filter(Car.rok <= rok_max)
+    if moc_min: query = query.filter(Car.moc >= moc_min) # ---✅ NOWE (Szukamy aut, które mają WIĘCEJ niż wpisana moc)
+    
+    # Sortowanie
     cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
+    
     return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
