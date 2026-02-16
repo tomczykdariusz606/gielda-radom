@@ -445,6 +445,48 @@ def index():
     cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow())
 
+# --- NOWA ZAAWANSOWANA WYSZUKIWARKA ---
+@app.route('/szukaj')
+def szukaj():
+    # Pobieranie parametrów z URL
+    marka = request.args.get('marka', '').strip()
+    model = request.args.get('model', '').strip()
+    paliwo = request.args.get('paliwo', '')
+    skrzynia = request.args.get('skrzynia', '')
+    nadwozie = request.args.get('nadwozie', '')
+    
+    cena_min = request.args.get('cena_min', type=float)
+    cena_max = request.args.get('cena_max', type=float)
+    rok_min = request.args.get('rok_min', type=int)
+    rok_max = request.args.get('rok_max', type=int)
+    
+    # NOWOŚĆ: Szukanie po ocenie AI (np. SUPER CENA)
+    ai_ocena = request.args.get('ai_ocena', '')
+
+    # Budowanie zapytania
+    query = Car.query
+
+    if marka: query = query.filter(Car.marka.icontains(marka))
+    if model: query = query.filter(Car.model.icontains(model))
+    if paliwo: query = query.filter(Car.paliwo == paliwo)
+    if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
+    if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
+    
+    if cena_min: query = query.filter(Car.cena >= cena_min)
+    if cena_max: query = query.filter(Car.cena <= cena_max)
+    if rok_min: query = query.filter(Car.rok >= rok_min)
+    if rok_max: query = query.filter(Car.rok <= rok_max)
+
+    # Filtracja po JSONie AI (szukamy tekstu wewnątrz zapisanego JSONa)
+    if ai_ocena:
+        query = query.filter(Car.ai_label.contains(ai_ocena))
+
+    # Sortowanie: Najpierw promowane, potem najnowsze
+    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
+    
+    return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), 
+                           args=request.args) # Przekazujemy argumenty, żeby formularz pamiętał co wpisano
+
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
