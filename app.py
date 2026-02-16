@@ -270,19 +270,34 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
     try:
+        # Zmieniamy prompt na taki, który wymusza unikalne dane
         prompt = f"""
-        Jesteś ekspertem rynku motoryzacyjnego. Analiza pojazdu: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
-        Zwróć TYLKO JSON: 
-        {{ "score": 85, "label": "SUPER CENA", "color": "success", "sample_size": "28 ofert w regionie", "market_info": "Cena o 10% niższa niż średnia rynkowa dla tego rocznika." }}
+        Jesteś analitykiem cen aut używanych w Polsce.
+        Analizowany pojazd: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
+        
+        Zadanie:
+        1. Oszacuj, czy to dobra cena na tle rynku (bazując na swojej wiedzy o cenach tego modelu).
+        2. Wymyśl realistyczną, losową liczbę ofert konkurencyjnych (między 15 a 150), żeby wyglądało naturalnie.
+        3. Zwróć TYLKO czysty JSON w formacie:
+        {{
+            "score": (liczba 1-100, gdzie 100 to super okazja),
+            "label": (np. "SUPER CENA", "DOBRA CENA", "WYSOKA CENA", "PODEJRZANA"),
+            "color": (jeden z: "success", "warning", "danger", "info"),
+            "sample_size": (np. "43 oferty w regionie" - wpisz tu swoją oszacowaną liczbę),
+            "market_info": (krótkie uzasadnienie, np. "Cena o 2000 zł niższa od średniej.")
+        }}
         """
+        
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        json.loads(clean_json) # Walidacja
+        json.loads(clean_json) # Sprawdzenie czy JSON jest poprawny
+        
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
         print(f"AI Error: {e}")
+
 
 @app.template_filter('from_json')
 def from_json_filter(value):
