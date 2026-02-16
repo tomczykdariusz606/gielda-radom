@@ -21,7 +21,7 @@
         
         body { background-color: var(--bg-dark); color: #e4e6eb; font-family: 'Inter', sans-serif; }
         
-        /* --- NOWY NAGŁÓWEK (HERO) W TWOIM STYLU --- */
+        /* HEADER HERO */
         .hero-section {
             background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
             position: relative; overflow: hidden;
@@ -37,7 +37,7 @@
         }
         .hero-content { position: relative; z-index: 1; }
         
-        /* AWATAR */
+        /* AVATAR */
         .profile-avatar {
             width: 90px; height: 90px; border-radius: 50%;
             border: 3px solid var(--radom-red);
@@ -45,7 +45,7 @@
             object-fit: cover;
         }
 
-        /* STATYSTYKI SZKLANE */
+        /* STATS */
         .glass-stat {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -53,12 +53,10 @@
             border-radius: 16px; padding: 15px;
             height: 100%; transition: 0.3s;
         }
-        .glass-stat:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
-        
         .limit-bar-bg { background: rgba(255,255,255,0.1); height: 6px; border-radius: 10px; overflow: hidden; margin-top: 8px; }
         .limit-bar-fill { background: var(--radom-red); height: 100%; transition: width 0.5s; }
 
-        /* --- TWOJE STYLE PREMIUM (ZACHOWANE) --- */
+        /* PREMIUM STYLES */
         .text-gold-glow { color: var(--premium-gold) !important; text-shadow: 0 0 15px rgba(240, 196, 32, 0.5); letter-spacing: 1px; }
         .btn-gold-premium {
             background: linear-gradient(135deg, #f0c420, #d4a017) !important;
@@ -66,23 +64,16 @@
             box-shadow: 0 4px 15px rgba(240, 196, 32, 0.4) !important;
             transition: all 0.3s ease !important; position: relative; overflow: hidden;
         }
-        .btn-gold-premium:hover {
-            transform: translateY(-3px) scale(1.05) !important;
-            box-shadow: 0 8px 25px rgba(240, 196, 32, 0.7) !important;
-            background: linear-gradient(135deg, #ffd700, #e6b800) !important;
-        }
-
         .car-card { background-color: var(--card-dark); border: 1px solid #333; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); }
         
-        /* FORMULARZ I MODAL */
+        /* FORM & MODAL */
         .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
         .cat-item input { display: none; }
         .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 12px; cursor: pointer; font-size: 0.75rem; text-align: center; color: var(--text-grey); transition: 0.2s; }
         .cat-item input:checked + .cat-label { background: #3a1517; border-color: var(--radom-red); color: white; font-weight: bold; box-shadow: 0 0 10px rgba(206, 43, 55, 0.4); }
         .form-control, .form-select { background-color: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; }
         .form-control:focus { background-color: #333; border-color: var(--radom-red); color: white; box-shadow: none; }
-
         .scanner-box { border: 2px dashed var(--premium-gold); border-radius: 15px; padding: 20px; text-align: center; background: rgba(0,0,0,0.3); margin-bottom: 20px; }
         .btn-submit-fix { background-color: var(--radom-red); color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 15px; width: 100%; border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(206, 43, 55, 0.4); margin-top: 20px; }
         
@@ -134,23 +125,14 @@
                             {% set limit = 500 %}{% else %}{% set limit = 6 %}{% endif %}
                         {% set uzyte = current_user.ai_requests_today %}
                         {% set pozostalo = limit - uzyte %}{% if pozostalo < 0 %}{% set pozostalo = 0 %}{% endif %}
-                        
-                        <div class="d-flex justify-content-between text-white-50 small mb-1">
-                            <span>Limit AI</span> <i class="bi bi-robot"></i>
-                        </div>
+                        <div class="d-flex justify-content-between text-white-50 small mb-1"><span>Limit AI</span> <i class="bi bi-robot"></i></div>
                         <h4 class="fw-bold m-0 text-white">{{ pozostalo }}<span class="fs-6 text-muted">/{{ limit }}</span></h4>
-                        
-                        <div class="limit-bar-bg">
-                            <div class="limit-bar-fill" style="width: {{ (uzyte / limit) * 100 }}%"></div>
-                        </div>
+                        <div class="limit-bar-bg"><div class="limit-bar-fill" style="width: {{ (uzyte / limit) * 100 }}%"></div></div>
                     </div>
                 </div>
-                
                 <div class="col-6">
                     <div class="glass-stat">
-                        <div class="d-flex justify-content-between text-white-50 small mb-1">
-                            <span>Aktywne</span> <i class="bi bi-car-front"></i>
-                        </div>
+                        <div class="d-flex justify-content-between text-white-50 small mb-1"><span>Aktywne</span> <i class="bi bi-car-front"></i></div>
                         <h4 class="fw-bold m-0 text-white">{{ cars|length }} <span class="fs-6 text-muted">ofert</span></h4>
                     </div>
                 </div>
@@ -183,9 +165,7 @@
                     <div class="position-relative">
                         <img src="{{ car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
                         {% set dni = (now - car.data_dodania).days %}{% set left = 30 - dni %}
-                        <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">
-                            {% if left > 0 %}{{ left }} dni{% else %}KONIEC{% endif %}
-                        </span>
+                        <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">{% if left > 0 %}{{ left }} dni{% else %}KONIEC{% endif %}</span>
                         {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow fw-bold">GOLD</span>{% endif %}
                     </div>
                     <div class="card-body d-flex flex-column">
@@ -214,7 +194,6 @@
             <div class="col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25">
                 <i class="bi bi-car-front fs-1 mb-3 d-block opacity-25"></i>
                 <h5 class="text-white opacity-50">Garaż jest pusty</h5>
-                <p class="small opacity-25">Dodaj swoje pierwsze auto, aby zacząć sprzedawać.</p>
             </div>
             {% endfor %}
         </div>
@@ -227,71 +206,37 @@
             </div>
             <div class="card-body text-white">
                 <div class="row g-3 mb-4 text-center">
-                    <div class="col-4">
-                        <div class="p-3 rounded-3 border border-secondary bg-dark bg-opacity-50">
-                            <h3 class="fw-bold text-white mb-0">{{ user_count }}</h3>
-                            <small class="text-secondary fw-bold" style="font-size:0.6rem;">KONTA</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
-                            <h3 class="fw-bold text-success mb-0">{{ online_count }}</h3>
-                            <small class="text-success fw-bold" style="font-size:0.6rem;">ONLINE</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="p-3 rounded-3 border border-info bg-info bg-opacity-10">
-                            <h3 class="fw-bold text-info mb-0">{{ total_views }}</h3>
-                            <small class="text-info fw-bold" style="font-size:0.6rem;">WIDOKI</small>
-                        </div>
-                    </div>
+                    <div class="col-4"><div class="p-3 rounded-3 border border-secondary bg-dark bg-opacity-50"><h3 class="fw-bold text-white mb-0">{{ user_count }}</h3><small class="text-secondary fw-bold" style="font-size:0.6rem;">KONTA</small></div></div>
+                    <div class="col-4"><div class="p-3 rounded-3 border border-success bg-success bg-opacity-10"><h3 class="fw-bold text-success mb-0">{{ online_count }}</h3><small class="text-success fw-bold" style="font-size:0.6rem;">ONLINE</small></div></div>
+                    <div class="col-4"><div class="p-3 rounded-3 border border-info bg-info bg-opacity-10"><h3 class="fw-bold text-info mb-0">{{ total_views }}</h3><small class="text-info fw-bold" style="font-size:0.6rem;">WIDOKI</small></div></div>
                 </div>
-
                 <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
-                    <button class="btn btn-danger w-100 fw-bold shadow-sm mb-3" data-bs-toggle="modal" data-bs-target="#usersModal">
-                        <i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI
-                    </button>
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2"><i class="bi bi-database"></i> SQL</a>
-                        <a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark"><i class="bi bi-archive-fill"></i> ZIP</a>
-                    </div>
+                    <button class="btn btn-danger w-100 fw-bold shadow-sm mb-3" data-bs-toggle="modal" data-bs-target="#usersModal"><i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI</button>
+                    <div class="d-flex gap-2"><a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2"><i class="bi bi-database"></i> SQL</a><a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark"><i class="bi bi-archive-fill"></i> ZIP</a></div>
                 </div>
             </div>
         </div>
         {% endif %}
         
         <div class="text-center mt-5 mb-5 pb-5 opacity-50">
-            <form action="/usun_konto" method="POST" onsubmit="return confirm('Czy na pewno? To usunie konto trwale.');">
-                <button class="btn btn-link text-danger text-decoration-none btn-sm">Usuń konto</button>
-            </form>
+            <form action="/usun_konto" method="POST" onsubmit="return confirm('Czy na pewno?');"><button class="btn btn-link text-danger text-decoration-none btn-sm">Usuń konto</button></form>
         </div>
     </div>
 
     <div class="nav-bottom">
-        <a href="/" class="nav-item">
-            <i class="bi bi-search"></i> Szukaj
-        </a>
-        <a href="/profil" class="nav-item active">
-            <i class="bi bi-speedometer2"></i> Garaż
-        </a>
-        <a href="/kontakt" class="nav-item">
-            <i class="bi bi-envelope"></i> Kontakt
-        </a>
+        <a href="/" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
+        <a href="/profil" class="nav-item active"><i class="bi bi-speedometer2"></i> Garaż</a>
+        <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> Kontakt</a>
     </div>
 
     <div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="fw-bold text-white">{{ t['add'] }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header border-secondary"><h5 class="fw-bold text-white">{{ t['add'] }}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this)">
-                    <input type="hidden" name="lat" id="gps_lat">
-                    <input type="hidden" name="lon" id="gps_lon">
+                    <input type="hidden" name="lat" id="gps_lat"><input type="hidden" name="lon" id="gps_lon">
 
                     <div class="modal-body p-4 pt-2">
-
                         <div class="cat-grid">
                             <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label></div>
                             <div class="cat-item"><input type="radio" name="typ" id="c2" value="SUV" onchange="adj()"><label for="c2" class="cat-label"><i class="bi bi-jeep"></i>SUV</label></div>
@@ -329,17 +274,42 @@
                             <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3" placeholder="Opis..."></textarea></div>
 
                             <div class="col-12 mt-3">
-                                <label class="small fw-bold text-muted mb-2">WYPOSAŻENIE</label>
-                                <div class="row g-2 p-3 rounded border border-secondary bg-black bg-opacity-25" style="max-height: 200px; overflow-y: auto;">
+                                <label class="small fw-bold text-muted mb-2">WYPOSAŻENIE (Zaznacz opcje)</label>
+                                <div class="row g-2 p-3 rounded border border-secondary bg-black bg-opacity-25" style="max-height: 250px; overflow-y: auto;">
+                                    <div class="col-12"><small class="text-secondary fw-bold">BEZPIECZEŃSTWO</small></div>
                                     <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ABS" id="w1"><label class="form-check-label small text-white" for="w1">ABS</label></div></div>
-                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja" id="w4"><label class="form-check-label small text-white" for="w4">Klimatyzacja</label></div></div>
-                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nawigacja" id="w10"><label class="form-check-label small text-white" for="w10">Nawigacja</label></div></div>
-                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w14"><label class="form-check-label small text-white" for="w14">Alufelgi</label></div></div>
-                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Światła LED" id="w15"><label class="form-check-label small text-white" for="w15">LED</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ESP" id="w2"><label class="form-check-label small text-white" for="w2">ESP / ASR</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Poduszki powietrzne" id="w3"><label class="form-check-label small text-white" for="w3">Poduszki powietrzne</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Isofix" id="w4"><label class="form-check-label small text-white" for="w4">Isofix</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Asystent pasa ruchu" id="w5"><label class="form-check-label small text-white" for="w5">Asystent pasa ruchu</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujnik martwego pola" id="w6"><label class="form-check-label small text-white" for="w6">Czujnik martwego pola</label></div></div>
+
+                                    <div class="col-12 mt-2"><small class="text-secondary fw-bold">KOMFORT</small></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja" id="w7"><label class="form-check-label small text-white" for="w7">Klimatyzacja</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatronik" id="w8"><label class="form-check-label small text-white" for="w8">Klimatronik</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Skórzana tapicerka" id="w9"><label class="form-check-label small text-white" for="w9">Skóry</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewane fotele" id="w10"><label class="form-check-label small text-white" for="w10">Grzane fotele</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="El. szyby" id="w11"><label class="form-check-label small text-white" for="w11">El. szyby</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="El. lusterka" id="w12"><label class="form-check-label small text-white" for="w12">El. lusterka</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Tempomat" id="w13"><label class="form-check-label small text-white" for="w13">Tempomat</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Tempomat aktywny" id="w14"><label class="form-check-label small text-white" for="w14">Tempomat Aktywny</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Keyless" id="w15"><label class="form-check-label small text-white" for="w15">Keyless / Bezkluczykowy</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Szyberdach" id="w16"><label class="form-check-label small text-white" for="w16">Szyberdach</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Webasto" id="w17"><label class="form-check-label small text-white" for="w17">Webasto</label></div></div>
+
+                                    <div class="col-12 mt-2"><small class="text-secondary fw-bold">MULTIMEDIA & INNE</small></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nawigacja" id="w18"><label class="form-check-label small text-white" for="w18">Nawigacja</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Bluetooth" id="w19"><label class="form-check-label small text-white" for="w19">Bluetooth / USB</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Android Auto" id="w20"><label class="form-check-label small text-white" for="w20">Android Auto / CarPlay</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera cofania" id="w21"><label class="form-check-label small text-white" for="w21">Kamera cofania</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera 360" id="w22"><label class="form-check-label small text-white" for="w22">Kamera 360</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujniki parkowania" id="w23"><label class="form-check-label small text-white" for="w23">Czujniki parkowania</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w24"><label class="form-check-label small text-white" for="w24">Alufelgi</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="LED" id="w25"><label class="form-check-label small text-white" for="w25">Światła LED / Xenon</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Hak" id="w26"><label class="form-check-label small text-white" for="w26">Hak</label></div></div>
                                 </div>
                             </div>
                         </div>
-
                         <div class="mt-3"><button type="button" class="btn btn-outline-success w-100 btn-sm rounded-pill py-2" onclick="getGPS(this)"><i class="bi bi-geo-alt-fill"></i> GPS</button></div>
                     </div>
                     <div class="modal-footer border-secondary pt-0 border-0"><button class="btn-submit-fix">DODAJ</button></div>
