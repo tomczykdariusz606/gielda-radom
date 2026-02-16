@@ -57,6 +57,8 @@
         .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 0.75rem; }
         .nav-item.active { color: var(--radom-red); font-weight: 700; }
         .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
+        
+        .input-group-text { background-color: #222; border-color: #444; }
     </style>
 </head>
 <body>
@@ -99,6 +101,21 @@
                 <div class="col-6"><input type="number" name="rok_max" class="form-control" placeholder="Rok do" value="{{ args.get('rok_max', '') }}"></div>
             </div>
 
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <div class="input-group">
+                        <span class="input-group-text text-warning"><i class="bi bi-lightning-charge-fill"></i></span>
+                        <input type="number" name="moc_min" class="form-control" placeholder="Moc od (KM)" value="{{ args.get('moc_min', '') }}">
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input-group">
+                        <span class="input-group-text text-info"><i class="bi bi-palette-fill"></i></span>
+                        <input type="text" name="kolor" class="form-control" placeholder="Kolor..." value="{{ args.get('kolor', '') }}">
+                    </div>
+                </div>
+            </div>
+
             <div class="row g-2 mb-3">
                 <div class="col-4">
                     <select name="paliwo" class="form-select">
@@ -121,16 +138,16 @@
                         <option value="Sedan" {% if args.get('nadwozie')=='Sedan' %}selected{% endif %}>Sedan</option>
                         <option value="Kombi" {% if args.get('nadwozie')=='Kombi' %}selected{% endif %}>Kombi</option>
                         <option value="SUV" {% if args.get('nadwozie')=='SUV' %}selected{% endif %}>SUV</option>
+                        <option value="Minivan" {% if args.get('nadwozie')=='Minivan' %}selected{% endif %}>Minivan</option>
                     </select>
                 </div>
             </div>
 
-            <button type="submit" class="btn-search">SZUKAJ ({{ cars|length }})</button>
+            <button type="submit" class="btn-search">SZUKAJ ({{ cars|length }} OFERT)</button>
         </form>
     </div>
 
     <div class="container">
-        <h6 class="text-white-50 mb-3 ps-2">Znaleziono: <strong class="text-white">{{ cars|length }}</strong> ofert</h6>
         
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for car in cars %}
@@ -172,7 +189,8 @@
     </div>
 
     <div class="nav-bottom">
-        <a href="/szukaj" class="nav-item active"> <i class="bi bi-search"></i> Szukaj
+        <a href="/szukaj" class="nav-item active">
+            <i class="bi bi-search"></i> Szukaj
         </a>
         <a href="/profil" class="nav-item">
             <i class="bi bi-speedometer2"></i> Garaż
