@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="pl" data-bs-theme="dark">
 <head>
- <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'AW-17939880807');
     </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edycja - Giełda Radom</title>
@@ -19,13 +20,11 @@
         
         .navbar { background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); border-bottom: 2px solid var(--radom-red); }
         
-        /* Box Edycji */
         .edit-box { 
             background: var(--card-dark); border: 1px solid #333; border-radius: 20px; padding: 40px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.5); 
         }
         
-        /* Pola formularza */
         .form-control, .form-select { 
             background-color: #2c2c2c; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px;
         }
@@ -33,14 +32,12 @@
             background-color: #333; border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206, 43, 55, 0.2); 
         }
         
-        /* Przycisk AI */
         .btn-ai { 
             background: linear-gradient(135deg, #2b1a1b, #000); border: 1px solid var(--radom-red); 
             color: var(--radom-red); font-weight: bold; transition: 0.3s;
         }
         .btn-ai:hover { background: var(--radom-red); color: white; box-shadow: 0 0 20px rgba(206, 43, 55, 0.4); }
         
-        /* Zdjęcia */
         .img-preview-container { position: relative; width: 120px; height: 90px; border-radius: 10px; overflow: hidden; border: 1px solid #444; }
         .img-preview { width: 100%; height: 100%; object-fit: cover; }
         .btn-delete-img { 
@@ -51,7 +48,6 @@
         .btn-delete-img:hover { background: var(--radom-red); transform: scale(1.1); }
         .badge-main { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(206, 43, 55, 0.8); color: white; font-size: 0.7rem; text-align: center; padding: 2px 0; }
 
-        /* Przycisk Zapisz */
         .btn-save-glow {
             background-color: var(--radom-red); color: white; font-weight: 800; text-transform: uppercase;
             letter-spacing: 1px; padding: 16px; width: 100%; border-radius: 50px; border: none;
@@ -121,19 +117,10 @@
                             <input type="text" name="model" id="i_model" class="form-control" value="{{ car.model }}" required>
                         </div>  
                         <div class="col-12">
-                            <label class="form-label fw-bold text-success">
-                                <i class="bi bi-shield-lock"></i> Numer VIN (Opcjonalne)
-                            </label>
+                            <label class="form-label fw-bold text-success"><i class="bi bi-shield-lock"></i> Numer VIN</label>
                             <div class="input-group">
-                                <span class="input-group-text bg-dark border-secondary text-success">
-                                    <i class="bi bi-upc-scan"></i>
-                                </span>
-                                <input type="text" class="form-control text-uppercase" name="vin" 
-                                       placeholder="Wpisz 17 znaków..." maxlength="17" 
-                                       value="{{ car.vin or '' }}">
-                            </div>
-                            <div class="form-text text-white-50 small mt-1">
-                                * Widoczny tylko dla zalogowanych. Buduje zaufanie.
+                                <span class="input-group-text bg-dark border-secondary text-success"><i class="bi bi-upc-scan"></i></span>
+                                <input type="text" class="form-control text-uppercase" name="vin" placeholder="Wpisz 17 znaków..." maxlength="17" value="{{ car.vin or '' }}">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -152,6 +139,16 @@
 
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Szczegóły Techniczne</label>
                     <div class="row g-3 mb-4 p-4 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25">
+                        
+                        <div class="col-6">
+                            <label class="small fw-bold text-warning mb-1">Moc Silnika (KM)</label>
+                            <input type="number" name="moc" id="i_moc" class="form-control border-warning text-warning fw-bold" value="{{ car.moc or '' }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="small fw-bold text-warning mb-1">Kolor</label>
+                            <input type="text" name="kolor" id="i_kolor" class="form-control border-warning" value="{{ car.kolor or '' }}">
+                        </div>
+
                         <div class="col-6 col-md-4">
                             <label class="small text-muted mb-1">Paliwo</label>
                             <select name="paliwo" id="i_paliwo" class="form-select">
@@ -170,7 +167,7 @@
                             </select>
                         </div>
                         <div class="col-6 col-md-4">
-                            <label class="small text-muted mb-1">Pojemność (np. 1.9 TDI)</label>
+                            <label class="small text-muted mb-1">Pojemność</label>
                             <input type="text" name="pojemnosc" id="i_pojemnosc" class="form-control" value="{{ car.pojemnosc or '' }}">
                         </div>
                         <div class="col-6 col-md-4">
@@ -189,7 +186,7 @@
                             </select>
                         </div>
                         <div class="col-md-8">
-                             <label class="small text-muted mb-1">Telefon kontaktowy</label>
+                             <label class="small text-muted mb-1">Telefon</label>
                              <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
                         </div>
                     </div>
@@ -197,13 +194,20 @@
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Wyposażenie Pojazdu</label>
                     <div class="p-4 mb-4 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25" style="max-height: 250px; overflow-y: auto;">
                         <div class="row g-2">
-                            {% set opcje = ['ABS', 'ESP', 'Poduszki powietrzne', 'Klimatyzacja', 'Klimatyzacja automatyczna', 'Skórzana tapicerka', 'Podgrzewane fotele', 'Tempomat', 'El. szyby', 'Nawigacja', 'Bluetooth', 'Kamera cofania', 'Czujniki parkowania', 'Alufelgi', 'Światła LED', 'Hak'] %}
+                            {% set current_options = car.wyposazenie.split(',') if car.wyposazenie else [] %}
+                            {% set all_options = [
+                                'ABS', 'ESP', 'Poduszki powietrzne', 'Isofix', 'Asystent pasa ruchu', 'Czujnik martwego pola',
+                                'Klimatyzacja', 'Klimatyzacja automatyczna', 'Skórzana tapicerka', 'Podgrzewane fotele', 'El. szyby', 'El. lusterka', 
+                                'Tempomat', 'Tempomat aktywny', 'Keyless', 'Szyberdach', 'Webasto',
+                                'Nawigacja', 'Bluetooth', 'Android Auto', 'Kamera cofania', 'Kamera 360', 
+                                'Czujniki parkowania', 'Alufelgi', 'Światła LED', 'Hak'
+                            ] %}
                             
-                            {% for opcja in opcje %}
+                            {% for opcja in all_options %}
                             <div class="col-6 col-md-4">
                                 <div class="form-check">
                                     <input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="{{ opcja }}" id="w_{{ loop.index }}" 
-                                    {% if car.wyposazenie and opcja in car.wyposazenie %}checked{% endif %}>
+                                    {% if opcja in current_options %}checked{% endif %}>
                                     <label class="form-check-label small text-white" for="w_{{ loop.index }}">
                                         {{ opcja }}
                                     </label>
