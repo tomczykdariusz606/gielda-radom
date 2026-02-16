@@ -245,22 +245,70 @@ def allowed_file(filename):
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    img = Image.open(file)
+    
     try:
-        img = ImageOps.exif_transpose(img)
-    except:
-        pass
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-    
-    # Resize jeśli za duże
-    if img.width > 1200:
-        w_percent = (1200 / float(img.width))
-        h_size = int((float(img.height) * float(w_percent)))
-        img = img.resize((1200, h_size), Image.Resampling.LANCZOS)
-    
-    img.save(filepath, "WEBP", quality=80)
+        img = Image.open(file)
+        # Obsługa obrotu zdjęcia (EXIF)
+        try:
+            img = ImageOps.exif_transpose(img)
+        except:
+            pass
+        
+        # Konwersja kolorów
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        
+        # 1. SKALOWANIE GŁÓWNEGO ZDJĘCIA
+        # Jeśli większe niż 1600px, zmniejsz (oszczędność miejsca)
+        base_width = 1600
+        if img.width > base_width:
+            w_percent = (base_width / float(img.width))
+            h_size = int((float(img.height) * float(w_percent)))
+            img = img.resize((base_width, h_size), Image.Resampling.LANCZOS)
+
+        # 2. DODAWANIE ZNAKU WODNEGO
+        watermark_path = 'static/watermark.png'
+        if os.path.exists(watermark_path):
+            try:
+                # Otwórz watermark i zachowaj przezroczystość
+                watermark = Image.open(watermark_path).convert("RGBA")
+                
+                # Oblicz wielkość znaku (np. 20% szerokości zdjęcia)
+                wm_width = int(img.width * 0.20)
+                wm_ratio = watermark.height / watermark.width
+                wm_height = int(wm_width * wm_ratio)
+                
+                # Jeśli watermark wyszedł za mały (np. przy małych fotkach), ustaw minimum
+                if wm_width < 100: 
+                    wm_width = 100
+                    wm_height = int(100 * wm_ratio)
+
+                watermark = watermark.resize((wm_width, wm_height), Image.Resampling.LANCZOS)
+
+                # Pozycja: Prawy dolny róg z marginesem
+                margin = int(img.width * 0.02) # 2% marginesu
+                position = (img.width - wm_width - margin, img.height - wm_height - margin)
+
+                # Ponieważ główne zdjęcie to RGB, a watermark to RGBA, musimy stworzyć tymczasową warstwę
+                transparent_layer = Image.new('RGBA', img.size, (0,0,0,0))
+                transparent_layer.paste(watermark, position, mask=watermark)
+                
+                # Połącz zdjęcia
+                img = img.convert("RGBA")
+                img = Image.alpha_composite(img, transparent_layer)
+                img = img.convert("RGB") # Wróć do RGB dla WebP
+            except Exception as e:
+                print(f"Błąd znaku wodnego: {e}")
+
+        # Zapisz jako WebP (lekki i szybki)
+        img.save(filepath, "WEBP", quality=85)
+        
+    except Exception as e:
+        print(f"Błąd zapisu obrazu: {e}")
+        return None
+
     return filename
+
 
 def check_ai_limit():
     if not current_user.is_authenticated: return False
