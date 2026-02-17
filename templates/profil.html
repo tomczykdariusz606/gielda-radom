@@ -88,34 +88,31 @@
         }
         @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
         
-        /* --- NOWY PEŁNOEKRANOWY LOADER --- */
+        /* --- NOWY PEŁNOEKRANOWY LOADER Z WIDEO --- */
         #loaderOverlay {
-            position: fixed; /* ZMIANA NA FIXED */
+            position: fixed; /* WAŻNE: FIXED NA PEŁNY EKRAN */
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.92); /* Bardzo ciemne tło */
-            z-index: 99999; /* NAJWYŻSZA WARSTWA */
-            display: none; /* Domyślnie ukryte */
+            background: rgba(0,0,0,0.92);
+            z-index: 99999; /* ZAWSZE NA WIERZCHU */
+            display: none;
             flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(8px);
         }
         
-        .spinning-logo {
-            width: 100px; height: auto;
-            margin-bottom: 30px;
-            animation: spin3D 2.5s infinite linear;
-            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.2));
-        }
-
         .loading-text {
             font-family: 'Inter', sans-serif; font-size: 1.2rem;
             font-weight: 700; color: white; letter-spacing: 3px;
             text-transform: uppercase;
             animation: pulseText 1.5s infinite ease-in-out;
+            margin-top: 10px;
         }
-
-        @keyframes spin3D {
-            0% { transform: perspective(1000px) rotateY(0deg); }
-            100% { transform: perspective(1000px) rotateY(360deg); }
+        
+        /* Styl wideo: cień i zaokrąglenie */
+        #loaderVideo {
+            width: 150px; height: auto;
+            border-radius: 50%; /* Opcjonalnie: koło */
+            box-shadow: 0 0 50px rgba(206,43,55, 0.4);
+            margin-bottom: 20px;
         }
 
         @keyframes pulseText {
@@ -424,8 +421,11 @@
 
     <div id="loaderOverlay">
         
-        <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
-
+        <video autoplay muted loop playsinline id="loaderVideo">
+            <source src="{{ url_for('static', filename='loading.mp4') }}" type="video/mp4">
+            <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
+        </video> 
+        
         <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
     </div>
 
@@ -438,11 +438,6 @@
         
         // POPRAWIONY LOADING EFEKT
         function loadingEfekt(form) { 
-            // Najpierw ukrywamy modal, żeby overlay był jedyną rzeczą na ekranie (opcjonalne, ale wygląda czyściej)
-            // const modalEl = document.getElementById('dodajModal');
-            // const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            // if (modalInstance) modalInstance.hide();
-            
             // Pokaż overlay
             document.getElementById('loaderOverlay').style.display = 'flex'; 
         }
