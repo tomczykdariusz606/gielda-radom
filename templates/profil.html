@@ -39,13 +39,13 @@
         }
         .hero-content { position: relative; z-index: 1; }
         
-        /* AVATAR - TERAZ Z LOGO JAKO TŁEM */
+        /* AVATAR */
         .profile-avatar {
             width: 90px; height: 90px; border-radius: 50%;
             border: 3px solid var(--radom-red);
             box-shadow: 0 0 20px rgba(206, 43, 55, 0.3);
             object-fit: cover;
-            background: #000; /* Czarne tło pod logo */
+            background: #000;
         }
 
         .glass-stat {
@@ -88,6 +88,40 @@
         }
         @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
         
+        /* --- EFEKT LOADINGU (WISIENKA NA TORCIE) --- */
+        #loaderOverlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: none; /* Domyślnie ukryte */
+            flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .spinning-logo {
+            width: 80px; height: auto;
+            animation: spin3D 2s infinite linear;
+            filter: drop-shadow(0 0 20px rgba(206, 43, 55, 0.6));
+        }
+
+        .loading-text {
+            margin-top: 20px; font-family: 'Inter', sans-serif;
+            font-weight: 800; color: white; letter-spacing: 2px;
+            animation: pulseText 1.5s infinite ease-in-out;
+        }
+
+        @keyframes spin3D {
+            0% { transform: perspective(1000px) rotateY(0deg); }
+            100% { transform: perspective(1000px) rotateY(360deg); }
+        }
+
+        @keyframes pulseText {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        /* ------------------------------------------- */
+
         .nav-bottom {
             position: fixed; bottom: 0; width: 100%; background: #000; z-index: 1000;
             display: flex; justify-content: space-around; padding: 12px 0;
@@ -257,7 +291,12 @@
 
     <div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary">
+            <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary" style="position: relative; overflow: hidden;">
+                
+                <div id="loaderOverlay">
+                    <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
+                    <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
+                </div>
                 <div class="modal-header border-secondary"><h5 class="fw-bold text-white">{{ t['add'] }}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this)">
                     <input type="hidden" name="lat" id="gps_lat"><input type="hidden" name="lon" id="gps_lon">
@@ -391,7 +430,14 @@
     <script>
         function adj(){ const v = document.querySelector('input[name="typ"]:checked').value; const ukryj = (v === 'Inne'); document.querySelectorAll('.tech').forEach(e => { e.style.display = ukryj ? 'none' : 'block'; }); }
         function getGPS(btn){ if(!navigator.geolocation) { alert('Brak GPS'); return; } btn.innerHTML='...'; navigator.geolocation.getCurrentPosition(pos => { document.getElementById('gps_lat').value=pos.coords.latitude; document.getElementById('gps_lon').value=pos.coords.longitude; btn.className="btn btn-success w-100 btn-sm rounded-pill py-2"; btn.innerHTML="<i class='bi bi-check-lg'></i> OK"; }, err => { alert('Błąd GPS'); }); }
-        function loadingEfekt(form) { const btn = form.querySelector('.btn-submit-fix'); btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ZAPISUJĘ...'; btn.style.opacity = '0.7'; btn.style.pointerEvents = 'none'; }
+        
+        // ZMODYFIKOWANA FUNKCJA LOADINGU - POKAZUJE OVERLAY Z KRĘCĄCYM SIĘ LOGIEM
+        function loadingEfekt(form) { 
+            document.getElementById('loaderOverlay').style.display = 'flex'; // Pokaż overlay
+            // Opcjonalnie: ukryj przycisk, żeby nie klikać (chociaż overlay i tak zasłania)
+            // const btn = form.querySelector('.btn-submit-fix'); btn.style.display = 'none'; 
+        }
+
         if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
         function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
         
@@ -408,11 +454,9 @@
                     document.querySelector('[name="rok"]').value=d.rok_sugestia||''; 
                     document.querySelector('[name="opis"]').value=d.opis_wizualny;
                     
-                    // NOWE POLA
                     if(d.moc_sugestia) document.querySelector('[name="moc"]').value=d.moc_sugestia;
                     if(d.kolor) document.querySelector('[name="kolor"]').value=d.kolor;
 
-                    // OZNACZANIE CHECKBOXÓW WYPOSAŻENIA (ALUFELGI, LED)
                     if (d.wyposazenie_wykryte) {
                         d.wyposazenie_wykryte.forEach(item => {
                             let chk = document.querySelector(`input[name="wyposazenie"][value="${item}"]`);
