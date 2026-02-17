@@ -88,25 +88,28 @@
         }
         @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
         
-        /* --- EFEKT LOADINGU (WISIENKA NA TORCIE) --- */
+        /* --- NOWY PEŁNOEKRANOWY LOADER --- */
         #loaderOverlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100;
+            position: fixed; /* ZMIANA NA FIXED */
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.92); /* Bardzo ciemne tło */
+            z-index: 99999; /* NAJWYŻSZA WARSTWA */
             display: none; /* Domyślnie ukryte */
             flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
         }
         
         .spinning-logo {
-            width: 80px; height: auto;
-            animation: spin3D 2s infinite linear;
-            filter: drop-shadow(0 0 20px rgba(206, 43, 55, 0.6));
+            width: 100px; height: auto;
+            margin-bottom: 30px;
+            animation: spin3D 2.5s infinite linear;
+            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.2));
         }
 
         .loading-text {
-            margin-top: 20px; font-family: 'Inter', sans-serif;
-            font-weight: 800; color: white; letter-spacing: 2px;
+            font-family: 'Inter', sans-serif; font-size: 1.2rem;
+            font-weight: 700; color: white; letter-spacing: 3px;
+            text-transform: uppercase;
             animation: pulseText 1.5s infinite ease-in-out;
         }
 
@@ -116,9 +119,9 @@
         }
 
         @keyframes pulseText {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
+            0% { opacity: 0.4; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1.02); color: var(--radom-red); }
+            100% { opacity: 0.4; transform: scale(0.98); }
         }
         /* ------------------------------------------- */
 
@@ -291,14 +294,9 @@
 
     <div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary" style="position: relative; overflow: hidden;">
-                
-                <div id="loaderOverlay">
-                    <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
-                    <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
-                </div>
+            <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary">
                 <div class="modal-header border-secondary"><h5 class="fw-bold text-white">{{ t['add'] }}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-                <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this)">
+                <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this); return true;">
                     <input type="hidden" name="lat" id="gps_lat"><input type="hidden" name="lon" id="gps_lon">
 
                     <div class="modal-body p-4 pt-2">
@@ -424,6 +422,13 @@
         </div>
     </div>
 
+    <div id="loaderOverlay">
+        
+        <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
+
+        <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
+    </div>
+
     <div id="aiToast"><i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -431,11 +436,15 @@
         function adj(){ const v = document.querySelector('input[name="typ"]:checked').value; const ukryj = (v === 'Inne'); document.querySelectorAll('.tech').forEach(e => { e.style.display = ukryj ? 'none' : 'block'; }); }
         function getGPS(btn){ if(!navigator.geolocation) { alert('Brak GPS'); return; } btn.innerHTML='...'; navigator.geolocation.getCurrentPosition(pos => { document.getElementById('gps_lat').value=pos.coords.latitude; document.getElementById('gps_lon').value=pos.coords.longitude; btn.className="btn btn-success w-100 btn-sm rounded-pill py-2"; btn.innerHTML="<i class='bi bi-check-lg'></i> OK"; }, err => { alert('Błąd GPS'); }); }
         
-        // ZMODYFIKOWANA FUNKCJA LOADINGU - POKAZUJE OVERLAY Z KRĘCĄCYM SIĘ LOGIEM
+        // POPRAWIONY LOADING EFEKT
         function loadingEfekt(form) { 
-            document.getElementById('loaderOverlay').style.display = 'flex'; // Pokaż overlay
-            // Opcjonalnie: ukryj przycisk, żeby nie klikać (chociaż overlay i tak zasłania)
-            // const btn = form.querySelector('.btn-submit-fix'); btn.style.display = 'none'; 
+            // Najpierw ukrywamy modal, żeby overlay był jedyną rzeczą na ekranie (opcjonalne, ale wygląda czyściej)
+            // const modalEl = document.getElementById('dodajModal');
+            // const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            // if (modalInstance) modalInstance.hide();
+            
+            // Pokaż overlay
+            document.getElementById('loaderOverlay').style.display = 'flex'; 
         }
 
         if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
