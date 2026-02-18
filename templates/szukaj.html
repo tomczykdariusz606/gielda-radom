@@ -75,25 +75,46 @@
         .nav-item.active { color: var(--radom-red); }
         .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
 /* --- POPRAWKA DLA CIEMNYCH OKIENEK (MODAL) --- */
-.modal-content {
-    background-color: #1a1a1a; /* Ciemny grafit zamiast białego */
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Delikatna ramka */
-    color: #eee; /* Jasny tekst */
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8); /* Mocny cień pod spodem */
-}
+    /* --- FIX: STYL EXCLUSIVE DLA LIST ROZWIJANYCH --- */
+    
+    /* 1. Wygląd głównego pola (przed kliknięciem) */
+    select, .form-select {
+        background-color: #121212 !important;   /* Głęboka czerń */
+        color: #e4e6eb !important;              /* Jasny tekst */
+        border: 1px solid #333 !important;      /* Ciemna ramka */
+        font-family: 'Inter', sans-serif !important; /* Twoja czcionka */
+        font-weight: 600 !important;            /* Lekko pogrubione - premium */
+        padding: 12px 15px !important;          /* Większe odstępy */
+        border-radius: 12px !important;         /* Zaokrąglone rogi */
+        cursor: pointer;
+        
+        /* Ekskluzywna czerwona strzałka zamiast systemowej */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ce2b37' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+        background-size: 16px 12px !important;
+    }
 
-.modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
+    /* 2. Efekt po kliknięciu (Glow) */
+    select:focus, .form-select:focus {
+        border-color: #ce2b37 !important;       /* Czerwona ramka */
+        box-shadow: 0 0 15px rgba(206, 43, 55, 0.4) !important; /* Czerwona poświata */
+        outline: none !important;
+    }
 
-.modal-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
+    /* 3. Rozwinięta lista (opcje) */
+    option {
+        background-color: #1a1a1a !important;   /* Ciemne tło listy */
+        color: #eee !important;                 /* Biały tekst */
+        font-family: 'Inter', sans-serif !important;
+        padding: 10px !important;
+        font-size: 1rem !important;
+    }
 
-/* To zmienia czarny krzyżyk (zamknij) na biały */
-.btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
-}
+    /* 4. Opcje po najechaniu (tylko Windows/Chrome, iOS ma systemowe) */
+    option:hover, option:checked {
+        background-color: #ce2b37 !important;   /* Czerwone tło aktywnego */
+        color: white !important;
+    }
+
 
     </style>
 </head>
