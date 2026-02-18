@@ -500,7 +500,7 @@ def index():
 @app.route('/szukaj')
 def szukaj():
     try:
-        # 1. Pobieranie parametrów
+        # 1. Pobieranie parametrów tekstowych
         marka = request.args.get('marka', '').strip()
         model = request.args.get('model', '').strip()
         kolor = request.args.get('kolor', '').strip()
@@ -510,17 +510,24 @@ def szukaj():
         skrzynia = request.args.get('skrzynia', '')
         nadwozie = request.args.get('nadwozie', '')
         
-        # 2. Bezpieczna konwersja
-        try: cena_min = float(request.args.get('cena_min')) if request.args.get('cena_min') else None
-        except: cena_min = None
-        try: cena_max = float(request.args.get('cena_max')) if request.args.get('cena_max') else None
-        except: cena_max = None
-        try: rok_min = int(request.args.get('rok_min')) if request.args.get('rok_min') else None
-        except: rok_min = None
-        try: rok_max = int(request.args.get('rok_max')) if request.args.get('rok_max') else None
-        except: rok_max = None
-        try: moc_min = int(request.args.get('moc_min')) if request.args.get('moc_min') else None
-        except: moc_min = None
+        # 2. Bezpieczna konwersja liczb (Cena, Rok, Moc, PRZEBIEG)
+        def get_int(key):
+            val = request.args.get(key)
+            return int(val) if val and val.isdigit() else None
+            
+        def get_float(key):
+            val = request.args.get(key)
+            try: return float(val) if val else None
+            except: return None
+
+        cena_min = get_float('cena_min')
+        cena_max = get_float('cena_max')
+        rok_min = get_int('rok_min')
+        rok_max = get_int('rok_max')
+        moc_min = get_int('moc_min')
+        # --- NOWE: PRZEBIEG ---
+        przebieg_min = get_int('przebieg_min')
+        przebieg_max = get_int('przebieg_max')
 
         query = Car.query
 
@@ -539,6 +546,10 @@ def szukaj():
         if rok_min is not None: query = query.filter(Car.rok >= rok_min)
         if rok_max is not None: query = query.filter(Car.rok <= rok_max)
         
+        # --- FILTROWANIE PRZEBIEGU ---
+        if przebieg_min is not None: query = query.filter(Car.przebieg >= przebieg_min)
+        if przebieg_max is not None: query = query.filter(Car.przebieg <= przebieg_max)
+        
         if moc_min is not None: 
             query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
         
@@ -548,8 +559,8 @@ def szukaj():
         return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
 
     except Exception as e:
-        # POKAŻ PRAWDZIWY BŁĄD NA EKRANIE
-        return f"<h1 style='color:red;font-family:sans-serif;padding:20px;'>BŁĄD SYSTEMU: {str(e)}</h1>"
+        return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
+
 
 
 @app.route('/ogloszenie/<int:car_id>')
