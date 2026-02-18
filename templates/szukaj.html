@@ -25,14 +25,13 @@
             background-color: #121212; 
             color: #e0e0e0; 
             font-family: 'Inter', sans-serif; 
-            padding-bottom: 120px; /* Więcej miejsca na dole */
+            padding-bottom: 120px; 
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover; 
             background-position: center; 
             background-attachment: fixed;
         }
         
-        /* TŁO SPÓJNE Z INDEX */
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to bottom, rgba(20, 20, 20, 0.4), rgba(10, 10, 10, 0.85)); 
@@ -46,7 +45,6 @@
             position: sticky; top: 0; z-index: 1000; 
         }
 
-        /* PANEL WYSZUKIWANIA - Nowoczesny */
         .search-panel {
             background: rgba(30, 30, 35, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -58,24 +56,15 @@
         }
 
         .form-control, .form-select {
-            background-color: #222; 
-            border: 1px solid #444; 
-            color: white; 
-            border-radius: 12px;
-            padding: 12px;
-            font-size: 0.95rem;
+            background-color: #222; border: 1px solid #444; color: white; border-radius: 12px; padding: 12px; font-size: 0.95rem;
         }
         .form-control:focus, .form-select:focus {
-            background-color: #2a2a2a; 
-            border-color: var(--radom-red); 
-            color: white; 
-            box-shadow: 0 0 0 3px rgba(206, 43, 55, 0.2);
+            background-color: #2a2a2a; border-color: var(--radom-red); color: white; box-shadow: 0 0 0 3px rgba(206, 43, 55, 0.2);
         }
         .input-group-text {
             background-color: #222; border: 1px solid #444; border-right: none; color: #888;
         }
 
-        /* ZŁOTA SEKCJA AI */
         .ai-filter-box {
             border: 1px solid rgba(255, 215, 0, 0.3);
             background: linear-gradient(145deg, rgba(255, 215, 0, 0.05), rgba(0,0,0,0));
@@ -83,49 +72,26 @@
         }
         .ai-label { color: #f0c420; font-weight: 800; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; }
 
-        /* KARTY SAMOCHODÓW - Takie same jak w Index */
         .car-card { 
-            background: #232329; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 16px; 
-            overflow: hidden; 
-            transition: all 0.3s ease; 
-            position: relative; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: #232329; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; transition: all 0.3s ease; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .car-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 15px 30px rgba(0,0,0,0.4); 
-            border-color: rgba(206, 43, 55, 0.5);
-            background: #2a2a30;
+            transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.4); border-color: rgba(206, 43, 55, 0.5); background: #2a2a30;
         }
         .car-img { height: 220px; object-fit: cover; width: 100%; }
 
         .btn-search {
-            background: var(--radom-red); border: none; color: white; font-weight: 800; width: 100%; 
-            padding: 16px; border-radius: 14px; text-transform: uppercase; letter-spacing: 1px;
-            box-shadow: 0 5px 20px rgba(206, 43, 55, 0.4); transition: 0.2s;
+            background: var(--radom-red); border: none; color: white; font-weight: 800; width: 100%; padding: 16px; border-radius: 14px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 20px rgba(206, 43, 55, 0.4); transition: 0.2s;
         }
         .btn-search:hover { background: #b01b25; transform: scale(1.02); }
 
-        /* --- DOLNE MENU (SKOPIOWANE Z INDEX) --- */
         .nav-bottom {
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            background: #111; 
-            z-index: 99999;
-            display: flex; 
-            justify-content: space-around; 
-            padding: 10px 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); 
-            border-top: 1px solid #333;
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #111; z-index: 99999;
+            display: flex; justify-content: space-around; padding: 10px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); border-top: 1px solid #333;
         }
         .nav-item { 
-            text-align: center; color: #888; text-decoration: none; 
-            font-size: 0.75rem; font-weight: 600; 
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: #888; text-decoration: none; font-size: 0.75rem; font-weight: 600; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .nav-item:hover { color: white; }
         .nav-item.active { color: var(--radom-red); }
@@ -152,7 +118,6 @@
             </div>
 
             <form action="/szukaj" method="GET">
-
                 <div class="ai-filter-box">
                     <label class="ai-label mb-2"><i class="bi bi-stars"></i> Szukaj po Ocenie AI</label>
                     <select name="ai_ocena" class="form-select border-warning text-warning fw-bold" style="background: #1a1a1a;">
@@ -189,7 +154,7 @@
                     <div class="col-6">
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-lightning-charge-fill text-warning"></i></span>
-                            <input type="number" name="moc_min" class="form-control" placeholder="Moc od (KM)" value="{{ args.get('moc_min', '') }}">
+                            <input type="number" name="moc_min" class="form-control" placeholder="Moc od" value="{{ args.get('moc_min', '') }}">
                         </div>
                     </div>
                     <div class="col-6">
@@ -256,7 +221,7 @@
                             <span class="badge bg-{{ ai.color }} text-dark fw-bold" style="font-size:0.65rem;">
                                 <i class="bi bi-stars"></i> {{ ai.label }}
                             </span>
-                            <small class="text-white-50" style="font-size:0.65rem;">{{ ai.market_info[:30] }}...</small>
+                            <small class="text-white-50" style="font-size:0.65rem;">{{ ai.expert_comment[:30] if ai.expert_comment else '' }}...</small>
                         </div>
                         {% endif %}
                         {% endif %}
