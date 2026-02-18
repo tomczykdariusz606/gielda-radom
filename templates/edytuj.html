@@ -10,50 +10,74 @@
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Edycja - Giełda Radom</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #121212; --card-dark: #1e1e1e; }
         
-        /* --- TŁO Z FIXEM DLA IPHONE --- */
+        /* --- TŁO I FIX DLA IPHONE --- */
         body { 
             background-color: var(--bg-dark); 
             color: #e4e6eb; 
-            font-family: 'Segoe UI', sans-serif; 
-            padding-bottom: 40px; 
+            font-family: 'Inter', sans-serif; 
             min-height: 100vh;
+            padding-bottom: calc(40px + env(safe-area-inset-bottom));
         }
 
         body::before {
-            content: ""; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%;
-            /* Tutaj ustawione tło: */
-            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
-            background-size: cover; 
-            background-position: center;
-            z-index: -1; 
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-position: center;
+            z-index: -1;
+        }
+        /* Ciemna warstwa na tło dla lepszej czytelności formularza */
+        body::after {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.7); 
+            z-index: -1;
         }
 
-        .navbar { background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); border-bottom: 2px solid var(--radom-red); }
+        .navbar { 
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--radom-red); 
+            padding-top: max(10px, env(safe-area-inset-top));
+        }
 
         .edit-box { 
-            background: rgba(30, 30, 30, 0.95); /* Lekka przezroczystość */
-            backdrop-filter: blur(5px);
-            border: 1px solid #444; border-radius: 20px; padding: 40px; 
+            background: rgba(30, 30, 30, 0.85); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 40px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.7); 
         }
 
-        .form-control, .form-select { 
-            background-color: #2c2c2c; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px;
+        .form-control { 
+            background-color: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; font-size: 0.95rem;
         }
-        .form-control:focus, .form-select:focus { 
-            background-color: #333; border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206, 43, 55, 0.2); 
+        .form-control:focus { 
+            background-color: #1a1a1a; border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206, 43, 55, 0.3); outline: none;
         }
+
+        /* --- CUSTOMOWE LISTY (ZAMIAST SELECT) --- */
+        .custom-dropdown-btn {
+            background-color: #222; border: 1px solid #444; color: #eee;
+            width: 100%; padding: 12px; border-radius: 10px; text-align: left;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s; font-size: 0.95rem;
+        }
+        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] {
+            background-color: #000; border-color: var(--radom-red); color: white;
+        }
+        .dropdown-menu-dark {
+            background-color: #1a1a1a; border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9); border-radius: 12px;
+            max-height: 300px; overflow-y: auto; z-index: 1050;
+        }
+        .dropdown-item { color: #ccc; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .dropdown-item:hover { background-color: var(--radom-red); color: white; }
 
         .btn-ai { 
             background: linear-gradient(135deg, #2b1a1b, #000); border: 1px solid var(--radom-red); 
@@ -121,14 +145,20 @@
                     <div class="row g-3 mb-4">
                         <div class="col-12">
                             <label class="small text-muted mb-1">Kategoria</label>
-                            <select name="typ" class="form-select bg-dark border-secondary text-white">
-                                <option value="Osobowe" {% if car.typ=='Osobowe' %}selected{% endif %}>Osobowe</option>
-                                <option value="SUV" {% if car.typ=='SUV' %}selected{% endif %}>SUV</option>
-                                <option value="Minivan" {% if car.typ=='Minivan' %}selected{% endif %}>Minivan</option>
-                                <option value="Ciezarowe" {% if car.typ=='Ciezarowe' %}selected{% endif %}>Dostawcze</option>
-                                <option value="Moto/Rower" {% if car.typ=='Moto/Rower' %}selected{% endif %}>Moto/Rower</option>
-                                <option value="Inne" {% if car.typ=='Inne' %}selected{% endif %}>Inne</option>
-                            </select>
+                            <input type="hidden" name="typ" id="val_typ" value="{{ car.typ }}">
+                            <div class="dropdown">
+                                <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_typ">
+                                    {{ car.typ }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark w-100">
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Osobowe', 'Osobowe')">Osobowe</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'SUV', 'SUV')">SUV</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Minivan', 'Minivan')">Minivan</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Ciezarowe', 'Dostawcze')">Dostawcze</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Moto/Rower', 'Moto/Rower')">Moto/Rower</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Inne', 'Inne')">Inne</a></li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
@@ -174,40 +204,62 @@
 
                         <div class="col-6 col-md-4">
                             <label class="small text-muted mb-1">Paliwo</label>
-                            <select name="paliwo" id="i_paliwo" class="form-select">
-                                <option {% if car.paliwo=='Benzyna' %}selected{% endif %}>Benzyna</option>
-                                <option {% if car.paliwo=='Diesel' %}selected{% endif %}>Diesel</option>
-                                <option {% if car.paliwo=='LPG' %}selected{% endif %}>LPG</option>
-                                <option {% if car.paliwo=='Hybryda' %}selected{% endif %}>Hybryda</option>
-                                <option {% if car.paliwo=='Elektryczny' %}selected{% endif %}>Elektryczny</option>
-                            </select>
+                            <input type="hidden" name="paliwo" id="val_paliwo" value="{{ car.paliwo }}">
+                            <div class="dropdown">
+                                <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_paliwo">
+                                    {{ car.paliwo or 'Wybierz' }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark">
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Benzyna', 'Benzyna')">Benzyna</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Diesel', 'Diesel')">Diesel</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'LPG', 'LPG')">LPG</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Hybryda', 'Hybryda')">Hybryda</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Elektryczny', 'Elektryczny')">Elektryczny</a></li>
+                                </ul>
+                            </div>
                         </div>
+
                         <div class="col-6 col-md-4">
                             <label class="small text-muted mb-1">Skrzynia</label>
-                            <select name="skrzynia" class="form-select">
-                                <option {% if car.skrzynia=='Manualna' %}selected{% endif %}>Manualna</option>
-                                <option {% if car.skrzynia=='Automatyczna' %}selected{% endif %}>Automatyczna</option>
-                            </select>
+                            <input type="hidden" name="skrzynia" id="val_skrzynia" value="{{ car.skrzynia }}">
+                            <div class="dropdown">
+                                <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_skrzynia">
+                                    {{ car.skrzynia or 'Wybierz' }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark">
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna', 'Manualna')">Manualna</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna', 'Automatyczna')">Automatyczna</a></li>
+                                </ul>
+                            </div>
                         </div>
+
                         <div class="col-6 col-md-4">
                             <label class="small text-muted mb-1">Pojemność</label>
                             <input type="text" name="pojemnosc" id="i_pojemnosc" class="form-control" value="{{ car.pojemnosc or '' }}">
                         </div>
+
                         <div class="col-6 col-md-4">
                             <label class="small text-muted mb-1">Nadwozie</label>
-                            <select name="nadwozie" class="form-select">
-                                <option {% if car.nadwozie=='Sedan' %}selected{% endif %}>Sedan</option>
-                                <option {% if car.nadwozie=='Kombi' %}selected{% endif %}>Kombi</option>
-                                <option {% if car.nadwozie=='Hatchback' %}selected{% endif %}>Hatchback</option>
-                                <option {% if car.nadwozie=='SUV' %}selected{% endif %}>SUV</option>
-                                <option {% if car.nadwozie=='Minivan' %}selected{% endif %}>Minivan</option>
-                                <option {% if car.nadwozie=='Coupe' %}selected{% endif %}>Coupe</option>
-                                <option {% if car.nadwozie=='Kabriolet' %}selected{% endif %}>Kabriolet</option>
-                                <option {% if car.nadwozie=='Pick-up' %}selected{% endif %}>Pick-up</option>
-                                <option {% if car.nadwozie=='Motocykl' %}selected{% endif %}>Motocykl</option>
-                                <option {% if car.nadwozie=='Inne' %}selected{% endif %}>Inne</option>
-                            </select>
+                            <input type="hidden" name="nadwozie" id="val_nadwozie" value="{{ car.nadwozie }}">
+                            <div class="dropdown">
+                                <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_nadwozie">
+                                    {{ car.nadwozie or 'Wybierz' }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="max-height: 250px;">
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Sedan', 'Sedan')">Sedan</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Kombi', 'Kombi')">Kombi</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Hatchback', 'Hatchback')">Hatchback</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'SUV', 'SUV')">SUV</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Minivan', 'Minivan')">Minivan</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Coupe', 'Coupe')">Coupe</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Kabriolet', 'Kabriolet')">Kabriolet</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Pick-up', 'Pick-up')">Pick-up</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Motocykl', 'Motocykl')">Motocykl</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Inne', 'Inne')">Inne</a></li>
+                                </ul>
+                            </div>
                         </div>
+
                         <div class="col-md-8">
                              <label class="small text-muted mb-1">Telefon</label>
                              <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
@@ -286,7 +338,15 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Funkcja do obsługi nowych list (dropdownów)
+    function setVal(name, val, label) {
+        document.getElementById('val_' + name).value = val;
+        document.getElementById('btn_' + name).innerText = label;
+    }
+
+    // Twoje funkcje AI i usuwania zdjęć
     async function generujOpis() {
         const data = {
             marka: document.getElementById('i_marka').value,
@@ -294,7 +354,7 @@
             rok: document.getElementById('i_rok').value,
             przebieg: document.getElementById('i_przebieg').value,
             cena: document.getElementById('i_cena').value,
-            paliwo: document.getElementById('i_paliwo').value,
+            paliwo: document.getElementById('val_paliwo').value, // Pobieramy z hidden input
             pojemnosc: document.getElementById('i_pojemnosc').value
         };
 
@@ -329,6 +389,5 @@
     }
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
