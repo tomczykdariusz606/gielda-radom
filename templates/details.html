@@ -244,12 +244,37 @@
         {% endif %}
     </div>
     
-    <div class="bg-black bg-opacity-50 px-4 py-2 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
-        <span class="badge bg-dark border border-secondary text-muted">v. 3.0 Pro</span>
-        <small class="text-muted" style="font-size: 0.6rem;">
-            *Wycena szacunkowa AI z dn. {{ car.ai_valuation_data }}.
-        </small>
+        <div class="bg-black bg-opacity-50 px-3 py-3 border-top border-secondary border-opacity-25">
+        <div class="row align-items-center">
+            <div class="col-7">
+                <small class="text-muted d-block fst-italic" style="font-size: 0.6rem; line-height: 1.2;">
+                    *Model Gemini 3.0 Pro.<br>Aktualizacja: {{ car.ai_valuation_data }}
+                </small>
+            </div>
+            <div class="col-5 text-end">
+                <button onclick="shareAiReport()" class="btn btn-sm btn-outline-warning rounded-pill fw-bold shadow-sm" style="font-size: 0.7rem; border-width: 1px;">
+                    <i class="bi bi-share-fill me-1"></i> UDOSTĘPNIJ
+                </button>
+            </div>
+        </div>
     </div>
+
+    <script>
+    function shareAiReport() {
+        const shareData = {
+            title: 'Raport Ekspercki: {{ car.marka }} {{ car.model }}',
+            text: 'Sprawdź ten wynik! Auto ocenione przez AI na {{ ai.score }}/100. Werdykt: {{ ai.label }}. Stan lakieru: {{ ai.paint_status }}.',
+            url: window.location.href
+        };
+        if (navigator.share) {
+            navigator.share(shareData).catch((err) => console.log(err));
+        } else {
+            const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`;
+            window.open(fbUrl, '_blank', 'width=600,height=400');
+        }
+    }
+    </script>
+
 </div>
 {% endif %}{% endif %}
 
