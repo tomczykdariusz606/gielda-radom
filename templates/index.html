@@ -30,31 +30,30 @@
             background-color: #1a1a1a; 
             color: #f0f0f0; 
             font-family: 'Inter', sans-serif; 
-            padding-bottom: 90px;
-            /* Tło jest teraz kluczowe */
+            padding-bottom: 100px; /* Zwiększony margines na dole, żeby menu nie zasłaniało treści */
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover; 
             background-position: center; 
             background-attachment: fixed;
         }
         
-        /* POPRAWKA: Zmniejszamy przyciemnienie z 0.85 na 0.5 - tło będzie widoczne! */
+        /* Tło przyciemniające */
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(20, 20, 20, 0.4), rgba(10, 10, 10, 0.8)); 
+            background: linear-gradient(to bottom, rgba(20, 20, 20, 0.4), rgba(10, 10, 10, 0.85)); 
             z-index: -1;
         }
 
         .navbar { 
-            background: rgba(26, 26, 26, 0.85); 
+            background: rgba(26, 26, 26, 0.95); 
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255,255,255,0.08); 
             position: sticky; top: 0; z-index: 1000; 
         }
 
-        /* HERO - Trochę jaśniejsze, szklane */
+        /* HERO */
         .ai-hero-banner {
-            background: rgba(30, 30, 35, 0.7); /* Półprzezroczyste */
+            background: rgba(30, 30, 35, 0.85);
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 40px;
@@ -76,7 +75,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        /* WYSZUKIWARKA - Biała pigułka dla kontrastu */
+        /* WYSZUKIWARKA */
         .search-pill-container {
             background: #fff;
             border-radius: 50px; padding: 5px;
@@ -99,9 +98,9 @@
         }
         .btn-search-pill:hover { background: #b01b25; transform: scale(1.03); }
 
-        /* KARTY SAMOCHODÓW - Jaśniejszy szary, lepszy kontrast */
+        /* KARTY SAMOCHODÓW */
         .car-card { 
-            background: #232329; /* Jaśniejszy od tła strony */
+            background: #232329; 
             border: 1px solid rgba(255,255,255,0.1); 
             border-radius: 16px; 
             overflow: hidden; 
@@ -122,24 +121,43 @@
             font-weight: 800;
         }
 
-        /* Stopka i Menu */
+        /* STOPKA */
         .seo-footer { background: #111; color: #999; padding: 60px 0; border-top: 1px solid #333; margin-top: 60px; }
+        
+        /* --- NAPRAWIONE DOLNE MENU (FIXED) --- */
         .nav-bottom {
-            position: fixed; bottom: 0; width: 100%; background: rgba(20,20,20,0.95); z-index: 1000;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: #111; /* Pełne tło dla pewności */
+            z-index: 99999; /* Musi być najwyżej! */
+            display: flex; 
+            justify-content: space-around; 
+            padding: 10px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); 
+            border-top: 1px solid #333;
         }
-        .nav-item { text-align: center; color: #777; text-decoration: none; font-size: 0.7rem; font-weight: 500; }
-        .nav-item.active { color: var(--radom-red); font-weight: 700; }
         
-        #loadMoreBtn {
-            border: 2px solid var(--radom-red); color: white; 
-            background: transparent; padding: 12px 40px; font-weight: 600; letter-spacing: 1px;
+        /* Klikalność przycisków */
+        .nav-item { 
+            text-align: center; 
+            color: #888; 
+            text-decoration: none; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            flex: 1; /* Rozciąga klikalność */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
         }
-        #loadMoreBtn:hover { background: var(--radom-red); }
+        .nav-item:hover, .nav-item:active { color: #fff; }
+        .nav-item.active { color: var(--radom-red); }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
         
-        /* Intro Video Overlay */
+        /* VIDEO INTRO */
         .video-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #000; z-index: 99999;
@@ -148,7 +166,8 @@
         }
         #introVid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         #skipBtn {
-            position: absolute; bottom: 40px; right: 40px;
+            position: absolute; bottom: 80px; /* Wyżej, żeby nie kolidował z menu */
+            right: 40px;
             background: rgba(0,0,0,0.5); color: white;
             border: 1px solid rgba(255,255,255,0.3);
             padding: 8px 20px; font-size: 0.8rem; border-radius: 30px;
