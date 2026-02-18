@@ -1,63 +1,247 @@
-@app.route('/szukaj')
-def szukaj():
-    try:
-        # 1. Pobieranie parametrów tekstowych
-        marka = request.args.get('marka', '').strip()
-        model = request.args.get('model', '').strip()
-        kolor = request.args.get('kolor', '').strip()
-        ai_ocena = request.args.get('ai_ocena', '')
-        
-        paliwo = request.args.get('paliwo', '')
-        skrzynia = request.args.get('skrzynia', '')
-        nadwozie = request.args.get('nadwozie', '')
-        
-        # 2. Bezpieczna konwersja liczb (Cena, Rok, Moc, PRZEBIEG)
-        def get_int(key):
-            val = request.args.get(key)
-            return int(val) if val and val.isdigit() else None
-            
-        def get_float(key):
-            val = request.args.get(key)
-            try: return float(val) if val else None
-            except: return None
+<!DOCTYPE html>
+<html lang="{{ lang }}" data-bs-theme="dark">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
 
-        cena_min = get_float('cena_min')
-        cena_max = get_float('cena_max')
-        rok_min = get_int('rok_min')
-        rok_max = get_int('rok_max')
-        moc_min = get_int('moc_min')
-        # --- NOWE: PRZEBIEG ---
-        przebieg_min = get_int('przebieg_min')
-        przebieg_max = get_int('przebieg_max')
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szczegółowe Szukanie - Giełda Radom</title>
+    
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 
-        query = Car.query
+    <style>
+        :root { --radom-red: #ce2b37; }
+        
+        body { 
+            background-color: #121212; color: #e0e0e0; font-family: 'Inter', sans-serif; 
+            padding-bottom: 120px; 
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(20, 20, 20, 0.4), rgba(10, 10, 10, 0.85)); 
+            z-index: -1;
+        }
 
-        # 3. Filtrowanie (zabezpieczone ILIKE)
-        if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
-        if model: query = query.filter(Car.model.ilike(f'%{model}%'))
-        if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
-        if ai_ocena: query = query.filter(Car.ai_label.contains(ai_ocena))
-        
-        if paliwo: query = query.filter(Car.paliwo == paliwo)
-        if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
-        if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
-        
-        if cena_min is not None: query = query.filter(Car.cena >= cena_min)
-        if cena_max is not None: query = query.filter(Car.cena <= cena_max)
-        if rok_min is not None: query = query.filter(Car.rok >= rok_min)
-        if rok_max is not None: query = query.filter(Car.rok <= rok_max)
-        
-        # --- FILTROWANIE PRZEBIEGU ---
-        if przebieg_min is not None: query = query.filter(Car.przebieg >= przebieg_min)
-        if przebieg_max is not None: query = query.filter(Car.przebieg <= przebieg_max)
-        
-        if moc_min is not None: 
-            query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
-        
-        # Sortowanie
-        cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
-        
-        return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+        .navbar { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 1000; }
 
-    except Exception as e:
-        return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
+        .search-panel {
+            background: rgba(30, 30, 35, 0.9); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px; border-radius: 24px; margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(15px);
+        }
+
+        .form-control, .form-select {
+            background-color: #222; border: 1px solid #444; color: white; border-radius: 12px; padding: 12px; font-size: 0.95rem;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #2a2a2a; border-color: var(--radom-red); color: white; box-shadow: 0 0 0 3px rgba(206, 43, 55, 0.2);
+        }
+        .input-group-text { background-color: #222; border: 1px solid #444; border-right: none; color: #888; }
+
+        .ai-filter-box {
+            border: 1px solid rgba(255, 215, 0, 0.3); background: linear-gradient(145deg, rgba(255, 215, 0, 0.05), rgba(0,0,0,0));
+            border-radius: 16px; padding: 20px; margin-bottom: 25px;
+        }
+        .ai-label { color: #f0c420; font-weight: 800; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; }
+
+        .car-card { background: #232329; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; transition: all 0.3s ease; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .car-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.4); border-color: rgba(206, 43, 55, 0.5); background: #2a2a30; }
+        .car-img { height: 220px; object-fit: cover; width: 100%; }
+
+        .btn-search {
+            background: var(--radom-red); border: none; color: white; font-weight: 800; width: 100%; padding: 16px; border-radius: 14px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 5px 20px rgba(206, 43, 55, 0.4); transition: 0.2s;
+        }
+        .btn-search:hover { background: #b01b25; transform: scale(1.02); }
+
+        .nav-bottom {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #111; z-index: 99999;
+            display: flex; justify-content: space-around; padding: 10px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5); border-top: 1px solid #333;
+        }
+        .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 0.75rem; font-weight: 600; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .nav-item:hover { color: white; }
+        .nav-item.active { color: var(--radom-red); }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark py-3 mb-4">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
+                <img src="{{ url_for('static', filename='watermark.png') }}" alt="G" style="height: 40px; width: auto; margin-right: 10px;">
+                <span style="font-family: 'Inter', sans-serif; letter-spacing: 0.5px;">GIEŁDA <span class="text-danger">RADOM</span></span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div class="search-panel">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold m-0 text-white"><i class="bi bi-sliders2 me-2 text-danger"></i>Szczegółowe Filtry</h4>
+                <a href="/szukaj" class="text-white-50 small text-decoration-none fw-bold"><i class="bi bi-arrow-counterclockwise"></i> RESET</a>
+            </div>
+
+            <form action="/szukaj" method="GET">
+                <div class="ai-filter-box">
+                    <label class="ai-label mb-2"><i class="bi bi-stars"></i> Szukaj po Ocenie AI</label>
+                    <select name="ai_ocena" class="form-select border-warning text-warning fw-bold" style="background: #1a1a1a;">
+                        <option value="" class="text-white">Wszystkie oferty</option>
+                        <option value="SUPER" {% if args.get('ai_ocena')=='SUPER' %}selected{% endif %}>💎 SUPER OKAZJE</option>
+                        <option value="DOBRA" {% if args.get('ai_ocena')=='DOBRA' %}selected{% endif %}>✅ DOBRA CENA</option>
+                        <option value="UCZCIWA" {% if args.get('ai_ocena')=='UCZCIWA' %}selected{% endif %}>⚖️ UCZCIWA CENA</option>
+                        <option value="DROGO" {% if args.get('ai_ocena')=='DROGO' %}selected{% endif %}>💰 POWYŻEJ RYNKU</option>
+                    </select>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="small text-white-50 ms-1 mb-1">Marka</label>
+                        <input type="text" name="marka" class="form-control" placeholder="np. Audi" value="{{ args.get('marka', '') }}">
+                    </div>
+                    <div class="col-6">
+                        <label class="small text-white-50 ms-1 mb-1">Model</label>
+                        <input type="text" name="model" class="form-control" placeholder="np. A4" value="{{ args.get('model', '') }}">
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6"><input type="number" name="cena_min" class="form-control" placeholder="Cena od (PLN)" value="{{ args.get('cena_min', '') }}"></div>
+                    <div class="col-6"><input type="number" name="cena_max" class="form-control" placeholder="Cena do (PLN)" value="{{ args.get('cena_max', '') }}"></div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6"><input type="number" name="rok_min" class="form-control" placeholder="Rok od" value="{{ args.get('rok_min', '') }}"></div>
+                    <div class="col-6"><input type="number" name="rok_max" class="form-control" placeholder="Rok do" value="{{ args.get('rok_max', '') }}"></div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-speedometer2"></i></span>
+                            <input type="number" name="przebieg_min" class="form-control" placeholder="Przebieg od (km)" value="{{ args.get('przebieg_min', '') }}">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-speedometer"></i></span>
+                            <input type="number" name="przebieg_max" class="form-control" placeholder="Przebieg do (km)" value="{{ args.get('przebieg_max', '') }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lightning-charge-fill text-warning"></i></span>
+                            <input type="number" name="moc_min" class="form-control" placeholder="Moc od (KM)" value="{{ args.get('moc_min', '') }}">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-palette-fill text-info"></i></span>
+                            <input type="text" name="kolor" class="form-control" placeholder="Kolor" value="{{ args.get('kolor', '') }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-4">
+                        <select name="paliwo" class="form-select">
+                            <option value="">Paliwo</option>
+                            <option value="Benzyna" {% if args.get('paliwo')=='Benzyna' %}selected{% endif %}>Benzyna</option>
+                            <option value="Diesel" {% if args.get('paliwo')=='Diesel' %}selected{% endif %}>Diesel</option>
+                            <option value="LPG" {% if args.get('paliwo')=='LPG' %}selected{% endif %}>LPG</option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <select name="skrzynia" class="form-select">
+                            <option value="">Skrzynia</option>
+                            <option value="Manualna" {% if args.get('skrzynia')=='Manualna' %}selected{% endif %}>Manual</option>
+                            <option value="Automatyczna" {% if args.get('skrzynia')=='Automatyczna' %}selected{% endif %}>Automat</option>
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <select name="nadwozie" class="form-select">
+                            <option value="">Nadwozie</option>
+                            <option value="Sedan" {% if args.get('nadwozie')=='Sedan' %}selected{% endif %}>Sedan</option>
+                            <option value="Kombi" {% if args.get('nadwozie')=='Kombi' %}selected{% endif %}>Kombi</option>
+                            <option value="SUV" {% if args.get('nadwozie')=='SUV' %}selected{% endif %}>SUV</option>
+                            <option value="Minivan" {% if args.get('nadwozie')=='Minivan' %}selected{% endif %}>Minivan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-search">SZUKAJ ({{ cars|length }} WYNIKÓW)</button>
+            </form>
+        </div>
+
+        <h5 class="text-white mb-3 ps-3 border-start border-4 border-danger fw-bold">WYNIKI WYSZUKIWANIA</h5>
+        
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for car in cars %}
+            <div class="col">
+                <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
+                    <div class="card car-card h-100">
+                        <div class="position-relative">
+                            <img src="{{ car.img }}" class="car-img" loading="lazy">
+                            <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);">
+                                <h5 class="fw-bold text-white mb-1">{{ car.marka }} {{ car.model }}</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-white-50 small">{{ car.rok }}r.</span>
+                                    <span class="text-danger fw-bold fs-5">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if car.ai_label %}
+                        {% set ai = car.ai_label|from_json %}
+                        {% if ai %}
+                        <div class="px-3 py-2 bg-black bg-opacity-25 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ ai.color }} text-dark fw-bold" style="font-size:0.65rem;">
+                                <i class="bi bi-stars"></i> {{ ai.label }}
+                            </span>
+                            <small class="text-white-50" style="font-size:0.65rem;">{{ ai.expert_comment[:30] if ai.expert_comment else '' }}...</small>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-search display-1 text-secondary opacity-25"></i>
+                <p class="text-muted mt-3">Brak wyników dla tych filtrów.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="nav-bottom">
+        <a href="/szukaj" class="nav-item active">
+            <i class="bi bi-search"></i> Szukaj
+        </a>
+        <a href="/profil" class="nav-item">
+            <i class="bi bi-speedometer2"></i> Garaż
+        </a>
+        <a href="/kontakt" class="nav-item">
+            <i class="bi bi-envelope"></i> Kontakt
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
