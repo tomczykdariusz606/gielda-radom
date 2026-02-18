@@ -11,12 +11,12 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+
     <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
-    <meta name="description" content="Sprzedam: {{ car.marka }} {{ car.model }} ({{ car.rok }}r). Cena: {{ car.cena }} PLN. Przebieg: {{ car.przebieg }} km. Zobacz szczegóły i raport AI na GiełdaRadom.pl">
-    
+    <meta name="description" content="Sprzedam: {{ car.marka }} {{ car.model }} ({{ car.rok }}r). Cena: {{ car.cena }} PLN. Zobacz zdjęcia i raport AI.">
+
     <meta property="og:title" content="{{ car.marka }} {{ car.model }} - {{ car.cena }} PLN">
-    <meta property="og:description" content="Rocznik {{ car.rok }}, Przebieg {{ car.przebieg }} km. Kliknij, aby zobaczyć pełny raport i zdjęcia.">
+    <meta property="og:description" content="Rocznik {{ car.rok }}, Przebieg {{ car.przebieg }} km. Kliknij, aby zobaczyć szczegóły.">
     <meta property="og:image" content="{{ car.img }}">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:type" content="article">
@@ -31,19 +31,18 @@
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #121212; }
 
-        /* --- FIX DLA IPHONE (TŁO) --- */
+        /* --- FIX TŁA DLA IPHONE --- */
         body { 
             background-color: var(--bg-dark); 
             color: #eee; 
             font-family: 'Segoe UI', sans-serif; 
             min-height: 100vh;
-            /* Płynne przewijanie na iOS */
             -webkit-overflow-scrolling: touch; 
             /* Margines na dole uwzględniający belkę iPhone */
-            padding-bottom: calc(50px + env(safe-area-inset-bottom)); 
+            padding-bottom: calc(40px + env(safe-area-inset-bottom)); 
         }
 
-        /* Tło jako osobna warstwa - jedyny sposób na fixed background na iOS */
+        /* Tło jako warstwa pod spodem - fix na iOS Safari */
         body::before {
             content: "";
             position: fixed;
@@ -51,15 +50,14 @@
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
             background-size: cover; 
             background-position: center;
-            z-index: -1; /* Pod spodem */
-            will-change: transform; /* Optymalizacja wydajności */
+            z-index: -1;
+            will-change: transform;
         }
 
-        /* NAVBAR */
+        /* NAVBAR GLASS */
         .navbar { 
-            background: rgba(0,0,0,0.9); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px); /* Safari Fix */
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 2px solid var(--radom-red); 
             padding-top: max(10px, env(safe-area-inset-top)); /* Odsunięcie od Notcha */
         }
@@ -69,54 +67,46 @@
             background: #000; border-radius: 20px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;
         }
-        .gallery-img { height: 500px; object-fit: contain; width: 100%; cursor: zoom-in; background: #000; }
+        .gallery-img { height: 450px; object-fit: contain; width: 100%; cursor: zoom-in; background: #000; }
         @media (max-width: 768px) { .gallery-img { height: 300px; } }
 
         /* KAFELKI SPECYFIKACJI (GLASS) */
         .spec-box { 
-            background: rgba(44, 44, 44, 0.7); 
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px); /* Safari Fix */
+            background: rgba(40, 40, 40, 0.6); 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             padding: 15px; border-radius: 12px; 
-            border: 1px solid rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.08); 
             text-align: center; transition: 0.2s; 
             height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; 
         }
-        .spec-box:hover { border-color: var(--radom-red); transform: translateY(-3px); background: rgba(44, 44, 44, 0.9); }
+        .spec-box:hover { border-color: var(--radom-red); transform: translateY(-3px); background: rgba(40, 40, 40, 0.8); }
 
-        /* TRUST BADGES */
-        .trust-badge { 
-            display: flex; align-items: center; gap: 15px; 
-            background: rgba(26, 26, 26, 0.8); border: 1px solid #333; padding: 15px; 
-            border-radius: 10px; color: white; text-decoration: none; 
-            transition: 0.2s; margin-bottom: 10px; 
-            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-        }
-        .trust-badge:hover { background: #252525; border-color: var(--radom-red); transform: translateX(5px); }
-        .trust-icon { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-
-        /* STYLIZACJA KART */
+        /* KARTY OPISU I WYPOSAŻENIA */
         .card-glass {
-            background: rgba(20, 20, 20, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 16px;
         }
 
-        /* PULSUJĄCY PRZYCISK TELEFONU */
+        /* TRUST BADGES */
+        .trust-badge { 
+            display: flex; align-items: center; gap: 15px; 
+            background: rgba(30, 30, 30, 0.7); border: 1px solid #333; padding: 15px; 
+            border-radius: 10px; color: white; text-decoration: none; 
+            transition: 0.2s; margin-bottom: 10px; backdrop-filter: blur(5px);
+        }
+        .trust-badge:hover { background: #252525; border-color: var(--radom-red); transform: translateX(5px); }
+        .trust-icon { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+        /* PULSUJĄCY PRZYCISK */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(25, 135, 84, 0); }
             100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
         }
         .pulse-btn { animation: pulse-green 2s infinite; }
-        
-        /* BANER COOKIES - wyżej na iOS */
-        #cookie-banner {
-            padding-bottom: calc(15px + env(safe-area-inset-bottom)) !important;
-        }
-    </style>
+    </script>
 
     <style>
         .expert-panel { background: linear-gradient(160deg, #1e1e1e 0%, #0a0a0a 100%); border: 1px solid #333; border-radius: 16px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); position: relative; }
@@ -148,7 +138,7 @@
                 <a href="/edytuj/{{ car.id }}" class="btn btn-warning btn-sm fw-bold shadow">
                     <i class="bi bi-pencil-fill me-1"></i> EDYTUJ
                 </a>
-                <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno usunąć?');">
+                <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno usunąć ogłoszenie?');">
                     <button class="btn btn-dark btn-sm border-secondary text-danger fw-bold shadow">
                         <i class="bi bi-trash-fill me-1"></i> USUŃ
                     </button>
@@ -163,7 +153,7 @@
 
         <div class="col-lg-8">
             
-            <div class="mb-5 gallery-wrapper" id="gallery-wrapper">
+            <div class="mb-5 gallery-wrapper">
                 <div id="carCarousel" class="carousel slide">
                     <div class="carousel-inner" id="pswp-gallery">
                         <div class="carousel-item active">
