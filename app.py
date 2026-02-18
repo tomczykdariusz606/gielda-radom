@@ -529,8 +529,13 @@ def szukaj():
     # 3. Filtrowanie Tekstowe (NAPRAWIONE: ilike zamiast icontains)
     if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
     if model: query = query.filter(Car.model.ilike(f'%{model}%'))
-    if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
-    if ai_ocena: query = query.filter(Car.ai_label.contains(ai_ocena))
+    
+    # Obsługa koloru (zabezpieczenie jeśli kolor jest pusty w bazie)
+    if kolor: 
+        query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
+        
+    if ai_ocena: 
+        query = query.filter(Car.ai_label.contains(ai_ocena))
     
     # 4. Filtrowanie ścisłe (select)
     if paliwo: query = query.filter(Car.paliwo == paliwo)
@@ -545,12 +550,14 @@ def szukaj():
     
     # Obsługa mocy (zabezpieczenie przed NULL w bazie)
     if moc_min is not None: 
+        # Filtrujemy tylko auta, które mają wpisaną moc (nie są NULL)
         query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
     
     # Sortowanie
     cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
     
     return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
