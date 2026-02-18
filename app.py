@@ -170,6 +170,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), default='Radom')
     google_id = db.Column(db.String(100), unique=True, nullable=True) # Nowe pole Google
+    avatar_url = db.Column(db.String(500), nullable=True) # Nowe pole Avatar
     ai_requests_today = db.Column(db.Integer, default=0)
     last_ai_request_date = db.Column(db.Date, default=datetime.utcnow().date())
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -213,6 +214,10 @@ class Car(db.Model):
     pojemnosc = db.Column(db.String(20))
     przebieg = db.Column(db.Integer, default=0)
     
+    # --- NOWE POLA DLA AI ---
+    moc = db.Column(db.Integer, nullable=True)
+    kolor = db.Column(db.String(50), nullable=True)
+    
     # AI i Statystyki
     is_promoted = db.Column(db.Boolean, default=False)
     ai_label = db.Column(db.String(500), nullable=True)
@@ -240,22 +245,70 @@ def allowed_file(filename):
 def save_optimized_image(file):
     filename = f"{uuid.uuid4().hex}.webp"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    img = Image.open(file)
+    
     try:
-        img = ImageOps.exif_transpose(img)
-    except:
-        pass
-    if img.mode in ("RGBA", "P"):
-        img = img.convert("RGB")
-    
-    # Resize jeśli za duże
-    if img.width > 1200:
-        w_percent = (1200 / float(img.width))
-        h_size = int((float(img.height) * float(w_percent)))
-        img = img.resize((1200, h_size), Image.Resampling.LANCZOS)
-    
-    img.save(filepath, "WEBP", quality=80)
+        img = Image.open(file)
+        # Obsługa obrotu zdjęcia (EXIF)
+        try:
+            img = ImageOps.exif_transpose(img)
+        except:
+            pass
+        
+        # Konwersja kolorów
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        
+        # 1. SKALOWANIE GŁÓWNEGO ZDJĘCIA
+        # Jeśli większe niż 1600px, zmniejsz (oszczędność miejsca)
+        base_width = 1600
+        if img.width > base_width:
+            w_percent = (base_width / float(img.width))
+            h_size = int((float(img.height) * float(w_percent)))
+            img = img.resize((base_width, h_size), Image.Resampling.LANCZOS)
+
+        # 2. DODAWANIE ZNAKU WODNEGO
+        watermark_path = 'static/watermark.png'
+        if os.path.exists(watermark_path):
+            try:
+                # Otwórz watermark i zachowaj przezroczystość
+                watermark = Image.open(watermark_path).convert("RGBA")
+                
+                # Oblicz wielkość znaku (np. 20% szerokości zdjęcia)
+                wm_width = int(img.width * 0.20)
+                wm_ratio = watermark.height / watermark.width
+                wm_height = int(wm_width * wm_ratio)
+                
+                # Jeśli watermark wyszedł za mały (np. przy małych fotkach), ustaw minimum
+                if wm_width < 100: 
+                    wm_width = 100
+                    wm_height = int(100 * wm_ratio)
+
+                watermark = watermark.resize((wm_width, wm_height), Image.Resampling.LANCZOS)
+
+                # Pozycja: Prawy dolny róg z marginesem
+                margin = int(img.width * 0.02) # 2% marginesu
+                position = (img.width - wm_width - margin, img.height - wm_height - margin)
+
+                # Ponieważ główne zdjęcie to RGB, a watermark to RGBA, musimy stworzyć tymczasową warstwę
+                transparent_layer = Image.new('RGBA', img.size, (0,0,0,0))
+                transparent_layer.paste(watermark, position, mask=watermark)
+                
+                # Połącz zdjęcia
+                img = img.convert("RGBA")
+                img = Image.alpha_composite(img, transparent_layer)
+                img = img.convert("RGB") # Wróć do RGB dla WebP
+            except Exception as e:
+                print(f"Błąd znaku wodnego: {e}")
+
+        # Zapisz jako WebP (lekki i szybki)
+        img.save(filepath, "WEBP", quality=85)
+        
+    except Exception as e:
+        print(f"Błąd zapisu obrazu: {e}")
+        return None
+
     return filename
+
 
 def check_ai_limit():
     if not current_user.is_authenticated: return False
@@ -269,14 +322,52 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
     try:
+        # 1. KROK: Python liczy REALNE dane z Twojej bazy (Radom i okolice)
+        similar_cars = Car.query.filter(
+            Car.marka == car.marka,
+            Car.model == car.model,
+            Car.rok >= car.rok - 2,
+            Car.rok <= car.rok + 2,
+            Car.id != car.id
+        ).all()
+        
+        liczba_lokalna = len(similar_cars)
+        
+        # Obliczamy średnią cenę w Twojej bazie (jeśli są auta)
+        if liczba_lokalna > 0:
+            srednia_cena = sum(c.cena for c in similar_cars) / liczba_lokalna
+            info_z_bazy = f"W lokalnej bazie Giełda Radom jest {liczba_lokalna} podobnych aut. Ich średnia cena to {int(srednia_cena)} PLN."
+        else:
+            info_z_bazy = "W lokalnej bazie Giełda Radom to jedyny taki egzemplarz (unikat)."
+
+        # 2. KROK: Wysyłamy te fakty do AI
         prompt = f"""
-        Jesteś ekspertem rynku motoryzacyjnego. Analiza pojazdu: {car.marka} {car.model}, {car.rok}, {car.cena} PLN.
-        Zwróć TYLKO JSON: 
-        {{ "score": 85, "label": "SUPER CENA", "color": "success", "sample_size": "28 ofert w regionie", "market_info": "Cena o 10% niższa niż średnia rynkowa dla tego rocznika." }}
+        Jesteś surowym ekspertem rynku aut używanych w województwie mazowieckim.
+        Analizujesz ofertę: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
+        
+        FAKTY Z BAZY DANYCH: {info_z_bazy}
+        
+        Twoje zadanie:
+        1. Jeśli cena {car.cena} jest niższa niż rynkowa -> daj wysoką ocenę (Super Cena).
+        2. Jeśli jest wyższa -> napisz wprost, że drogo.
+        3. W polu "sample_size" WPISZ PRAWDĘ. Jeśli baza lokalna jest pusta, napisz "Analiza ogólnopolska (Mazowieckie)". Jeśli są auta w bazie, napisz np. "Porównano z 3 ofertami w Radomiu".
+        
+        Zwróć TYLKO JSON:
+        {{
+            "score": (liczba 1-100),
+            "label": (np. "SUPER OKAZJA", "UCZCIWA CENA", "POWYŻEJ ŚREDNIEJ", "DROGO"),
+            "color": ("success", "warning", "info" lub "danger"),
+            "sample_size": (Tutaj wpisz tekst o próbce danych),
+            "market_info": (Krótkie uzasadnienie dla klienta, np. "Tańszy o 15% od średniej w regionie" lub "Unikatowy model w Radomiu")
+        }}
         """
+        
         response = model_ai.generate_content(prompt)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
-        json.loads(clean_json) # Walidacja
+        
+        # Walidacja JSON
+        data = json.loads(clean_json)
+        
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
@@ -317,6 +408,7 @@ def google_callback():
         email = user_info.get('email')
         google_id = user_info.get('id')
         name = user_info.get('name') or email.split('@')[0]
+        picture = user_info.get('picture') 
 
         # Sprawdź czy użytkownik istnieje (po emailu lub google_id)
         user = User.query.filter((User.email == email) | (User.google_id == google_id)).first()
@@ -325,7 +417,6 @@ def google_callback():
             # Rejestracja nowego użytkownika
             random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
             
-            # Unikalność nazwy użytkownika
             base_username = name.replace(' ', '')
             username = base_username
             counter = 1
@@ -338,16 +429,23 @@ def google_callback():
                 email=email,
                 google_id=google_id,
                 password_hash=generate_password_hash(random_pass),
+                avatar_url=picture,
                 lokalizacja='Radom'
             )
             db.session.add(user)
             db.session.commit()
             flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
         else:
-            # Linkowanie konta jeśli brak google_id
+            # Linkowanie konta i aktualizacja zdjęcia
+            changed = False
             if not user.google_id:
                 user.google_id = google_id
-                db.session.commit()
+                changed = True
+            if picture and user.avatar_url != picture:
+                user.avatar_url = picture
+                changed = True
+            
+            if changed: db.session.commit()
 
         login_user(user)
         return redirect(url_for('profil'))
@@ -395,8 +493,52 @@ def index():
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
     # Sortowanie: Promowane pierwsze, potem najnowsze
-    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
+    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow())
+
+@app.route('/szukaj')
+def szukaj():
+    # Pobieramy parametry
+    marka = request.args.get('marka', '').strip()
+    model = request.args.get('model', '').strip()
+    ai_ocena = request.args.get('ai_ocena', '')
+    paliwo = request.args.get('paliwo', '')
+    skrzynia = request.args.get('skrzynia', '')
+    nadwozie = request.args.get('nadwozie', '')
+    kolor = request.args.get('kolor', '').strip() # ---✅ NOWE
+    
+    # Liczbowe
+    cena_min = request.args.get('cena_min', type=float)
+    cena_max = request.args.get('cena_max', type=float)
+    rok_min = request.args.get('rok_min', type=int)
+    rok_max = request.args.get('rok_max', type=int)
+    moc_min = request.args.get('moc_min', type=int) # ---✅ NOWE
+    
+    query = Car.query
+
+    # Filtrowanie tekstowe
+    if marka: query = query.filter(Car.marka.icontains(marka))
+    if model: query = query.filter(Car.model.icontains(model))
+    if kolor: query = query.filter(Car.kolor.icontains(kolor)) # ---✅ NOWE
+    if ai_ocena: query = query.filter(Car.ai_label.contains(ai_ocena))
+    
+    # Filtrowanie ścisłe (select)
+    if paliwo: query = query.filter(Car.paliwo == paliwo)
+    if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
+    if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
+    
+    # Filtrowanie liczbowe
+    if cena_min: query = query.filter(Car.cena >= cena_min)
+    if cena_max: query = query.filter(Car.cena <= cena_max)
+    if rok_min: query = query.filter(Car.rok >= rok_min)
+    if rok_max: query = query.filter(Car.rok <= rok_max)
+    if moc_min: query = query.filter(Car.moc >= moc_min) # ---✅ NOWE (Szukamy aut, które mają WIĘCEJ niż wpisana moc)
+    
+    # Sortowanie
+    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
+    
+    return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
@@ -406,14 +548,14 @@ def car_details(car_id):
     if car.views is None: car.views = 0
     car.views += 1
     
-    # Sprawdzenie czy odświeżyć wycenę AI (co 7 dni)
+    # Sprawdzenie czy odświeżyć wycenę AI (co 3 dni - ZMODYFIKOWANE)
     should_update = False
     if not car.ai_valuation_data or not car.ai_label:
         should_update = True
     else:
         try:
             last_check = datetime.strptime(car.ai_valuation_data, "%Y-%m-%d")
-            if (datetime.now() - last_check).days >= 7:
+            if (datetime.now() - last_check).days >= 3:
                 should_update = True
         except:
             should_update = True
@@ -461,13 +603,13 @@ def dodaj_ogloszenie():
     saved_paths = []
     
     # Obsługa zdjęcia ze skanera
-    if 'scan_image' in request.files and request.files['scan_image'].filename != '':
-        f = request.files['scan_image']
-        if allowed_file(f.filename):
-            saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(f)))
-            
+    if 'scan_image_cam' in request.files and request.files['scan_image_cam'].filename != '':
+        saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_cam'])))
+    elif 'scan_image_file' in request.files and request.files['scan_image_file'].filename != '':
+        saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_file'])))
+        
     # Obsługa zdjęć z galerii
-    for file in files[:15]:
+    for file in files[:18]:
         if file and allowed_file(file.filename):
             saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
             
@@ -496,6 +638,10 @@ def dodaj_ogloszenie():
         wyposazenie=wyposazenie_str,
         pojemnosc=request.form.get('pojemnosc'),
         przebieg=int(request.form.get('przebieg') or 0),
+        # --- ZAPISUJEMY MOC I KOLOR ---
+        moc=int(request.form.get('moc') or 0), 
+        kolor=request.form.get('kolor'),
+        # -----------------------------
         img=main_img,
         zrodlo=current_user.lokalizacja,
         user_id=current_user.id,
@@ -538,17 +684,31 @@ def analyze_car():
 
     try:
         image_data = file.read()
+        # --- ZMODYFIKOWANY PROMPT DLA AI (MOC, KOLOR, REFLEKTORY) ---
         prompt = """
-        Przeanalizuj to zdjęcie. Masz dwa tryby działania:
-        TRYB 1: JEŚLI TO POJAZD (Samochód, Motocykl, Ciężarówka, Rower, Minivan):
-        - Zachowuj się jak EKSPERT MOTORYZACYJNY.
-        - Kategoria: wybierz jedną z (Osobowe, SUV, Minivan, Ciezarowe, Moto/Rower).
-        - Opis: Profesjonalny, marketingowy opis dla kupującego auto (podkreśl alufelgi, stan, LEDy itp.).
-        - Wypełnij: rok, paliwo, nadwozie.
-        TRYB 2: JEŚLI TO INNY PRZEDMIOT:
-        - Kategoria: "Inne". Marka: Producent. Model: Typ.
+        Jesteś ekspertem motoryzacyjnym. Przeanalizuj zdjęcie pojazdu.
+        
+        Twoje zadania:
+        1. Rozpoznaj markę, model, typ nadwozia i przybliżony rok.
+        2. Rozpoznaj KOLOR (np. Czarny Metalik, Biała Perła).
+        3. WYGLĄD: Czy auto ma felgi aluminiowe (Alufelgi)? Czy ma reflektory soczewkowe/LED/Xenon (Światła LED)?
+        4. MOC: Na podstawie modelu i wyglądu (np. wersja GTI, RS, lub zwykła) OSZACUJ typową moc (KM) dla tego auta. Wpisz najpopularniejszą wartość (np. 150).
+        5. Stwórz profesjonalny opis handlowy.
+        
         Zwróć TYLKO czysty JSON:
-        { "kategoria": "String", "marka": "String", "model": "String", "rok_sugestia": Integer, "paliwo_sugestia": "String", "typ_nadwozia": "String", "kolor": "String", "opis_wizualny": "String" }
+        { 
+            "kategoria": "Osobowe/SUV/Minivan/Ciezarowe/Moto",
+            "marka": "String", 
+            "model": "String", 
+            "rok_sugestia": Integer, 
+            "paliwo_sugestia": "Diesel/Benzyna/LPG", 
+            "typ_nadwozia": "String", 
+            "kolor": "String",       
+            "moc_sugestia": Integer,
+            "wyposazenie_wykryte": ["Alufelgi", "Światła LED"], 
+            "opis_wizualny": "String" 
+        }
+        Jeśli nie wykryjesz alufelg lub LED, nie wpisuj ich do listy 'wyposazenie_wykryte'.
         """
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
@@ -694,6 +854,10 @@ def edytuj(id):
             car.cena = float(request.form.get('cena') or 0)
             car.rok = int(request.form.get('rok') or 0)
             car.przebieg = int(request.form.get('przebieg') or 0)
+            # --- AKTUALIZACJA MOCY I KOLORU PRZY EDYCJI ---
+            car.moc = int(request.form.get('moc') or 0)
+            car.kolor = request.form.get('kolor')
+            # ----------------------------------------------
             car.paliwo = request.form.get('paliwo')
             car.skrzynia = request.form.get('skrzynia')
             car.typ = request.form.get('typ')
@@ -813,7 +977,10 @@ def update_db():
             ("car", "vin", "TEXT"),
             ("car", "wyposazenie", "TEXT"),
             ("user", "last_seen", "TIMESTAMP"),
-            ("user", "google_id", "TEXT") # Nowe pole!
+            ("user", "google_id", "TEXT"),
+            ("user", "avatar_url", "TEXT"),
+            ("car", "moc", "INTEGER"),   # ---✅ MOC
+            ("car", "kolor", "TEXT")     # ---✅ KOLOR
         ]
         
         for table, col, dtype in columns_to_add:
@@ -830,4 +997,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host='0.0.0.0', port=5000)
-
