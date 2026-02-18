@@ -499,64 +499,57 @@ def index():
 
 @app.route('/szukaj')
 def szukaj():
-    # 1. Pobieranie parametrów
-    marka = request.args.get('marka', '').strip()
-    model = request.args.get('model', '').strip()
-    ai_ocena = request.args.get('ai_ocena', '')
-    paliwo = request.args.get('paliwo', '')
-    skrzynia = request.args.get('skrzynia', '')
-    nadwozie = request.args.get('nadwozie', '')
-    kolor = request.args.get('kolor', '').strip()
-    
-    # 2. Bezpieczna konwersja liczb (zabezpieczenie przed błędem 500)
-    try: cena_min = float(request.args.get('cena_min')) if request.args.get('cena_min') else None
-    except: cena_min = None
-    
-    try: cena_max = float(request.args.get('cena_max')) if request.args.get('cena_max') else None
-    except: cena_max = None
-    
-    try: rok_min = int(request.args.get('rok_min')) if request.args.get('rok_min') else None
-    except: rok_min = None
-    
-    try: rok_max = int(request.args.get('rok_max')) if request.args.get('rok_max') else None
-    except: rok_max = None
-    
-    try: moc_min = int(request.args.get('moc_min')) if request.args.get('moc_min') else None
-    except: moc_min = None
-    
-    query = Car.query
-
-    # 3. Filtrowanie Tekstowe (NAPRAWIONE: ilike zamiast icontains)
-    if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
-    if model: query = query.filter(Car.model.ilike(f'%{model}%'))
-    
-    # Obsługa koloru (zabezpieczenie jeśli kolor jest pusty w bazie)
-    if kolor: 
-        query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
+    try:
+        # 1. Pobieranie parametrów
+        marka = request.args.get('marka', '').strip()
+        model = request.args.get('model', '').strip()
+        kolor = request.args.get('kolor', '').strip()
+        ai_ocena = request.args.get('ai_ocena', '')
         
-    if ai_ocena: 
-        query = query.filter(Car.ai_label.contains(ai_ocena))
-    
-    # 4. Filtrowanie ścisłe (select)
-    if paliwo: query = query.filter(Car.paliwo == paliwo)
-    if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
-    if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
-    
-    # 5. Filtrowanie liczbowe
-    if cena_min is not None: query = query.filter(Car.cena >= cena_min)
-    if cena_max is not None: query = query.filter(Car.cena <= cena_max)
-    if rok_min is not None: query = query.filter(Car.rok >= rok_min)
-    if rok_max is not None: query = query.filter(Car.rok <= rok_max)
-    
-    # Obsługa mocy (zabezpieczenie przed NULL w bazie)
-    if moc_min is not None: 
-        # Filtrujemy tylko auta, które mają wpisaną moc (nie są NULL)
-        query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
-    
-    # Sortowanie
-    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
-    
-    return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+        paliwo = request.args.get('paliwo', '')
+        skrzynia = request.args.get('skrzynia', '')
+        nadwozie = request.args.get('nadwozie', '')
+        
+        # 2. Bezpieczna konwersja
+        try: cena_min = float(request.args.get('cena_min')) if request.args.get('cena_min') else None
+        except: cena_min = None
+        try: cena_max = float(request.args.get('cena_max')) if request.args.get('cena_max') else None
+        except: cena_max = None
+        try: rok_min = int(request.args.get('rok_min')) if request.args.get('rok_min') else None
+        except: rok_min = None
+        try: rok_max = int(request.args.get('rok_max')) if request.args.get('rok_max') else None
+        except: rok_max = None
+        try: moc_min = int(request.args.get('moc_min')) if request.args.get('moc_min') else None
+        except: moc_min = None
+
+        query = Car.query
+
+        # 3. Filtrowanie (zabezpieczone ILIKE)
+        if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
+        if model: query = query.filter(Car.model.ilike(f'%{model}%'))
+        if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
+        if ai_ocena: query = query.filter(Car.ai_label.contains(ai_ocena))
+        
+        if paliwo: query = query.filter(Car.paliwo == paliwo)
+        if skrzynia: query = query.filter(Car.skrzynia == skrzynia)
+        if nadwozie: query = query.filter(Car.nadwozie == nadwozie)
+        
+        if cena_min is not None: query = query.filter(Car.cena >= cena_min)
+        if cena_max is not None: query = query.filter(Car.cena <= cena_max)
+        if rok_min is not None: query = query.filter(Car.rok >= rok_min)
+        if rok_max is not None: query = query.filter(Car.rok <= rok_max)
+        
+        if moc_min is not None: 
+            query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
+        
+        # Sortowanie
+        cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
+        
+        return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+
+    except Exception as e:
+        # POKAŻ PRAWDZIWY BŁĄD NA EKRANIE
+        return f"<h1 style='color:red;font-family:sans-serif;padding:20px;'>BŁĄD SYSTEMU: {str(e)}</h1>"
 
 
 @app.route('/ogloszenie/<int:car_id>')
