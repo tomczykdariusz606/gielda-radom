@@ -44,7 +44,7 @@
 
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover; background-position: center;
             z-index: -1; will-change: transform;
         }
@@ -74,7 +74,7 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
-        /* SPECYFIKACJA (Małe kafelki pod SMS) */
+        /* SPECYFIKACJA (Małe kafelki) */
         .spec-box { 
             background: rgba(40, 40, 40, 0.6); 
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -108,7 +108,7 @@
 
     <style>
         .expert-panel { 
-            background: rgba(30, 30, 30, 0.65); /* SZKŁO ZAMIAST SOLIDNEGO KOLORU */
+            background: rgba(30, 30, 30, 0.65); /* SZKŁO */
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255,255,255,0.15);
             border-radius: 16px; overflow: hidden; margin-bottom: 30px; 
@@ -203,6 +203,7 @@
                                 <div class="paint-inner">{{ ai.paint_score or '-' }}</div>
                             </div>
                             <div class="small text-muted fw-bold" style="font-size:0.6rem;">KONDYCJA WIZUALNA</div>
+                            <div class="text-white small mt-1 fw-bold">{{ ai.paint_status }}</div>
                         </div>
                     </div>
 
