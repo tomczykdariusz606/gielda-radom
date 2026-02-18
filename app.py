@@ -747,7 +747,7 @@ def delete_car(car_id):
         db.session.commit()
     return redirect('/profil')
 
-@@app.route('/odswiez/<int:car_id>', methods=['POST'])
+@app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
 def refresh_car(car_id):
     c = Car.query.get(car_id)
