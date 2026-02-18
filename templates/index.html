@@ -10,10 +10,10 @@
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <title>Giełda Radom - Auta z Weryfikacją AI | Busy, Rowery, Części</title>
-    <meta name="description" content="Najnowocześniejsza giełda w Radomiu (26-600). Darmowe ogłoszenia: auta, busy, rowery. Jedyna platforma z analizą ekspercką Google Gemini 3.0. Skanuj auto telefonem i sprawdź realną wycenę.">
+    <meta name="description" content="Najnowocześniejsza giełda w Radomiu (26-600). Darmowe ogłoszenia: auta, busy, rowery. Jedyna platforma z analizą ekspercką Google Gemini 3.0.">
     <meta name="keywords" content="giełda samochodowa radom, busy radom, rowery radom, tanie auta mazowieckie, sprzedaż samochodów radom, czerwiec 76 radom, ogłoszenia radom, wycena AI">
     <link rel="canonical" href="https://gieldaradom.pl/">
     <meta name="author" content="Giełda Radom AI Team">
@@ -36,14 +36,22 @@
 
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #0f0f0f; }
+        
+        /* FIX TŁA DLA IPHONE */
         body { 
             background-color: var(--bg-dark); 
             color: #eee; font-family: 'Segoe UI', sans-serif; 
-            padding-bottom: 90px;
-            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
-            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh;
+            padding-bottom: calc(90px + env(safe-area-inset-bottom));
         }
-        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-position: center;
+            z-index: -1;
+        }
+
+        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); padding-top: max(10px, env(safe-area-inset-top)); }
 
         /* HERO & AI BANNER */
         .hero-wrap { padding: 40px 0 40px 0; }
@@ -86,7 +94,20 @@
         .btn-search-pill:hover { background: #b01b25; transform: scale(1.05); }
 
         .advanced-filters { margin-top: 15px; background: rgba(15, 15, 15, 0.95); border-radius: 15px; padding: 20px; max-width: 700px; margin-left: auto; margin-right: auto; text-align: left; border: 1px solid #333; backdrop-filter: blur(10px); }
-        .form-select-dark, .form-control-dark { background: #222; border: 1px solid #444; color: white; }
+        
+        /* --- NOWE STYLE DLA CUSTOM LIST (ZAMIAST SELECT) --- */
+        .custom-dropdown-btn {
+            background-color: #222; border: 1px solid #444; color: #eee;
+            width: 100%; padding: 7px 12px; border-radius: 8px; text-align: left;
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; transition: 0.2s;
+        }
+        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] { background-color: #000; border-color: var(--radom-red); color: white; }
+        .dropdown-menu-dark { background-color: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.9); border-radius: 10px; max-height: 250px; overflow-y: auto; }
+        .dropdown-item { color: #ccc; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .dropdown-item:hover, .dropdown-item:focus { background-color: var(--radom-red); color: white; }
+        
+        .form-control-dark { background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 0.9rem; }
+        .form-control-dark:focus { border-color: var(--radom-red); box-shadow: none; background: #1a1a1a; color: white; }
 
         /* KARTY SAMOCHODÓW */
         .car-card { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
@@ -96,17 +117,11 @@
         .seo-footer { background: #050505; color: #777; padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; font-size: 0.9rem; }
         .seo-footer a { color: #999; text-decoration: none; } .seo-footer a:hover { color: var(--radom-red); }
 
-        /* STYL PRZYCISKU "NASTĘPNA STRONA" */
-        #loadMoreBtn {
-            transition: all 0.3s ease;
-            letter-spacing: 2px;
-        }
-        #loadMoreBtn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(206, 43, 55, 0.4);
-        }
+        /* LOAD MORE */
+        #loadMoreBtn { transition: all 0.3s ease; letter-spacing: 2px; }
+        #loadMoreBtn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(206, 43, 55, 0.4); }
 
-        /* INTRO VIDEO (Overlay) */
+        /* INTRO VIDEO */
         .video-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #000; z-index: 99999;
@@ -127,7 +142,7 @@
         .promo-video-container { height: 350px; }
         @media (max-width: 767px) { .promo-video-container { height: 500px !important; } }
 
-        /* --- DOLNE MENU --- */
+        /* DOLNE MENU */
         .nav-bottom {
             position: fixed; bottom: 0; width: 100%; background: #000; z-index: 1000;
             display: flex; justify-content: space-around; padding: 12px 0;
@@ -215,26 +230,49 @@
 
             <div class="collapse" id="advFilters">
                 <div class="advanced-filters row g-3">
+                    
                     <div class="col-6 col-md-3">
                         <label class="small text-muted mb-1">{{ t['cat'] }}</label>
-                        <select name="typ" class="form-select form-select-dark btn-sm">
-                            <option value="">{{ t['all'] }}</option>
-                            <option value="Osobowe">Osobowe</option>
-                            <option value="SUV">SUV</option>
-                            <option value="Minivan">Minivan</option>
-                            <option value="Ciezarowe">Dostawcze</option>
-                            <option value="Moto/Rower">Moto/Rower</option>
-                            <option value="Inne">Inne</option>
-                        </select>
+                        <input type="hidden" name="typ" id="val_typ" value="">
+                        <div class="dropdown">
+                            <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_typ">
+                                {{ t['all'] }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark w-100">
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', '', '{{ t['all'] }}')">{{ t['all'] }}</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Osobowe', 'Osobowe')">Osobowe</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'SUV', 'SUV')">SUV</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Minivan', 'Minivan')">Minivan</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Ciezarowe', 'Dostawcze')">Dostawcze</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Moto/Rower', 'Moto/Rower')">Moto/Rower</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Inne', 'Inne')">Inne</a></li>
+                            </ul>
+                        </div>
                     </div>
+
                     <div class="col-6 col-md-3">
                         <label class="small text-muted mb-1">{{ t['gear'] }}</label>
-                        <select name="skrzynia" class="form-select form-select-dark btn-sm">
-                            <option value="">{{ t['all'] }}</option><option value="Manualna">{{ t['man'] }}</option><option value="Automatyczna">{{ t['auto'] }}</option>
-                        </select>
+                        <input type="hidden" name="skrzynia" id="val_skrzynia" value="">
+                        <div class="dropdown">
+                            <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_skrzynia">
+                                {{ t['all'] }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark w-100">
+                                <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', '', '{{ t['all'] }}')">{{ t['all'] }}</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna', '{{ t['man'] }}')">{{ t['man'] }}</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna', '{{ t['auto'] }}')">{{ t['auto'] }}</a></li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="col-6 col-md-3"><label class="small text-muted mb-1">{{ t['mileage'] }}</label><input type="number" name="max_przebieg" class="form-control form-control-dark btn-sm" placeholder="km"></div>
-                    <div class="col-6 col-md-3"><label class="small text-muted mb-1">{{ t['price'] }}</label><input type="number" name="max_cena" class="form-control form-control-dark btn-sm" placeholder="PLN"></div>
+
+                    <div class="col-6 col-md-3">
+                        <label class="small text-muted mb-1">{{ t['mileage'] }}</label>
+                        <input type="number" name="max_przebieg" class="form-control form-control-dark" placeholder="km">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="small text-muted mb-1">{{ t['price'] }}</label>
+                        <input type="number" name="max_cena" class="form-control form-control-dark" placeholder="PLN">
+                    </div>
                 </div>
             </div>
         </form>
@@ -364,6 +402,12 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // FUNKCJA OBSŁUGI CUSTOM DROPDOWN (DODANA)
+    function setVal(name, val, label) {
+        document.getElementById('val_' + name).value = val;
+        document.getElementById('btn_' + name).innerText = label;
+    }
+
     // OBSŁUGA PAGINACJI "LOAD MORE"
     document.addEventListener("DOMContentLoaded", function() {
         const btn = document.getElementById('loadMoreBtn');
@@ -375,12 +419,10 @@
                 for (let i = 0; i < 30; i++) {
                     if (hiddenCars[i]) {
                         hiddenCars[i].classList.remove('d-none');
-                        // Dodaj małą animację pojawiania się
                         hiddenCars[i].style.animation = "fadeIn 0.5s";
                     }
                 }
 
-                // Jeśli nie ma więcej ukrytych, ukryj przycisk
                 if (document.querySelectorAll('.car-item.d-none').length === 0) {
                     btn.style.display = 'none';
                 }
@@ -407,14 +449,8 @@
             overlay.style.display = 'none'; 
         } else {
             video.muted = true; 
-            video.play().catch(error => {
-                console.log("Autoplay zablokowany:", error);
-                finishIntro();
-            });
-
-            video.onended = function() {
-                finishIntro();
-            };
+            video.play().catch(error => { console.log("Autoplay zablokowany"); finishIntro(); });
+            video.onended = function() { finishIntro(); };
         }
     });
 
