@@ -74,6 +74,27 @@
         .nav-item:hover { color: white; }
         .nav-item.active { color: var(--radom-red); }
         .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
+/* --- POPRAWKA DLA CIEMNYCH OKIENEK (MODAL) --- */
+.modal-content {
+    background-color: #1a1a1a; /* Ciemny grafit zamiast białego */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Delikatna ramka */
+    color: #eee; /* Jasny tekst */
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8); /* Mocny cień pod spodem */
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* To zmienia czarny krzyżyk (zamknij) na biały */
+.btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
     </style>
 </head>
 <body>
