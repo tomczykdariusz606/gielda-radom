@@ -322,47 +322,40 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
 
-    # 1. Przygotowanie zdjęcia (usuwanie prefixów URL)
+    # 1. Przygotowanie zdjęcia (ścieżka systemowa)
     img_path = car.img
     if 'static/' in img_path:
         img_path = img_path.replace(url_for('static', filename=''), 'static/')
-        if img_path.startswith('/'): img_path = img_path[1:] # Usuń pierwszy slash
+        if img_path.startswith('/'): img_path = img_path[1:] 
     
     image_file = None
     try:
         if os.path.exists(img_path):
             image_file = Image.open(img_path)
     except Exception as e:
-        print(f"Błąd ładowania zdjęcia do AI: {e}")
+        print(f"Błąd zdjęcia dla AI: {e}")
 
     # 2. PROMPT - RZECZOZNAWCA RYNKU POLSKIEGO
     prompt = f"""
-    Działasz jako profesjonalny rzeczoznawca samochodowy na rynku Polskim.
-    Analizowany pojazd: {car.marka} {car.model}
-    Rok: {car.rok}
-    Przebieg: {car.przebieg} km
-    Silnik/Paliwo: {car.paliwo}, {car.moc} KM
-    Cena sprzedawcy: {car.cena} PLN
+    Jesteś rzeczoznawcą samochodowym na rynku Polskim.
+    Analizujesz: {car.marka} {car.model}, Rok: {car.rok}, {car.przebieg} km, Cena: {car.cena} PLN.
     
     ZADANIA:
-    1. ANALIZA RYNKU PL: Na podstawie swojej wiedzy o cenach transakcyjnych w Polsce dla tego modelu (w tym roczniku i przebiegu), oszacuj realny zakres cenowy (Min - Max) oraz Średnią Rynkową.
-    2. ANALIZA STANU (Tylko jeśli widzisz zdjęcie): Oceń stan blacharsko-lakierniczy (1-10). Szukaj rdzy, wgnieceń, różnic w odcieniach.
-    3. WERDYKT: Porównaj cenę sprzedawcy ({car.cena}) do Rynku PL.
+    1. Rynkowa Wycena (PL): Podaj realne widełki cenowe (Min-Max) i Średnią dla tego modelu w Polsce.
+    2. Stan Wizualny (ze zdjęcia): Oceń stan lakieru/blacharki (1-10).
+    3. Werdykt: Porównaj cenę sprzedawcy ({car.cena}) do Rynku.
     
-    Zwróć TYLKO czysty JSON:
+    Zwróć TYLKO JSON:
     {{
-        "score": (liczba 1-100, ogólna atrakcyjność oferty),
-        "label": (np. "Super Okazja", "Uczciwa Cena", "Powyżej Rynku", "Drogo"),
-        "color": ("success", "info", "warning", "danger"),
-        
-        "pl_min": (liczba, dolna granica ceny w Polsce),
-        "pl_avg": (liczba, średnia cena w Polsce),
-        "pl_max": (liczba, górna granica ceny w Polsce),
-        
-        "paint_score": (liczba 1-10, ocena wizualna),
-        "paint_status": (krótki zwrot np. "Lakier oryginalny", "Widoczne naprawy", "Stan kolekcjonerski"),
-        
-        "expert_comment": (Jedno zdanie podsumowania dla kupującego, np. "Auto tańsze o 15% od średniej krajowej, wizualnie bez zarzutu.")
+        "score": (liczba 1-100),
+        "label": (np. "SUPER OKAZJA", "DOBRA CENA", "DROGO"),
+        "color": ("success", "warning", "info", "danger"),
+        "pl_min": (liczba - dolna granica ceny w PL),
+        "pl_avg": (liczba - średnia cena w PL),
+        "pl_max": (liczba - górna granica ceny w PL),
+        "paint_score": (liczba 1-10),
+        "paint_status": (krótki opis np. "Lakier zadbany", "Widoczne rysy"),
+        "expert_comment": (Krótkie podsumowanie dla kupującego)
     }}
     """
 
@@ -373,13 +366,11 @@ def update_market_valuation(car):
         response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         
-        # Walidacja JSON
-        json.loads(clean_json) 
+        json.loads(clean_json) # Walidacja
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
-        
     except Exception as e:
         print(f"AI Error: {e}")
 
@@ -756,14 +747,24 @@ def delete_car(car_id):
         db.session.commit()
     return redirect('/profil')
 
-@app.route('/odswiez/<int:car_id>', methods=['POST'])
+@@app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
 def refresh_car(car_id):
     c = Car.query.get(car_id)
-    if c and (c.user_id == current_user.id or current_user.username=='admin'):
+    
+    # Sprawdzenie uprawnień (Właściciel lub Admin)
+    if c and (c.user_id == current_user.id or current_user.username == 'admin'):
+        # 1. Podbicie daty (dla wszystkich)
         c.data_dodania = datetime.utcnow()
+        
+        # 2. Reset AI (TYLKO DLA ADMINA - wymusza nową analizę raportu)
+        if current_user.username == 'admin' or current_user.id == 1:
+            c.ai_valuation_data = None 
+            
         db.session.commit()
+        
     return redirect('/profil')
+
 
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
