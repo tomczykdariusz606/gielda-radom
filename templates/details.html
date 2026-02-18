@@ -11,9 +11,10 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="robots" content="index, follow">
 
     <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
-    <meta name="description" content="Sprzedam: {{ car.marka }} {{ car.model }} ({{ car.rok }}r). Cena: {{ car.cena }} PLN. Zobacz zdjęcia i raport AI.">
+    <meta name="description" content="Sprzedam: {{ car.marka }} {{ car.model }} ({{ car.rok }}r). Cena: {{ car.cena }} PLN. Zobacz zdjęcia i raport AI na GiełdaRadom.pl">
 
     <meta property="og:title" content="{{ car.marka }} {{ car.model }} - {{ car.cena }} PLN">
     <meta property="og:description" content="Rocznik {{ car.rok }}, Przebieg {{ car.przebieg }} km. Kliknij, aby zobaczyć szczegóły.">
@@ -38,20 +39,14 @@
             font-family: 'Segoe UI', sans-serif; 
             min-height: 100vh;
             -webkit-overflow-scrolling: touch; 
-            /* Margines na dole uwzględniający belkę iPhone */
             padding-bottom: calc(40px + env(safe-area-inset-bottom)); 
         }
 
-        /* Tło jako warstwa pod spodem - fix na iOS Safari */
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
-            background-size: cover; 
-            background-position: center;
-            z-index: -1;
-            will-change: transform;
+            background-size: cover; background-position: center;
+            z-index: -1; will-change: transform;
         }
 
         /* NAVBAR GLASS */
@@ -59,7 +54,7 @@
             background: rgba(0,0,0,0.85); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border-bottom: 2px solid var(--radom-red); 
-            padding-top: max(10px, env(safe-area-inset-top)); /* Odsunięcie od Notcha */
+            padding-top: max(10px, env(safe-area-inset-top)); 
         }
 
         /* GALERIA */
@@ -70,34 +65,37 @@
         .gallery-img { height: 450px; object-fit: contain; width: 100%; cursor: zoom-in; background: #000; }
         @media (max-width: 768px) { .gallery-img { height: 300px; } }
 
-        /* KAFELKI SPECYFIKACJI (GLASS) */
+        /* EFEKT SZKŁA (GLASS) */
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.65) !important;
+            backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* SPECYFIKACJA (Małe kafelki pod SMS) */
         .spec-box { 
             background: rgba(40, 40, 40, 0.6); 
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             padding: 15px; border-radius: 12px; 
-            border: 1px solid rgba(255,255,255,0.08); 
+            border: 1px solid rgba(255,255,255,0.1); 
             text-align: center; transition: 0.2s; 
             height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; 
         }
-        .spec-box:hover { border-color: var(--radom-red); transform: translateY(-3px); background: rgba(40, 40, 40, 0.8); }
-
-        /* KARTY OPISU I WYPOSAŻENIA */
-        .card-glass {
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-        }
+        .spec-box:hover { border-color: var(--radom-red); transform: translateY(-3px); background: rgba(50, 50, 50, 0.75); }
 
         /* TRUST BADGES */
         .trust-badge { 
             display: flex; align-items: center; gap: 15px; 
-            background: rgba(30, 30, 30, 0.7); border: 1px solid #333; padding: 15px; 
-            border-radius: 10px; color: white; text-decoration: none; 
-            transition: 0.2s; margin-bottom: 10px; backdrop-filter: blur(5px);
+            background: rgba(30, 30, 30, 0.6); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px; border-radius: 10px; color: white; text-decoration: none; 
+            transition: 0.2s; margin-bottom: 10px; 
         }
-        .trust-badge:hover { background: #252525; border-color: var(--radom-red); transform: translateX(5px); }
-        .trust-icon { width: 40px; height: 40px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .trust-badge:hover { background: rgba(40, 40, 40, 0.8); border-color: var(--radom-red); transform: translateX(5px); }
+        .trust-icon { width: 40px; height: 40px; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
         /* PULSUJĄCY PRZYCISK */
         @keyframes pulse-green {
@@ -106,12 +104,20 @@
             100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
         }
         .pulse-btn { animation: pulse-green 2s infinite; }
-    </script>
+    </style>
 
     <style>
-        .expert-panel { background: linear-gradient(160deg, #1e1e1e 0%, #0a0a0a 100%); border: 1px solid #333; border-radius: 16px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); position: relative; }
-        .expert-header { padding: 15px 20px; background: rgba(255,255,255,0.03); border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .expert-panel { 
+            background: rgba(30, 30, 30, 0.65); /* SZKŁO ZAMIAST SOLIDNEGO KOLORU */
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px; overflow: hidden; margin-bottom: 30px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.5); position: relative; 
+        }
+        
+        .expert-header { padding: 15px 20px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
         .badge-ai-pro { background: linear-gradient(90deg, #FFD700, #b8860b); color: black; font-weight: 900; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; letter-spacing: 1px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        
         .market-bar-container { position: relative; height: 12px; background: #222; border-radius: 6px; margin: 45px 10px 25px 10px; border: 1px solid #444; }
         .market-bar-gradient { position: absolute; top: 0; left: 0; height: 100%; width: 100%; border-radius: 6px; background: linear-gradient(90deg, #198754 0%, #ffc107 50%, #dc3545 100%); opacity: 0.4; }
         .avg-marker { position: absolute; top: -8px; left: 50%; width: 2px; height: 28px; background: #fff; z-index: 1; opacity: 0.5; }
@@ -235,7 +241,7 @@
             </div>
             {% endif %}{% endif %}
 
-            <div class="card card-glass mb-4 shadow-sm">
+            <div class="card glass-panel mb-4 shadow-sm">
                 <div class="card-header bg-transparent border-secondary text-muted small fw-bold text-uppercase p-3">
                     <i class="bi bi-file-text-fill me-2"></i> OPIS POJAZDU
                 </div>
@@ -243,7 +249,7 @@
             </div>
 
             {% if car.wyposazenie %}
-            <div class="card card-glass mb-4 shadow-sm">
+            <div class="card glass-panel mb-4 shadow-sm">
                 <div class="card-header bg-transparent border-secondary text-muted small fw-bold text-uppercase p-3">
                     <i class="bi bi-ui-checks-grid me-2"></i> WYPOSAŻENIE
                 </div>
@@ -281,6 +287,10 @@
                        class="btn btn-outline-light btn-lg fw-bold rounded-pill shadow py-2">
                         <i class="bi bi-chat-text-fill me-2"></i> SMS
                     </a>
+
+                    <button onclick="shareOffer()" class="btn btn-dark border-secondary btn-lg fw-bold rounded-pill shadow py-2 text-info">
+                        <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
+                    </button>
                 </div>
 
                 <div class="mb-4">
@@ -309,7 +319,7 @@
                 </div>
 
                 {% if car.vin %}
-                <div class="card card-glass border-success border-opacity-25 mb-4 shadow-sm">
+                <div class="card glass-panel border-success border-opacity-25 mb-4 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title text-success small fw-bold text-uppercase mb-3"><i class="bi bi-shield-check me-2"></i>Zweryfikowany VIN</h5>
                         <div class="input-group mb-3">
@@ -324,7 +334,7 @@
                 </div>
                 {% endif %}
 
-                <div class="card card-glass shadow-sm">
+                <div class="card glass-panel shadow-sm">
                     <div class="card-header bg-transparent border-secondary text-white fw-bold small"><i class="bi bi-geo-alt-fill text-danger me-2"></i> Lokalizacja</div>
                     <div class="overflow-hidden bg-white" style="height: 250px;">
                         {% if car.latitude and car.longitude %}
