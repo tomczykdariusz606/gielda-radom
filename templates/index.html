@@ -14,16 +14,16 @@
 
     <title>Giełda Radom - Auta z Weryfikacją AI | Busy, Rowery, Części</title>
     <meta name="description" content="Najnowocześniejsza giełda w Radomiu (26-600). Darmowe ogłoszenia: auta, busy, rowery. Jedyna platforma z analizą ekspercką Google Gemini 3.0. Skanuj auto telefonem i sprawdź realną wycenę.">
+    <meta name="keywords" content="giełda samochodowa radom, busy radom, rowery radom, tanie auta mazowieckie, sprzedaż samochodów radom, czerwiec 76 radom, ogłoszenia radom, wycena AI">
+    <link rel="canonical" href="https://gieldaradom.pl/">
+    <meta name="author" content="Giełda Radom AI Team">
 
     <meta property="og:title" content="Giełda Radom - Rewolucja AI w Handlu Autami">
-    
-    <meta property="og:image" content="{{ url_for('static', filename='radom_hero.png') }}">
-    <meta property="og:url" content="https://gieldaradom.pl/">
-    <meta property="og:type" content="website">
     <meta property="og:description" content="Sprzedajesz? Zrób zdjęcie, a AI napisze opis i wyceni auto! Kupujesz? Zobacz raport ekspercki Gemini.">
     <meta property="og:image" content="{{ url_for('static', filename='radom_hero.png') }}">
     <meta property="og:url" content="https://gieldaradom.pl/">
     <meta property="og:type" content="website">
+
     <meta name="geo.region" content="PL-MZ">
     <meta name="geo.placename" content="Radom">
     <meta name="geo.position" content="51.4027;21.1471">
@@ -39,13 +39,13 @@
         body { 
             background-color: var(--bg-dark); 
             color: #eee; font-family: 'Segoe UI', sans-serif; 
-            padding-bottom: 90px; /* ZWIĘKSZONE, ŻEBY MENU NIE ZASŁANIAŁO TREŚCI */
+            padding-bottom: 90px;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo.jpg') }}");
             background-size: cover; background-position: center; background-attachment: fixed;
         }
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
 
-        /* HERO & AI BANNER (STARY - ZOSTAWIAMY) */
+        /* HERO & AI BANNER */
         .hero-wrap { padding: 40px 0 40px 0; }
         .ai-hero-banner {
             background: rgba(20, 20, 20, 0.8);
@@ -127,7 +127,7 @@
         .promo-video-container { height: 350px; }
         @media (max-width: 767px) { .promo-video-container { height: 500px !important; } }
 
-        /* --- NOWE DOLNE MENU --- */
+        /* --- DOLNE MENU --- */
         .nav-bottom {
             position: fixed; bottom: 0; width: 100%; background: #000; z-index: 1000;
             display: flex; justify-content: space-around; padding: 12px 0;
@@ -298,7 +298,8 @@
                 {% endif %}
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 230px; object-fit: cover;">
+                        <img src="{{ car.img }}" class="card-img-top" loading="lazy" alt="{{ car.marka }} {{ car.model }} Radom" style="height: 230px; object-fit: cover;">
+                        
                         {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>{% endif %}
                         <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
                             <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
@@ -443,4 +444,3 @@
 
 </body>
 </html>
-
