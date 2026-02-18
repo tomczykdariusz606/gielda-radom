@@ -72,8 +72,27 @@
         .cat-item input { display: none; }
         .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70px; background: #2c2c2c; border: 1px solid #444; border-radius: 12px; cursor: pointer; font-size: 0.75rem; text-align: center; color: var(--text-grey); transition: 0.2s; }
         .cat-item input:checked + .cat-label { background: #3a1517; border-color: var(--radom-red); color: white; font-weight: bold; box-shadow: 0 0 10px rgba(206, 43, 55, 0.4); }
+        
         .form-control, .form-select { background-color: #2c2c2c; border: 1px solid #444; color: white; padding: 10px; }
         .form-control:focus { background-color: #333; border-color: var(--radom-red); color: white; box-shadow: none; }
+        
+        /* --- NOWE STYLE DLA CUSTOMOWYCH LIST (DODANE) --- */
+        .custom-dropdown-btn {
+            background-color: #2c2c2c; border: 1px solid #444; color: white;
+            width: 100%; padding: 10px; text-align: left; border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] {
+            background-color: #333; border-color: var(--radom-red); color: white;
+        }
+        .dropdown-menu-dark {
+            background-color: #1a1a1a; border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        .dropdown-item { color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .dropdown-item:hover { background-color: var(--radom-red); color: white; }
+        /* ------------------------------------------------ */
+
         .scanner-box { border: 2px dashed var(--premium-gold); border-radius: 15px; padding: 20px; text-align: center; background: rgba(0,0,0,0.3); margin-bottom: 20px; }
         .btn-submit-fix { background-color: var(--radom-red); color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 15px; width: 100%; border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(206, 43, 55, 0.4); margin-top: 20px; }
         
@@ -130,27 +149,20 @@
         .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 0.75rem; }
         .nav-item.active { color: var(--radom-red); font-weight: 700; }
         .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
-/* --- POPRAWKA DLA CIEMNYCH OKIENEK (MODAL) --- */
-.modal-content {
-    background-color: #1a1a1a; /* Ciemny grafit zamiast białego */
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Delikatna ramka */
-    color: #eee; /* Jasny tekst */
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8); /* Mocny cień pod spodem */
-}
 
-.modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.modal-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* To zmienia czarny krzyżyk (zamknij) na biały */
-.btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
-}
-
+        /* --- FIX: Ciemne Okienka (Modale) --- */
+        .modal-content {
+            background-color: #1a1a1a !important;   /* Ciemne tło */
+            border: 1px solid #333 !important;       /* Ciemna ramka */
+            color: #eee !important;                  /* Jasny tekst */
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9) !important;
+        }
+        .modal-header, .modal-footer {
+            border-color: #333 !important;           /* Ciemne linie oddzielające */
+        }
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%) !important; /* Biały krzyżyk */
+        }
     </style>
 </head>
 <body class="pb-5">
@@ -353,8 +365,38 @@
                             <div class="col-6 tech"><label class="small fw-bold text-warning">Kolor</label><input type="text" name="kolor" class="form-control border-warning" placeholder="np. Czarny"></div>
 
                             <div class="col-6 tech"><label class="small fw-bold text-muted">Pojemność</label><input type="text" name="pojemnosc" class="form-control"></div>
-                            <div class="col-6 tech"><label class="small fw-bold text-muted">Paliwo</label><select name="paliwo" class="form-select"><option>Benzyna</option><option>Diesel</option><option>LPG</option><option>Hybryda</option><option>Elektryczny</option></select></div>
-                            <div class="col-6 tech"><label class="small fw-bold text-muted">Skrzynia</label><select name="skrzynia" class="form-select"><option>Manualna</option><option>Automatyczna</option></select></div>
+                            
+                            <div class="col-6 tech">
+                                <label class="small fw-bold text-muted">Paliwo</label>
+                                <input type="hidden" name="paliwo" id="val_paliwo" value="Benzyna">
+                                <div class="dropdown">
+                                    <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_paliwo">
+                                        Benzyna
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark w-100">
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Benzyna')">Benzyna</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Diesel')">Diesel</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'LPG')">LPG</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Hybryda')">Hybryda</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Elektryczny')">Elektryczny</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="col-6 tech">
+                                <label class="small fw-bold text-muted">Skrzynia</label>
+                                <input type="hidden" name="skrzynia" id="val_skrzynia" value="Manualna">
+                                <div class="dropdown">
+                                    <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_skrzynia">
+                                        Manualna
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark w-100">
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna')">Manualna</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna')">Automatyczna</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
                             <div class="col-12"><label class="small fw-bold text-muted">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
                             <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3" placeholder="Opis..."></textarea></div>
 
@@ -406,7 +448,7 @@
     {% if current_user.username == 'admin' or current_user.id == 1 %}
     <div class="modal fade" id="usersModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content bg-dark border border-secondary text-white">
+            <div class="modal-content border border-secondary text-white">
                 <div class="modal-header border-secondary"><h5 class="fw-bold">Baza Użytkowników</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body p-0">
                     <div class="table-responsive">
@@ -466,6 +508,12 @@
         if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
         function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
         
+        // NOWA FUNKCJA DO OBSŁUGI LIST ROZWIJANYCH
+        function setVal(name, val) {
+            document.getElementById('val_' + name).value = val;
+            document.getElementById('btn_' + name).innerText = val;
+        }
+
         async function performAnalysis(file) {
             const toast = document.getElementById('aiToast'); toast.style.display = 'block';
             const fd=new FormData(); fd.append('scan_image', file); 
@@ -489,7 +537,11 @@
                         });
                     }
 
-                    if(d.paliwo_sugestia && d.kategoria!=='Inne'){ const sel=document.querySelector('[name="paliwo"]'); for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text===d.paliwo_sugestia) sel.selectedIndex=i; } } 
+                    // ZAKTUALIZOWANA LOGIKA PALIWA DLA CUSTOM DROPDOWN
+                    if(d.paliwo_sugestia && d.kategoria!=='Inne'){
+                        setVal('paliwo', d.paliwo_sugestia);
+                    } 
+                    
                     toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane (Moc/Kolor/Opcje) uzupełnione!'; setTimeout(() => { toast.style.display = 'none'; }, 3000);
                 } else { toast.style.display = 'none'; } 
             } catch(e){ console.error(e); toast.style.display = 'none'; } 
