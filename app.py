@@ -321,58 +321,59 @@ def check_ai_limit():
 
 def update_market_valuation(car):
     if not model_ai: return
-    try:
-        # 1. KROK: Python liczy REALNE dane z Twojej bazy (Radom i okolice)
-        similar_cars = Car.query.filter(
-            Car.marka == car.marka,
-            Car.model == car.model,
-            Car.rok >= car.rok - 2,
-            Car.rok <= car.rok + 2,
-            Car.id != car.id
-        ).all()
-        
-        liczba_lokalna = len(similar_cars)
-        
-        # Obliczamy średnią cenę w Twojej bazie (jeśli są auta)
-        if liczba_lokalna > 0:
-            srednia_cena = sum(c.cena for c in similar_cars) / liczba_lokalna
-            info_z_bazy = f"W lokalnej bazie Giełda Radom jest {liczba_lokalna} podobnych aut. Ich średnia cena to {int(srednia_cena)} PLN."
-        else:
-            info_z_bazy = "W lokalnej bazie Giełda Radom to jedyny taki egzemplarz (unikat)."
 
-        # 2. KROK: Wysyłamy te fakty do AI
-        prompt = f"""
-        Jesteś surowym ekspertem rynku aut używanych w województwie mazowieckim.
-        Analizujesz ofertę: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
-        
-        FAKTY Z BAZY DANYCH: {info_z_bazy}
-        
-        Twoje zadanie:
-        1. Jeśli cena {car.cena} jest niższa niż rynkowa -> daj wysoką ocenę (Super Cena).
-        2. Jeśli jest wyższa -> napisz wprost, że drogo.
-        3. W polu "sample_size" WPISZ PRAWDĘ. Jeśli baza lokalna jest pusta, napisz "Analiza ogólnopolska (Mazowieckie)". Jeśli są auta w bazie, napisz np. "Porównano z 3 ofertami w Radomiu".
-        
-        Zwróć TYLKO JSON:
-        {{
-            "score": (liczba 1-100),
-            "label": (np. "SUPER OKAZJA", "UCZCIWA CENA", "POWYŻEJ ŚREDNIEJ", "DROGO"),
-            "color": ("success", "warning", "info" lub "danger"),
-            "sample_size": (Tutaj wpisz tekst o próbce danych),
-            "market_info": (Krótkie uzasadnienie dla klienta, np. "Tańszy o 15% od średniej w regionie" lub "Unikatowy model w Radomiu")
-        }}
-        """
-        
-        response = model_ai.generate_content(prompt)
+    # 1. Przygotowanie zdjęcia (ścieżka systemowa)
+    img_path = car.img
+    if 'static/' in img_path:
+        img_path = img_path.replace(url_for('static', filename=''), 'static/')
+        if img_path.startswith('/'): img_path = img_path[1:] 
+    
+    image_file = None
+    try:
+        if os.path.exists(img_path):
+            image_file = Image.open(img_path)
+    except Exception as e:
+        print(f"Błąd zdjęcia dla AI: {e}")
+
+    # 2. PROMPT - RZECZOZNAWCA RYNKU POLSKIEGO
+    prompt = f"""
+    Jesteś rzeczoznawcą samochodowym na rynku Polskim.
+    Analizujesz: {car.marka} {car.model}, Rok: {car.rok}, {car.przebieg} km, Cena: {car.cena} PLN.
+    
+    ZADANIA:
+    1. Rynkowa Wycena (PL): Podaj realne widełki cenowe (Min-Max) i Średnią dla tego modelu w Polsce.
+    2. Stan Wizualny (ze zdjęcia): Oceń stan lakieru/blacharki (1-10).
+    3. Werdykt: Porównaj cenę sprzedawcy ({car.cena}) do Rynku.
+    
+    Zwróć TYLKO JSON:
+    {{
+        "score": (liczba 1-100),
+        "label": (np. "SUPER OKAZJA", "DOBRA CENA", "DROGO"),
+        "color": ("success", "warning", "info", "danger"),
+        "pl_min": (liczba - dolna granica ceny w PL),
+        "pl_avg": (liczba - średnia cena w PL),
+        "pl_max": (liczba - górna granica ceny w PL),
+        "paint_score": (liczba 1-10),
+        "paint_status": (krótki opis np. "Lakier zadbany", "Widoczne rysy"),
+        "expert_comment": (Krótkie podsumowanie dla kupującego)
+    }}
+    """
+
+    try:
+        content = [prompt]
+        if image_file: content.append(image_file)
+
+        response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         
-        # Walidacja JSON
-        data = json.loads(clean_json)
+        json.loads(clean_json) # Walidacja
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
         print(f"AI Error: {e}")
+
 
 @app.template_filter('from_json')
 def from_json_filter(value):
@@ -750,10 +751,20 @@ def delete_car(car_id):
 @login_required
 def refresh_car(car_id):
     c = Car.query.get(car_id)
-    if c and (c.user_id == current_user.id or current_user.username=='admin'):
+    
+    # Sprawdzenie uprawnień (Właściciel lub Admin)
+    if c and (c.user_id == current_user.id or current_user.username == 'admin'):
+        # 1. Podbicie daty (dla wszystkich)
         c.data_dodania = datetime.utcnow()
+        
+        # 2. Reset AI (TYLKO DLA ADMINA - wymusza nową analizę raportu)
+        if current_user.username == 'admin' or current_user.id == 1:
+            c.ai_valuation_data = None 
+            
         db.session.commit()
+        
     return redirect('/profil')
+
 
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
@@ -997,3 +1008,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host='0.0.0.0', port=5000)
+
