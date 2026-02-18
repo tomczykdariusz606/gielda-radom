@@ -321,58 +321,68 @@ def check_ai_limit():
 
 def update_market_valuation(car):
     if not model_ai: return
-    try:
-        # 1. KROK: Python liczy REALNE dane z Twojej bazy (Radom i okolice)
-        similar_cars = Car.query.filter(
-            Car.marka == car.marka,
-            Car.model == car.model,
-            Car.rok >= car.rok - 2,
-            Car.rok <= car.rok + 2,
-            Car.id != car.id
-        ).all()
-        
-        liczba_lokalna = len(similar_cars)
-        
-        # Obliczamy średnią cenę w Twojej bazie (jeśli są auta)
-        if liczba_lokalna > 0:
-            srednia_cena = sum(c.cena for c in similar_cars) / liczba_lokalna
-            info_z_bazy = f"W lokalnej bazie Giełda Radom jest {liczba_lokalna} podobnych aut. Ich średnia cena to {int(srednia_cena)} PLN."
-        else:
-            info_z_bazy = "W lokalnej bazie Giełda Radom to jedyny taki egzemplarz (unikat)."
 
-        # 2. KROK: Wysyłamy te fakty do AI
-        prompt = f"""
-        Jesteś surowym ekspertem rynku aut używanych w województwie mazowieckim.
-        Analizujesz ofertę: {car.marka} {car.model}, Rok: {car.rok}, Cena: {car.cena} PLN.
+    # 1. Przygotowanie zdjęcia (usuwanie prefixów URL)
+    img_path = car.img
+    if 'static/' in img_path:
+        img_path = img_path.replace(url_for('static', filename=''), 'static/')
+        if img_path.startswith('/'): img_path = img_path[1:] # Usuń pierwszy slash
+    
+    image_file = None
+    try:
+        if os.path.exists(img_path):
+            image_file = Image.open(img_path)
+    except Exception as e:
+        print(f"Błąd ładowania zdjęcia do AI: {e}")
+
+    # 2. PROMPT - RZECZOZNAWCA RYNKU POLSKIEGO
+    prompt = f"""
+    Działasz jako profesjonalny rzeczoznawca samochodowy na rynku Polskim.
+    Analizowany pojazd: {car.marka} {car.model}
+    Rok: {car.rok}
+    Przebieg: {car.przebieg} km
+    Silnik/Paliwo: {car.paliwo}, {car.moc} KM
+    Cena sprzedawcy: {car.cena} PLN
+    
+    ZADANIA:
+    1. ANALIZA RYNKU PL: Na podstawie swojej wiedzy o cenach transakcyjnych w Polsce dla tego modelu (w tym roczniku i przebiegu), oszacuj realny zakres cenowy (Min - Max) oraz Średnią Rynkową.
+    2. ANALIZA STANU (Tylko jeśli widzisz zdjęcie): Oceń stan blacharsko-lakierniczy (1-10). Szukaj rdzy, wgnieceń, różnic w odcieniach.
+    3. WERDYKT: Porównaj cenę sprzedawcy ({car.cena}) do Rynku PL.
+    
+    Zwróć TYLKO czysty JSON:
+    {{
+        "score": (liczba 1-100, ogólna atrakcyjność oferty),
+        "label": (np. "Super Okazja", "Uczciwa Cena", "Powyżej Rynku", "Drogo"),
+        "color": ("success", "info", "warning", "danger"),
         
-        FAKTY Z BAZY DANYCH: {info_z_bazy}
+        "pl_min": (liczba, dolna granica ceny w Polsce),
+        "pl_avg": (liczba, średnia cena w Polsce),
+        "pl_max": (liczba, górna granica ceny w Polsce),
         
-        Twoje zadanie:
-        1. Jeśli cena {car.cena} jest niższa niż rynkowa -> daj wysoką ocenę (Super Cena).
-        2. Jeśli jest wyższa -> napisz wprost, że drogo.
-        3. W polu "sample_size" WPISZ PRAWDĘ. Jeśli baza lokalna jest pusta, napisz "Analiza ogólnopolska (Mazowieckie)". Jeśli są auta w bazie, napisz np. "Porównano z 3 ofertami w Radomiu".
+        "paint_score": (liczba 1-10, ocena wizualna),
+        "paint_status": (krótki zwrot np. "Lakier oryginalny", "Widoczne naprawy", "Stan kolekcjonerski"),
         
-        Zwróć TYLKO JSON:
-        {{
-            "score": (liczba 1-100),
-            "label": (np. "SUPER OKAZJA", "UCZCIWA CENA", "POWYŻEJ ŚREDNIEJ", "DROGO"),
-            "color": ("success", "warning", "info" lub "danger"),
-            "sample_size": (Tutaj wpisz tekst o próbce danych),
-            "market_info": (Krótkie uzasadnienie dla klienta, np. "Tańszy o 15% od średniej w regionie" lub "Unikatowy model w Radomiu")
-        }}
-        """
-        
-        response = model_ai.generate_content(prompt)
+        "expert_comment": (Jedno zdanie podsumowania dla kupującego, np. "Auto tańsze o 15% od średniej krajowej, wizualnie bez zarzutu.")
+    }}
+    """
+
+    try:
+        content = [prompt]
+        if image_file: content.append(image_file)
+
+        response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         
         # Walidacja JSON
-        data = json.loads(clean_json)
+        json.loads(clean_json) 
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
+        
     except Exception as e:
         print(f"AI Error: {e}")
+
 
 @app.template_filter('from_json')
 def from_json_filter(value):
