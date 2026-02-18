@@ -10,7 +10,8 @@
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <title>Szczegółowe Szukanie - Giełda Radom</title>
 
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -21,34 +22,84 @@
     <style>
         :root { --radom-red: #ce2b37; }
 
+        /* --- TŁO I FIX DLA IPHONE --- */
         body { 
             background-color: #121212; color: #e0e0e0; font-family: 'Inter', sans-serif; 
-            padding-bottom: 120px; 
-            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
-            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh;
+            padding-bottom: calc(90px + env(safe-area-inset-bottom)); /* Margines na belkę iOS */
         }
 
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(20, 20, 20, 0.4), rgba(10, 10, 10, 0.85)); 
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-position: center;
+            z-index: -1;
+        }
+        /* Ciemna nakładka na tło */
+        body::after {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(20, 20, 20, 0.6), rgba(10, 10, 10, 0.9)); 
             z-index: -1;
         }
 
-        .navbar { background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 1000; }
+        .navbar { 
+            background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 1000; 
+            padding-top: max(10px, env(safe-area-inset-top));
+        }
 
         .search-panel {
-            background: rgba(30, 30, 35, 0.9); border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 30, 35, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 30px; border-radius: 24px; margin-bottom: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
         }
 
-        .form-control, .form-select {
-            background-color: #222; border: 1px solid #444; color: white; border-radius: 12px; padding: 12px; font-size: 0.95rem;
+        /* --- STYLIZACJA PÓL FORMULARZA (INPUT I SELECT) --- */
+        .form-control, .input-group-text {
+            background-color: #121212; border: 1px solid #333; color: #e4e6eb;
+            border-radius: 12px; padding: 12px; font-size: 0.95rem;
         }
-        .form-control:focus, .form-select:focus {
-            background-color: #2a2a2a; border-color: var(--radom-red); color: white; box-shadow: 0 0 0 3px rgba(206, 43, 55, 0.2);
+        .input-group-text { border-right: none; color: #888; }
+
+        /* Ekskluzywny styl dla list rozwijanych (Select) */
+        select, .form-select {
+            background-color: #121212 !important;
+            color: #e4e6eb !important;
+            border: 1px solid #333 !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            padding: 12px 15px !important;
+            border-radius: 12px !important;
+            cursor: pointer;
+            /* Czerwona strzałka */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ce2b37' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-size: 16px 12px !important;
         }
-        .input-group-text { background-color: #222; border: 1px solid #444; border-right: none; color: #888; }
+
+        /* Aktywne pole */
+        .form-control:focus, select:focus, .form-select:focus {
+            background-color: #1a1a1a !important;
+            border-color: var(--radom-red) !important;
+            color: white !important;
+            box-shadow: 0 0 15px rgba(206, 43, 55, 0.3) !important;
+            outline: none !important;
+        }
+
+        /* Styl rozwiniętej listy opcji */
+        option {
+            background-color: #1a1a1a !important;
+            color: #eee !important;
+            padding: 10px !important;
+        }
+
+        /* Wyjątek dla filtra AI (żeby był złoty) */
+        .ai-select-special {
+            border-color: #f0c420 !important;
+            color: #f0c420 !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f0c420' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+        }
 
         .ai-filter-box {
             border: 1px solid rgba(255, 215, 0, 0.3); background: linear-gradient(145deg, rgba(255, 215, 0, 0.05), rgba(0,0,0,0));
@@ -74,48 +125,6 @@
         .nav-item:hover { color: white; }
         .nav-item.active { color: var(--radom-red); }
         .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
-/* --- POPRAWKA DLA CIEMNYCH OKIENEK (MODAL) --- */
-    /* --- FIX: STYL EXCLUSIVE DLA LIST ROZWIJANYCH --- */
-    
-    /* 1. Wygląd głównego pola (przed kliknięciem) */
-    select, .form-select {
-        background-color: #121212 !important;   /* Głęboka czerń */
-        color: #e4e6eb !important;              /* Jasny tekst */
-        border: 1px solid #333 !important;      /* Ciemna ramka */
-        font-family: 'Inter', sans-serif !important; /* Twoja czcionka */
-        font-weight: 600 !important;            /* Lekko pogrubione - premium */
-        padding: 12px 15px !important;          /* Większe odstępy */
-        border-radius: 12px !important;         /* Zaokrąglone rogi */
-        cursor: pointer;
-        
-        /* Ekskluzywna czerwona strzałka zamiast systemowej */
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ce2b37' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
-        background-size: 16px 12px !important;
-    }
-
-    /* 2. Efekt po kliknięciu (Glow) */
-    select:focus, .form-select:focus {
-        border-color: #ce2b37 !important;       /* Czerwona ramka */
-        box-shadow: 0 0 15px rgba(206, 43, 55, 0.4) !important; /* Czerwona poświata */
-        outline: none !important;
-    }
-
-    /* 3. Rozwinięta lista (opcje) */
-    option {
-        background-color: #1a1a1a !important;   /* Ciemne tło listy */
-        color: #eee !important;                 /* Biały tekst */
-        font-family: 'Inter', sans-serif !important;
-        padding: 10px !important;
-        font-size: 1rem !important;
-    }
-
-    /* 4. Opcje po najechaniu (tylko Windows/Chrome, iOS ma systemowe) */
-    option:hover, option:checked {
-        background-color: #ce2b37 !important;   /* Czerwone tło aktywnego */
-        color: white !important;
-    }
-
-
     </style>
 </head>
 <body>
@@ -140,7 +149,7 @@
             <form action="/szukaj" method="GET">
                 <div class="ai-filter-box">
                     <label class="ai-label mb-2"><i class="bi bi-stars"></i> Szukaj po Ocenie AI</label>
-                    <select name="ai_ocena" class="form-select border-warning text-warning fw-bold" style="background: #1a1a1a;">
+                    <select name="ai_ocena" class="form-select ai-select-special fw-bold">
                         <option value="" class="text-white">Wszystkie oferty</option>
                         <option value="SUPER" {% if args.get('ai_ocena')=='SUPER' %}selected{% endif %}>💎 SUPER OKAZJE</option>
                         <option value="DOBRA" {% if args.get('ai_ocena')=='DOBRA' %}selected{% endif %}>✅ DOBRA CENA</option>
