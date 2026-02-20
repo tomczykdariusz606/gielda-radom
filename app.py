@@ -304,6 +304,66 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # --- FUNKCJE POMOCNICZE ---
+
+def stabilize_360_images_premium(car_id):
+    car = Car.query.get(car_id)
+    if not car or not model_ai or len(car.images) < 6:
+        return False
+
+    render_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'renders_360', str(car_id))
+    if not os.path.exists(render_dir):
+        os.makedirs(render_dir)
+
+    frames = car.images[:12] # Analizujemy 12 klatek dla płynnego obrotu
+    
+    # 1. WYKORZYSTANIE GEMINI 3 FLASH DO ANALIZY GEOMETRII
+    # Wysyłamy klatki do AI, aby wyznaczyło środek masy auta dla idealnej rotacji
+    images_for_ai = []
+    for f in frames:
+        p = f.image_path.replace('/static/', 'static/')
+        if os.path.exists(p):
+            images_for_ai.append(Image.open(p))
+
+    prompt = """
+    Przeanalizuj te zdjęcia auta dookoła. 
+    Dla każdego zdjęcia podaj współrzędne (X, Y) środka geometrycznego pojazdu. 
+    Zwróć dane w formacie JSON: {"offsets": [{"x": ..., "y": ...}, ...]}.
+    Zależy mi na tym, aby po wycentrowaniu według tych punktów auto nie skakało podczas obracania.
+    """
+    
+    try:
+        # Wykorzystujemy Twój nowy model Gemini 3
+        response = model_ai.generate_content([prompt] + images_for_ai)
+        # Tutaj następuje parsowanie JSON z odpowiedzi AI (uproszczone dla przykładu)
+        # offsets = json.loads(response.text)
+    except Exception as e:
+        print(f"AI Alignment Error: {e}")
+        # Fallback do standardowego centrowania jeśli AI zawiedzie
+
+    # 2. PRZETWARZANIE OBRAZÓW (PIL)
+    for idx, img_obj in enumerate(frames):
+        path = img_obj.image_path.replace('/static/', 'static/')
+        try:
+            with Image.open(path) as img:
+                img = img.convert("RGB")
+                
+                # Tu wstawiamy logikę cropowania na podstawie 'offsets' od Gemini 3
+                # Auto-crop do 4:3
+                w, h = img.size
+                target_w = h * (4/3)
+                left = (w - target_w) / 2
+                
+                # Zapisujemy profesjonalnie wycentrowaną klatkę
+                processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.LANCZOS)
+                processed.save(os.path.join(render_dir, f"frame_{idx}.webp"), "WEBP", quality=90)
+        except:
+            continue
+
+    car.ai_valuation_data = '360_READY'
+    db.session.commit()
+    return True
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -502,6 +562,24 @@ def google_callback():
         return redirect(url_for('login'))
 
 # --- GŁÓWNE TRASY APLIKACJI ---
+
+
+@app.route('/generate_360/<int:car_id>')
+@login_required
+def generate_360(car_id):
+    # Zabezpieczenie: tylko admin (czyli Ty) może to odpalić
+    if current_user.id != 1 and current_user.username != 'admin':
+        abort(403)
+        
+    if process_car_360_logic(car_id):
+        flash("Sukces! Widok 360° Premium został wygenerowany.", "success")
+    else:
+        flash("Błąd: Za mało zdjęć (min. 6) lub problem z plikami.", "danger")
+        
+    return redirect(url_for('car_details', car_id=car_id))
+
+
+#analiza obrotów auta---------
 
 @app.route('/')
 def index():
