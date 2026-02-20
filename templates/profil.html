@@ -11,7 +11,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twój Garaż - Giełda Radom</title>
+    <title>{{ t['garage'] }} - Giełda Radom</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -173,7 +173,7 @@
                 <img src="{{ url_for('static', filename='watermark.png') }}" alt="G" style="height: 45px; width: auto; margin-right: 10px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
                 <span style="font-family: 'Inter', sans-serif; letter-spacing: 1px;">GIEŁDA <span class="text-danger">RADOM</span></span>
             </a>
-            <a href="/logout" class="btn btn-sm btn-outline-danger rounded-pill px-3">Wyloguj</a>
+            <a href="/logout" class="btn btn-sm btn-outline-danger rounded-pill px-3">{{ t['logout'] }}</a>
         </div>
     </nav>
 
@@ -185,7 +185,13 @@
                     <img src="{{ current_user.avatar_url or url_for('static', filename='watermark.png') }}" class="profile-avatar" alt="User">
                 </div>
                 <div class="col">
-                    <h5 class="text-white-50 m-0 small text-uppercase">Witaj w garażu</h5>
+                    <h5 class="text-white-50 m-0 small text-uppercase mb-1">
+                        {% if current_user.account_type == 'company' %}
+                            <i class="bi bi-shop text-warning"></i> {{ t['company'] }}: {{ current_user.company_name }}
+                        {% else %}
+                            <i class="bi bi-person text-info"></i> {{ t['private_person'] }}
+                        {% endif %}
+                    </h5>
                     <h2 class="fw-bold text-white m-0 text-truncate">{{ current_user.username }}</h2>
                 </div>
             </div>
@@ -197,7 +203,7 @@
                             {% set limit = 500 %}{% else %}{% set limit = 6 %}{% endif %}
                         {% set uzyte = current_user.ai_requests_today %}
                         {% set pozostalo = limit - uzyte %}{% if pozostalo < 0 %}{% set pozostalo = 0 %}{% endif %}
-                        <div class="d-flex justify-content-between text-white-50 small mb-1"><span>Limit AI</span> <i class="bi bi-robot"></i></div>
+                        <div class="d-flex justify-content-between text-white-50 small mb-1"><span>{{ t['limit'] }}</span> <i class="bi bi-robot"></i></div>
                         <h4 class="fw-bold m-0 text-white">{{ pozostalo }}<span class="fs-6 text-muted">/{{ limit }}</span></h4>
                         <div class="limit-bar-bg"><div class="limit-bar-fill" style="width: {{ (uzyte / limit) * 100 }}%"></div></div>
                     </div>
@@ -225,10 +231,10 @@
         {% endwith %}
 
         <button class="btn btn-danger w-100 rounded-4 py-3 shadow-lg fw-bold mb-4 fs-5 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#dodajModal">
-            <i class="bi bi-plus-circle-fill"></i> DODAJ NOWE OGŁOSZENIE
+            <i class="bi bi-plus-circle-fill"></i> {{ t['add'] }}
         </button>
 
-        <h5 class="fw-bold text-white mb-3 ps-2 border-start border-4 border-danger ps-3">TWOJE OGŁOSZENIA</h5>
+        <h5 class="fw-bold text-white mb-3 ps-2 border-start border-4 border-danger ps-3">{{ t['your_ads'] }}</h5>
         
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for car in cars %}
@@ -237,14 +243,14 @@
                     <div class="position-relative">
                         <img src="{{ car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
                         {% set dni = (now - car.data_dodania).days %}{% set left = 30 - dni %}
-                        <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">{% if left > 0 %}{{ left }} dni{% else %}KONIEC{% endif %}</span>
+                        <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">{% if left > 0 %}{{ left }} {{ t['days_left'] }}{% else %}{{ t['expired'] }}{% endif %}</span>
                         {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow fw-bold">GOLD</span>{% endif %}
                     </div>
                     <div class="card-body d-flex flex-column">
                         <h5 class="fw-bold text-truncate text-white mb-1">{{ car.marka }} {{ car.model }}</h5>
-                        <h4 class="text-danger fw-800">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</h4>
+                        <h4 class="text-danger fw-800">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}</h4>
                         <div class="row g-2 small text-muted mb-3 mt-1">
-                            <div class="col-6"><i class="bi bi-calendar3"></i> {{ car.rok }}r.</div>
+                            <div class="col-6"><i class="bi bi-calendar3"></i> {{ car.rok }}</div>
                             <div class="col-6"><i class="bi bi-fuel-pump"></i> {{ car.paliwo }}</div>
                             <div class="col-6"><i class="bi bi-speedometer2"></i> {{ car.przebieg }}</div>
                             <div class="col-6"><i class="bi bi-eye"></i> {{ car.views }}</div>
@@ -265,12 +271,12 @@
             {% else %}
             <div class="col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25">
                 <i class="bi bi-car-front fs-1 mb-3 d-block opacity-25"></i>
-                <h5 class="text-white opacity-50">Garaż jest pusty</h5>
+                <h5 class="text-white opacity-50">{{ t['empty_garage'] }}</h5>
             </div>
             {% endfor %}
         </div>
 
-        <h5 class="fw-bold text-white mb-3 mt-5 ps-2 border-start border-4 border-warning ps-3">OBSERWOWANE OFERTY</h5>
+        <h5 class="fw-bold text-white mb-3 mt-5 ps-2 border-start border-4 border-warning ps-3">{{ t['observed'] }}</h5>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for fav in favorites %}
             {% set f_car = fav.car %}
@@ -282,12 +288,12 @@
                     </div>
                     <div class="card-body">
                         <h6 class="fw-bold text-truncate text-white mb-1">{{ f_car.marka }} {{ f_car.model }}</h6>
-                        <div class="d-flex justify-content-between align-items-center"><span class="text-warning fw-bold">{{ "{:,.0f}".format(f_car.cena).replace(',', ' ') }} PLN</span><a href="/ogloszenie/{{ f_car.id }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.7rem;">ZOBACZ</a></div>
+                        <div class="d-flex justify-content-between align-items-center"><span class="text-warning fw-bold">{{ "{:,.0f}".format(f_car.cena).replace(',', ' ') }} {{ f_car.waluta if f_car.waluta else 'PLN' }}</span><a href="/ogloszenie/{{ f_car.id }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.7rem;">{{ t['see_details'] }}</a></div>
                     </div>
                 </div>
             </div>
             {% else %}
-            <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10"><p class="small mb-0 opacity-25">Nie obserwujesz jeszcze żadnych ogłoszeń.</p></div>
+            <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10"><p class="small mb-0 opacity-25">{{ t['no_favorites'] }}</p></div>
             {% endfor %}
         </div>
 
@@ -317,9 +323,9 @@
     </div>
 
     <div class="nav-bottom">
-        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
-        <a href="/profil" class="nav-item active"><i class="bi bi-speedometer2"></i> Garaż</a>
-        <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> Kontakt</a>
+        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> {{ t['search'] }}</a>
+        <a href="/profil" class="nav-item active"><i class="bi bi-speedometer2"></i> {{ t['garage'] }}</a>
+        <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> {{ t['contact'] }}</a>
     </div>
 
     <div class="modal fade" id="dodajModal" tabindex="-1" data-bs-backdrop="static">
@@ -342,8 +348,8 @@
                         <div class="scanner-box">
                             <div class="mb-3 text-gold-glow fw-bold fs-5"><i class="bi bi-stars"></i> GEMINI 3.0 EXPERT <i class="bi bi-stars"></i></div>
                             <div class="d-flex justify-content-center gap-3">
-                                <label class="btn btn-gold-premium rounded-pill px-4 py-2 shadow-lg"><i class="bi bi-camera-fill me-2 fs-5"></i> SKANUJ AUTO (AI)<input type="file" name="scan_image_cam" accept="image/*" capture="environment" hidden onchange="scanCar(this)"></label>
-                                <label class="btn btn-outline-light rounded-pill px-3 py-2 fw-bold"><i class="bi bi-folder-fill me-2"></i> Plik<input type="file" name="scan_image_file" accept="image/*" hidden onchange="scanCar(this)"></label>
+                                <label class="btn btn-gold-premium rounded-pill px-4 py-2 shadow-lg"><i class="bi bi-camera-fill me-2 fs-5"></i> {{ t['scan_cam'] }}<input type="file" name="scan_image_cam" accept="image/*" capture="environment" hidden onchange="scanCar(this)"></label>
+                                <label class="btn btn-outline-light rounded-pill px-3 py-2 fw-bold"><i class="bi bi-folder-fill me-2"></i> {{ t['scan_file'] }}<input type="file" name="scan_image_file" accept="image/*" hidden onchange="scanCar(this)"></label>
                             </div>
                             <div id="scanLoader" class="mt-3 small text-warning fw-bold" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Analiza AI...</div>
                         </div>
@@ -358,7 +364,18 @@
                             <div class="col-6"><label class="small fw-bold text-muted">Model</label><input type="text" name="model" class="form-control" placeholder="np. X5"></div>
                             <div class="col-12"><label class="small fw-bold text-success">VIN</label><input type="text" name="vin" class="form-control text-uppercase" placeholder="VIN..." maxlength="17"></div>
                             <div class="col-4"><label class="small fw-bold text-muted">Rok</label><input type="number" name="rok" class="form-control"></div>
-                            <div class="col-4"><label class="small fw-bold text-muted">Cena</label><input type="number" name="cena" class="form-control border-danger text-danger fw-bold" required></div>
+                            
+                            <div class="col-4">
+                                <label class="small fw-bold text-muted">Cena</label>
+                                <div class="input-group">
+                                    <input type="number" name="cena" class="form-control border-danger text-danger fw-bold" style="border-right: none;" required>
+                                    <select name="waluta" class="form-select border-danger text-danger fw-bold px-1" style="max-width: 65px; background-color: #2c2c2c;">
+                                        <option value="PLN">PLN</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div class="col-4 tech"><label class="small fw-bold text-muted">Przebieg</label><input type="number" name="przebieg" class="form-control"></div>
                             
                             <div class="col-6 tech"><label class="small fw-bold text-warning">Moc (KM)</label><input type="number" name="moc" class="form-control border-warning text-warning fw-bold" placeholder="np. 150"></div>
@@ -439,7 +456,7 @@
                         </div>
                         <div class="mt-3"><button type="button" class="btn btn-outline-success w-100 btn-sm rounded-pill py-2" onclick="getGPS(this)"><i class="bi bi-geo-alt-fill"></i> GPS</button></div>
                     </div>
-                    <div class="modal-footer border-secondary pt-0 border-0"><button class="btn-submit-fix">DODAJ</button></div>
+                    <div class="modal-footer border-secondary pt-0 border-0"><button class="btn-submit-fix">{{ t['add'] }}</button></div>
                 </form>
             </div>
         </div>
@@ -453,7 +470,7 @@
                 <div class="modal-body p-0">
                     <div class="table-responsive">
                         <table class="table table-dark table-hover mb-0 text-center align-middle">
-                            <thead><tr class="text-secondary small text-uppercase"><th>ID</th><th>Login</th><th>Email</th><th>Akcja</th></tr></thead>
+                            <thead><tr class="text-secondary small text-uppercase"><th>ID</th><th>Login</th><th>Typ Konta</th><th>Email</th><th>Akcja</th></tr></thead>
                             <tbody>
                                 {% for u in all_users %}
                                 <tr>
@@ -461,6 +478,13 @@
                                     <td class="fw-bold text-white">
                                         <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" width="25" height="25" class="rounded-circle me-2" style="object-fit:cover;">
                                         {{ u.username }}
+                                    </td>
+                                    <td class="small">
+                                        {% if u.account_type == 'company' %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-shop"></i> {{ u.company_name }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary"><i class="bi bi-person"></i> Prywatne</span>
+                                        {% endif %}
                                     </td>
                                     <td class="small text-muted">{{ u.email }}</td>
                                     <td>{% if u.id != current_user.id %}<form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Usunąć?');"><button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button></form>{% else %}<span class="badge bg-warning text-dark">TY</span>{% endif %}</td>
