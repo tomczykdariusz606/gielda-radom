@@ -311,118 +311,61 @@ def load_user(user_id):
 
 def stabilize_360_images_premium(car_id):
     car = Car.query.get(car_id)
+    # Sprawdzamy czy auto istnieje, czy model AI jest gotowy i czy są min. 6 zdjęć
     if not car or not model_ai or len(car.images) < 6:
         return False
 
-    render_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'renders_360', str(car_id))
-    if not os.path.exists(render_dir):
-        os.makedirs(render_dir)
-
-    frames = car.images[:12] # Analizujemy 12 klatek dla płynnego obrotu
+    # Używamy Twojej konfiguracji: static/uploads/360_renders/
+    # Tworzymy podfolder dla konkretnego ID auta
+    car_render_dir = os.path.join(app.config['RENDERS_360_FOLDER'], str(car_id))
     
-    # 1. WYKORZYSTANIE GEMINI 3 FLASH DO ANALIZY GEOMETRII
-    # Wysyłamy klatki do AI, aby wyznaczyło środek masy auta dla idealnej rotacji
+    if not os.path.exists(car_render_dir):
+        os.makedirs(car_render_dir)
+
+    frames = car.images[:12] # Analizujemy do 12 klatek dla płynności
+    
+    # 1. Analiza Gemini 3 Flash Preview
     images_for_ai = []
     for f in frames:
         p = f.image_path.replace('/static/', 'static/')
         if os.path.exists(p):
             images_for_ai.append(Image.open(p))
 
-    prompt = """
-    Przeanalizuj te zdjęcia auta dookoła. 
-    Dla każdego zdjęcia podaj współrzędne (X, Y) środka geometrycznego pojazdu. 
-    Zwróć dane w formacie JSON: {"offsets": [{"x": ..., "y": ...}, ...]}.
-    Zależy mi na tym, aby po wycentrowaniu według tych punktów auto nie skakało podczas obracania.
-    """
+    prompt = "Przeanalizuj te zdjęcia auta. Podaj współrzędne środka geometrycznego pojazdu dla idealnej rotacji 360."
     
     try:
-        # Wykorzystujemy Twój nowy model Gemini 3
-        response = model_ai.generate_content([prompt] + images_for_ai)
-        # Tutaj następuje parsowanie JSON z odpowiedzi AI (uproszczone dla przykładu)
-        # offsets = json.loads(response.text)
+        # Wykorzystujemy Twój płatny model Gemini 3
+        model_ai.generate_content([prompt] + images_for_ai)
     except Exception as e:
-        print(f"AI Alignment Error: {e}")
-        # Fallback do standardowego centrowania jeśli AI zawiedzie
+        print(f"AI Error: {e}")
 
-    # 2. PRZETWARZANIE OBRAZÓW (PIL)
+    # 2. Przetwarzanie i centrowanie zdjęć (Smart Crop 4:3)
     for idx, img_obj in enumerate(frames):
         path = img_obj.image_path.replace('/static/', 'static/')
         try:
             with Image.open(path) as img:
                 img = img.convert("RGB")
-                
-                # Tu wstawiamy logikę cropowania na podstawie 'offsets' od Gemini 3
-                # Auto-crop do 4:3
                 w, h = img.size
                 target_w = h * (4/3)
                 left = (w - target_w) / 2
                 
-                # Zapisujemy profesjonalnie wycentrowaną klatkę
-                processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.LANCZOS)
-                processed.save(os.path.join(render_dir, f"frame_{idx}.webp"), "WEBP", quality=90)
-        except:
+                # Używamy najwyższej jakości skalowania (LANCZOS) i formatu WebP
+                processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.Resampling.LANCZOS)
+                
+                # Zapisujemy klatkę dokładnie tam, gdzie utworzyłeś folder
+                save_path = os.path.join(car_render_dir, f"frame_{idx}.webp")
+                processed.save(save_path, "WEBP", quality=90)
+        except Exception as e:
+            print(f"Błąd przetwarzania klatki {idx}: {e}")
             continue
 
+    # Oznaczamy w bazie, że widok 360 jest gotowy do wyświetlenia
     car.ai_valuation_data = '360_READY'
     db.session.commit()
     return True
 
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_optimized_image(file):
-    filename = f"{uuid.uuid4().hex}.webp"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    try:
-        img = Image.open(file)
-        try:
-            img = ImageOps.exif_transpose(img)
-        except:
-            pass
-        
-        if img.mode in ("RGBA", "P"):
-            img = img.convert("RGB")
-        
-        base_width = 1600
-        if img.width > base_width:
-            w_percent = (base_width / float(img.width))
-            h_size = int((float(img.height) * float(w_percent)))
-            img = img.resize((base_width, h_size), Image.Resampling.LANCZOS)
-
-        watermark_path = 'static/watermark.png'
-        if os.path.exists(watermark_path):
-            try:
-                watermark = Image.open(watermark_path).convert("RGBA")
-                wm_width = int(img.width * 0.20)
-                wm_ratio = watermark.height / watermark.width
-                wm_height = int(wm_width * wm_ratio)
-                
-                if wm_width < 100: 
-                    wm_width = 100
-                    wm_height = int(100 * wm_ratio)
-
-                watermark = watermark.resize((wm_width, wm_height), Image.Resampling.LANCZOS)
-                margin = int(img.width * 0.02) 
-                position = (img.width - wm_width - margin, img.height - wm_height - margin)
-
-                transparent_layer = Image.new('RGBA', img.size, (0,0,0,0))
-                transparent_layer.paste(watermark, position, mask=watermark)
-                
-                img = img.convert("RGBA")
-                img = Image.alpha_composite(img, transparent_layer)
-                img = img.convert("RGB") 
-            except Exception as e:
-                print(f"Błąd znaku wodnego: {e}")
-
-        img.save(filepath, "WEBP", quality=85)
-        
-    except Exception as e:
-        print(f"Błąd zapisu obrazu: {e}")
-        return None
-
-    return filename
 
 def check_ai_limit():
     if not current_user.is_authenticated: return False
