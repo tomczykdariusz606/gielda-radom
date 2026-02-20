@@ -338,14 +338,14 @@
                 <form action="/dodaj" method="POST" enctype="multipart/form-data" onsubmit="loadingEfekt(this); return true;">
                     <input type="hidden" name="lat" id="gps_lat"><input type="hidden" name="lon" id="gps_lon">
 
-                    <div class="modal-body p-4 pt-2">
+                                        <div class="modal-body p-4 pt-2">
                         <div class="cat-grid">
-                            <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label></div>
-                            <div class="cat-item"><input type="radio" name="typ" id="c2" value="SUV" onchange="adj()"><label for="c2" class="cat-label"><i class="bi bi-jeep"></i>SUV</label></div>
-                            <div class="cat-item"><input type="radio" name="typ" id="c3" value="Minivan" onchange="adj()"><label for="c3" class="cat-label"><i class="bi bi-people-fill"></i>Minivan</label></div>
-                            <div class="cat-item"><input type="radio" name="typ" id="c4" value="Ciezarowe" onchange="adj()"><label for="c4" class="cat-label"><i class="bi bi-truck"></i>Bus</label></div>
-                            <div class="cat-item"><input type="radio" name="typ" id="c5" value="Moto/Rower" onchange="adj()"><label for="c5" class="cat-label"><i class="bi bi-bicycle"></i>Moto</label></div>
-                            <div class="cat-item"><input type="radio" name="typ" id="c6" value="Inne" onchange="adj()"><label for="c6" class="cat-label"><i class="bi bi-grid"></i>Inne</label></div>
+                            <div class="cat-item"><input type="radio" name="typ" id="c1" value="Osobowe" checked onchange="adj()"><label for="c1" class="cat-label"><i class="bi bi-car-front"></i>{{ t['car_passenger'] }}</label></div>
+                            <div class="cat-item"><input type="radio" name="typ" id="c2" value="SUV" onchange="adj()"><label for="c2" class="cat-label"><i class="bi bi-jeep"></i>{{ t['car_suv'] }}</label></div>
+                            <div class="cat-item"><input type="radio" name="typ" id="c3" value="Minivan" onchange="adj()"><label for="c3" class="cat-label"><i class="bi bi-people-fill"></i>{{ t['car_minivan'] }}</label></div>
+                            <div class="cat-item"><input type="radio" name="typ" id="c4" value="Ciezarowe" onchange="adj()"><label for="c4" class="cat-label"><i class="bi bi-truck"></i>{{ t['car_bus'] }}</label></div>
+                            <div class="cat-item"><input type="radio" name="typ" id="c5" value="Moto/Rower" onchange="adj()"><label for="c5" class="cat-label"><i class="bi bi-bicycle"></i>{{ t['car_moto'] }}</label></div>
+                            <div class="cat-item"><input type="radio" name="typ" id="c6" value="Inne" onchange="adj()"><label for="c6" class="cat-label"><i class="bi bi-grid"></i>{{ t['car_other'] }}</label></div>
                         </div>
 
                         <div class="scanner-box">
@@ -358,70 +358,71 @@
                         </div>
                         
                         <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center"><label class="small fw-bold text-muted mb-1" id="photoLabel">ZDJĘCIA</label><span class="small text-warning fw-bold">MAX 18</span></div>
+                            <div class="d-flex justify-content-between align-items-center"><label class="small fw-bold text-muted mb-1" id="photoLabel">{{ t['photos'] }}</label><span class="small text-warning fw-bold">{{ t['max'] }} 18</span></div>
                             <input type="file" name="zdjecia" class="form-control" multiple accept="image/*" id="fileInput">
                         </div>
 
                         <div class="row g-2">
-                            <div class="col-6"><label class="small fw-bold text-muted">Marka</label><input type="text" name="marka" class="form-control" placeholder="np. BMW"></div>
-                            <div class="col-6"><label class="small fw-bold text-muted">Model</label><input type="text" name="model" class="form-control" placeholder="np. X5"></div>
-                            <div class="col-12"><label class="small fw-bold text-success">VIN</label><input type="text" name="vin" class="form-control text-uppercase" placeholder="VIN..." maxlength="17"></div>
-                            <div class="col-4"><label class="small fw-bold text-muted">Rok</label><input type="number" name="rok" class="form-control"></div>
+                            <div class="col-6"><label class="small fw-bold text-muted">{{ t['brand'] }}</label><input type="text" name="marka" class="form-control" placeholder="np. BMW"></div>
+                            <div class="col-6"><label class="small fw-bold text-muted">{{ t['model'] }}</label><input type="text" name="model" class="form-control" placeholder="np. X5"></div>
+                            <div class="col-12"><label class="small fw-bold text-success">{{ t['vin'] }}</label><input type="text" name="vin" class="form-control text-uppercase" placeholder="VIN..." maxlength="17"></div>
                             
-                            <div class="col-4">
-                                <label class="small fw-bold text-muted">Cena</label>
+                            <div class="col-6">
+                                <label class="small fw-bold text-muted">{{ t['price_ad'] }}</label>
                                 <div class="input-group">
                                     <input type="number" name="cena" class="form-control border-danger text-danger fw-bold" style="border-right: none;" required>
-                                    <select name="waluta" class="form-select border-danger text-danger fw-bold px-1" style="max-width: 65px; background-color: #2c2c2c;">
+                                    <select name="waluta" class="form-select border-danger text-danger fw-bold px-1" style="max-width: 75px; background-color: #2c2c2c;">
                                         <option value="PLN">PLN</option>
                                         <option value="EUR">EUR</option>
                                     </select>
                                 </div>
                             </div>
                             
-                            <div class="col-4 tech"><label class="small fw-bold text-muted">Przebieg</label><input type="number" name="przebieg" class="form-control"></div>
+                            <div class="col-6 tech"><label class="small fw-bold text-muted">{{ t['mileage_ad'] }}</label><input type="number" name="przebieg" class="form-control"></div>
                             
-                            <div class="col-6 tech"><label class="small fw-bold text-warning">Moc (KM)</label><input type="number" name="moc" class="form-control border-warning text-warning fw-bold" placeholder="np. 150"></div>
-                            <div class="col-6 tech"><label class="small fw-bold text-warning">Kolor</label><input type="text" name="kolor" class="form-control border-warning" placeholder="np. Czarny"></div>
+                            <div class="col-6 tech"><label class="small fw-bold text-warning">{{ t['power'] }}</label><input type="number" name="moc" class="form-control border-warning text-warning fw-bold" placeholder="np. 150"></div>
+                            <div class="col-6 tech"><label class="small fw-bold text-warning">{{ t['color'] }}</label><input type="text" name="kolor" class="form-control border-warning" placeholder="np. Czarny"></div>
 
-                            <div class="col-6 tech"><label class="small fw-bold text-muted">Pojemność</label><input type="text" name="pojemnosc" class="form-control"></div>
+                            <div class="col-6 tech"><label class="small fw-bold text-muted">{{ t['engine_cap'] }}</label><input type="text" name="pojemnosc" class="form-control"></div>
                             
                             <div class="col-6 tech">
-                                <label class="small fw-bold text-muted">Paliwo</label>
+                                <label class="small fw-bold text-muted">{{ t['fuel'] }}</label>
                                 <input type="hidden" name="paliwo" id="val_paliwo" value="Benzyna">
                                 <div class="dropdown">
                                     <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_paliwo">
-                                        Benzyna
+                                        {{ t['petrol'] }}
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-dark w-100">
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Benzyna')">Benzyna</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Diesel')">Diesel</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'LPG')">LPG</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Hybryda')">Hybryda</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Elektryczny')">Elektryczny</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Benzyna', '{{ t['petrol'] }}')">{{ t['petrol'] }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Diesel', '{{ t['diesel'] }}')">{{ t['diesel'] }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'LPG', '{{ t['lpg'] }}')">{{ t['lpg'] }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Hybryda', '{{ t['hybrid'] }}')">{{ t['hybrid'] }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Elektryczny', '{{ t['electric'] }}')">{{ t['electric'] }}</a></li>
                                     </ul>
                                 </div>
                             </div>
 
                             <div class="col-6 tech">
-                                <label class="small fw-bold text-muted">Skrzynia</label>
+                                <label class="small fw-bold text-muted">{{ t['gear'] }}</label>
                                 <input type="hidden" name="skrzynia" id="val_skrzynia" value="Manualna">
                                 <div class="dropdown">
                                     <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_skrzynia">
-                                        Manualna
+                                        {{ t['man'] }}
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-dark w-100">
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna')">Manualna</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna')">Automatyczna</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna', '{{ t['man'] }}')">{{ t['man'] }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna', '{{ t['auto'] }}')">{{ t['auto'] }}</a></li>
                                     </ul>
                                 </div>
                             </div>
+                            
+                            <div class="col-6"><label class="small fw-bold text-muted">{{ t['year_prod'] }}</label><input type="number" name="rok" class="form-control"></div>
 
-                            <div class="col-12"><label class="small fw-bold text-muted">Telefon</label><input type="text" name="telefon" class="form-control" required></div>
-                            <div class="col-12"><label class="small fw-bold text-muted">Opis</label><textarea name="opis" class="form-control" rows="3" placeholder="Opis..."></textarea></div>
+                            <div class="col-12"><label class="small fw-bold text-muted">{{ t['phone'] }}</label><input type="text" name="telefon" class="form-control" required></div>
+                            <div class="col-12"><label class="small fw-bold text-muted">{{ t['desc'] }}</label><textarea name="opis" class="form-control" rows="3" placeholder="..."></textarea></div>
 
                             <div class="col-12 mt-3">
-                                <label class="small fw-bold text-muted mb-2">WYPOSAŻENIE (Zaznacz opcje)</label>
+                                <label class="small fw-bold text-muted mb-2">{{ t['equip'] }}</label>
                                 <div class="row g-2 p-3 rounded border border-secondary bg-black bg-opacity-25" style="max-height: 250px; overflow-y: auto;">
                                     <div class="col-12"><small class="text-secondary fw-bold">BEZPIECZEŃSTWO</small></div>
                                     <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ABS" id="w1"><label class="form-check-label small text-white" for="w1">ABS</label></div></div>
@@ -461,6 +462,7 @@
                     </div>
                     <div class="modal-footer border-secondary pt-0 border-0"><button class="btn-submit-fix">{{ t['add'] }}</button></div>
                 </form>
+
             </div>
         </div>
     </div>
