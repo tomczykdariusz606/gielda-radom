@@ -11,7 +11,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t['create_acc'] }} - Giełda Radom</title>
+    <title>{{ t.get('create_acc', 'ZAŁÓŻ KONTO') }} - Giełda Radom</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -26,6 +26,7 @@
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
             background-size: cover; background-position: center; background-attachment: fixed;
             position: relative; overflow-x: hidden;
+            padding: 20px 0;
         }
         
         /* Ciemna nakładka na tło */
@@ -33,14 +34,14 @@
 
         /* Karta Rejestracji - Dark Glass */
         .login-card {
-            position: relative; z-index: 10; width: 100%; max-width: 450px;
+            position: relative; z-index: 10; width: 100%; max-width: 480px;
             background: rgba(20, 20, 20, 0.85); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 2.5rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9); 
-            margin: 20px; color: white;
+            margin: auto; color: white;
         }
 
         /* Logo */
@@ -92,6 +93,25 @@
         .lang-switch { position: absolute; top: 20px; right: 20px; z-index: 20; }
         .lang-switch a { text-decoration: none; font-size: 1.5rem; margin-left: 8px; opacity: 0.6; transition: 0.2s; filter: grayscale(100%); }
         .lang-switch a:hover { opacity: 1; transform: scale(1.2); filter: grayscale(0%); }
+
+        /* Reklama Gemini */
+        .gemini-promo {
+            background: linear-gradient(145deg, rgba(30,30,30,0.9), rgba(10,10,10,0.95));
+            border: 1px solid rgba(240, 196, 32, 0.2);
+            border-left: 4px solid #f0c420;
+            border-radius: 16px;
+            padding: 15px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .gemini-promo::before {
+            content: ''; position: absolute; top: -50px; right: -50px;
+            width: 100px; height: 100px; background: rgba(240, 196, 32, 0.15);
+            filter: blur(30px); border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -110,8 +130,8 @@
             <img src="{{ url_for('static', filename='watermark.png') }}" class="auth-logo" alt="Giełda Radom">
         </a>
 
-        <h3 class="fw-bold mb-1 text-white">{{ t['create_acc'] }}</h3>
-        <p class="text-white-50 small mb-4">Wystawiaj auta za darmo i korzystaj z AI</p>
+        <h3 class="fw-bold mb-1 text-white">{{ t.get('create_acc', 'ZAŁÓŻ KONTO') }}</h3>
+        <p class="text-white-50 small mb-4">{{ t.get('create_acc_desc', 'Wystawiaj auta za darmo i korzystaj z AI') }}</p>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -126,13 +146,13 @@
         <div class="mb-4">
             <a href="/login/google" class="btn-google shadow-sm text-decoration-none">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" height="20">
-                <span>Zarejestruj przez Google</span>
+                <span>{{ t.get('reg_google', 'Zarejestruj przez Google') }}</span>
             </a>
         </div>
 
         <div class="d-flex align-items-center mb-4">
             <hr class="flex-grow-1 m-0 divider">
-            <span class="px-3 text-white-50 small text-uppercase fw-bold" style="font-size: 0.65rem;">LUB RĘCZNIE</span>
+            <span class="px-3 text-white-50 small text-uppercase fw-bold" style="font-size: 0.65rem;">{{ t.get('or_manual', 'LUB RĘCZNIE') }}</span>
             <hr class="flex-grow-1 m-0 divider">
         </div>
 
@@ -140,34 +160,77 @@
             <div class="mb-3 text-start">
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person fs-5"></i></span>
-                    <input type="text" name="username" class="form-control form-control-modern" placeholder="Nazwa użytkownika" required>
+                    <input type="text" name="username" class="form-control form-control-modern" placeholder="{{ t.get('username', 'Nazwa użytkownika') }}" required>
                 </div>
             </div>
 
             <div class="mb-3 text-start">
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope fs-5"></i></span>
-                    <input type="email" name="email" class="form-control form-control-modern" placeholder="Adres email" required>
+                    <input type="email" name="email" class="form-control form-control-modern" placeholder="{{ t.get('email', 'Adres email') }}" required>
+                </div>
+            </div>
+
+            <div class="mb-3 text-start">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key fs-5"></i></span>
+                    <input type="password" name="password" class="form-control form-control-modern" placeholder="{{ t.get('password', 'Hasło') }} (min. 5 znaków)" required>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3 text-start">
+                <div class="col-5">
+                    <select name="kraj" class="form-control form-control-modern w-100" style="appearance: auto; padding-left: 10px; background-color: rgba(0,0,0,0.6);">
+                        <option value="Polska" selected>🇵🇱 Polska</option>
+                        <option value="Niemcy">🇩🇪 Niemcy</option>
+                        <option value="Belgia">🇧🇪 Belgia</option>
+                        <option value="Holandia">🇳🇱 Holandia</option>
+                        <option value="Francja">🇫🇷 Francja</option>
+                        <option value="Inny">🌍 Inny</option>
+                    </select>
+                </div>
+                <div class="col-7">
+                    <input type="text" name="lokalizacja" class="form-control form-control-modern" placeholder="{{ t.get('city', 'Miejscowość') }}" required>
                 </div>
             </div>
 
             <div class="mb-4 text-start">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-key fs-5"></i></span>
-                    <input type="password" name="password" class="form-control form-control-modern" placeholder="{{ t['password'] }} (min. 5 znaków)" required>
+                <select name="account_type" class="form-control form-control-modern w-100" style="appearance: auto; padding-left: 10px; background-color: rgba(0,0,0,0.6);" onchange="document.getElementById('firmaFields').style.display = this.value === 'company' ? 'block' : 'none';">
+                    <option value="private" selected>{{ t.get('private_person', 'Osoba Prywatna') }}</option>
+                    <option value="company">{{ t.get('company', 'Firma') }}</option>
+                </select>
+
+                <div id="firmaFields" style="display: none; margin-top: 10px;">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-shop fs-5"></i></span>
+                        <input type="text" name="company_name" class="form-control form-control-modern" placeholder="{{ t.get('company_name', 'Nazwa Firmy') }}">
+                    </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn-radom shadow mb-3">{{ t['create_acc'] }}</button>
+            <button type="submit" class="btn-radom shadow">{{ t.get('create_acc', 'ZAŁÓŻ KONTO') }}</button>
         </form>
 
-        <div class="border-top border-secondary border-opacity-25 pt-3 mt-2">
-            <p class="text-white-50 small mb-1">Masz już konto?</p>
-            <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none text-red">{{ t['login'] }}</a>
+        <div class="gemini-promo text-start">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fs-1 text-warning" style="text-shadow: 0 0 15px rgba(240,196,32,0.8);">
+                    <i class="bi bi-google"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1 text-white" style="letter-spacing: 0.5px;">Powered by Gemini AI <i class="bi bi-stars text-warning"></i></h6>
+                    <p class="small text-white-50 mb-0" style="line-height: 1.3; font-size: 0.75rem;">
+                        Wyceny aut, analiza uszkodzeń ze zdjęć i generowanie opisów handlowych. <strong>Wszystko to zyskujesz za darmo po założeniu konta!</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="border-top border-secondary border-opacity-25 pt-3 mt-4">
+            <p class="text-white-50 small mb-1">{{ t.get('already_have_acc', 'Masz już konto?') }}</p>
+            <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none text-red">{{ t.get('login', 'LOGOWANIE') }}</a>
         </div>
         
         <div class="mt-4">
-            <a href="/" class="text-white-50 small text-decoration-none opacity-75"><i class="bi bi-arrow-left"></i> {{ t['back_home'] }}</a>
+            <a href="/" class="text-white-50 small text-decoration-none opacity-75"><i class="bi bi-arrow-left"></i> {{ t.get('back_home', 'Wróć na stronę główną') }}</a>
         </div>
     </div>
 
