@@ -574,13 +574,14 @@ def generate_360(car_id):
     if current_user.id != 1 and current_user.username != 'admin':
         abort(403)
         
-    # Zmieniono nazwę na tę, którą masz zdefiniowaną wyżej
+    # POPRAWKA: Nazwa musi pasować do funkcji zdefiniowanej wyżej
     if stabilize_360_images_premium(car_id): 
         flash("Sukces! Widok 360° Premium został wygenerowany.", "success")
     else:
         flash("Błąd: Za mało zdjęć (min. 6) lub problem z plikami.", "danger")
         
     return redirect(url_for('car_details', car_id=car_id))
+
 
 
 @app.route('/')
