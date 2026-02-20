@@ -315,7 +315,7 @@ def stabilize_360_images_premium(car_id):
     if not car or not model_ai or len(car.images) < 6:
         return False
 
-    # Używamy Twojej konfiguracji: static/uploads/360_renders/
+    # Używamy Twojej konfiguracji z linii 70: static/uploads/360_renders/
     # Tworzymy podfolder dla konkretnego ID auta
     car_render_dir = os.path.join(app.config['RENDERS_360_FOLDER'], str(car_id))
     
@@ -352,7 +352,7 @@ def stabilize_360_images_premium(car_id):
                 # Używamy najwyższej jakości skalowania (LANCZOS) i formatu WebP
                 processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.Resampling.LANCZOS)
                 
-                # Zapisujemy klatkę dokładnie tam, gdzie utworzyłeś folder
+                # Zapisujemy klatkę dokładnie tam, gdzie utworzyłeś folder na serwerze
                 save_path = os.path.join(car_render_dir, f"frame_{idx}.webp")
                 processed.save(save_path, "WEBP", quality=90)
         except Exception as e:
@@ -363,6 +363,7 @@ def stabilize_360_images_premium(car_id):
     car.ai_valuation_data = '360_READY'
     db.session.commit()
     return True
+
 
 
 
@@ -514,16 +515,18 @@ def google_callback():
 @app.route('/generate_360/<int:car_id>')
 @login_required
 def generate_360(car_id):
+    # Zabezpieczenie: tylko Ty (admin) możesz to odpalić
     if current_user.id != 1 and current_user.username != 'admin':
         abort(403)
         
-    # POPRAWKA: Nazwa musi pasować do funkcji zdefiniowanej wyżej
+    # Wywołanie poprawnej funkcji zdefiniowanej wyżej
     if stabilize_360_images_premium(car_id): 
         flash("Sukces! Widok 360° Premium został wygenerowany.", "success")
     else:
         flash("Błąd: Za mało zdjęć (min. 6) lub problem z plikami.", "danger")
         
     return redirect(url_for('car_details', car_id=car_id))
+
 
 
 
