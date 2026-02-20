@@ -1,0 +1,50 @@
+{
+  "pl": {
+    "title": "Polityka Prywatności i RODO",
+    "ver": "Wersja AI Expert | Obowiązuje od lutego 2026 r.",
+    "intro": "Szanujemy Twoją prywatność. Poniżej znajdują się informacje o przetwarzaniu danych w serwisie Giełda Radom.",
+    "h1": "1. Administrator Danych",
+    "p1": "Administratorem jest ADT Dariusz Tomczyk z siedzibą w Radomiu, e-mail: dariusztom@go2.pl.",
+    "h2": "2. Zakres danych",
+    "p2": "Przetwarzamy dane konta, numery telefonów, lokalizację pojazdów oraz zdjęcia analizowane przez AI.",
+    "h4": "4. Udostępnianie danych",
+    "p4": "Dane techniczne pojazdów (zanonimizowane) są przesyłane do Google Cloud/Gemini w celu analizy.",
+    "h8": "8. Przetwarzanie przez Sztuczną Inteligencję (AI)",
+    "p8_a": "Analiza obrazu: Zdjęcia są analizowane przez Google Gemini 3.0 w celu identyfikacji parametrów i uszkodzeń.",
+    "p8_b": "Interakcja: Zapytania do asystenta są przetwarzane przez modele LLM w celu generowania odpowiedzi.",
+    "footer_note": "Masz pytania dotyczące prywatności lub AI? Napisz do nas.",
+    "back": "Powrót"
+  },
+  "en": {
+    "title": "Privacy Policy and GDPR",
+    "ver": "AI Expert Version | Effective from February 2026",
+    "intro": "We respect your privacy. Below is information regarding data processing at Giełda Radom.",
+    "h1": "1. Data Controller",
+    "p1": "The controller is ADT Dariusz Tomczyk, based in Radom, e-mail: dariusztom@go2.pl.",
+    "h2": "2. Scope of Data",
+    "p2": "We process account details, phone numbers, vehicle locations, and AI-analyzed photos.",
+    "h4": "4. Data Sharing",
+    "p4": "Anonymized vehicle technical data is sent to Google Cloud/Gemini for analysis.",
+    "h8": "8. Artificial Intelligence (AI) Processing",
+    "p8_a": "Image Analysis: Photos are analyzed by Google Gemini 3.0 to identify parameters and damages.",
+    "p8_b": "Interaction: Assistant queries are processed by LLM models to generate responses.",
+    "footer_note": "Questions about privacy or AI? Contact us.",
+    "back": "Back"
+  },
+  "de": {
+    "title": "Datenschutzerklärung (DSGVO)",
+    "ver": "KI-Experte Version | Gültig ab Februar 2026",
+    "intro": "Wir respektieren Ihre Privatsphäre. Nachfolgend finden Sie Informationen zur Datenverarbeitung bei Giełda Radom.",
+    "h1": "1. Verantwortlicher",
+    "p1": "Verantwortlicher ist ADT Dariusz Tomczyk mit Sitz in Radom, E-Mail: dariusztom@go2.pl.",
+    "h2": "2. Datenumfang",
+    "p2": "Wir verarbeiten Kontodaten, Telefonnummern, Fahrzeugstandorte und KI-analysierte Fotos.",
+    "h4": "4. Datenaustausch",
+    "p4": "Anonymisierte technische Fahrzeugdaten werden zur Analyse an Google Cloud/Gemini gesendet.",
+    "h8": "8. Verarbeitung durch Künstliche Intelligenz (KI)",
+    "p8_a": "Bildanalyse: Fotos werden von Google Gemini 3.0 analysiert, um Parameter und Schäden zu identifizieren.",
+    "p8_b": "Interaktion: Assistenten-Anfragen werden von LLM-Modellen verarbeitet, um Antworten zu generieren.",
+    "footer_note": "Fragen zu Datenschutz oder KI? Kontaktieren Sie uns.",
+    "back": "Zurück"
+  }
+}
