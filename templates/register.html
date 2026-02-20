@@ -58,6 +58,8 @@
             background: black; border-color: var(--radom-red); 
             box-shadow: none; color: white; 
         }
+        /* Jaśniejsze podpowiedzi wewnątrz pól */
+        .form-control-modern::placeholder { color: rgba(255, 255, 255, 0.4); }
         
         .standalone-input {
             border-left: 1px solid #444 !important;
@@ -179,31 +181,35 @@
 
         <form method="POST">
             <div class="mb-3 text-start">
+                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('username_label', 'Nazwa użytkownika (Login)') }}</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person fs-5"></i></span>
-                    <input type="text" name="username" class="form-control form-control-modern" placeholder="{{ t.get('username', 'Nazwa użytkownika') }}" required>
+                    <input type="text" name="username" class="form-control form-control-modern" placeholder="{{ t.get('username', 'np. JanKowalski') }}" required>
                 </div>
             </div>
 
             <div class="mb-3 text-start">
+                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('email_label', 'Adres E-mail') }}</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope fs-5"></i></span>
-                    <input type="email" name="email" class="form-control form-control-modern" placeholder="{{ t.get('email', 'Adres email') }}" required>
+                    <input type="email" name="email" class="form-control form-control-modern" placeholder="{{ t.get('email', 'np. jan@gmail.com') }}" required>
                 </div>
             </div>
 
             <div class="mb-3 text-start">
+                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('password_label', 'Hasło (Minimum 5 znaków)') }}</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-key fs-5"></i></span>
-                    <input type="password" name="password" class="form-control form-control-modern" placeholder="{{ t.get('password', 'Hasło') }} (min. 5 znaków)" required>
+                    <input type="password" name="password" class="form-control form-control-modern" placeholder="••••••••" required>
                 </div>
             </div>
 
             <div class="row g-2 mb-3 text-start">
                 <div class="col-5">
+                    <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('country', 'Kraj') }}</label>
                     <input type="hidden" name="kraj" id="val_kraj" value="Polska">
                     <div class="dropdown w-100 h-100">
-                        <button class="btn custom-dropdown-btn dropdown-toggle w-100 h-100" type="button" data-bs-toggle="dropdown" id="btn_kraj">
+                        <button class="btn custom-dropdown-btn dropdown-toggle w-100 h-100" type="button" data-bs-toggle="dropdown" id="btn_kraj" style="padding-top: 0.6rem; padding-bottom: 0.6rem;">
                             🇵🇱 Polska
                         </button>
                         <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
@@ -217,11 +223,13 @@
                     </div>
                 </div>
                 <div class="col-7">
-                    <input type="text" name="lokalizacja" class="form-control form-control-modern standalone-input" placeholder="{{ t.get('city', 'Miejscowość') }}" required>
+                    <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('city', 'Miasto') }}</label>
+                    <input type="text" name="lokalizacja" class="form-control form-control-modern standalone-input" placeholder="np. Radom" required style="padding-top: 0.6rem; padding-bottom: 0.6rem;">
                 </div>
             </div>
 
             <div class="mb-4 text-start">
+                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('acc_type', 'Typ konta') }}</label>
                 <input type="hidden" name="account_type" id="val_account_type" value="private">
                 <div class="dropdown w-100">
                     <button class="btn custom-dropdown-btn dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" id="btn_account_type">
@@ -233,10 +241,11 @@
                     </ul>
                 </div>
 
-                <div id="firmaFields" style="display: none; margin-top: 10px;">
+                <div id="firmaFields" style="display: none; margin-top: 15px;">
+                    <label class="small text-warning fw-bold mb-1 ms-1">{{ t.get('company_name', 'Nazwa Firmy') }}</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-shop fs-5"></i></span>
-                        <input type="text" name="company_name" class="form-control form-control-modern" placeholder="{{ t.get('company_name', 'Nazwa Firmy') }}">
+                        <span class="input-group-text"><i class="bi bi-shop fs-5 text-warning"></i></span>
+                        <input type="text" name="company_name" class="form-control form-control-modern" placeholder="np. Auto-Handel Kowalski">
                     </div>
                 </div>
             </div>
