@@ -1,124 +1,122 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="{{ lang }}" data-bs-theme="dark">
 <head>
- <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'AW-17939880807');
     </script>
-    <meta charset="UTF-8">
-    <title>Regulamin - Giełda Radom</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ reg.reg_title }} - Giełda Radom</title>
+    
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
-        body { font-family: 'Inter', sans-serif; background-color: #fcefe9; min-height: 100vh; display: flex; flex-direction: column; }
+        :root { --radom-red: #ce2b37; --premium-gold: #f0c420; }
+        body { 
+            color: #e4e6eb; font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh;
+        }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: -1; }
 
-        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-        .legal-container { background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 3rem; margin-top: 3rem; margin-bottom: 3rem; border: 1px solid #eee; }
+        .legal-card {
+            background: rgba(25, 25, 30, 0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 3rem; margin-top: 3rem; margin-bottom: 6rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
 
-        h1 { color: var(--radom-dark); font-weight: 800; margin-bottom: 2rem; border-left: 6px solid var(--radom-red); padding-left: 20px; }
-        h2 { color: var(--radom-red); font-weight: 700; font-size: 1.3rem; margin-top: 2rem; margin-bottom: 1rem; }
+        h1 { color: #fff; font-weight: 800; border-left: 5px solid var(--radom-red); padding-left: 20px; margin-bottom: 1.5rem; }
+        h2 { color: var(--radom-red); font-size: 1.3rem; font-weight: 700; margin-top: 2.5rem; }
+        p { color: #ccc; line-height: 1.7; }
         
-        .ai-section { background-color: #f8f9ff; border: 1px solid #e0e7ff; border-radius: 16px; padding: 2rem; margin-top: 2rem; }
+        .ai-box {
+            background: rgba(66, 133, 244, 0.1);
+            border: 1px solid rgba(66, 133, 244, 0.3);
+            border-radius: 15px; padding: 1.5rem; margin: 2rem 0;
+        }
         .ai-badge { background: linear-gradient(135deg, #4285f4, #9b51e0); color: white; padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem; display: inline-block; }
 
-        .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
-        .footer-link { color: #bbb; text-decoration: none; transition: 0.2s; display: block; margin-bottom: 12px; }
-        .footer-link:hover { color: var(--radom-red); padding-left: 5px; }
+        .nav-bottom { 
+            position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); 
+            backdrop-filter: blur(15px); z-index: 1000; display: flex; justify-content: space-around; padding: 12px 0; 
+            border-top: 1px solid rgba(255,255,255,0.05); 
+        }
+        .nav-item { text-align: center; color: #777; text-decoration: none; font-size: 0.75rem; flex: 1; }
+        .nav-item i { font-size: 1.4rem; display: block; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-            <div class="ms-auto">
-                <a href="/" class="btn btn-outline-light rounded-pill px-4 btn-sm">Powrót do strony głównej</a>
-            </div>
+    <nav class="navbar navbar-dark p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4" href="/">GIEŁDA <span class="text-danger">RADOM</span></a>
+            <a href="/" class="btn btn-sm btn-outline-danger rounded-pill px-3">{{ reg.reg_back }}</a>
         </div>
     </nav>
 
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-10 legal-container">
-                <h1>Regulamin Serwisu</h1>
-                <p class="text-muted">Obowiązuje od lutego 2026 roku dla wszystkich użytkowników Giełdy Radom.</p>
+            <div class="col-lg-9">
+                <div class="legal-card shadow-lg">
+                    <h1>{{ reg.reg_title }}</h1>
+                    <p class="small text-muted">{{ reg.reg_ver }}</p>
+                    <hr class="border-secondary opacity-25">
 
-                <hr class="my-4">
+                    <section>
+                        <h2>{{ reg.reg_h1 }}</h2>
+                        <p>{{ reg.reg_p1 }}</p>
+                    </section>
 
-                <section>
-                    <h2>1. Postanowienia ogólne</h2>
-                    <p>Serwis <strong>Giełda Radom</strong> jest lokalną platformą ogłoszeniową dedykowaną mieszkańcom Radomia i okolic. Korzystanie z serwisu oznacza pełną akceptację niniejszego regulaminu.</p>
-                </section>
+                    <section>
+                        <h2>{{ reg.reg_h2 }}</h2>
+                        <p>{{ reg.reg_p2_1 }}</p>
+                        <p>{{ reg.reg_p2_2 }}</p>
+                        <p>{{ reg.reg_p2_3 }}</p>
+                    </section>
 
-                <section>
-                    <h2>2. Zasady dodawania ogłoszeń</h2>
-                    <p>1. Serwis służy do publikacji bezpłatnych ogłoszeń motoryzacyjnych.</p>
-                    <p>2. Zabrania się dodawania ogłoszeń o charakterze obraźliwym, niezgodnym z polskim prawem lub wprowadzających w błąd co do rzeczywistego stanu technicznego pojazdu.</p>
-                    <p>3. Każde ogłoszenie jest ważne przez okres 30 dni.</p>
-                </section>
+                    <section>
+                        <h2>{{ reg.reg_h3 }}</h2>
+                        <p>{{ reg.reg_p3 }}</p>
+                    </section>
 
-                <section>
-                    <h2>3. Odpowiedzialność</h2>
-                    <p>Administrator nie ponosi odpowiedzialności za treść ogłoszeń ani za wynik transakcji między użytkownikami. Wszystkie transakcje odbywają się bezpośrednio między kupującym a sprzedającym na ich własne ryzyko.</p>
-                </section>
+                    <div class="ai-box shadow-sm">
+                        <div class="ai-badge"><i class="bi bi-robot me-2"></i>TECHNOLOGIA AI GEMINI 3.0</div>
+                        <h2>{{ reg.reg_h4 }}</h2>
+                        <p class="small">• {{ reg.reg_p4_1 }}</p>
+                        <p class="small">• {{ reg.reg_p4_2 }}</p>
+                        <p class="small">• {{ reg.reg_p4_3 }}</p>
+                        <p class="small">• {{ reg.reg_p4_4 }}</p>
+                        <p class="small">• {{ reg.reg_p4_5 }}</p>
+                        <p class="small">• {{ reg.reg_p4_6 }}</p>
+                    </div>
 
-                <section class="ai-section">
-                    <div class="ai-badge shadow-sm"><i class="bi bi-robot me-2"></i>TECHNOLOGIA AI GEMINI 3.0</div>
-                    <h2>4. System Analizy AI i Weryfikacji Ofert</h2>
-                    <p>1. Serwis wykorzystuje zaawansowaną technologię sztucznej inteligencji <strong>Gemini 3.0 Flash (v. 2026)</strong> do automatycznej analizy treści ogłoszeń oraz dokumentacji fotograficznej.</p>
-                    <p>2. <strong>Analiza Wizualna:</strong> System AI analizuje zdjęcia pojazdu pod kątem wykrywania uszkodzeń zewnętrznych, stanu lakierniczego oraz ogólnej prezentacji wizualnej, co wpływa na generowaną ocenę kondycji pojazdu.</p>
-                    <p>3. <strong>Wycena Rynkowa:</strong> Prezentowany "Pasek wyceny" oraz etykiety (np. "Okazja", "Cena rynkowa") są wynikiem analizy danych rynkowych opartej na próbce kontrolnej ok. 50-70 podobnych pojazdów.</p>
-                    <p>4. <strong>Charakter informacyjny:</strong> Analizy generowane przez AI mają charakter wyłącznie pomocniczy i doradczy. Nie stanowią one oficjalnej wyceny rzeczoznawcy, ekspertyzy technicznej ani gwarancji sprzedaży pojazdu w sugerowanej cenie.</p>
-                    <p>5. <strong>Cykliczność aktualizacji:</strong> Dane analityczne oraz oceny AI są odświeżane w interwałach co 3 dni w celu zapewnienia aktualności informacji rynkowych.</p>
-                    <p>6. Administrator nie ponosi odpowiedzialności za subiektywny odbiór ocen generowanych przez AI przez Użytkowników ani za ewentualne błędy w interpretacji obrazu przez algorytmy sztucznej inteligencji.</p>
-                </section>
-
-                <div class="mt-5 p-4 bg-light rounded-4 border text-center">
-                    <p class="mb-0 small">
-                        Pytania dotyczące funkcjonowania systemu AI oraz regulaminu prosimy kierować na: <strong>dariusztom@go2.pl</strong>
-                    </p>
+                    <div class="mt-5 p-4 border border-secondary rounded-4 bg-black bg-opacity-25 text-center">
+                        <p class="mb-0 small fw-bold">{{ reg.reg_contact }} <br> 
+                        <a href="mailto:dariusztom@go2.pl" class="text-danger">dariusztom@go2.pl</a></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="footer-main">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-lg-4">
-                    <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
-                    <p class="small">Pierwszy w regionie portal motoryzacyjny wykorzystujący Google Gemini 3.0 do analizy rynku. Tradycja Czerwca '76 w nowoczesnym wydaniu.</p>
-                    <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
-                </div>
-                <div class="col-lg-2">
-                    <h5 class="text-white small fw-bold mb-3 text-uppercase">Nawigacja</h5>
-                    <a href="/" class="footer-link">Giełda</a>
-                    <a href="/register" class="footer-link">Wystaw auto</a>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="text-white small fw-bold mb-3 text-uppercase">Informacje</h5>
-                    <a href="/regulamin" class="footer-link">Regulamin</a>
-                    <a href="/polityka-prywatnosci" class="footer-link">Prywatność</a>
-                    <a href="/kontakt" class="footer-link">Kontakt</a>
-                </div>
-                <div class="col-lg-3 text-md-end">
-                    <h5 class="text-white small fw-bold mb-3 text-uppercase">Radom 26-600</h5>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.3;">
-                    <p class="small text-muted mt-2">Dumni z historii, napędzani technologią.</p>
-                </div>
-            </div>
-            <hr class="my-4 border-secondary opacity-25">
-            <p class="text-center small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
-        </div>
-    </footer>
+    <div class="nav-bottom">
+        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
+        <a href="/profil" class="nav-item"><i class="bi bi-speedometer2"></i> Garaż</a>
+        <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> Kontakt</a>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
