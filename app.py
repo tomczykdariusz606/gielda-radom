@@ -940,7 +940,18 @@ def reset_token(token):
 @app.route('/kontakt')
 def kontakt(): return render_template('kontakt.html')
 @app.route('/regulamin')
-def regulamin(): return render_template('regulamin.html')
+def regulamin():
+    lang = request.cookies.get('lang', 'pl')
+    path = os.path.join(app.root_path, 'translations', 'legal.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            all_texts = json.load(f)
+        current_reg = all_texts.get(lang, all_texts.get('pl'))
+    except:
+        current_reg = {"reg_title": "Regulamin"} # Fallback
+
+    return render_template('regulamin.html', reg=current_reg, lang=lang)
+
 @app.route('/polityka')
 def polityka_privacy():
     # Pobieramy język z ciasteczka (tak jak robisz to w inject_conf_var)
