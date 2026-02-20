@@ -48,3 +48,68 @@
     "back": "Zurück"
   }
 }
+{
+  "pl": {
+    "reg_title": "Regulamin Serwisu",
+    "reg_ver": "Obowiązuje od lutego 2026 roku dla wszystkich użytkowników Giełdy Radom.",
+    "reg_h1": "1. Postanowienia ogólne",
+    "reg_p1": "Serwis Giełda Radom jest lokalną platformą ogłoszeniową dedykowaną mieszkańcom Radomia i okolic. Korzystanie z serwisu oznacza pełną akceptację niniejszego regulaminu.",
+    "reg_h2": "2. Zasady dodawania ogłoszeń",
+    "reg_p2_1": "1. Serwis służy do publikacji bezpłatnych ogłoszeń motoryzacyjnych.",
+    "reg_p2_2": "2. Zabrania się dodawania ogłoszeń o charakterze obraźliwym, niezgodnym z polskim prawem lub wprowadzających w błąd co do rzeczywistego stanu technicznego pojazdu.",
+    "reg_p2_3": "3. Każde ogłoszenie jest ważne przez okres 30 dni.",
+    "reg_h3": "3. Odpowiedzialność",
+    "reg_p3": "Administrator nie ponosi odpowiedzialności za treść ogłoszeń ani za wynik transakcji między użytkownikami. Wszystkie transakcje odbywają się bezpośrednio między kupującym a sprzedającym na ich własne ryzyko.",
+    "reg_h4": "4. System Analizy AI i Weryfikacji Ofert",
+    "reg_p4_1": "1. Serwis wykorzystuje zaawansowaną technologię sztucznej inteligencji Gemini 3.0 Flash (v. 2026) do automatycznej analizy treści ogłoszeń oraz dokumentacji fotograficznej.",
+    "reg_p4_2": "2. Analiza Wizualna: System AI analizuje zdjęcia pojazdu pod kątem wykrywania uszkodzeń zewnętrznych, stanu lakierniczego oraz ogólnej prezentacji wizualnej.",
+    "reg_p4_3": "3. Wycena Rynkowa: Prezentowany 'Pasek wyceny' oraz etykiety są wynikiem analizy danych rynkowych opartej na próbce kontrolnej ok. 50-70 podobnych pojazdów.",
+    "reg_p4_4": "4. Charakter informacyjny: Analizy generowane przez AI mają charakter wyłącznie pomocniczy i doradczy. Nie stanowią one oficjalnej wyceny rzeczoznawcy.",
+    "reg_p4_5": "5. Cykliczność aktualizacji: Dane analityczne oraz oceny AI są odświeżane w interwałach co 3 dni.",
+    "reg_p4_6": "6. Administrator nie ponosi odpowiedzialności za subiektywny odbiór ocen generowanych przez AI.",
+    "reg_contact": "Pytania dotyczące funkcjonowania systemu AI oraz regulaminu prosimy kierować na:",
+    "reg_back": "Powrót do strony głównej"
+  },
+  "en": {
+    "reg_title": "Terms of Service",
+    "reg_ver": "Effective from February 2026 for all users of Giełda Radom.",
+    "reg_h1": "1. General Provisions",
+    "reg_p1": "Giełda Radom is a local classifieds platform dedicated to the residents of Radom and the surrounding areas. Using the service constitutes full acceptance of these terms.",
+    "reg_h2": "2. Rules for Posting Ads",
+    "reg_p2_1": "1. The service is used for publishing free automotive advertisements.",
+    "reg_p2_2": "2. It is forbidden to add advertisements that are offensive, inconsistent with Polish law, or misleading regarding the actual technical condition of the vehicle.",
+    "reg_p2_3": "3. Each advertisement is valid for a period of 30 days.",
+    "reg_h3": "3. Liability",
+    "reg_p3": "The Administrator is not responsible for the content of advertisements or the outcome of transactions between users. All transactions take place directly between the buyer and the seller at their own risk.",
+    "reg_h4": "4. AI Analysis and Offer Verification System",
+    "reg_p4_1": "1. The service uses advanced Gemini 3.0 Flash (v. 2026) artificial intelligence technology for automatic analysis of advertisement content and photo documentation.",
+    "reg_p4_2": "2. Visual Analysis: The AI system analyzes photos of the vehicle to detect external damage, paint condition, and overall visual presentation.",
+    "reg_p4_3": "3. Market Valuation: The presented 'Valuation bar' and labels are the result of market data analysis based on a control sample of approximately 50-70 similar vehicles.",
+    "reg_p4_4": "4. Informational Character: AI-generated analyses are purely auxiliary and advisory. They do not constitute an official appraiser's valuation.",
+    "reg_p4_5": "5. Update Cycle: Analytical data and AI ratings are refreshed at 3-day intervals.",
+    "reg_p4_6": "6. The Administrator is not responsible for the subjective perception of AI-generated ratings by Users.",
+    "reg_contact": "Questions regarding the AI system and the terms should be sent to:",
+    "reg_back": "Back to Home"
+  },
+  "de": {
+    "reg_title": "Nutzungsbedingungen",
+    "reg_ver": "Gültig ab Februar 2026 für alle Nutzer von Giełda Radom.",
+    "reg_h1": "1. Allgemeine Bestimmungen",
+    "reg_p1": "Giełda Radom ist eine lokale Anzeigenplattform für die Bewohner von Radom und Umgebung. Die Nutzung des Dienstes setzt die volle Akzeptanz dieser Bedingungen voraus.",
+    "reg_h2": "2. Regeln für das Schalten von Anzeigen",
+    "reg_p2_1": "1. Der Dienst dient der Veröffentlichung kostenloser Automobilanzeigen.",
+    "reg_p2_2": "2. Es ist verboten, Anzeigen zu schalten, die beleidigend sind, gegen polnisches Recht verstoßen oder über den tatsächlichen technischen Zustand des Fahrzeugs täuschen.",
+    "reg_p2_3": "3. Jede Anzeige ist für einen Zeitraum von 30 Tagen gültig.",
+    "reg_h3": "3. Haftung",
+    "reg_p3": "Der Administrator ist nicht verantwortlich für den Inhalt der Anzeigen oder das Ergebnis von Transaktionen zwischen Nutzern. Alle Transaktionen finden direkt zwischen Käufer und Verkäufer auf eigene Gefahr statt.",
+    "reg_h4": "4. KI-Analyse- und Angebotsprüfungssystem",
+    "reg_p4_1": "1. Der Dienst nutzt fortschrittliche Gemini 3.0 Flash (v. 2026) KI-Technologie zur automatischen Analyse von Anzeigeninhalten und Fotodokumentationen.",
+    "reg_p4_2": "2. Visuelle Analyse: Das KI-System analysiert Fotos des Fahrzeugs, um äußere Schäden, den Lackzustand und die allgemeine visuelle Präsentation zu erkennen.",
+    "reg_p4_3": "3. Marktbewertung: Der dargestellte 'Bewertungsbalken' und die Etiketten sind das Ergebnis einer Marktdatenanalyse basierend auf einer Kontrollstichprobe von ca. 50-70 ähnlichen Fahrzeugen.",
+    "reg_p4_4": "4. Informativer Charakter: KI-generierte Analysen sind rein unterstützend und beratend. Sie stellen keine offizielle Gutachterbewertung dar.",
+    "reg_p4_5": "5. Aktualisierungszyklus: Analysedaten und KI-Bewertungen werden in Abständen von 3 Tagen aktualisiert.",
+    "reg_p4_6": "6. Der Administrator haftet nicht für die subjektive Wahrnehmung der KI-generierten Bewertungen durch die Nutzer.",
+    "reg_contact": "Fragen zum KI-System und zu den Bedingungen richten Sie bitte an:",
+    "reg_back": "Zurück zur Startseite"
+  }
+}
