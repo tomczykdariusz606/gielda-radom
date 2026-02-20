@@ -292,6 +292,7 @@
                         <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
                     </button>
                 </div>
+                    {% if car.owner.username != 'admin' and car.owner.id != 1 %}
 
                 <div class="card glass-panel mb-4 shadow-sm border-0" style="background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(15,15,15,0.8)); border-top: 2px solid var(--radom-red) !important;">
                     <div class="card-body text-center p-4">
@@ -319,6 +320,16 @@
                         </a>
                     </div>
                 </div>
+                    {% if car.owner.username != 'admin' and car.owner.id != 1 %}
+                <div class="card glass-panel mb-4 shadow-sm border-0" style="background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(15,15,15,0.8)); border-top: 2px solid var(--radom-red) !important;">
+                    <div class="card-body text-center p-4">
+                        <a href="/sprzedawca/{{ car.owner.id }}" class="btn btn-outline-light btn-sm rounded-pill w-100 fw-bold py-2 transition-all">
+                            ZOBACZ OFERTY SPRZEDAWCY »
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="mb-4">
                     <label class="text-muted small fw-bold text-uppercase mb-2 ms-1">Bezpieczeństwo</label>
                     <a href="https://www.carvertical.com/pl/sprawdzenie-vin?vin={{ car.vin or '' }}" target="_blank" class="trust-badge">
