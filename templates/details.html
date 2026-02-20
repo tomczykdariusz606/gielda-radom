@@ -292,8 +292,8 @@
                         <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
                     </button>
                 </div>
-                    {% if car.owner.username != 'admin' and car.owner.id != 1 %}
-
+                
+                {% if car.owner.username != 'admin' and car.owner.id != 1 %}
                 <div class="card glass-panel mb-4 shadow-sm border-0" style="background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(15,15,15,0.8)); border-top: 2px solid var(--radom-red) !important;">
                     <div class="card-body text-center p-4">
                         <div class="mb-2">
@@ -315,14 +315,6 @@
                             <span><i class="bi bi-geo-alt-fill text-danger"></i> {{ car.owner.lokalizacja or 'Radom' }}</span>
                             <span><i class="bi bi-car-front-fill text-info"></i> Ofert: {{ car.owner.cars|length }}</span>
                         </div>
-                        <a href="/sprzedawca/{{ car.owner.id }}" class="btn btn-outline-light btn-sm rounded-pill w-100 fw-bold py-2 transition-all">
-                            ZOBACZ OFERTY SPRZEDAWCY &raquo;
-                        </a>
-                    </div>
-                </div>
-                    {% if car.owner.username != 'admin' and car.owner.id != 1 %}
-                <div class="card glass-panel mb-4 shadow-sm border-0" style="background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(15,15,15,0.8)); border-top: 2px solid var(--radom-red) !important;">
-                    <div class="card-body text-center p-4">
                         <a href="/sprzedawca/{{ car.owner.id }}" class="btn btn-outline-light btn-sm rounded-pill w-100 fw-bold py-2 transition-all">
                             ZOBACZ OFERTY SPRZEDAWCY »
                         </a>
