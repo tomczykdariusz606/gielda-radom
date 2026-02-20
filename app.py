@@ -6,6 +6,7 @@ import json
 import sqlite3
 import random
 import string
+import shutil
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageOps
 # Importy Flask
@@ -269,6 +270,8 @@ class Car(db.Model):
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(50), default='Radom')
+    is_360_premium = db.Column(db.Boolean, default=False) # Dodaj to tutaj!
+
     
     # Dane techniczne
     latitude = db.Column(db.Float, nullable=True)
@@ -299,8 +302,7 @@ class CarImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image_path = db.Column(db.String(200), nullable=False)
     car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
-    is_360_premium = db.Column(db.Boolean, default=False) # Dodaj to tutaj!
-
+    
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -569,19 +571,17 @@ def google_callback():
 @app.route('/generate_360/<int:car_id>')
 @login_required
 def generate_360(car_id):
-    # Zabezpieczenie: tylko admin (czyli Ty) może to odpalić
     if current_user.id != 1 and current_user.username != 'admin':
         abort(403)
         
-    if process_car_360_logic(car_id):
+    # Zmieniono nazwę na tę, którą masz zdefiniowaną wyżej
+    if stabilize_360_images_premium(car_id): 
         flash("Sukces! Widok 360° Premium został wygenerowany.", "success")
     else:
         flash("Błąd: Za mało zdjęć (min. 6) lub problem z plikami.", "danger")
         
     return redirect(url_for('car_details', car_id=car_id))
 
-
-#analiza obrotów auta---------
 
 @app.route('/')
 def index():
