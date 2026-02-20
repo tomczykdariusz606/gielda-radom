@@ -169,8 +169,13 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     lokalizacja = db.Column(db.String(100), default='Radom')
-    google_id = db.Column(db.String(100), unique=True, nullable=True) # Nowe pole Google
-    avatar_url = db.Column(db.String(500), nullable=True) # Nowe pole Avatar
+    google_id = db.Column(db.String(100), unique=True, nullable=True)
+    avatar_url = db.Column(db.String(500), nullable=True)
+    
+    # --- NOWE: TYP KONTA (FIRMA/PRYWATNE) ---
+    account_type = db.Column(db.String(20), default='private') 
+    company_name = db.Column(db.String(100), nullable=True)
+    
     ai_requests_today = db.Column(db.Integer, default=0)
     last_ai_request_date = db.Column(db.Date, default=datetime.utcnow().date())
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -198,6 +203,10 @@ class Car(db.Model):
     model = db.Column(db.String(50), nullable=False)
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
+    
+    # --- NOWE: WALUTA (PLN/EUR) ---
+    waluta = db.Column(db.String(10), default='PLN')
+    
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False)
@@ -214,7 +223,6 @@ class Car(db.Model):
     pojemnosc = db.Column(db.String(20))
     przebieg = db.Column(db.Integer, default=0)
     
-    # --- NOWE POLA DLA AI ---
     moc = db.Column(db.Integer, nullable=True)
     kolor = db.Column(db.String(50), nullable=True)
     
@@ -248,59 +256,45 @@ def save_optimized_image(file):
     
     try:
         img = Image.open(file)
-        # Obsługa obrotu zdjęcia (EXIF)
         try:
             img = ImageOps.exif_transpose(img)
         except:
             pass
         
-        # Konwersja kolorów
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
         
-        # 1. SKALOWANIE GŁÓWNEGO ZDJĘCIA
-        # Jeśli większe niż 1600px, zmniejsz (oszczędność miejsca)
         base_width = 1600
         if img.width > base_width:
             w_percent = (base_width / float(img.width))
             h_size = int((float(img.height) * float(w_percent)))
             img = img.resize((base_width, h_size), Image.Resampling.LANCZOS)
 
-        # 2. DODAWANIE ZNAKU WODNEGO
         watermark_path = 'static/watermark.png'
         if os.path.exists(watermark_path):
             try:
-                # Otwórz watermark i zachowaj przezroczystość
                 watermark = Image.open(watermark_path).convert("RGBA")
-                
-                # Oblicz wielkość znaku (np. 20% szerokości zdjęcia)
                 wm_width = int(img.width * 0.20)
                 wm_ratio = watermark.height / watermark.width
                 wm_height = int(wm_width * wm_ratio)
                 
-                # Jeśli watermark wyszedł za mały (np. przy małych fotkach), ustaw minimum
                 if wm_width < 100: 
                     wm_width = 100
                     wm_height = int(100 * wm_ratio)
 
                 watermark = watermark.resize((wm_width, wm_height), Image.Resampling.LANCZOS)
-
-                # Pozycja: Prawy dolny róg z marginesem
-                margin = int(img.width * 0.02) # 2% marginesu
+                margin = int(img.width * 0.02) 
                 position = (img.width - wm_width - margin, img.height - wm_height - margin)
 
-                # Ponieważ główne zdjęcie to RGB, a watermark to RGBA, musimy stworzyć tymczasową warstwę
                 transparent_layer = Image.new('RGBA', img.size, (0,0,0,0))
                 transparent_layer.paste(watermark, position, mask=watermark)
                 
-                # Połącz zdjęcia
                 img = img.convert("RGBA")
                 img = Image.alpha_composite(img, transparent_layer)
-                img = img.convert("RGB") # Wróć do RGB dla WebP
+                img = img.convert("RGB") 
             except Exception as e:
                 print(f"Błąd znaku wodnego: {e}")
 
-        # Zapisz jako WebP (lekki i szybki)
         img.save(filepath, "WEBP", quality=85)
         
     except Exception as e:
@@ -308,7 +302,6 @@ def save_optimized_image(file):
         return None
 
     return filename
-
 
 def check_ai_limit():
     if not current_user.is_authenticated: return False
@@ -322,7 +315,6 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
 
-    # 1. Przygotowanie zdjęcia (ścieżka systemowa)
     img_path = car.img
     if 'static/' in img_path:
         img_path = img_path.replace(url_for('static', filename=''), 'static/')
@@ -335,15 +327,14 @@ def update_market_valuation(car):
     except Exception as e:
         print(f"Błąd zdjęcia dla AI: {e}")
 
-    # 2. PROMPT - RZECZOZNAWCA RYNKU POLSKIEGO
     prompt = f"""
     Jesteś rzeczoznawcą samochodowym na rynku Polskim.
-    Analizujesz: {car.marka} {car.model}, Rok: {car.rok}, {car.przebieg} km, Cena: {car.cena} PLN.
+    Analizujesz: {car.marka} {car.model}, Rok: {car.rok}, {car.przebieg} km, Cena: {car.cena} {car.waluta}.
     
     ZADANIA:
     1. Rynkowa Wycena (PL): Podaj realne widełki cenowe (Min-Max) i Średnią dla tego modelu w Polsce.
     2. Stan Wizualny (ze zdjęcia): Oceń stan lakieru/blacharki (1-10).
-    3. Werdykt: Porównaj cenę sprzedawcy ({car.cena}) do Rynku.
+    3. Werdykt: Porównaj cenę sprzedawcy ({car.cena} {car.waluta}) do Rynku.
     
     Zwróć TYLKO JSON:
     {{
@@ -366,14 +357,13 @@ def update_market_valuation(car):
         response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         
-        json.loads(clean_json) # Walidacja
+        json.loads(clean_json) 
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
         print(f"AI Error: {e}")
-
 
 @app.template_filter('from_json')
 def from_json_filter(value):
@@ -411,13 +401,10 @@ def google_callback():
         name = user_info.get('name') or email.split('@')[0]
         picture = user_info.get('picture') 
 
-        # Sprawdź czy użytkownik istnieje (po emailu lub google_id)
         user = User.query.filter((User.email == email) | (User.google_id == google_id)).first()
 
         if not user:
-            # Rejestracja nowego użytkownika
             random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-            
             base_username = name.replace(' ', '')
             username = base_username
             counter = 1
@@ -425,19 +412,20 @@ def google_callback():
                 username = f"{base_username}{counter}"
                 counter += 1
 
+            # Przy logowaniu z Google domyślnie to konto prywatne
             user = User(
                 username=username,
                 email=email,
                 google_id=google_id,
                 password_hash=generate_password_hash(random_pass),
                 avatar_url=picture,
-                lokalizacja='Radom'
+                lokalizacja='Radom',
+                account_type='private'
             )
             db.session.add(user)
             db.session.commit()
             flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
         else:
-            # Linkowanie konta i aktualizacja zdjęcia
             changed = False
             if not user.google_id:
                 user.google_id = google_id
@@ -463,7 +451,6 @@ def index():
     q = request.args.get('q', '').strip()
     query = Car.query
     
-    # Wyszukiwanie
     if q:
         terms = q.split()
         conditions = []
@@ -477,7 +464,6 @@ def index():
             ))
         query = query.filter(and_(*conditions))
     
-    # Filtry
     cat = request.args.get('typ', '')
     if cat: query = query.filter(Car.typ == cat)
     
@@ -493,14 +479,12 @@ def index():
     max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
-    # Sortowanie: Promowane pierwsze, potem najnowsze
     cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
     return render_template('index.html', cars=cars, now=datetime.utcnow())
 
 @app.route('/szukaj')
 def szukaj():
     try:
-        # 1. Pobieranie parametrów tekstowych
         marka = request.args.get('marka', '').strip()
         model = request.args.get('model', '').strip()
         kolor = request.args.get('kolor', '').strip()
@@ -510,7 +494,6 @@ def szukaj():
         skrzynia = request.args.get('skrzynia', '')
         nadwozie = request.args.get('nadwozie', '')
         
-        # 2. Bezpieczna konwersja liczb (Cena, Rok, Moc, PRZEBIEG)
         def get_int(key):
             val = request.args.get(key)
             return int(val) if val and val.isdigit() else None
@@ -525,13 +508,11 @@ def szukaj():
         rok_min = get_int('rok_min')
         rok_max = get_int('rok_max')
         moc_min = get_int('moc_min')
-        # --- NOWE: PRZEBIEG ---
         przebieg_min = get_int('przebieg_min')
         przebieg_max = get_int('przebieg_max')
 
         query = Car.query
 
-        # 3. Filtrowanie (zabezpieczone ILIKE)
         if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
         if model: query = query.filter(Car.model.ilike(f'%{model}%'))
         if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
@@ -546,14 +527,12 @@ def szukaj():
         if rok_min is not None: query = query.filter(Car.rok >= rok_min)
         if rok_max is not None: query = query.filter(Car.rok <= rok_max)
         
-        # --- FILTROWANIE PRZEBIEGU ---
         if przebieg_min is not None: query = query.filter(Car.przebieg >= przebieg_min)
         if przebieg_max is not None: query = query.filter(Car.przebieg <= przebieg_max)
         
         if moc_min is not None: 
             query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
         
-        # Sortowanie
         cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
         
         return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
@@ -561,17 +540,13 @@ def szukaj():
     except Exception as e:
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
 
-
-
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
     
-    # Licznik wyświetleń
     if car.views is None: car.views = 0
     car.views += 1
     
-    # Sprawdzenie czy odświeżyć wycenę AI (co 3 dni - ZMODYFIKOWANE)
     should_update = False
     if not car.ai_valuation_data or not car.ai_label:
         should_update = True
@@ -595,7 +570,6 @@ def car_details(car_id):
 @app.route('/profil')
 @login_required
 def profil():
-    # Dane dla Admina
     user_count = 0
     online_count = 0
     total_views = 0
@@ -625,13 +599,11 @@ def dodaj_ogloszenie():
     files = request.files.getlist('zdjecia')
     saved_paths = []
     
-    # Obsługa zdjęcia ze skanera
     if 'scan_image_cam' in request.files and request.files['scan_image_cam'].filename != '':
         saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_cam'])))
     elif 'scan_image_file' in request.files and request.files['scan_image_file'].filename != '':
         saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_file'])))
         
-    # Obsługa zdjęć z galerii
     for file in files[:18]:
         if file and allowed_file(file.filename):
             saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
@@ -651,6 +623,7 @@ def dodaj_ogloszenie():
         model=request.form.get('model'),
         rok=int(request.form.get('rok') or 0),
         cena=float(request.form.get('cena') or 0),
+        waluta=request.form.get('waluta', 'PLN'), # --- NOWE ZAPISYWANIE WALUTY
         typ=request.form.get('typ', 'Osobowe'),
         opis=request.form.get('opis', ''),
         vin=request.form.get('vin'),
@@ -661,10 +634,8 @@ def dodaj_ogloszenie():
         wyposazenie=wyposazenie_str,
         pojemnosc=request.form.get('pojemnosc'),
         przebieg=int(request.form.get('przebieg') or 0),
-        # --- ZAPISUJEMY MOC I KOLOR ---
         moc=int(request.form.get('moc') or 0), 
         kolor=request.form.get('kolor'),
-        # -----------------------------
         img=main_img,
         zrodlo=current_user.lokalizacja,
         user_id=current_user.id,
@@ -673,9 +644,8 @@ def dodaj_ogloszenie():
         data_dodania=datetime.utcnow()
     )
     db.session.add(new_car)
-    db.session.flush() # Pobierz ID
+    db.session.flush() 
     
-    # Zapisz dodatkowe zdjęcia
     for p in saved_paths:
         db.session.add(CarImage(image_path=p, car_id=new_car.id))
         
@@ -686,7 +656,6 @@ def dodaj_ogloszenie():
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
-    # Sprawdź limity
     dzisiaj = datetime.utcnow().date()
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
@@ -707,7 +676,6 @@ def analyze_car():
 
     try:
         image_data = file.read()
-        # --- ZMODYFIKOWANY PROMPT DLA AI (MOC, KOLOR, REFLEKTORY) ---
         prompt = """
         Jesteś ekspertem motoryzacyjnym. Przeanalizuj zdjęcie pojazdu.
         
@@ -773,18 +741,11 @@ def delete_car(car_id):
 @login_required
 def refresh_car(car_id):
     c = Car.query.get(car_id)
-    
-    # Sprawdzenie uprawnień (Właściciel lub Admin)
     if c and (c.user_id == current_user.id or current_user.username == 'admin'):
-        # 1. Podbicie daty (dla wszystkich)
         c.data_dodania = datetime.utcnow()
-        
-        # 2. Reset AI (TYLKO DLA ADMINA - wymusza nową analizę raportu)
         if current_user.username == 'admin' or current_user.id == 1:
             c.ai_valuation_data = None 
-            
         db.session.commit()
-        
     return redirect('/profil')
 
 
@@ -818,8 +779,17 @@ def register():
         elif User.query.filter_by(email=request.form['email']).first():
             flash('Email zajęty', 'danger')
         else:
-            db.session.add(User(username=request.form['username'], email=request.form['email'], 
-                                password_hash=generate_password_hash(request.form['password'])))
+            # --- ZMIENIONE: POBIERANIE TYPU KONTA I NAZWY FIRMY ---
+            acc_type = request.form.get('account_type', 'private')
+            comp_name = request.form.get('company_name', '') if acc_type == 'company' else None
+            
+            db.session.add(User(
+                username=request.form['username'], 
+                email=request.form['email'], 
+                password_hash=generate_password_hash(request.form['password']),
+                account_type=acc_type,
+                company_name=comp_name
+            ))
             db.session.commit()
             flash('Konto założone! Zaloguj się.', 'success')
             return redirect(url_for('login'))
@@ -885,12 +855,11 @@ def edytuj(id):
             car.model = request.form.get('model')
             car.vin = request.form.get('vin')
             car.cena = float(request.form.get('cena') or 0)
+            car.waluta = request.form.get('waluta', 'PLN') # --- NOWE ZAPISYWANIE WALUTY
             car.rok = int(request.form.get('rok') or 0)
             car.przebieg = int(request.form.get('przebieg') or 0)
-            # --- AKTUALIZACJA MOCY I KOLORU PRZY EDYCJI ---
             car.moc = int(request.form.get('moc') or 0)
             car.kolor = request.form.get('kolor')
-            # ----------------------------------------------
             car.paliwo = request.form.get('paliwo')
             car.skrzynia = request.form.get('skrzynia')
             car.typ = request.form.get('typ')
@@ -953,7 +922,6 @@ def admin_delete_user(user_id):
 @login_required
 def usun_zdjecie(image_id):
     img = CarImage.query.get_or_404(image_id)
-    # Sprawdzenie uprawnień
     car = Car.query.get(img.car_id)
     if car.user_id != current_user.id and current_user.username != 'admin':
         return jsonify({'success': False, 'message': 'Brak uprawnień'}), 403
@@ -980,10 +948,8 @@ def usun_konto():
 def sitemap():
     base = request.url_root.rstrip('/')
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    # Statyczne
     for p in ['', 'login', 'register', 'kontakt', 'regulamin']:
         xml += f'<url><loc>{base}/{p}</loc><changefreq>weekly</changefreq></url>\n'
-    # Dynamiczne (Auta)
     for car in Car.query.order_by(Car.data_dodania.desc()).all():
         xml += f'<url><loc>{base}/ogloszenie/{car.id}</loc><changefreq>daily</changefreq></url>\n'
     xml += '</urlset>'
@@ -1003,7 +969,7 @@ def update_db():
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         
-        # Lista kolumn do sprawdzenia/dodania
+        # --- ZAKTUALIZOWANA LISTA KOLUMN DO DODANIA ---
         columns_to_add = [
             ("car", "latitude", "FLOAT"),
             ("car", "longitude", "FLOAT"),
@@ -1012,8 +978,11 @@ def update_db():
             ("user", "last_seen", "TIMESTAMP"),
             ("user", "google_id", "TEXT"),
             ("user", "avatar_url", "TEXT"),
-            ("car", "moc", "INTEGER"),   # ---✅ MOC
-            ("car", "kolor", "TEXT")     # ---✅ KOLOR
+            ("car", "moc", "INTEGER"),   
+            ("car", "kolor", "TEXT"),
+            ("user", "account_type", "TEXT DEFAULT 'private'"), # MIGRACJA FIRMA
+            ("user", "company_name", "TEXT"),                   # MIGRACJA FIRMA
+            ("car", "waluta", "TEXT DEFAULT 'PLN'")             # MIGRACJA EURO
         ]
         
         for table, col, dtype in columns_to_add:
@@ -1030,4 +999,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host='0.0.0.0', port=5000)
-
