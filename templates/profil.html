@@ -367,14 +367,19 @@
                             <div class="col-6"><label class="small fw-bold text-muted">{{ t['model'] }}</label><input type="text" name="model" class="form-control" placeholder="np. X5"></div>
                             <div class="col-12"><label class="small fw-bold text-success">{{ t['vin'] }}</label><input type="text" name="vin" class="form-control text-uppercase" placeholder="VIN..." maxlength="17"></div>
                             
-                            <div class="col-6">
+                                                        <div class="col-6">
                                 <label class="small fw-bold text-muted">{{ t['price_ad'] }}</label>
                                 <div class="input-group">
                                     <input type="number" name="cena" class="form-control border-danger text-danger fw-bold" style="border-right: none;" required>
-                                    <select name="waluta" class="form-select border-danger text-danger fw-bold px-1" style="max-width: 75px; background-color: #2c2c2c;">
-                                        <option value="PLN">PLN</option>
-                                        <option value="EUR">EUR</option>
-                                    </select>
+                                    
+                                    <input type="hidden" name="waluta" id="val_waluta" value="PLN">
+                                    <button class="btn dropdown-toggle border-danger text-danger fw-bold" type="button" data-bs-toggle="dropdown" id="btn_waluta" style="background-color: #2c2c2c; border-left: 1px solid #444; width: 80px;">
+                                        PLN
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg" style="min-width: 80px;">
+                                        <li><a class="dropdown-item fw-bold text-center" href="#" onclick="setVal('waluta', 'PLN', 'PLN')">PLN</a></li>
+                                        <li><a class="dropdown-item fw-bold text-center" href="#" onclick="setVal('waluta', 'EUR', 'EUR')">EUR</a></li>
+                                    </ul>
                                 </div>
                             </div>
                             
