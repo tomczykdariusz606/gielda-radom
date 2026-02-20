@@ -122,7 +122,12 @@ TRANSLATIONS = {
         'private_person': 'Osoba Prywatna', 'company': 'Firma', 'company_name': 'Nazwa Firmy',
         'your_ads': 'TWOJE OGŁOSZENIA', 'observed': 'OBSERWOWANE OFERTY', 'empty_garage': 'Garaż jest pusty',
         'no_favorites': 'Nie obserwujesz jeszcze żadnych ogłoszeń.', 'see_details': 'ZOBACZ',
-        'contact': 'Kontakt', 'search': 'Szukaj', 'add_car': 'DODAJ SWOJE AUTO'
+        'contact': 'Kontakt', 'search': 'Szukaj', 'add_car': 'DODAJ SWOJE AUTO',
+        # --- NOWE: FORMULARZE ---
+        'car_passenger': 'Osobowe', 'car_suv': 'SUV', 'car_minivan': 'Minivan', 'car_bus': 'Bus/Dostawcze', 'car_moto': 'Moto/Rower', 'car_other': 'Inne',
+        'photos': 'ZDJĘCIA', 'max': 'MAX', 'brand': 'Marka', 'model': 'Model', 'vin': 'VIN', 'year_prod': 'Rok produkcji', 'price_ad': 'Cena', 'mileage_ad': 'Przebieg',
+        'power': 'Moc (KM)', 'color': 'Kolor', 'engine_cap': 'Pojemność', 'phone': 'Telefon', 'desc': 'Opis',
+        'equip': 'WYPOSAŻENIE (Zaznacz opcje)', 'petrol': 'Benzyna', 'diesel': 'Diesel', 'hybrid': 'Hybryda', 'electric': 'Elektryczny', 'lpg': 'LPG'
     },
     'en': {
         'search_ph': 'E.g. Audi A4, Automatic...', 'btn_search': 'SEARCH', 'filters': 'Filters', 
@@ -137,7 +142,12 @@ TRANSLATIONS = {
         'private_person': 'Private Person', 'company': 'Company', 'company_name': 'Company Name',
         'your_ads': 'YOUR ADS', 'observed': 'WATCHLIST', 'empty_garage': 'Garage is empty',
         'no_favorites': 'You are not watching any ads yet.', 'see_details': 'VIEW',
-        'contact': 'Contact', 'search': 'Search', 'add_car': 'ADD YOUR CAR'
+        'contact': 'Contact', 'search': 'Search', 'add_car': 'ADD YOUR CAR',
+        # --- NOWE: FORMULARZE ---
+        'car_passenger': 'Passenger', 'car_suv': 'SUV', 'car_minivan': 'Minivan', 'car_bus': 'Van', 'car_moto': 'Moto/Bike', 'car_other': 'Other',
+        'photos': 'PHOTOS', 'max': 'MAX', 'brand': 'Brand', 'model': 'Model', 'vin': 'VIN', 'year_prod': 'Year', 'price_ad': 'Price', 'mileage_ad': 'Mileage',
+        'power': 'Power (HP)', 'color': 'Color', 'engine_cap': 'Engine (CC)', 'phone': 'Phone', 'desc': 'Description',
+        'equip': 'EQUIPMENT (Check options)', 'petrol': 'Petrol', 'diesel': 'Diesel', 'hybrid': 'Hybrid', 'electric': 'Electric', 'lpg': 'LPG'
     },
     'de': {
         'search_ph': 'Z.B. Audi A4, Automatik...', 'btn_search': 'SUCHEN', 'filters': 'Filter', 
@@ -152,9 +162,15 @@ TRANSLATIONS = {
         'private_person': 'Privatperson', 'company': 'Firma', 'company_name': 'Firmenname',
         'your_ads': 'DEINE ANZEIGEN', 'observed': 'BEOBACHTET', 'empty_garage': 'Garage ist leer',
         'no_favorites': 'Sie beobachten noch keine Anzeigen.', 'see_details': 'ANSEHEN',
-        'contact': 'Kontakt', 'search': 'Suchen', 'add_car': 'AUTO HINZUFÜGEN'
+        'contact': 'Kontakt', 'search': 'Suchen', 'add_car': 'AUTO HINZUFÜGEN',
+        # --- NOWE: FORMULARZE ---
+        'car_passenger': 'PKW', 'car_suv': 'SUV', 'car_minivan': 'Minivan', 'car_bus': 'Transporter', 'car_moto': 'Motorrad', 'car_other': 'Andere',
+        'photos': 'FOTOS', 'max': 'MAX', 'brand': 'Marke', 'model': 'Modell', 'vin': 'FIN', 'year_prod': 'Baujahr', 'price_ad': 'Preis', 'mileage_ad': 'Kilometer',
+        'power': 'Leistung (PS)', 'color': 'Farbe', 'engine_cap': 'Hubraum', 'phone': 'Telefon', 'desc': 'Beschreibung',
+        'equip': 'AUSSTATTUNG', 'petrol': 'Benzin', 'diesel': 'Diesel', 'hybrid': 'Hybrid', 'electric': 'Elektro', 'lpg': 'Autogas (LPG)'
     }
 }
+
 
 
 @app.context_processor
