@@ -541,6 +541,15 @@ def szukaj():
     except Exception as e:
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
 
+# --- TRASA DLA PROFILU SPRZEDAWCY (DODANA ZGODNIE Z PROŚBĄ) ---
+@app.route('/sprzedawca/<int:user_id>')
+def sprzedawca_oferty(user_id):
+    sprzedawca = User.query.get_or_404(user_id)
+    # Pobieramy auta tylko tego użytkownika
+    cars = Car.query.filter_by(user_id=user_id).order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
+    
+    return render_template('sprzedawca.html', sprzedawca=sprzedawca, cars=cars, now=datetime.utcnow())
+
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
     car = Car.query.get_or_404(car_id)
