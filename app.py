@@ -581,6 +581,25 @@ def sprzedawca_oferty(user_id):
     cars = Car.query.filter_by(user_id=user_id).order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
     
     return render_template('sprzedawca.html', sprzedawca=sprzedawca, cars=cars, now=datetime.utcnow())
+# --- NOWA TRASA ZMIANY MINIATURKI ---
+@app.route('/zmien_avatar', methods=['POST'])
+@login_required
+def zmien_avatar():
+    if 'avatar' in request.files:
+        file = request.files['avatar']
+        if file and allowed_file(file.filename):
+            # Zapisuje obraz używając Twojej funkcji optymalizującej (WebP + Znak wodny)
+            filename = save_optimized_image(file)
+            if filename:
+                current_user.avatar_url = url_for('static', filename='uploads/' + filename)
+                db.session.commit()
+                flash('Miniaturka została zaktualizowana!', 'success')
+            else:
+                flash('Wystąpił błąd podczas przetwarzania obrazu.', 'danger')
+        else:
+            flash('Nieprawidłowy format pliku.', 'warning')
+    return redirect('/profil')
+
 
 @app.route('/ogloszenie/<int:car_id>')
 def car_details(car_id):
