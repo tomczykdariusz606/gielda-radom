@@ -514,18 +514,26 @@ def google_callback():
 
 @app.route('/generate_360/<int:car_id>')
 @login_required
-def generate_360(car_id):
-    # Zabezpieczenie: tylko Ty (admin) możesz to odpalić
-    if current_user.id != 1 and current_user.username != 'admin':
+def generate_360_trigger(car_id):
+    # Zabezpieczenie: Tylko Ty jako Admin masz do tego dostęp
+    if current_user.username != 'admin' and current_user.id != 1:
         abort(403)
-        
-    # Wywołanie poprawnej funkcji zdefiniowanej wyżej
-    if stabilize_360_images_premium(car_id): 
-        flash("Sukces! Widok 360° Premium został wygenerowany.", "success")
+
+    # Pobieramy ogłoszenie z bazy
+    car = Car.query.get_or_404(car_id)
+
+    # Uruchamiamy Twoją funkcję stabilizacji AI
+    if stabilize_360_images_premium(car.id):
+        # Oznaczamy w bazie, że status 360 jest gotowy (używając dedykowanej kolumny)
+        car.is_360_premium = True
+        db.session.commit()
+        flash(f"Sukces! Widok 360° dla {car.marka} został wygenerowany.", "success")
     else:
-        flash("Błąd: Za mało zdjęć (min. 6) lub problem z plikami.", "danger")
-        
-    return redirect(url_for('car_details', car_id=car_id))
+        flash("Błąd: Za mało zdjęć (wymagane min. 6) lub problem z modelem AI.", "danger")
+
+    # Powrót do profilu (garażu) po zakończeniu pracy AI
+    return redirect(url_for('profil'))
+
 
 
 
