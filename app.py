@@ -144,6 +144,7 @@ TRANSLATIONS = {
     }
 }
 
+
 @app.context_processor
 def inject_conf_var():
     lang = request.cookies.get('lang', 'pl')
