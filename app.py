@@ -315,7 +315,6 @@ def stabilize_360_images_premium(car_id):
     if not car or not model_ai or len(car.images) < 6:
         return False
 
-    # Używamy Twojej konfiguracji z linii 70: static/uploads/360_renders/
     # Tworzymy podfolder dla konkretnego ID auta
     car_render_dir = os.path.join(app.config['RENDERS_360_FOLDER'], str(car_id))
     
@@ -334,7 +333,7 @@ def stabilize_360_images_premium(car_id):
     prompt = "Przeanalizuj te zdjęcia auta. Podaj współrzędne środka geometrycznego pojazdu dla idealnej rotacji 360."
     
     try:
-        # Wykorzystujemy Twój płatny model Gemini 3
+        # Wykorzystujemy model AI
         model_ai.generate_content([prompt] + images_for_ai)
     except Exception as e:
         print(f"AI Error: {e}")
@@ -349,20 +348,21 @@ def stabilize_360_images_premium(car_id):
                 target_w = h * (4/3)
                 left = (w - target_w) / 2
                 
-                # Używamy najwyższej jakości skalowania (LANCZOS) i formatu WebP
+                # Najwyższa jakość skalowania (LANCZOS) i format WebP
                 processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.Resampling.LANCZOS)
                 
-                # Zapisujemy klatkę dokładnie tam, gdzie utworzyłeś folder na serwerze
+                # Zapisujemy klatkę na serwerze
                 save_path = os.path.join(car_render_dir, f"frame_{idx}.webp")
                 processed.save(save_path, "WEBP", quality=90)
         except Exception as e:
             print(f"Błąd przetwarzania klatki {idx}: {e}")
             continue
 
-    # Oznaczamy w bazie, że widok 360 jest gotowy do wyświetlenia
-    car.ai_valuation_data = '360_READY'
+    # 3. Oznaczamy w bazie za pomocą nowej flagi Premium (ZAMIAST NADPISYWAĆ DATĘ)
+    car.is_360_premium = True
     db.session.commit()
     return True
+
 
 
 
