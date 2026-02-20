@@ -938,7 +938,25 @@ def reset_token(token):
 
 # --- STRONY STATYCZNE ---
 @app.route('/kontakt')
-def kontakt(): return render_template('kontakt.html')
+def kontakt():
+    # Pobieramy język z ciasteczek (domyślnie 'pl')
+    lang = request.cookies.get('lang', 'pl')
+    
+    # Ścieżka do pliku z tłumaczeniami
+    path = os.path.join(app.root_path, 'translations', 'legal.json')
+    
+    try:
+        with open(path, encoding='utf-8') as f:
+            all_texts = json.load(f)
+        # Pobieramy sekcję dla danego języka
+        current_texts = all_texts.get(lang, all_texts.get('pl'))
+    except Exception as e:
+        print(f"Błąd wczytywania tłumaczeń: {e}")
+        current_texts = {}
+
+    # Zwracamy szablon z odpowiednimi danymi
+    return render_template('kontakt.html', legal=current_texts, lang=lang)
+
 @app.route('/regulamin')
 def regulamin():
     lang = request.cookies.get('lang', 'pl')
