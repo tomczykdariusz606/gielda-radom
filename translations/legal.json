@@ -113,3 +113,44 @@
     "reg_back": "Zurück zur Startseite"
   }
 }
+{
+  "pl": {
+    "contact_title": "Kontakt i Wsparcie",
+    "contact_hero_sub": "Tradycja radomskiej motoryzacji od Czerwca '76.",
+    "contact_mail_title": "Napisz maila",
+    "contact_mail_sub": "Pytania techniczne i pomoc:",
+    "contact_loc_title": "Nasza lokalizacja",
+    "contact_loc_sub": "Działamy lokalnie w sercu Radomia:",
+    "contact_form_title": "Wyślij szybką wiadomość",
+    "contact_form_name": "Twoje Imię",
+    "contact_form_msg": "W czym możemy pomóc?",
+    "contact_form_btn": "Wyślij wiadomość",
+    "contact_back": "Wróć"
+  },
+  "en": {
+    "contact_title": "Contact & Support",
+    "contact_hero_sub": "Radom's automotive tradition since June '76.",
+    "contact_mail_title": "Send an email",
+    "contact_mail_sub": "Technical questions and support:",
+    "contact_loc_title": "Our Location",
+    "contact_loc_sub": "Operating locally in the heart of Radom:",
+    "contact_form_title": "Send a quick message",
+    "contact_form_name": "Your Name",
+    "contact_form_msg": "How can we help you?",
+    "contact_form_btn": "Send Message",
+    "contact_back": "Back"
+  },
+  "de": {
+    "contact_title": "Kontakt & Support",
+    "contact_hero_sub": "Radoms Automobiltradition seit Juni '76.",
+    "contact_mail_title": "E-Mail senden",
+    "contact_mail_sub": "Technische Fragen und Hilfe:",
+    "contact_loc_title": "Unser Standort",
+    "contact_loc_sub": "Lokal tätig im Herzen von Radom:",
+    "contact_form_title": "Schnelle Nachricht senden",
+    "contact_form_name": "Ihr Name",
+    "contact_form_msg": "Wie können wir Ihnen helfen?",
+    "contact_form_btn": "Nachricht senden",
+    "contact_back": "Zurück"
+  }
+}
