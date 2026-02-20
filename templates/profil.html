@@ -192,10 +192,20 @@
                             <i class="bi bi-person text-info"></i> {{ t['private_person'] }}
                         {% endif %}
                     </h5>
-                    <h2 class="fw-bold text-white m-0 text-truncate">{{ current_user.username }}</h2>
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill mt-2 fw-bold" data-bs-toggle="modal" data-bs-target="#ustawieniaModal">
-                        <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
-                    </button>
+                                        <h2 class="fw-bold text-white m-0 text-truncate">{{ current_user.username }}</h2>
+                    
+                    <div class="mt-2 d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#ustawieniaModal">
+                            <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
+                        </button>
+                        
+                        <form id="avatarForm" action="/zmien_avatar" method="POST" enctype="multipart/form-data" class="m-0">
+                            <label class="btn btn-sm btn-outline-info rounded-pill fw-bold mb-0" style="cursor: pointer;">
+                                <i class="bi bi-camera-fill me-1"></i> EDYTUJ MINIATURKĘ
+                                <input type="file" name="avatar" accept="image/*" style="display: none;" onchange="document.getElementById('loaderOverlay').style.display='flex'; this.form.submit();">
+                            </label>
+                        </form>
+                    </div>
                 </div>
             </div>
 
