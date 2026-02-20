@@ -129,9 +129,7 @@
         .paint-inner { width: 60px; height: 60px; background: #161616; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: white; }
     </style>
     <style>
-        /* ... Twoje istniejące style dla .paint-inner itp. ... */
-        
-        /* DODAJ TO TUTAJ: */
+        /* CSS DLA TRYBU FULLSCREEN */
         #fullscreen-target:fullscreen {
             background-color: black !important;
             display: flex;
@@ -148,10 +146,35 @@
             margin: 0 !important;
         }
 
-        /* Dodatkowo: ukrywamy zbędne elementy w trybie pełnego ekranu */
         #fullscreen-target:fullscreen .expert-header {
             width: 100%;
             background: rgba(0,0,0,0.5);
+        }
+
+        /* NOWY CSS DLA PŁYNNOŚCI 360 (CROSSFADE) */
+        #threesixty-frames {
+            position: relative; 
+            width: 100%;
+            height: 100%;
+        }
+
+        .frame-360 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 0.15s ease-in-out; /* To robi magię płynności */
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none; 
+        }
+
+        .frame-360.active {
+            opacity: 1;
+            z-index: 2;
         }
     </style>
 
@@ -211,7 +234,8 @@
                     {% endif %}
                 </div>
             </div>
-         {% if car.is_360_premium and (current_user.is_authenticated and current_user.username == 'admin') %}
+
+{% if car.is_360_premium and (current_user.is_authenticated and current_user.username == 'admin') %}
 <div class="expert-panel mb-4 shadow-lg border-info border-opacity-25" id="fullscreen-target">
     <div class="expert-header bg-info bg-opacity-10">
         <div class="text-info small text-uppercase fw-bold">
@@ -226,15 +250,15 @@
     </div>
     
     <div id="car360Container" class="position-relative bg-black" style="height: 500px; cursor: ew-resize; touch-action: none;">
-        <div id="threesixty-frames" class="h-100 w-100 d-flex align-items-center justify-content-center">
+        
+        <div id="threesixty-frames">
             {% for i in range(12) %}
                 <img src="{{ url_for('static', filename='uploads/360_renders/' ~ car.id ~ '/frame_' ~ i ~ '.webp') }}" 
-                     class="frame-360 w-100 h-100" 
-                     style="object-fit: contain; display: {% if loop.first %}block{% else %}none{% endif %}; user-select: none; -webkit-user-drag: none;">
+                     class="frame-360 {% if loop.first %}active{% endif %}">
             {% endfor %}
         </div>
         
-        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-center">
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-center" style="pointer-events: none; z-index: 10;">
             <span class="badge bg-dark bg-opacity-75 rounded-pill px-3 py-2 border border-secondary mb-2 d-block">
                 <i class="bi bi-arrows-left-right me-2"></i> PRZESUŃ, ABY OBRÓCIĆ
             </span>
@@ -474,7 +498,6 @@
         if (navigator.share) {
             navigator.share({
                 title: '{{ car.marka }} {{ car.model }}',
-                // POPRAWIONE: Elastyczna waluta w skrypcie udostępniania
                 text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}.',
                 url: window.location.href
             }).catch(console.error);
@@ -486,6 +509,7 @@
     if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
     function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
 </script>
+
 <script>
     function toggleFullScreen() {
         const elem = document.getElementById("fullscreen-target");
@@ -518,14 +542,20 @@
 
         const updateFrame = (index) => {
             Array.from(images).forEach((img, i) => {
-                img.style.display = i === index ? 'block' : 'none';
+                if (i === index) {
+                    img.classList.add('active');
+                } else {
+                    img.classList.remove('active');
+                }
             });
         };
 
         const handleMove = (clientX) => {
             if (!isDragging) return;
             const deltaX = startX - clientX;
-            if (Math.abs(deltaX) > 8) { // Czułość
+            
+            // Zwiększony próg przewijania dla lepszej kontroli przy animacji
+            if (Math.abs(deltaX) > 12) { 
                 if (deltaX > 0) currentFrame = (currentFrame + 1) % totalFrames;
                 else currentFrame = (currentFrame - 1 + totalFrames) % totalFrames;
                 updateFrame(currentFrame);
@@ -545,8 +575,6 @@
         }, { passive: false });
     });
 </script>
-
-
 
 </body>
 </html>
