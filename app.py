@@ -941,16 +941,26 @@ def reset_token(token):
 def kontakt(): return render_template('kontakt.html')
 @app.route('/regulamin')
 def regulamin(): return render_template('regulamin.html')
-@app.route('/polityka') # lub jakkolwiek masz nazwany route
+@app.route('/polityka')
 def polityka_privacy():
-    lang = session.get('lang', 'pl')
-    # Ładowanie tekstów z JSONa
-    path = os.path.join(app.root_path, 'translations', 'legal.json')
-    with open(path, encoding='utf-8') as f:
-        all_texts = json.load(f)
+    # Pobieramy język z ciasteczka (tak jak robisz to w inject_conf_var)
+    lang = request.cookies.get('lang', 'pl')
     
-    # Przekazujemy tekst dla aktualnego języka do polityka.html
-    current_legal = all_texts.get(lang, all_texts['pl'])
+    # Ścieżka do Twojego pliku z tłumaczeniami
+    # Zakładamy strukturę: /twoj_projekt/translations/legal.json
+    path = os.path.join(app.root_path, 'translations', 'legal.json')
+    
+    try:
+        with open(path, encoding='utf-8') as f:
+            all_texts = json.load(f)
+        
+        # Pobieramy sekcję dla danego języka, jeśli brak - fallback na polski
+        current_legal = all_texts.get(lang, all_texts.get('pl'))
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Błąd ładowania legal.json: {e}")
+        # Prosty fallback, żeby strona nie wywaliła błędu 500
+        current_legal = {"title": "Polityka Prywatności", "intro": "Błąd ładowania treści."}
+
     return render_template('polityka.html', legal=current_legal, lang=lang)
 
 # --- EDYCJA OGŁOSZENIA ---
