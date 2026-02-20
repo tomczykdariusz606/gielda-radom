@@ -311,19 +311,19 @@ def load_user(user_id):
 
 def stabilize_360_images_premium(car_id):
     car = Car.query.get(car_id)
-    # Sprawdzamy czy auto istnieje, czy model AI jest gotowy i czy są min. 6 zdjęć
+    # 1. Sprawdzamy czy auto istnieje, czy model AI jest gotowy i czy są min. 6 zdjęć
     if not car or not model_ai or len(car.images) < 6:
         return False
 
-    # Tworzymy podfolder dla konkretnego ID auta
-    car_render_dir = os.path.join(app.config['RENDERS_360_FOLDER'], str(car_id))
+    # 2. BEZPIECZNA ŚCIEŻKA: Wpisana na sztywno, żeby nie było błędu 500
+    car_render_dir = os.path.join('static', 'uploads', '360_renders', str(car_id))
     
-    if not os.path.exists(car_render_dir):
-        os.makedirs(car_render_dir)
+    # Bezpieczne tworzenie folderu (jeśli istnieje, po prostu nadpisze zdjęcia)
+    os.makedirs(car_render_dir, exist_ok=True)
 
-    frames = car.images[:12] # Analizujemy do 12 klatek dla płynności
+    frames = car.images[:12] # Analizujemy do 12 klatek
     
-    # 1. Analiza Gemini 3 Flash Preview
+    # 3. Analiza AI
     images_for_ai = []
     for f in frames:
         p = f.image_path.replace('/static/', 'static/')
@@ -333,12 +333,11 @@ def stabilize_360_images_premium(car_id):
     prompt = "Przeanalizuj te zdjęcia auta. Podaj współrzędne środka geometrycznego pojazdu dla idealnej rotacji 360."
     
     try:
-        # Wykorzystujemy model AI
         model_ai.generate_content([prompt] + images_for_ai)
     except Exception as e:
         print(f"AI Error: {e}")
 
-    # 2. Przetwarzanie i centrowanie zdjęć (Smart Crop 4:3)
+    # 4. Przetwarzanie i zapis klatek
     for idx, img_obj in enumerate(frames):
         path = img_obj.image_path.replace('/static/', 'static/')
         try:
@@ -348,20 +347,19 @@ def stabilize_360_images_premium(car_id):
                 target_w = h * (4/3)
                 left = (w - target_w) / 2
                 
-                # Najwyższa jakość skalowania (LANCZOS) i format WebP
                 processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.Resampling.LANCZOS)
                 
-                # Zapisujemy klatkę na serwerze
                 save_path = os.path.join(car_render_dir, f"frame_{idx}.webp")
                 processed.save(save_path, "WEBP", quality=90)
         except Exception as e:
             print(f"Błąd przetwarzania klatki {idx}: {e}")
             continue
 
-    # 3. Oznaczamy w bazie za pomocą nowej flagi Premium (ZAMIAST NADPISYWAĆ DATĘ)
+    # 5. Oznaczamy w bazie nową flagą (nie ruszamy daty wyceny!)
     car.is_360_premium = True
     db.session.commit()
     return True
+
 
 
 
