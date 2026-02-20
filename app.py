@@ -836,16 +836,19 @@ def register():
         elif User.query.filter_by(email=request.form['email']).first():
             flash('Email zajęty', 'danger')
         else:
-            # --- ZMIENIONE: POBIERANIE TYPU KONTA I NAZWY FIRMY ---
             acc_type = request.form.get('account_type', 'private')
             comp_name = request.form.get('company_name', '') if acc_type == 'company' else None
+            user_kraj = request.form.get('kraj', 'Polska')
+            user_lokal = request.form.get('lokalizacja', 'Radom')
             
             db.session.add(User(
                 username=request.form['username'], 
                 email=request.form['email'], 
                 password_hash=generate_password_hash(request.form['password']),
                 account_type=acc_type,
-                company_name=comp_name
+                company_name=comp_name,
+                kraj=user_kraj,          # Zapisywanie kraju
+                lokalizacja=user_lokal   # Zapisywanie miejscowości
             ))
             db.session.commit()
             flash('Konto założone! Zaloguj się.', 'success')
