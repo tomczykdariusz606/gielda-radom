@@ -193,6 +193,9 @@
                         {% endif %}
                     </h5>
                     <h2 class="fw-bold text-white m-0 text-truncate">{{ current_user.username }}</h2>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill mt-2 fw-bold" data-bs-toggle="modal" data-bs-target="#ustawieniaModal">
+                        <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
+                    </button>
                 </div>
             </div>
 
@@ -499,6 +502,73 @@
     </div>
     {% endif %}
 
+    <div class="modal fade" id="ustawieniaModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-4 bg-dark border border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="fw-bold text-white"><i class="bi bi-person-gear me-2 text-danger"></i>Ustawienia Konta</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/ustawienia_profilu" method="POST">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold mb-2">Typ Konta</label>
+                            <select name="account_type" class="form-select bg-black border-secondary text-white" onchange="document.getElementById('sekcja_firma').style.display = this.value === 'company' ? 'block' : 'none';">
+                                <option value="private" {% if current_user.account_type == 'private' %}selected{% endif %}>Osoba Prywatna</option>
+                                <option value="company" {% if current_user.account_type == 'company' %}selected{% endif %}>Firma / Handlarz</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-5">
+                                <label class="small text-muted fw-bold">Kraj</label>
+                                <select name="kraj" class="form-select bg-black border-secondary text-white">
+                                    <option value="Polska" {% if current_user.kraj == 'Polska' or not current_user.kraj %}selected{% endif %}>🇵🇱 Polska</option>
+                                    <option value="Niemcy" {% if current_user.kraj == 'Niemcy' %}selected{% endif %}>🇩🇪 Niemcy</option>
+                                    <option value="Belgia" {% if current_user.kraj == 'Belgia' %}selected{% endif %}>🇧🇪 Belgia</option>
+                                    <option value="Holandia" {% if current_user.kraj == 'Holandia' %}selected{% endif %}>🇳🇱 Holandia</option>
+                                    <option value="Francja" {% if current_user.kraj == 'Francja' %}selected{% endif %}>🇫🇷 Francja</option>
+                                    <option value="Inny" {% if current_user.kraj == 'Inny' %}selected{% endif %}>🌍 Inny</option>
+                                </select>
+                            </div>
+                            <div class="col-7">
+                                <label class="small text-muted fw-bold">Miejscowość (np. Radom)</label>
+                                <input type="text" name="lokalizacja" class="form-control bg-black border-secondary text-white" value="{{ current_user.lokalizacja }}">
+                            </div>
+                        </div>
+
+                        <div id="sekcja_firma" style="display: {% if current_user.account_type == 'company' %}block{% else %}none{% endif %};">
+                            <hr class="border-secondary my-4">
+                            <h6 class="text-warning fw-bold small mb-3"><i class="bi bi-shop me-1"></i> DANE FIRMY</h6>
+                            
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">Nazwa Firmy</label>
+                                <input type="text" name="company_name" class="form-control bg-black border-secondary text-white" value="{{ current_user.company_name or '' }}">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="small text-muted fw-bold">NIP</label>
+                                    <input type="text" name="nip" class="form-control bg-black border-secondary text-white" value="{{ current_user.nip or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small text-muted fw-bold">Adres (Ulica, Nr)</label>
+                                    <input type="text" name="adres" class="form-control bg-black border-secondary text-white" placeholder="np. Warszawska 10" value="{{ current_user.adres or '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">Wizytówka (Krótki opis działalności)</label>
+                                <textarea name="opis_firmy" class="form-control bg-black border-secondary text-white" rows="3" placeholder="np. Import aut z Niemiec. Działamy od 10 lat...">{{ current_user.opis_firmy or '' }}</textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer border-secondary pt-0 border-0">
+                        <button type="submit" class="btn btn-danger w-100 fw-bold rounded-pill">ZAPISZ ZMIANY</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
         <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
             <span class="text-light small">🍪 <strong>Pliki cookies</strong> są używane do logowania.</span>
