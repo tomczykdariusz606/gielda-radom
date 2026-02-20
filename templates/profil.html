@@ -23,6 +23,7 @@
     <meta property="og:title" content="{{ t.get('garage', 'Twój Garaż') }} - Giełda Radom">
     <meta property="og:description" content="Zarządzaj swoimi ogłoszeniami i sprzedawaj szybciej na Giełdzie Radom.">
     <meta property="og:image" content="{{ url_for('static', filename='watermark.png') }}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -30,29 +31,25 @@
     <style>
         :root { --radom-red: #ce2b37; --premium-gold: #f0c420; }
         
-        /* GŁÓWNE TŁO STRONY (WIDOCZNE) */
         body { 
-            color: #e4e6eb; font-family: 'Inter', sans-serif; padding-bottom: 90px; 
+            color: #e4e6eb; font-family: 'Inter', sans-serif; padding-bottom: 0px; 
             background-color: #050505;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
             background-size: cover; background-position: center; background-attachment: fixed;
             position: relative; min-height: 100vh;
         }
         
-        /* CIEMNA NAKŁADKA NA TŁO (tylko 50% czerni, aby tło było super widoczne) */
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.50); z-index: -1;
         }
         
-        /* NAVBAR GLASS */
         .navbar { 
             background: rgba(15, 15, 15, 0.85); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border-bottom: 2px solid var(--radom-red); 
         }
 
-        /* HERO SECTION (GÓRNY PANEL) - SZKŁO */
         .hero-section {
             background: rgba(25, 25, 30, 0.6);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -66,7 +63,6 @@
         .hero-bg { display: none; } 
         .hero-content { position: relative; z-index: 1; }
         
-        /* AVATAR */
         .profile-avatar {
             width: 90px; height: 90px; border-radius: 50%;
             border: 3px solid var(--radom-red);
@@ -74,7 +70,6 @@
             object-fit: cover; background: #000;
         }
 
-        /* MAŁE KAFELKI STATYSTYK - SZKŁO */
         .glass-stat {
             background: rgba(20, 20, 25, 0.7);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -94,7 +89,6 @@
             transition: all 0.3s ease !important; position: relative; overflow: hidden;
         }
 
-        /* KARTY AUT (OGŁOSZENIA) - SZKŁO */
         .car-card { 
             background: rgba(25, 25, 30, 0.75); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -104,7 +98,6 @@
         }
         .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); box-shadow: 0 15px 35px rgba(206,43,55,0.4); }
         
-        /* FORMULARZE W MODALACH */
         .form-control, .form-select { 
             background-color: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.2); 
             color: white; padding: 10px; border-radius: 8px;
@@ -131,14 +124,13 @@
         .btn-submit-fix:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(206, 43, 55, 0.7); }
         
         #aiToast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
             background: rgba(240, 196, 32, 0.95); color: black; padding: 15px 25px; border-radius: 50px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999; font-weight: bold; display: none;
             text-align: center; width: 90%; max-width: 400px; animation: slideUp 0.5s ease-out;
         }
-        @keyframes slideUp { from { bottom: -100px; } to { bottom: 20px; } }
+        @keyframes slideUp { from { bottom: -100px; } to { bottom: 100px; } }
         
-        /* PEŁNOEKRANOWY LOADER Z WIDEO */
         #loaderOverlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); z-index: 99999; display: none;
@@ -148,7 +140,6 @@
         #loaderVideo { width: 150px; height: auto; border-radius: 50%; box-shadow: 0 0 50px rgba(206,43,55, 0.5); margin-bottom: 20px; }
         @keyframes pulseText { 0% { opacity: 0.4; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); color: var(--radom-red); } 100% { opacity: 0.4; transform: scale(0.98); } }
 
-        /* DOLNE MENU */
         .nav-bottom { 
             position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.90); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
@@ -159,7 +150,6 @@
         .nav-item.active { color: var(--radom-red); font-weight: 700; text-shadow: 0 0 10px rgba(206,43,55,0.6); }
         .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
 
-        /* CIEMNE OKIENKA (MODALE) Z EFEKTEM SZKŁA */
         .modal-content {
             background: rgba(25, 25, 30, 0.85) !important;
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
@@ -168,11 +158,20 @@
             color: #eee !important;
             box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;
         }
-        .modal-header, .modal-footer { border-color: rgba(255,255,255,0.1) !important; }
-        .btn-close { filter: invert(1) grayscale(100%) brightness(200%) !important; }
+
+        /* STOPKA */
+        .footer-main {
+            background: rgba(10,10,10,0.95);
+            padding: 40px 0 110px 0; /* padding bottom dla nav-bottom */
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #777;
+            font-size: 0.85rem;
+        }
+        .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
+        .footer-link:hover { color: var(--radom-red); }
     </style>
 </head>
-<body class="pb-5">
+<body class="pb-0">
 
     <nav class="navbar navbar-dark p-3 mb-0">
         <div class="container d-flex justify-content-between align-items-center">
@@ -337,10 +336,38 @@
         </div>
         {% endif %}
         
-        <div class="text-center mt-5 mb-5 pb-5 opacity-50">
+        <div class="text-center mt-5 mb-5 opacity-50">
             <form action="/usun_konto" method="POST" onsubmit="return confirm('Czy na pewno?');"><button class="btn btn-link text-danger text-decoration-none btn-sm">Usuń konto</button></form>
         </div>
     </div>
+
+    <footer class="footer-main">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-12 col-md-4 text-center text-md-start">
+                    <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
+                    <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+                </div>
+                <div class="col-6 col-md-4 text-center">
+                    <h6 class="text-white fw-bold mb-3">MENU</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="footer-link">Strona Główna</a></li>
+                        <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                        <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4 text-center text-md-end">
+                    <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
+                    <p class="small mb-1">Masz pytania?</p>
+                    <a href="mailto:kontakt@gieldaradom.pl" class="text-danger fw-bold text-decoration-none">kontakt@gieldaradom.pl</a>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="text-center small opacity-50">
+                &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: AI Team.
+            </div>
+        </div>
+    </footer>
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> {{ t.get('search', 'Szukaj') }}</a>
@@ -574,10 +601,10 @@
         </div>
     </div>
 
-    <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
+    <div id="cookie-banner" style="position: fixed; bottom: 85px; left: 10px; right: 10px; background: rgba(26,26,26,0.95); border: 1px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.8); border-radius: 15px; backdrop-filter: blur(10px);">
         <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
-            <span class="text-light small">🍪 <strong>Pliki cookies</strong> są używane do logowania.</span>
-            <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">OK</button>
+            <span class="text-light small">🍪 Używamy plików cookies do obsługi Twojej sesji.</span>
+            <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">Zgoda</button>
         </div>
     </div>
 
@@ -627,7 +654,6 @@
             else document.getElementById('btn_' + name).innerText = val;
         }
 
-        // --- NOWE FUNKCJE DLA WYSULANYCH MENU W USTAWIENIACH ---
         function setProfileDropdown(name, val, label) {
             document.getElementById('val_' + name).value = val;
             document.getElementById('btn_' + name).innerText = label;
@@ -638,7 +664,6 @@
             document.getElementById('btn_profile_account').innerText = label;
             document.getElementById('sekcja_firma').style.display = val === 'company' ? 'block' : 'none';
         }
-        // --------------------------------------------------------
 
         async function performAnalysis(file) {
             const toast = document.getElementById('aiToast'); toast.style.display = 'block';
@@ -652,17 +677,14 @@
                     if(d.vin) document.querySelector('[name="vin"]').value=d.vin; 
                     document.querySelector('[name="rok"]').value=d.rok_sugestia||''; 
                     document.querySelector('[name="opis"]').value=d.opis_wizualny;
-                    
                     if(d.moc_sugestia) document.querySelector('[name="moc"]').value=d.moc_sugestia;
                     if(d.kolor) document.querySelector('[name="kolor"]').value=d.kolor;
-
                     if (d.wyposazenie_wykryte) {
                         d.wyposazenie_wykryte.forEach(item => {
                             let chk = document.querySelector(`input[name="wyposazenie"][value="${item}"]`);
                             if (chk) chk.checked = true;
                         });
                     }
-
                     if(d.paliwo_sugestia && d.kategoria!=='Inne'){
                         let t_label = d.paliwo_sugestia;
                         if(d.paliwo_sugestia === 'Benzyna') t_label = "{{ t.get('petrol', 'Benzyna') }}";
@@ -672,8 +694,7 @@
                         else if(d.paliwo_sugestia === 'LPG') t_label = "{{ t.get('lpg', 'LPG') }}";
                         setVal('paliwo', d.paliwo_sugestia, t_label);
                     } 
-                    
-                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane (Moc/Kolor/Opcje) uzupełnione!'; setTimeout(() => { toast.style.display = 'none'; }, 3000);
+                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione!'; setTimeout(() => { toast.style.display = 'none'; }, 3000);
                 } else { toast.style.display = 'none'; } 
             } catch(e){ console.error(e); toast.style.display = 'none'; } 
         }
@@ -687,7 +708,7 @@
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const headerLabel = document.getElementById('photoLabel'); if(headerLabel.innerText.includes("SKAN")) { headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; }
-            if (this.files.length > 18) { alert('⚠️ {{ t.get("max", "MAX") }} 18 zdjęć.'); const dt = new DataTransfer(); for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } this.files = dt.files; }
+            if (this.files.length > 18) { alert('⚠️ MAX 18 zdjęć.'); const dt = new DataTransfer(); for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } this.files = dt.files; }
             const markaField = document.querySelector('[name="marka"]'); if (this.files.length > 0 && markaField.value.trim() === "") { performAnalysis(this.files[0]); }
         });
     </script>
