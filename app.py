@@ -941,8 +941,17 @@ def reset_token(token):
 def kontakt(): return render_template('kontakt.html')
 @app.route('/regulamin')
 def regulamin(): return render_template('regulamin.html')
-@app.route('/polityka')
-def polityka(): return render_template('polityka.html')
+@app.route('/polityka') # lub jakkolwiek masz nazwany route
+def polityka_privacy():
+    lang = session.get('lang', 'pl')
+    # Ładowanie tekstów z JSONa
+    path = os.path.join(app.root_path, 'translations', 'legal.json')
+    with open(path, encoding='utf-8') as f:
+        all_texts = json.load(f)
+    
+    # Przekazujemy tekst dla aktualnego języka do polityka.html
+    current_legal = all_texts.get(lang, all_texts['pl'])
+    return render_template('polityka.html', legal=current_legal, lang=lang)
 
 # --- EDYCJA OGŁOSZENIA ---
 @app.route('/edytuj/<int:id>', methods=['GET','POST'])
