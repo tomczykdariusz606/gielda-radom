@@ -183,7 +183,33 @@
                     {% endif %}
                 </div>
             </div>
-
+         {% if car.ai_valuation_data == '360_READY' %}
+<div class="expert-panel mb-4 shadow-lg border-info border-opacity-25">
+    <div class="expert-header bg-info bg-opacity-10">
+        <div class="text-info small text-uppercase fw-bold">
+            <i class="bi bi-view-360 me-2"></i>Interaktywny Widok 360° Premium
+        </div>
+        <span class="badge bg-info text-dark fw-900">AI STABILIZED</span>
+    </div>
+    
+    <div id="car360Container" class="position-relative bg-black" style="height: 450px; cursor: ew-resize; touch-action: none;">
+        <div id="threesixty-frames" class="h-100 w-100">
+            {% for i in range(12) %}
+                <img src="{{ url_for('static', filename='uploads/360_renders/' ~ car.id ~ '/frame_' ~ i ~ '.webp') }}" 
+                     class="frame-360 w-100 h-100" 
+                     style="object-fit: contain; display: {% if loop.first %}block{% else %}none{% endif %}; user-select: none; -webkit-user-drag: none;">
+            {% endfor %}
+        </div>
+        
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+            <span class="badge bg-dark bg-opacity-75 rounded-pill px-3 py-2 border border-secondary">
+                <i class="bi bi-arrows-left-right me-2"></i> PRZESUŃ, ABY OBRÓCIĆ
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+ 
             {% if car.ai_label %}{% set ai = car.ai_label|from_json %}{% if ai %}
             <div class="expert-panel">
                 <div class="expert-header">
@@ -425,6 +451,48 @@
     }
     if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
     function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('car360Container');
+        if (!container) return;
+
+        const images = container.getElementsByClassName('frame-360');
+        const totalFrames = images.length;
+        let currentFrame = 0;
+        let isDragging = false;
+        let startX = 0;
+
+        const updateFrame = (index) => {
+            Array.from(images).forEach((img, i) => {
+                img.style.display = i === index ? 'block' : 'none';
+            });
+        };
+
+        const handleMove = (clientX) => {
+            if (!isDragging) return;
+            const deltaX = startX - clientX;
+            if (Math.abs(deltaX) > 10) { // Czułość obrotu
+                if (deltaX > 0) currentFrame = (currentFrame + 1) % totalFrames;
+                else currentFrame = (currentFrame - 1 + totalFrames) % totalFrames;
+                updateFrame(currentFrame);
+                startX = clientX;
+            }
+        };
+
+        // Myszka
+        container.addEventListener('mousedown', (e) => { isDragging = true; startX = e.clientX; });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => handleMove(e.clientX));
+
+        // Dotyk (Telefon)
+        container.addEventListener('touchstart', (e) => { isDragging = true; startX = e.touches[0].clientX; });
+        window.addEventListener('touchend', () => { isDragging = false; });
+        window.addEventListener('touchmove', (e) => { 
+            if (isDragging) e.preventDefault(); // Zapobiega przewijaniu strony podczas obracania
+            handleMove(e.touches[0].clientX);
+        }, { passive: false });
+    });
 </script>
 
 </body>
