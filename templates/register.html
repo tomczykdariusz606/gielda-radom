@@ -59,6 +59,11 @@
             box-shadow: none; color: white; 
         }
         
+        .standalone-input {
+            border-left: 1px solid #444 !important;
+            border-radius: 0.375rem !important;
+        }
+
         /* Fix dla autouzupełniania w Chrome */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
@@ -67,6 +72,22 @@
             -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
             -webkit-text-fill-color: white !important;
         }
+
+        /* Styl dla wysuwanych menu (Custom Dropdowns) */
+        .custom-dropdown-btn {
+            background-color: rgba(0, 0, 0, 0.4); border: 1px solid #444; color: white;
+            width: 100%; padding: 0.8rem; text-align: left; border-radius: 0.375rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] {
+            background-color: black; border-color: var(--radom-red); color: white;
+        }
+        .dropdown-menu-dark {
+            background-color: #1a1a1a; border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        .dropdown-item { color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .dropdown-item:hover { background-color: var(--radom-red); color: white; }
 
         /* Przyciski */
         .btn-radom {
@@ -180,25 +201,37 @@
 
             <div class="row g-2 mb-3 text-start">
                 <div class="col-5">
-                    <select name="kraj" class="form-control form-control-modern w-100" style="appearance: auto; padding-left: 10px; background-color: rgba(0,0,0,0.6);">
-                        <option value="Polska" selected>🇵🇱 Polska</option>
-                        <option value="Niemcy">🇩🇪 Niemcy</option>
-                        <option value="Belgia">🇧🇪 Belgia</option>
-                        <option value="Holandia">🇳🇱 Holandia</option>
-                        <option value="Francja">🇫🇷 Francja</option>
-                        <option value="Inny">🌍 Inny</option>
-                    </select>
+                    <input type="hidden" name="kraj" id="val_kraj" value="Polska">
+                    <div class="dropdown w-100 h-100">
+                        <button class="btn custom-dropdown-btn dropdown-toggle w-100 h-100" type="button" data-bs-toggle="dropdown" id="btn_kraj">
+                            🇵🇱 Polska
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Polska', '🇵🇱 Polska')">🇵🇱 Polska</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Niemcy', '🇩🇪 Niemcy')">🇩🇪 Niemcy</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Belgia', '🇧🇪 Belgia')">🇧🇪 Belgia</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Holandia', '🇳🇱 Holandia')">🇳🇱 Holandia</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Francja', '🇫🇷 Francja')">🇫🇷 Francja</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Inny', '🌍 Inny')">🌍 Inny</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="col-7">
-                    <input type="text" name="lokalizacja" class="form-control form-control-modern" placeholder="{{ t.get('city', 'Miejscowość') }}" required>
+                    <input type="text" name="lokalizacja" class="form-control form-control-modern standalone-input" placeholder="{{ t.get('city', 'Miejscowość') }}" required>
                 </div>
             </div>
 
             <div class="mb-4 text-start">
-                <select name="account_type" class="form-control form-control-modern w-100" style="appearance: auto; padding-left: 10px; background-color: rgba(0,0,0,0.6);" onchange="document.getElementById('firmaFields').style.display = this.value === 'company' ? 'block' : 'none';">
-                    <option value="private" selected>{{ t.get('private_person', 'Osoba Prywatna') }}</option>
-                    <option value="company">{{ t.get('company', 'Firma') }}</option>
-                </select>
+                <input type="hidden" name="account_type" id="val_account_type" value="private">
+                <div class="dropdown w-100">
+                    <button class="btn custom-dropdown-btn dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" id="btn_account_type">
+                        {{ t.get('private_person', 'Osoba Prywatna') }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                        <li><a class="dropdown-item" href="#" onclick="setAccountType('private', `{{ t.get('private_person', 'Osoba Prywatna') }}`)">{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setAccountType('company', `{{ t.get('company', 'Firma') }}`)">{{ t.get('company', 'Firma') }}</a></li>
+                    </ul>
+                </div>
 
                 <div id="firmaFields" style="display: none; margin-top: 10px;">
                     <div class="input-group">
@@ -217,9 +250,9 @@
                     <i class="bi bi-google"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold mb-1 text-white" style="letter-spacing: 0.5px;">Powered by Gemini AI <i class="bi bi-stars text-warning"></i></h6>
+                    <h6 class="fw-bold mb-1 text-white" style="letter-spacing: 0.5px;">{{ t.get('gemini_title', 'Powered by Gemini AI') }} <i class="bi bi-stars text-warning"></i></h6>
                     <p class="small text-white-50 mb-0" style="line-height: 1.3; font-size: 0.75rem;">
-                        Wyceny aut, analiza uszkodzeń ze zdjęć i generowanie opisów handlowych. <strong>Wszystko to zyskujesz za darmo po założeniu konta!</strong>
+                        {{ t.get('gemini_desc_1', 'Wyceny aut, analiza uszkodzeń ze zdjęć i generowanie opisów handlowych.') }} <strong>{{ t.get('gemini_desc_2', 'Wszystko to zyskujesz za darmo po założeniu konta!') }}</strong>
                     </p>
                 </div>
             </div>
@@ -234,5 +267,25 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Funkcja obsługująca menu rozwijane "Kraj"
+        function setDropdown(name, val, label) {
+            document.getElementById('val_' + name).value = val;
+            document.getElementById('btn_' + name).innerText = label;
+        }
+
+        // Funkcja obsługująca Typ Konta i pokazywanie pola na nazwę firmy
+        function setAccountType(val, label) {
+            document.getElementById('val_account_type').value = val;
+            document.getElementById('btn_account_type').innerText = label;
+            
+            if (val === 'company') {
+                document.getElementById('firmaFields').style.display = 'block';
+            } else {
+                document.getElementById('firmaFields').style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
