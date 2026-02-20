@@ -90,8 +90,7 @@ login_manager.login_view = 'login'
 # --- KONFIGURACJA GEMINI AI ---
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
-    try:
-        model_ai = genai.GenerativeModel('gemini-2.0-flash') # Lub 'gemini-pro' zależnie od dostępności
+    try: model_ai = genai.GenerativeModel('gemini-3-flash-preview') # Lub 'gemini-pro' zależnie od dostępności
     except:
         model_ai = None
 else:
