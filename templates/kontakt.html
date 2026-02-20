@@ -1,143 +1,136 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="{{ lang }}" data-bs-theme="dark">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
+
     <meta charset="UTF-8">
-    <title>Kontakt - Giełda Radom</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.get('contact', 'Kontakt') }} - Giełda Radom</title>
     
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --radom-red: #ce2b37; --radom-dark: #1a1a1a; }
+        :root { --radom-red: #ce2b37; --premium-gold: #f0c420; }
         
         body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #fcefe9; 
-            min-height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
+            color: #e4e6eb; font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh;
+        }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.70); z-index: -1; }
+
+        .navbar { 
+            background: rgba(15, 15, 15, 0.85); 
+            backdrop-filter: blur(15px); border-bottom: 2px solid var(--radom-red); 
         }
 
-        .navbar { background: var(--radom-dark); border-bottom: 3px solid var(--radom-red); }
-
-        /* NAGŁÓWEK HERO Z TWOIM ZDJĘCIEM */
         .contact-hero {
-            position: relative;
-            background-image: url("{{ url_for('static', filename='radom_hero.png') }}");
-            background-size: cover;
-            background-position: center;
-            height: 380px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            border-bottom: 5px solid var(--radom-red);
+            height: 300px; display: flex; align-items: center; justify-content: center;
+            text-align: center; position: relative;
         }
-        .hero-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
-            z-index: 1;
-        }
-        .hero-content { position: relative; z-index: 2; }
-        .hero-content h1 { font-family: 'Anton', sans-serif; letter-spacing: 2px; font-size: 3.5rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .contact-hero h1 { font-family: 'Anton', sans-serif; font-size: 3.5rem; letter-spacing: 2px; color: white; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        .contact-card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-            padding: 3rem;
-            margin-top: -80px;
-            position: relative;
-            z-index: 10;
-            border: 1px solid rgba(0,0,0,0.05);
+        .glass-card {
+            background: rgba(25, 25, 30, 0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 3rem; margin-top: -50px; margin-bottom: 6rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         .info-box {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            height: 100%;
-            transition: 0.3s;
-            border: 1px solid transparent;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 15px; padding: 25px; transition: 0.3s;
         }
-        .info-box:hover { transform: translateY(-5px); border-color: var(--radom-red); background: white; }
-        .info-icon { font-size: 2.2rem; color: var(--radom-red); margin-bottom: 15px; }
+        .info-box:hover { background: rgba(206, 43, 55, 0.1); border-color: var(--radom-red); transform: translateY(-5px); }
+        .info-icon { font-size: 2.5rem; color: var(--radom-red); margin-bottom: 15px; display: block; }
 
-        /* STOPKA */
-        .footer-main { background: var(--radom-dark); color: #bbb; padding: 60px 0 20px; margin-top: auto; }
-        .footer-heading { color: white; font-weight: 600; margin-bottom: 25px; text-transform: uppercase; font-size: 0.9rem; }
-        .footer-link { color: #bbb; text-decoration: none; transition: 0.2s; display: block; margin-bottom: 12px; }
-        .footer-link:hover { color: var(--radom-red); padding-left: 5px; }
+        .form-control { 
+            background-color: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.2); 
+            color: white; padding: 12px; border-radius: 10px;
+        }
+        .form-control:focus { background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); color: white; box-shadow: 0 0 10px rgba(206,43,55,0.4); }
+
+        .nav-bottom { 
+            position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); 
+            backdrop-filter: blur(15px); z-index: 1000; display: flex; justify-content: space-around; padding: 12px 0; 
+            border-top: 1px solid rgba(255,255,255,0.05); 
+        }
+        .nav-item { text-align: center; color: #777; text-decoration: none; font-size: 0.75rem; flex: 1; }
+        .nav-item i { font-size: 1.4rem; display: block; }
+        .nav-item.active { color: var(--radom-red); }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-3" href="/"><i class="bi bi-speedometer2 text-danger"></i> Giełda Radom</a>
-            <div class="ms-auto">
-                <a href="/" class="btn btn-outline-light rounded-pill px-4 btn-sm">Wróć do ogłoszeń</a>
-            </div>
+    <nav class="navbar navbar-dark p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4" href="/">GIEŁDA <span class="text-danger">RADOM</span></a>
+            <a href="/" class="btn btn-sm btn-outline-danger rounded-pill px-3">{{ legal.contact_back }}</a>
         </div>
     </nav>
 
     <header class="contact-hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>Kontakt i Wsparcie</h1>
-            <p class="lead fw-bold">Tradycja radomskiej motoryzacji od Czerwca '76.</p>
+        <div>
+            <h1>{{ legal.contact_title }}</h1>
+            <p class="lead fw-bold text-white-50">{{ legal.contact_hero_sub }}</p>
         </div>
     </header>
 
-    <div class="container mb-5">
+    <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="contact-card">
+                <div class="glass-card shadow-lg">
                     <div class="row g-4 text-center mb-5">
                         <div class="col-md-6">
                             <div class="info-box">
                                 <i class="bi bi-envelope-at-fill info-icon"></i>
-                                <h4 class="fw-bold">Napisz maila</h4>
-                                <p class="text-muted small">Pytania techniczne i pomoc:</p>
+                                <h4 class="fw-bold text-white">{{ legal.contact_mail_title }}</h4>
+                                <p class="text-muted small">{{ legal.contact_mail_sub }}</p>
                                 <a href="mailto:dariusztom@go2.pl" class="text-danger fw-bold text-decoration-none fs-5">dariusztom@go2.pl</a>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-box">
                                 <i class="bi bi-geo-alt-fill info-icon"></i>
-                                <h4 class="fw-bold">Nasza lokalizacja</h4>
-                                <p class="text-muted small">Działamy lokalnie w sercu Radomia:</p>
-                                <span class="fw-bold fs-5 text-dark">26-600 Radom, Polska</span>
+                                <h4 class="fw-bold text-white">{{ legal.contact_loc_title }}</h4>
+                                <p class="text-muted small">{{ legal.contact_loc_sub }}</p>
+                                <span class="fw-bold fs-5 text-white">26-600 Radom, Polska</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <h3 class="fw-bold mb-4 text-center">Wyślij szybką wiadomość</h3>
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            <h3 class="fw-bold mb-4 text-center text-white">{{ legal.contact_form_title }}</h3>
                             <form action="#" method="POST">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label small fw-bold">Twoje Imię</label>
-                                        <input type="text" class="form-control form-control-lg rounded-3 bg-light border-0 shadow-sm" placeholder="Np. Jan" required>
+                                        <label class="form-label small fw-bold text-muted">{{ legal.contact_form_name }}</label>
+                                        <input type="text" class="form-control" placeholder="Jan" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label small fw-bold">E-mail zwrotny</label>
-                                        <input type="email" class="form-control form-control-lg rounded-3 bg-light border-0 shadow-sm" placeholder="email@domena.pl" required>
+                                        <label class="form-label small fw-bold text-muted">E-mail</label>
+                                        <input type="email" class="form-control" placeholder="email@domena.pl" required>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label small fw-bold">W czym możemy pomóc?</label>
-                                        <textarea class="form-control rounded-3 bg-light border-0 shadow-sm" rows="4" placeholder="Opisz swój problem lub zadaj pytanie..." required></textarea>
+                                        <label class="form-label small fw-bold text-muted">{{ legal.contact_form_msg }}</label>
+                                        <textarea class="form-control" rows="4" placeholder="..." required></textarea>
                                     </div>
                                     <div class="col-12 text-center mt-4">
-                                        <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg" style="background-color: var(--radom-red);">
-                                            Wyślij do Dariusza <i class="bi bi-send ms-2"></i>
+                                        <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg">
+                                            {{ legal.contact_form_btn }} <i class="bi bi-send ms-2"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -149,34 +142,11 @@
         </div>
     </div>
 
-    <footer class="footer-main">
-        <div class="container">
-            <div class="row gy-4">
-                <div class="col-lg-4">
-                    <h5 class="text-white fw-bold mb-3">Giełda Radom</h5>
-                    <p class="small">Lokalny portal ogłoszeniowy mieszkańców Radomia. Tradycja handlu i solidności. Czerwiec '76 - Pamiętamy!</p>
-                    <p class="small mt-3"><i class="bi bi-envelope-at text-danger me-2"></i> dariusztom@go2.pl</p>
-                </div>
-                <div class="col-lg-2">
-                    <h5 class="footer-heading">Nawigacja</h5>
-                    <a href="/" class="footer-link">Strona Główna</a>
-                    <a href="/register" class="footer-link">Dodaj Ogłoszenie</a>
-                </div>
-                <div class="col-lg-3">
-                    <h5 class="footer-heading">Informacje</h5>
-                    <a href="/regulamin" class="footer-link">Regulamin</a>
-                    <a href="/polityka-prywatnosci" class="footer-link">Polityka Prywatności</a>
-                    <a href="/kontakt" class="footer-link">Kontakt</a>
-                </div>
-                <div class="col-lg-3 text-md-end">
-                    <h5 class="footer-heading">Radom 26-600</h5>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Flag_of_Radom.svg/800px-Flag_of_Radom.svg.png" alt="Radom" style="height: 20px; opacity: 0.3;">
-                </div>
-            </div>
-            <hr class="my-4 border-secondary opacity-25">
-            <p class="text-center small mb-0">© 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
-        </div>
-    </footer>
+    <div class="nav-bottom">
+        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
+        <a href="/profil" class="nav-item"><i class="bi bi-speedometer2"></i> Garaż</a>
+        <a href="/kontakt" class="nav-item active"><i class="bi bi-envelope"></i> Kontakt</a>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
