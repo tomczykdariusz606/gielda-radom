@@ -11,7 +11,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t.get('create_acc', 'ZAŁÓŻ KONTO') }} - Giełda Radom</title>
+    <title>{{ t['create_acc'] }} - Giełda Radom</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -23,50 +23,52 @@
             font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
             background-color: #050505;
+            /* Tło podane przez Ciebie */
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
             background-size: cover; background-position: center; background-attachment: fixed;
             position: relative; overflow-x: hidden;
-            padding: 20px 0;
+            padding: 40px 0;
         }
         
-        /* Ciemna nakładka na tło */
-        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 1; }
+        /* Ciemna nakładka na tło, żeby zachować mrok */
+        .overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.80); z-index: 1; }
 
-        /* Karta Rejestracji - Dark Glass */
+        /* Karta Rejestracji - Dark Glass Premium */
         .login-card {
-            position: relative; z-index: 10; width: 100%; max-width: 480px;
+            position: relative; z-index: 10; width: 100%; max-width: 500px;
             background: rgba(20, 20, 20, 0.85); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1); 
-            padding: 2.5rem;
+            border-top: 2px solid var(--radom-red);
+            padding: 3rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9); 
             margin: auto; color: white;
         }
 
-        /* Logo */
         .auth-logo { height: 50px; width: auto; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); margin-bottom: 15px; }
 
-        /* Pola formularza */
-        .input-group-text { background: rgba(255,255,255,0.05); border: 1px solid #444; border-right: none; color: #aaa; }
+        /* Pola formularza - Nowoczesny wygląd z etykietami */
+        .form-label-custom {
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase; 
+            letter-spacing: 1px; color: #a0a0a0; margin-bottom: 5px; display: block;
+        }
+        .input-group-text { background: rgba(0,0,0,0.4); border: 1px solid #444; border-right: none; color: #aaa; }
         .form-control-modern {
             background: rgba(0, 0, 0, 0.4); 
             border: 1px solid #444; border-left: none;
             color: white; padding: 0.8rem; transition: 0.3s;
         }
         .form-control-modern:focus { 
-            background: black; border-color: var(--radom-red); 
-            box-shadow: none; color: white; 
+            background: rgba(0,0,0,0.8); border-color: var(--radom-red); 
+            box-shadow: 0 0 15px rgba(206, 43, 55, 0.3); color: white; 
         }
-        /* Jaśniejsze podpowiedzi wewnątrz pól */
-        .form-control-modern::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .form-control-modern::placeholder { color: rgba(255, 255, 255, 0.3); }
         
         .standalone-input {
-            border-left: 1px solid #444 !important;
-            border-radius: 0.375rem !important;
+            border-left: 1px solid #444 !important; border-radius: 0.375rem !important;
         }
 
-        /* Fix dla autouzupełniania w Chrome */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
@@ -75,64 +77,60 @@
             -webkit-text-fill-color: white !important;
         }
 
-        /* Styl dla wysuwanych menu (Custom Dropdowns) */
+        /* Menu wysuwane (Dropdown) */
         .custom-dropdown-btn {
             background-color: rgba(0, 0, 0, 0.4); border: 1px solid #444; color: white;
             width: 100%; padding: 0.8rem; text-align: left; border-radius: 0.375rem;
             display: flex; justify-content: space-between; align-items: center;
+            height: 100%;
         }
         .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] {
-            background-color: black; border-color: var(--radom-red); color: white;
+            background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); color: white;
         }
         .dropdown-menu-dark {
-            background-color: #1a1a1a; border: 1px solid #333;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+            background-color: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
         }
-        .dropdown-item { color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .dropdown-item { color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 10px 15px; }
         .dropdown-item:hover { background-color: var(--radom-red); color: white; }
 
         /* Przyciski */
         .btn-radom {
             background: linear-gradient(135deg, var(--radom-red), #911620); 
             color: white; border: none; border-radius: 12px;
-            padding: 12px; font-weight: 800; letter-spacing: 1px; width: 100%; 
+            padding: 15px; font-weight: 800; letter-spacing: 1px; width: 100%; 
             transition: 0.3s; text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(206, 43, 55, 0.3);
+            box-shadow: 0 8px 25px rgba(206, 43, 55, 0.4);
         }
-        .btn-radom:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(206, 43, 55, 0.5); background: #b01b25; color: white; }
+        .btn-radom:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(206, 43, 55, 0.6); color: white; }
 
         .btn-google {
-            background: white; color: #333; font-weight: 600; border: none;
+            background: white; color: #111; font-weight: 700; border: none;
             padding: 12px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            gap: 12px; transition: 0.2s; width: 100%;
+            gap: 12px; transition: 0.2s; width: 100%; box-shadow: 0 4px 15px rgba(255,255,255,0.1);
         }
         .btn-google:hover { background: #f0f0f0; transform: scale(1.02); }
 
-        /* Linki i teksty */
-        .text-red { color: var(--radom-red) !important; }
         .divider { border-top: 1px solid rgba(255,255,255,0.15); }
         
-        /* Języki */
-        .lang-switch { position: absolute; top: 20px; right: 20px; z-index: 20; }
-        .lang-switch a { text-decoration: none; font-size: 1.5rem; margin-left: 8px; opacity: 0.6; transition: 0.2s; filter: grayscale(100%); }
-        .lang-switch a:hover { opacity: 1; transform: scale(1.2); filter: grayscale(0%); }
+        .lang-switch { position: absolute; top: 20px; right: 20px; z-index: 20; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.1); }
+        .lang-switch a { text-decoration: none; font-size: 1.3rem; margin-left: 8px; opacity: 0.5; transition: 0.2s; filter: grayscale(100%); }
+        .lang-switch a:hover, .lang-switch a.active { opacity: 1; transform: scale(1.2); filter: grayscale(0%); }
 
         /* Reklama Gemini */
         .gemini-promo {
             background: linear-gradient(145deg, rgba(30,30,30,0.9), rgba(10,10,10,0.95));
-            border: 1px solid rgba(240, 196, 32, 0.2);
+            border: 1px solid rgba(240, 196, 32, 0.3);
             border-left: 4px solid #f0c420;
             border-radius: 16px;
-            padding: 15px;
-            margin-top: 25px;
-            margin-bottom: 10px;
+            padding: 15px 20px;
+            margin-top: 30px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
         .gemini-promo::before {
-            content: ''; position: absolute; top: -50px; right: -50px;
-            width: 100px; height: 100px; background: rgba(240, 196, 32, 0.15);
+            content: ''; position: absolute; top: -40px; right: -40px;
+            width: 120px; height: 120px; background: rgba(240, 196, 32, 0.15);
             filter: blur(30px); border-radius: 50%;
         }
     </style>
@@ -142,9 +140,9 @@
     <div class="overlay"></div>
     
     <div class="lang-switch">
-        <a href="/set_lang/pl" title="Polski">🇵🇱</a>
-        <a href="/set_lang/en" title="English">🇬🇧</a>
-        <a href="/set_lang/de" title="Deutsch">🇩🇪</a>
+        <a href="/set_lang/pl" title="Polski" class="{% if lang == 'pl' %}active{% endif %}">🇵🇱</a>
+        <a href="/set_lang/en" title="English" class="{% if lang == 'en' %}active{% endif %}">🇬🇧</a>
+        <a href="/set_lang/de" title="Deutsch" class="{% if lang == 'de' %}active{% endif %}">🇩🇪</a>
     </div>
 
     <div class="login-card text-center">
@@ -153,8 +151,8 @@
             <img src="{{ url_for('static', filename='watermark.png') }}" class="auth-logo" alt="Giełda Radom">
         </a>
 
-        <h3 class="fw-bold mb-1 text-white">{{ t.get('create_acc', 'ZAŁÓŻ KONTO') }}</h3>
-        <p class="text-white-50 small mb-4">{{ t.get('create_acc_desc', 'Wystawiaj auta za darmo i korzystaj z AI') }}</p>
+        <h3 class="fw-bold mb-1 text-white" style="letter-spacing: 1px;">{{ t['create_acc'] }}</h3>
+        <p class="text-white-50 small mb-4">{{ t['create_acc_desc'] }}</p>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -167,90 +165,90 @@
         {% endwith %}
 
         <div class="mb-4">
-            <a href="/login/google" class="btn-google shadow-sm text-decoration-none">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" height="20">
-                <span>{{ t.get('reg_google', 'Zarejestruj przez Google') }}</span>
+            <a href="/login/google" class="btn-google text-decoration-none">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" height="22">
+                <span>{{ t['reg_google'] }}</span>
             </a>
         </div>
 
         <div class="d-flex align-items-center mb-4">
             <hr class="flex-grow-1 m-0 divider">
-            <span class="px-3 text-white-50 small text-uppercase fw-bold" style="font-size: 0.65rem;">{{ t.get('or_manual', 'LUB RĘCZNIE') }}</span>
+            <span class="px-3 text-white-50 small text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">{{ t['or_manual'] }}</span>
             <hr class="flex-grow-1 m-0 divider">
         </div>
 
         <form method="POST">
             <div class="mb-3 text-start">
-                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('username_label', 'Nazwa użytkownika (Login)') }}</label>
+                <label class="form-label-custom">{{ t['username_label'] }}</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person fs-5"></i></span>
-                    <input type="text" name="username" class="form-control form-control-modern" placeholder="{{ t.get('username', 'np. JanKowalski') }}" required>
+                    <input type="text" name="username" class="form-control form-control-modern" placeholder="{{ t['username_ph'] }}" required>
                 </div>
             </div>
 
             <div class="mb-3 text-start">
-                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('email_label', 'Adres E-mail') }}</label>
+                <label class="form-label-custom">{{ t['email_label'] }}</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope fs-5"></i></span>
-                    <input type="email" name="email" class="form-control form-control-modern" placeholder="{{ t.get('email', 'np. jan@gmail.com') }}" required>
-                </div>
-            </div>
-
-            <div class="mb-3 text-start">
-                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('password_label', 'Hasło (Minimum 5 znaków)') }}</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-key fs-5"></i></span>
-                    <input type="password" name="password" class="form-control form-control-modern" placeholder="••••••••" required>
-                </div>
-            </div>
-
-            <div class="row g-2 mb-3 text-start">
-                <div class="col-5">
-                    <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('country', 'Kraj') }}</label>
-                    <input type="hidden" name="kraj" id="val_kraj" value="Polska">
-                    <div class="dropdown w-100 h-100">
-                        <button class="btn custom-dropdown-btn dropdown-toggle w-100 h-100" type="button" data-bs-toggle="dropdown" id="btn_kraj" style="padding-top: 0.6rem; padding-bottom: 0.6rem;">
-                            🇵🇱 Polska
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
-                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Polska', '🇵🇱 Polska')">🇵🇱 Polska</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Niemcy', '🇩🇪 Niemcy')">🇩🇪 Niemcy</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Belgia', '🇧🇪 Belgia')">🇧🇪 Belgia</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Holandia', '🇳🇱 Holandia')">🇳🇱 Holandia</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Francja', '🇫🇷 Francja')">🇫🇷 Francja</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Inny', '🌍 Inny')">🌍 Inny</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-7">
-                    <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('city', 'Miasto') }}</label>
-                    <input type="text" name="lokalizacja" class="form-control form-control-modern standalone-input" placeholder="np. Radom" required style="padding-top: 0.6rem; padding-bottom: 0.6rem;">
+                    <input type="email" name="email" class="form-control form-control-modern" placeholder="{{ t['email_ph'] }}" required>
                 </div>
             </div>
 
             <div class="mb-4 text-start">
-                <label class="small text-white-50 fw-bold mb-1 ms-1">{{ t.get('acc_type', 'Typ konta') }}</label>
+                <label class="form-label-custom">{{ t['password_label'] }}</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-key fs-5"></i></span>
+                    <input type="password" name="password" class="form-control form-control-modern" placeholder="{{ t['password_ph'] }}" required>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-4 text-start">
+                <div class="col-5">
+                    <label class="form-label-custom">{{ t['country'] }}</label>
+                    <input type="hidden" name="kraj" id="val_kraj" value="Polska">
+                    <div class="dropdown h-100">
+                        <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_kraj">
+                            🇵🇱 {{ t['country_pl'] }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Polska', '🇵🇱 {{ t['country_pl'] }}')">🇵🇱 {{ t['country_pl'] }}</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Niemcy', '🇩🇪 {{ t['country_de'] }}')">🇩🇪 {{ t['country_de'] }}</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Belgia', '🇧🇪 {{ t['country_be'] }}')">🇧🇪 {{ t['country_be'] }}</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Holandia', '🇳🇱 {{ t['country_nl'] }}')">🇳🇱 {{ t['country_nl'] }}</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Francja', '🇫🇷 {{ t['country_fr'] }}')">🇫🇷 {{ t['country_fr'] }}</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="setDropdown('kraj', 'Inny', '🌍 {{ t['country_other'] }}')">🌍 {{ t['country_other'] }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-7">
+                    <label class="form-label-custom">{{ t['city'] }}</label>
+                    <input type="text" name="lokalizacja" class="form-control form-control-modern standalone-input" placeholder="{{ t['city_ph'] }}" required>
+                </div>
+            </div>
+
+            <div class="mb-4 text-start">
+                <label class="form-label-custom">{{ t['acc_type'] }}</label>
                 <input type="hidden" name="account_type" id="val_account_type" value="private">
                 <div class="dropdown w-100">
                     <button class="btn custom-dropdown-btn dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" id="btn_account_type">
-                        {{ t.get('private_person', 'Osoba Prywatna') }}
+                        {{ t['private_person'] }}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
-                        <li><a class="dropdown-item" href="#" onclick="setAccountType('private', `{{ t.get('private_person', 'Osoba Prywatna') }}`)">{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="setAccountType('company', `{{ t.get('company', 'Firma') }}`)">{{ t.get('company', 'Firma') }}</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setAccountType('private', `{{ t['private_person'] }}`)">{{ t['private_person'] }}</a></li>
+                        <li><a class="dropdown-item fw-bold text-warning" href="#" onclick="setAccountType('company', `{{ t['company'] }}`)"><i class="bi bi-shop me-2"></i>{{ t['company'] }}</a></li>
                     </ul>
                 </div>
 
                 <div id="firmaFields" style="display: none; margin-top: 15px;">
-                    <label class="small text-warning fw-bold mb-1 ms-1">{{ t.get('company_name', 'Nazwa Firmy') }}</label>
+                    <label class="form-label-custom text-warning">{{ t['company_name'] }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-shop fs-5 text-warning"></i></span>
-                        <input type="text" name="company_name" class="form-control form-control-modern" placeholder="np. Auto-Handel Kowalski">
+                        <input type="text" name="company_name" class="form-control form-control-modern border-warning border-start-0" placeholder="{{ t['company_ph'] }}">
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn-radom shadow">{{ t.get('create_acc', 'ZAŁÓŻ KONTO') }}</button>
+            <button type="submit" class="btn-radom mt-2"><i class="bi bi-person-plus-fill me-2"></i> {{ t['create_acc'] }}</button>
         </form>
 
         <div class="gemini-promo text-start">
@@ -259,35 +257,34 @@
                     <i class="bi bi-google"></i>
                 </div>
                 <div>
-                    <h6 class="fw-bold mb-1 text-white" style="letter-spacing: 0.5px;">{{ t.get('gemini_title', 'Powered by Gemini AI') }} <i class="bi bi-stars text-warning"></i></h6>
-                    <p class="small text-white-50 mb-0" style="line-height: 1.3; font-size: 0.75rem;">
-                        {{ t.get('gemini_desc_1', 'Wyceny aut, analiza uszkodzeń ze zdjęć i generowanie opisów handlowych.') }} <strong>{{ t.get('gemini_desc_2', 'Wszystko to zyskujesz za darmo po założeniu konta!') }}</strong>
+                    <h6 class="fw-bold mb-1 text-white" style="letter-spacing: 0.5px;">{{ t['gemini_title'] }} <i class="bi bi-stars text-warning"></i></h6>
+                    <p class="small text-white-50 mb-0" style="line-height: 1.4; font-size: 0.75rem;">
+                        {{ t['gemini_desc_1'] }} <strong class="text-white">{{ t['gemini_desc_2'] }}</strong>
                     </p>
                 </div>
             </div>
         </div>
-        <div class="border-top border-secondary border-opacity-25 pt-3 mt-4">
-            <p class="text-white-50 small mb-1">{{ t.get('already_have_acc', 'Masz już konto?') }}</p>
-            <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none text-red">{{ t.get('login', 'LOGOWANIE') }}</a>
+
+        <div class="border-top border-secondary border-opacity-25 pt-4 mt-4">
+            <p class="text-white-50 small mb-1">{{ t['already_have_acc'] }}</p>
+            <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none text-red fs-5" style="letter-spacing: 1px;">{{ t['login'] }}</a>
         </div>
         
-        <div class="mt-4">
-            <a href="/" class="text-white-50 small text-decoration-none opacity-75"><i class="bi bi-arrow-left"></i> {{ t.get('back_home', 'Wróć na stronę główną') }}</a>
+        <div class="mt-4 pt-2">
+            <a href="/" class="text-white-50 small text-decoration-none opacity-75 hover-opacity-100 transition-all"><i class="bi bi-arrow-left me-1"></i> {{ t['back_home'] }}</a>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Funkcja obsługująca menu rozwijane "Kraj"
         function setDropdown(name, val, label) {
             document.getElementById('val_' + name).value = val;
-            document.getElementById('btn_' + name).innerText = label;
+            document.getElementById('btn_' + name).innerHTML = label;
         }
 
-        // Funkcja obsługująca Typ Konta i pokazywanie pola na nazwę firmy
         function setAccountType(val, label) {
             document.getElementById('val_account_type').value = val;
-            document.getElementById('btn_account_type').innerText = label;
+            document.getElementById('btn_account_type').innerHTML = label;
             
             if (val === 'company') {
                 document.getElementById('firmaFields').style.display = 'block';
