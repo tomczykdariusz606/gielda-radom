@@ -68,6 +68,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- KONFIGURACJA UPLOADU ---
 UPLOAD_FOLDER = 'static/uploads'
+RENDERS_360_FOLDER = os.path.join(UPLOAD_FOLDER, '360_renders')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
@@ -298,6 +299,7 @@ class CarImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image_path = db.Column(db.String(200), nullable=False)
     car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
+    is_360_premium = db.Column(db.Boolean, default=False) # Dodaj to tutaj!
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -910,10 +912,22 @@ def generuj_opis_ai():
 @login_required
 def delete_car(car_id):
     c = Car.query.get(car_id)
-    if c and (c.user_id == current_user.id or current_user.username=='admin'):
+    if c and (c.user_id == current_user.id or current_user.username == 'admin'):
+        # --- USUNIĘCIE FOLDERU 360° Z SERWERA ---
+        # Tworzymy ścieżkę do folderu: static/uploads/360_renders/[ID_AUTA]
+        render_path = os.path.join(app.config['RENDERS_360_FOLDER'], str(car_id))
+        
+        try:
+            if os.path.exists(render_path):
+                import shutil
+                shutil.rmtree(render_path) # Kasuje folder i wszystkie klatki w środku
+        except Exception as e:
+            print(f"Błąd usuwania folderu 360: {e}")
+
         db.session.delete(c)
         db.session.commit()
     return redirect('/profil')
+
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
@@ -1198,7 +1212,7 @@ def update_db():
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         
-        # --- ZAKTUALIZOWANA LISTA KOLUMN DO DODANIA W BAZIE ---
+        # --- ZAKTUALIZOWANA LISTA KOLUMN (DODANO 360 PREMIUM) ---
         columns_to_add = [
             ("car", "latitude", "FLOAT"),
             ("car", "longitude", "FLOAT"),
@@ -1215,7 +1229,9 @@ def update_db():
             ("user", "nip", "TEXT"),
             ("user", "adres", "TEXT"),
             ("user", "opis_firmy", "TEXT"),
-            ("user", "kraj", "TEXT DEFAULT 'Polska'")
+            ("user", "kraj", "TEXT DEFAULT 'Polska'"),
+            # --- NOWA KOLUMNA DLA FUNKCJI 360 ---
+            ("car", "is_360_premium", "BOOLEAN DEFAULT 0") 
         ]
         
         for table, col, dtype in columns_to_add:
@@ -1226,6 +1242,7 @@ def update_db():
                 
         conn.commit()
         conn.close()
+
 
 if __name__ == '__main__':
     update_db()
