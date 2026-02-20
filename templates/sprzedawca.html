@@ -97,6 +97,16 @@
                 </div>
                 <h2 class="fw-bold text-white mb-1">{{ sprzedawca.company_name }}</h2>
                 <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold shadow-sm">KONTO FIRMOWE</span>
+                
+                <div class="text-white-50 small mb-3">
+                    {% if sprzedawca.nip %}<div class="mb-1"><strong>NIP:</strong> {{ sprzedawca.nip }}</div>{% endif %}
+                    {% if sprzedawca.adres %}<div><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ sprzedawca.adres }}, {{ sprzedawca.lokalizacja }} {% if sprzedawca.kraj %}({{ sprzedawca.kraj }}){% endif %}</div>{% endif %}
+                </div>
+                {% if sprzedawca.opis_firmy %}
+                <div class="text-white fst-italic mx-auto mb-3 px-3 py-2 rounded" style="max-width: 600px; font-size: 0.95rem; background: rgba(0,0,0,0.3); border-left: 3px solid var(--radom-red);">
+                    "{{ sprzedawca.opis_firmy }}"
+                </div>
+                {% endif %}
             {% else %}
                 {% if sprzedawca.avatar_url %}
                     <img src="{{ sprzedawca.avatar_url }}" class="seller-avatar-large border-secondary">
@@ -107,14 +117,16 @@
                 {% endif %}
                 <h2 class="fw-bold text-white mb-1">{{ sprzedawca.username }}</h2>
                 <span class="badge bg-secondary mb-3 px-3 py-2 rounded-pill shadow-sm">OSOBA PRYWATNA</span>
+
+                <div class="text-white-50 small mb-3">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ sprzedawca.lokalizacja or 'Radom' }} {% if sprzedawca.kraj and sprzedawca.kraj != 'Polska' %}({{ sprzedawca.kraj }}){% endif %}
+                </div>
             {% endif %}
 
-            <div class="d-flex gap-4 justify-content-center text-white-50 mb-2">
-                <span class="small fw-bold"><i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ sprzedawca.lokalizacja or 'Radom' }}</span>
+            <div class="d-flex gap-4 justify-content-center text-white-50 mb-2 mt-2">
                 <span class="small fw-bold"><i class="bi bi-car-front-fill text-info me-1"></i> W bazie: <span class="text-white">{{ cars|length }} ofert</span></span>
             </div>
         </div>
-
         <h5 class="text-white mb-4 ps-3 border-start border-4 border-danger fw-bold text-uppercase">OFERTY SPRZEDAWCY ({{ cars|length }})</h5>
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
