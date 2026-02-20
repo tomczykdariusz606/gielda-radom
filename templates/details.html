@@ -14,9 +14,9 @@
     <meta name="robots" content="index, follow">
 
     <title>{{ car.marka }} {{ car.model }} - Giełda Radom</title>
-    <meta name="description" content="Sprzedam: {{ car.marka }} {{ car.model }} ({{ car.rok }}r). Cena: {{ car.cena }} PLN. Zobacz zdjęcia i raport AI na GiełdaRadom.pl">
+    <meta name="description" content="Sprzedam: {{ car.marka }} {{ car.model }} ({{ car.rok }}r). Cena: {{ car.cena }} {{ car.waluta if car.waluta else 'PLN' }}. Zobacz zdjęcia i raport AI na GiełdaRadom.pl">
 
-    <meta property="og:title" content="{{ car.marka }} {{ car.model }} - {{ car.cena }} PLN">
+    <meta property="og:title" content="{{ car.marka }} {{ car.model }} - {{ car.cena }} {{ car.waluta if car.waluta else 'PLN' }}">
     <meta property="og:description" content="Rocznik {{ car.rok }}, Przebieg {{ car.przebieg }} km. Kliknij, aby zobaczyć szczegóły.">
     <meta property="og:image" content="{{ car.img }}">
     <meta property="og:url" content="{{ request.url }}">
@@ -276,7 +276,7 @@
             <div class="sticky-top" style="top: 20px; z-index: 10;">
                 <h2 class="fw-bold mb-0 text-white">{{ car.marka }} {{ car.model }}</h2>
                 <div class="fs-1 fw-bold text-danger mb-3" style="text-shadow: 0 0 20px rgba(206, 43, 55, 0.4); font-family: 'Anton', sans-serif; letter-spacing: 1px;">
-                    {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN
+                    {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}
                 </div>
 
                 <div class="d-grid gap-2 mb-4">
@@ -284,17 +284,41 @@
                         <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
                     </a>
                     
-                    <a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl" 
-   class="btn btn-danger btn-lg fw-bold rounded-pill shadow py-2">
-    <i class="bi bi-chat-text-fill me-2"></i> SMS
+                    <a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl" class="btn btn-danger btn-lg fw-bold rounded-pill shadow py-2">
+                        <i class="bi bi-chat-text-fill me-2"></i> SMS
                     </a>
-
 
                     <button onclick="shareOffer()" class="btn btn-dark border-secondary btn-lg fw-bold rounded-pill shadow py-2 text-info">
                         <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
                     </button>
                 </div>
 
+                <div class="card glass-panel mb-4 shadow-sm border-0" style="background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(15,15,15,0.8)); border-top: 2px solid var(--radom-red) !important;">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-2">
+                            {% if car.owner.account_type == 'company' %}
+                                <div class="bg-warning text-dark d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-shop fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold text-white mb-1">{{ car.owner.company_name }}</h5>
+                                <span class="badge bg-warning text-dark small mb-3 fw-bold shadow-sm">KONTO FIRMOWE</span>
+                            {% else %}
+                                <div class="bg-secondary text-white d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow" style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person fs-3"></i>
+                                </div>
+                                <h5 class="fw-bold text-white mb-1">{{ car.owner.username }}</h5>
+                                <span class="badge bg-secondary small mb-3 fw-bold">OSOBA PRYWATNA</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-center gap-3 small text-white-50 mb-4 fw-bold">
+                            <span><i class="bi bi-geo-alt-fill text-danger"></i> {{ car.owner.lokalizacja or 'Radom' }}</span>
+                            <span><i class="bi bi-car-front-fill text-info"></i> Ofert: {{ car.owner.cars|length }}</span>
+                        </div>
+                        <a href="/sprzedawca/{{ car.owner.id }}" class="btn btn-outline-light btn-sm rounded-pill w-100 fw-bold py-2 transition-all">
+                            ZOBACZ OFERTY SPRZEDAWCY &raquo;
+                        </a>
+                    </div>
+                </div>
                 <div class="mb-4">
                     <label class="text-muted small fw-bold text-uppercase mb-2 ms-1">Bezpieczeństwo</label>
                     <a href="https://www.carvertical.com/pl/sprawdzenie-vin?vin={{ car.vin or '' }}" target="_blank" class="trust-badge">
@@ -377,7 +401,8 @@
         if (navigator.share) {
             navigator.share({
                 title: '{{ car.marka }} {{ car.model }}',
-                text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN.',
+                // POPRAWIONE: Elastyczna waluta w skrypcie udostępniania
+                text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}.',
                 url: window.location.href
             }).catch(console.error);
         } else {
