@@ -211,7 +211,7 @@
                     {% endif %}
                 </div>
             </div>
-         {% if car.ai_valuation_data == '360_READY' and (current_user.is_authenticated and current_user.username == 'admin') %}
+         {% if car.is_360_premium and (current_user.is_authenticated and current_user.username == 'admin') %}
 <div class="expert-panel mb-4 shadow-lg border-info border-opacity-25" id="fullscreen-target">
     <div class="expert-header bg-info bg-opacity-10">
         <div class="text-info small text-uppercase fw-bold">
