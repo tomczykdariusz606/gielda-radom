@@ -32,7 +32,6 @@
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #121212; }
 
-        /* --- FIX TŁA DLA IPHONE --- */
         body { 
             background-color: var(--bg-dark); 
             color: #eee; 
@@ -49,7 +48,6 @@
             z-index: -1; will-change: transform;
         }
 
-        /* NAVBAR GLASS */
         .navbar { 
             background: rgba(0,0,0,0.85); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -57,7 +55,6 @@
             padding-top: max(10px, env(safe-area-inset-top)); 
         }
 
-        /* GALERIA */
         .gallery-wrapper {
             background: #000; border-radius: 20px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;
@@ -65,7 +62,6 @@
         .gallery-img { height: 450px; object-fit: contain; width: 100%; cursor: zoom-in; background: #000; }
         @media (max-width: 768px) { .gallery-img { height: 300px; } }
 
-        /* EFEKT SZKŁA (GLASS) */
         .glass-panel {
             background: rgba(30, 30, 30, 0.65) !important;
             backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
@@ -74,7 +70,6 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
-        /* SPECYFIKACJA (Małe kafelki) */
         .spec-box { 
             background: rgba(40, 40, 40, 0.6); 
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -85,7 +80,6 @@
         }
         .spec-box:hover { border-color: var(--radom-red); transform: translateY(-3px); background: rgba(50, 50, 50, 0.75); }
 
-        /* TRUST BADGES */
         .trust-badge { 
             display: flex; align-items: center; gap: 15px; 
             background: rgba(30, 30, 30, 0.6); 
@@ -97,7 +91,6 @@
         .trust-badge:hover { background: rgba(40, 40, 40, 0.8); border-color: var(--radom-red); transform: translateX(5px); }
         .trust-icon { width: 40px; height: 40px; background: rgba(0,0,0,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-        /* PULSUJĄCY PRZYCISK */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(25, 135, 84, 0); }
@@ -105,7 +98,6 @@
         }
         .pulse-btn { animation: pulse-green 2s infinite; }
         
-        /* STYLE RAPORTU AI */
         .expert-panel { 
             background: rgba(30, 30, 30, 0.65);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -157,13 +149,23 @@
         <div class="col-lg-8">
             
             <div class="mb-5 gallery-wrapper position-relative">
-                                <div id="carCarousel" class="carousel slide" data-bs-touch="true" data-bs-interval="false">
+                <div id="carCarousel" class="carousel slide" data-bs-touch="true" data-bs-interval="false">
                     
                     <div class="carousel-indicators mb-0 pb-2">
-                        <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="0" class="active"></button>
+                        {% set slide_idx = namespace(value=0) %}
+                        
+                        {% if car.is_360_premium %}
+                            <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="active"></button>
+                            {% set slide_idx.value = slide_idx.value + 1 %}
+                        {% endif %}
+                        
+                        <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="{% if not car.is_360_premium %}active{% endif %}"></button>
+                        {% set slide_idx.value = slide_idx.value + 1 %}
+                        
                         {% for img in car.images %}
                             {% if img.image_path != car.img %}
-                            <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ loop.index }}"></button>
+                                <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}"></button>
+                                {% set slide_idx.value = slide_idx.value + 1 %}
                             {% endif %}
                         {% endfor %}
                     </div>
@@ -171,8 +173,7 @@
                     <div class="carousel-inner" id="pswp-gallery">
                         
                         {% if car.is_360_premium %}
-                        <div class="carousel-item active" id="trigger360" style="cursor: pointer;">
-
+                        <div class="carousel-item active" style="cursor: pointer;" onclick="open360Modal()">
                             <div class="position-absolute top-0 start-0 m-3 z-3">
                                 <span class="badge bg-danger shadow fs-6"><i class="bi bi-arrow-repeat me-1"></i> WIDOK 360°</span>
                             </div>
@@ -483,7 +484,7 @@
         const modal = document.getElementById('modal360');
         const scrubVideo = document.getElementById('scrubVideo');
         modal.classList.remove('d-none');
-        document.body.style.overflow = 'hidden'; // Blokuje scroll strony pod spodem
+        document.body.style.overflow = 'hidden'; 
         scrubVideo.currentTime = 0; 
         scrubVideo.pause();
     }
@@ -491,10 +492,10 @@
     function close360Modal() {
         const modal = document.getElementById('modal360');
         modal.classList.add('d-none');
-        document.body.style.overflow = ''; // Przywraca scroll
+        document.body.style.overflow = ''; 
     }
 
-        // LOGIKA PRZESUWANIA, ZOOMU I GESTÓW PREMIUM
+    // LOGIKA PRZESUWANIA, ZOOMU I GESTÓW PREMIUM
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('scrubContainer');
         const video = document.getElementById('scrubVideo');
@@ -505,37 +506,28 @@
         let isDragging = false;
         let startX = 0;
         
-        // Zmienne do płynności (Masło)
         let targetTime = 0;
         let currentTime = 0;
 
-                // Pętla animacji - "Ciężka Maszyna"
+        // Pętla animacji - "Ciężka Maszyna"
         function animate() {
             if (!isNaN(video.duration) && video.duration > 0) {
-                
-                // Obliczamy dystans między palcem a aktualną klatką
                 let diff = targetTime - currentTime;
                 
-                // 1. Zabezpieczenie przed "nakręcaniem sprężyny" 
-                // Jeśli użytkownik pociągnie za daleko, ucinamy dystans
                 if (diff > 1.5) { targetTime = currentTime + 1.5; diff = 1.5; }
                 if (diff < -1.5) { targetTime = currentTime - 1.5; diff = -1.5; }
 
-                // 2. Bezwładność (zmniejszono z 0.15 na 0.08) - auto reaguje ciężej
                 let step = diff * 0.08; 
                 
-                // 3. TWARDY OGRANICZNIK PRĘDKOŚCI (MAX SPEED)
-                // To nie pozwala autu kręcić się szybciej niż założona prędkość
                 const maxSpeed = 0.035; 
                 if (step > maxSpeed) step = maxSpeed;
                 if (step < -maxSpeed) step = -maxSpeed;
 
                 currentTime += step;
                 
-                // Płynne zapętlanie
                 if (currentTime >= video.duration) {
                     currentTime %= video.duration;
-                    targetTime %= video.duration; // synchronizujemy też cel!
+                    targetTime %= video.duration; 
                 }
                 if (currentTime < 0) {
                     currentTime = video.duration + (currentTime % video.duration);
@@ -560,43 +552,35 @@
             if (!isDragging || isNaN(video.duration) || video.duration === 0) return;
             const deltaX = startX - x;
             startX = x; 
-            
-            // Czułość pociągnięcia - dopasowana do nowej masy
             targetTime += (deltaX * 0.004); 
         };
 
-
         const stopDrag = () => { isDragging = false; };
 
-        // Myszka (Komputer)
+        // Myszka
         container.addEventListener('mousedown', (e) => startDrag(e.clientX));
         window.addEventListener('mousemove', (e) => onDrag(e.clientX));
         window.addEventListener('mouseup', stopDrag);
         window.addEventListener('mouseleave', stopDrag);
 
-        // --- GESTY DOTYKOWE (Smartfony) ---
+        // Gesty
         let initialPinchDistance = null;
         let lastTap = 0;
         let isZoomed = false;
 
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
-                // 1 palec - start obrotu
                 startDrag(e.touches[0].clientX);
-                
-                // Wykrywanie podwójnego tapnięcia (Double Tap) dla ZOOMU
                 const currentTimeTap = new Date().getTime();
                 const tapLength = currentTimeTap - lastTap;
                 if (tapLength < 300 && tapLength > 0) {
                     isZoomed = !isZoomed;
                     video.style.transform = isZoomed ? 'scale(1.8)' : 'scale(1)';
                     video.style.transition = 'transform 0.3s ease-in-out';
-                    e.preventDefault(); // Blokujemy inne akcje
+                    e.preventDefault(); 
                 }
                 lastTap = currentTimeTap;
-                
             } else if (e.touches.length === 2) {
-                // 2 palce - start wykrywania zsuwania (Pinch)
                 isDragging = false; 
                 initialPinchDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
@@ -607,7 +591,7 @@
 
         window.addEventListener('touchmove', (e) => {
             if (e.touches.length === 1 && isDragging) {
-                e.preventDefault(); // Blokuje scrollowanie strony w dół
+                e.preventDefault(); 
                 onDrag(e.touches[0].clientX);
             } else if (e.touches.length === 2 && initialPinchDistance) {
                 e.preventDefault();
@@ -615,12 +599,9 @@
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                
-                // Pinch-to-close: Jeśli palce zsunęły się o 60 pikseli
                 if (initialPinchDistance - currentDistance > 60) {
                     close360Modal();
                     initialPinchDistance = null;
-                    // Resetujemy powiększenie po zamknięciu
                     isZoomed = false;
                     video.style.transform = 'scale(1)';
                 }
@@ -632,45 +613,6 @@
             initialPinchDistance = null;
         });
     });
-
-        // --- INTELIGENTNE WYKRYWANIE: TAP vs SWIPE W GŁÓWNEJ GALERII ---
-        const trigger360 = document.getElementById('trigger360');
-        if (trigger360) {
-            let isGallerySwipe = false;
-            let startTouchX = 0;
-            let startTouchY = 0;
-
-            // Obsługa myszki
-            trigger360.addEventListener('mousedown', (e) => {
-                isGallerySwipe = false;
-                startTouchX = e.clientX;
-            });
-            trigger360.addEventListener('mousemove', (e) => {
-                if (Math.abs(e.clientX - startTouchX) > 10) isGallerySwipe = true;
-            });
-            trigger360.addEventListener('mouseup', () => {
-                if (!isGallerySwipe) open360Modal();
-            });
-
-            // Obsługa palca (Smartfon)
-            trigger360.addEventListener('touchstart', (e) => {
-                isGallerySwipe = false;
-                startTouchX = e.touches[0].clientX;
-                startTouchY = e.touches[0].clientY;
-            }, { passive: true });
-
-            trigger360.addEventListener('touchmove', (e) => {
-                // Jeśli palec przesuwa się po ekranie, to znaczy że klient przegląda galerię
-                if (Math.abs(e.touches[0].clientX - startTouchX) > 10 || Math.abs(e.touches[0].clientY - startTouchY) > 10) {
-                    isGallerySwipe = true;
-                }
-            }, { passive: true });
-
-            trigger360.addEventListener('touchend', () => {
-                // Odpalamy widok 360 TYLKO jeśli to było celowe "puknięcie", a nie przesunięcie
-                if (!isGallerySwipe) open360Modal(); 
-            });
-        }
 </script>
 {% endif %}
 
