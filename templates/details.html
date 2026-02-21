@@ -48,12 +48,12 @@
             z-index: -1; will-change: transform;
         }
 
-        /* FIX IPHONE RETINA */
+        /* --- FIX IPHONE RETINA ORAZ RENDEROWANIE --- */
         .text-danger, .fw-bold, h5, h2, .fs-1 {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
-            transform: translateZ(0); 
+            transform: translateZ(0); /* Wymuszenie sprzętowej akceleracji dla ostrości fontów */
             backface-visibility: hidden;
         }
 
@@ -61,6 +61,7 @@
             image-rendering: -webkit-optimize-contrast;
             will-change: transform;
         }
+        /* --- KONIEC FIX IPHONE --- */
 
         .navbar { 
             background: rgba(0,0,0,0.85); 
@@ -161,16 +162,21 @@
     <div class="row g-5">
 
         <div class="col-lg-8">
+            
             <div class="mb-5 gallery-wrapper position-relative">
                 <div id="carCarousel" class="carousel slide" data-bs-touch="true" data-bs-interval="false">
+                    
                     <div class="carousel-indicators mb-0 pb-2">
                         {% set slide_idx = namespace(value=0) %}
+                        
                         {% if car.is_360_premium %}
                             <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="active"></button>
                             {% set slide_idx.value = slide_idx.value + 1 %}
                         {% endif %}
+                        
                         <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="{% if not car.is_360_premium %}active{% endif %}"></button>
                         {% set slide_idx.value = slide_idx.value + 1 %}
+                        
                         {% for img in car.images %}
                             {% if img.image_path != car.img %}
                                 <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}"></button>
@@ -180,6 +186,7 @@
                     </div>
 
                     <div class="carousel-inner" id="pswp-gallery">
+                        
                         {% if car.is_360_premium %}
                         <div class="carousel-item active" style="cursor: pointer;" onclick="open360Modal()">
                             <div class="position-absolute top-0 start-0 m-3 z-3">
@@ -190,6 +197,7 @@
                                     <i class="bi bi-hand-index me-2"></i> KLIKNIJ, ABY OBRACAĆ
                                 </span>
                             </div>
+                            
                             <video src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
                                    class="d-block w-100 gallery-img" style="object-fit: cover;"
                                    autoplay loop muted playsinline webkit-playsinline preload="auto"></video>
@@ -317,9 +325,11 @@
                     <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3 pulse-btn">
                         <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
                     </a>
+                    
                     <a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl" class="btn btn-danger btn-lg fw-bold rounded-pill shadow py-2">
                         <i class="bi bi-chat-text-fill me-2"></i> SMS
                     </a>
+
                     <button onclick="shareOffer()" class="btn btn-dark border-secondary btn-lg fw-bold rounded-pill shadow py-2 text-info">
                         <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
                     </button>
@@ -335,6 +345,7 @@
                                 </div>
                                 <h5 class="fw-bold text-white mb-1">{{ car.owner.company_name }}</h5>
                                 <span class="badge bg-warning text-dark small mb-2 fw-bold shadow-sm">KONTO FIRMOWE</span>
+                                
                                 <div class="small text-white-50 mb-3 lh-sm" style="font-size: 0.75rem;">
                                     {% if car.owner.nip %}<div class="mb-1 text-muted">NIP: {{ car.owner.nip }}</div>{% endif %}
                                     {% if car.owner.adres %}<div>{{ car.owner.adres }}</div>{% endif %}
@@ -347,6 +358,7 @@
                                 <span class="badge bg-secondary small mb-3 fw-bold">OSOBA PRYWATNA</span>
                             {% endif %}
                         </div>
+                        
                         <div class="d-flex justify-content-center gap-3 small text-white-50 mb-4 fw-bold">
                             <span>
                                 <i class="bi bi-geo-alt-fill text-danger"></i> {{ car.owner.lokalizacja or 'Radom' }}
@@ -378,8 +390,10 @@
                     <div class="col-6"><div class="spec-box"><i class="bi bi-speedometer2 d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.przebieg }} km</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-fuel-pump d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.paliwo }}</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-gear-wide d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.skrzynia or '-' }}</span></div></div>
+                    
                     <div class="col-6"><div class="spec-box"><i class="bi bi-lightning-charge-fill d-block text-warning mb-1 fs-5"></i><span class="small fw-bold">{{ car.moc or '-' }} KM</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-palette-fill d-block text-info mb-1 fs-5"></i><span class="small fw-bold">{{ car.kolor or '-' }}</span></div></div>
+                    
                     <div class="col-6"><div class="spec-box"><i class="bi bi-car-front d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.nadwozie or '-' }}</span></div></div>
                     <div class="col-6"><div class="spec-box"><i class="bi bi-hdd-network d-block text-danger mb-1 fs-5"></i><span class="small fw-bold">{{ car.pojemnosc or '-' }}</span></div></div>
                 </div>
@@ -416,6 +430,7 @@
         </div> 
     </div> 
 </div> 
+
 <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
     <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
         <span class="text-light small">🍪 Ta strona używa cookies.</span>
@@ -436,15 +451,15 @@
         <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
     </div>
 
-    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
         <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform;" 
+               style="width: 100%; max-height: 100vh; object-fit: contain;" 
                muted playsinline webkit-playsinline preload="auto"></video>
     </div>
 
     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
         <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
-            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ PALCEM W PRAWO LUB LEWO
         </span>
     </div>
 </div>
@@ -463,9 +478,14 @@
 <script>
     function shareOffer() {
         if (navigator.share) {
-            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
+            navigator.share({
+                title: '{{ car.marka }} {{ car.model }}',
+                text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}.',
+                url: window.location.href
+            }).catch(console.error);
         } else {
-            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
+            navigator.clipboard.writeText(window.location.href);
+            alert('Skopiowano link do ogłoszenia!');
         }
     }
     if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
@@ -483,62 +503,13 @@
         <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
     </div>
 
-    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize; position: relative;">
         
         <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform;" 
-               muted playsinline webkit-playsinline disablePictureInPicture preload="auto"></video>
-               
-    </div>
-
-    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
-        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
-            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
-        </span>
-    </div>
-</div>
-{% endif %}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script type="module">
-    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
-    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
-    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
-    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
-    lightbox.init();
-</script>
-
-<script>
-    function shareOffer() {
-        if (navigator.share) {
-            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
-        } else {
-            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
-        }
-    }
-    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
-    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
-</script>
-
-{% if car.is_360_premium %}
-<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    
-    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
-        <i class="bi bi-x-lg"></i>
-    </button>
-    
-    <div class="position-absolute top-0 start-0 m-3 z-3">
-        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
-    </div>
-
-    <div class="w-100 h-100 position-relative d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
+               style="opacity: 0.01; position: absolute; z-index: -1; width: 1px; height: 1px;" 
+               muted playsinline webkit-playsinline preload="auto"></video>
         
-        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="position: absolute; width: 10px; height: 10px; opacity: 0.01; pointer-events: none; z-index: -1;" 
-               muted playsinline webkit-playsinline disablePictureInPicture preload="auto"></video>
-        
-        <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; z-index: 5; transform-origin: center center; will-change: transform;"></canvas>
+        <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform;"></canvas>
         
     </div>
 
@@ -563,9 +534,14 @@
 <script>
     function shareOffer() {
         if (navigator.share) {
-            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
+            navigator.share({
+                title: '{{ car.marka }} {{ car.model }}',
+                text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}.',
+                url: window.location.href
+            }).catch(console.error);
         } else {
-            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
+            navigator.clipboard.writeText(window.location.href);
+            alert('Skopiowano link do ogłoszenia!');
         }
     }
     if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
@@ -576,18 +552,12 @@
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
-        const video = document.getElementById('scrubVideo');
+        const scrubVideo = document.getElementById('scrubVideo');
         modal.classList.remove('d-none');
         document.body.style.overflow = 'hidden'; 
         
-        if(video) {
-            // Budzimy sprzętowy dekoder, żeby obraz na Canvasie nie "zamarzł" na S24/iPhone
-            let playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => { video.pause(); video.currentTime = 0; }).catch(() => {});
-            } else {
-                video.currentTime = 0;
-            }
+        if(scrubVideo.readyState >= 1) {
+            scrubVideo.currentTime = 0; 
         }
     }
 
@@ -605,12 +575,14 @@
 
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
+        // Ustawienie rozdzielczości płótna po załadowaniu wideo
         video.addEventListener('loadedmetadata', () => { 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
+            video.currentTime = 0.01; 
         });
 
-        // 1. PĘTLA RYSOWANIA CANVAS (Gwarantuje idealną płynność obrotu bez przeskakiwania)
+        // Ciągłe przerzucanie klatek wideo na Canvas
         function drawToCanvas() {
             if (video.readyState >= 2) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -622,50 +594,55 @@
         let isDragging = false;
         let lastX = 0;
         let velocity = 0;
-        let virtualTime = 0;
+        let currentTime = 0;
+        let lastSetTime = -1;
 
+        // Zmienne do Zoomu i Panoramy
         let targetScale = 1, currentScale = 1;
         let panX = 0, panY = 0, targetPanX = 0, targetPanY = 0;
         let lastPanX = 0, lastPanY = 0;
         let initialPinchDistance = null;
         let startScale = 1;
 
-        // 2. PĘTLA FIZYKI (Oblicza Momentum i Zoom)
         function animatePhysics() {
-            // Fizyka obrotu auta "jak po maśle"
+            // FIZYKA OBROTU I BEZWŁADNOŚCI
             if (!isNaN(video.duration) && video.duration > 0) {
                 if (!isDragging) { velocity *= 0.88; } 
 
-                if (velocity > 0.08) velocity = 0.08;
-                if (velocity < -0.08) velocity = -0.08;
+                const maxSpeed = 0.08; 
+                if (velocity > maxSpeed) velocity = maxSpeed;
+                if (velocity < -maxSpeed) velocity = -maxSpeed;
 
                 if (Math.abs(velocity) > 0.0005) {
-                    virtualTime += velocity;
-                    if (virtualTime >= video.duration) virtualTime -= video.duration;
-                    if (virtualTime < 0) virtualTime += video.duration;
+                    currentTime += velocity;
                     
-                    video.currentTime = virtualTime;
+                    if (currentTime >= video.duration) currentTime -= video.duration;
+                    if (currentTime < 0) currentTime += video.duration;
+                    
+                    // Ograniczenie odpytywania dekodera, zapobiega zacinaniu się MP4 w tył
+                    if (Math.abs(lastSetTime - currentTime) > 0.04) {
+                        video.currentTime = currentTime;
+                        lastSetTime = currentTime;
+                    }
                 } else {
                     velocity = 0;
                 }
             }
 
-            // Fizyka płynnego zoomu CSS na płótnie Canvas
+            // FIZYKA ZOOMA I PRZESUWANIA (ZOOM TERAZ NAKŁADANY NA CANVAS)
             currentScale += (targetScale - currentScale) * 0.15;
             panX += (targetPanX - panX) * 0.15;
             panY += (targetPanY - panY) * 0.15;
 
-            let maxPanX = (currentScale - 1) * (window.innerWidth / 2); 
-            let maxPanY = (currentScale - 1) * (window.innerHeight / 2); 
-            if (targetPanX > maxPanX) targetPanX = maxPanX;
-            if (targetPanX < -maxPanX) targetPanX = -maxPanX;
-            if (targetPanY > maxPanY) targetPanY = maxPanY;
-            if (targetPanY < -maxPanY) targetPanY = -maxPanY;
+            // Limity przesuwania po przybliżeniu
+            let maxPan = (currentScale - 1) * (window.innerWidth / 2); 
+            if (targetPanX > maxPan) targetPanX = maxPan;
+            if (targetPanX < -maxPan) targetPanX = -maxPan;
+            if (targetPanY > maxPan) targetPanY = maxPan;
+            if (targetPanY < -maxPan) targetPanY = -maxPan;
 
-            // NAKŁADAMY ZOOM BEZPOŚREDNIO NA CANVAS!
-            const transformStr = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
-            canvas.style.transform = transformStr;
-            canvas.style.webkitTransform = transformStr;
+            // CSS Transform narzucony na Canvas!
+            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
 
             requestAnimationFrame(animatePhysics);
         }
@@ -678,8 +655,10 @@
         const moveInteraction = (x, y) => {
             if (!isDragging) return;
             if (targetScale <= 1.05) {
+                // Skala 1:1 -> Obrót auta
                 const deltaX = lastX - x; lastX = x; velocity = deltaX * 0.002; 
             } else {
+                // Przybliżone -> Przesuwanie kamery po detalu
                 targetPanX += (x - lastPanX) * 1.5; targetPanY += (y - lastPanY) * 1.5;
                 lastPanX = x; lastPanY = y;
             }
@@ -687,24 +666,15 @@
 
         const endInteraction = () => { isDragging = false; };
 
-        // --- OBSŁUGA GESTÓW DOTYKOWYCH NA KONTENERZE ---
-        container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            targetScale -= e.deltaY * 0.005;
-            if (targetScale < 1) { targetScale = 1; targetPanX = 0; targetPanY = 0; }
-            if (targetScale > 4) targetScale = 4;
-        }, { passive: false });
-
+        // Mysz
         container.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
         window.addEventListener('mousemove', (e) => { if(isDragging) moveInteraction(e.clientX, e.clientY); });
         window.addEventListener('mouseup', endInteraction);
         window.addEventListener('mouseleave', endInteraction);
 
+        // Dotyk
         let lastTap = 0;
         container.addEventListener('touchstart', (e) => {
-            // TO BLOKUJE PAUZĘ I "ZWARIOWANIE" EKRANU
-            e.preventDefault(); 
-            
             if (e.touches.length === 1) {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
                 
@@ -712,6 +682,7 @@
                 if (currentTimeTap - lastTap < 300 && currentTimeTap - lastTap > 0) {
                     targetScale = targetScale > 1.5 ? 1 : 2.5; 
                     if (targetScale === 1) { targetPanX = 0; targetPanY = 0; }
+                    e.preventDefault(); 
                 }
                 lastTap = currentTimeTap;
             } else if (e.touches.length === 2) {
@@ -721,12 +692,11 @@
             }
         }, { passive: false });
 
-        container.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
-            
+        window.addEventListener('touchmove', (e) => {
             if (e.touches.length === 1 && isDragging) {
-                moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
+                e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
             } else if (e.touches.length === 2 && initialPinchDistance) {
+                e.preventDefault();
                 let currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 let scaleMultiplier = currentDistance / initialPinchDistance;
                 targetScale = startScale * scaleMultiplier;
@@ -736,17 +706,11 @@
             }
         }, { passive: false });
         
-        container.addEventListener('touchend', (e) => { 
-            e.preventDefault(); 
-            endInteraction(); 
-            if (e.touches.length < 2) initialPinchDistance = null; 
-        }, { passive: false });
+        window.addEventListener('touchend', (e) => { endInteraction(); if (e.touches.length < 2) initialPinchDistance = null; });
     });
 </script>
 {% endif %}
 
 </body>
 </html>
-
-
 
