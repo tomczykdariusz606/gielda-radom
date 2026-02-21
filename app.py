@@ -70,10 +70,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # --- KONFIGURACJA UPLOADU ---
 UPLOAD_FOLDER = 'static/uploads'
 RENDERS_360_FOLDER = os.path.join(UPLOAD_FOLDER, '360_renders')
+VIDEOS_360_FOLDER = os.path.join(UPLOAD_FOLDER, '360_videos') # NOWY FOLDER NA MP4
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+if not os.path.exists(VIDEOS_360_FOLDER):
+    os.makedirs(VIDEOS_360_FOLDER)
+
 
 # --- KONFIGURACJA MAILA (O2.PL) ---
 app.config['MAIL_SERVER'] = 'poczta.o2.pl'
@@ -309,56 +313,7 @@ def load_user(user_id):
 
 # --- FUNKCJE POMOCNICZE ---
 
-def stabilize_360_images_premium(car_id):
-    car = Car.query.get(car_id)
-    # 1. Sprawdzamy czy auto istnieje, czy model AI jest gotowy i czy są min. 6 zdjęć
-    if not car or not model_ai or len(car.images) < 6:
-        return False
 
-    # 2. BEZPIECZNA ŚCIEŻKA: Wpisana na sztywno, żeby nie było błędu 500
-    car_render_dir = os.path.join('static', 'uploads', '360_renders', str(car_id))
-    
-    # Bezpieczne tworzenie folderu (jeśli istnieje, po prostu nadpisze zdjęcia)
-    os.makedirs(car_render_dir, exist_ok=True)
-
-    frames = car.images[:12] # Analizujemy do 12 klatek
-    
-    # 3. Analiza AI
-    images_for_ai = []
-    for f in frames:
-        p = f.image_path.replace('/static/', 'static/')
-        if os.path.exists(p):
-            images_for_ai.append(Image.open(p))
-
-    prompt = "Przeanalizuj te zdjęcia auta. Podaj współrzędne środka geometrycznego pojazdu dla idealnej rotacji 360."
-    
-    try:
-        model_ai.generate_content([prompt] + images_for_ai)
-    except Exception as e:
-        print(f"AI Error: {e}")
-
-    # 4. Przetwarzanie i zapis klatek
-    for idx, img_obj in enumerate(frames):
-        path = img_obj.image_path.replace('/static/', 'static/')
-        try:
-            with Image.open(path) as img:
-                img = img.convert("RGB")
-                w, h = img.size
-                target_w = h * (4/3)
-                left = (w - target_w) / 2
-                
-                processed = img.crop((left, 0, w - left, h)).resize((1200, 900), Image.Resampling.LANCZOS)
-                
-                save_path = os.path.join(car_render_dir, f"frame_{idx}.webp")
-                processed.save(save_path, "WEBP", quality=90)
-        except Exception as e:
-            print(f"Błąd przetwarzania klatki {idx}: {e}")
-            continue
-
-    # 5. Oznaczamy w bazie nową flagą (nie ruszamy daty wyceny!)
-    car.is_360_premium = True
-    db.session.commit()
-    return True
 
 
 
@@ -513,23 +468,24 @@ def google_callback():
 @app.route('/generate_360/<int:car_id>')
 @login_required
 def generate_360_trigger(car_id):
-    # Zabezpieczenie: Tylko Ty jako Admin masz do tego dostęp
+    # Zabezpieczenie: Tylko Admin
     if current_user.username != 'admin' and current_user.id != 1:
         abort(403)
 
-    # Pobieramy ogłoszenie z bazy
     car = Car.query.get_or_404(car_id)
-
-    # Uruchamiamy Twoją funkcję stabilizacji AI
-    if stabilize_360_images_premium(car.id):
-        # Oznaczamy w bazie, że status 360 jest gotowy (używając dedykowanej kolumny)
+    
+    # Tworzymy ścieżkę do pliku MP4 z numerem ID auta
+    video_filename = f"{car.id}.mp4"
+    video_path = os.path.join(app.root_path, 'static', 'uploads', '360_videos', video_filename)
+    
+    # Zamiast odpalać skrypty, serwer po prostu patrzy, czy wgrałeś przez FTP plik wideo
+    if os.path.exists(video_path):
         car.is_360_premium = True
         db.session.commit()
-        flash(f"Sukces! Widok 360° dla {car.marka} został wygenerowany.", "success")
+        flash(f"Aktywowano! Wideo 360° dla {car.marka} jest już podpięte pod ogłoszenie.", "success")
     else:
-        flash("Błąd: Za mało zdjęć (wymagane min. 6) lub problem z modelem AI.", "danger")
+        flash(f"Brak pliku! Wgraj najpierw plik o nazwie {video_filename} do folderu static/uploads/360_videos/", "danger")
 
-    # Powrót do profilu (garażu) po zakończeniu pracy AI
     return redirect(url_for('profil'))
 
 
