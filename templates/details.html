@@ -483,7 +483,7 @@
         document.body.style.overflow = ''; // Przywraca scroll
     }
 
-    // LOGIKA PRZESUWANIA (SCRUBBING)
+        // LOGIKA PRZESUWANIA, ZOOMU I GESTÓW PREMIUM
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('scrubContainer');
         const video = document.getElementById('scrubVideo');
@@ -493,44 +493,110 @@
 
         let isDragging = false;
         let startX = 0;
-        let startCurrentTime = 0;
+        
+        // Zmienne do płynności (Masło)
+        let targetTime = 0;
+        let currentTime = 0;
+
+        // Pętla animacji nadająca "poślizg" i płynność (Lerp)
+        function animate() {
+            if (!isNaN(video.duration) && video.duration > 0) {
+                // 0.15 to siła poślizgu. Mniejsze = bardziej miękkie, Większe = sztywniejsze
+                currentTime += (targetTime - currentTime) * 0.15;
+                
+                // Zapętlanie wartości
+                if (currentTime >= video.duration) currentTime %= video.duration;
+                if (currentTime < 0) currentTime = video.duration + (currentTime % video.duration);
+                
+                // Aktualizujemy wideo tylko jeśli zmiana jest zauważalna
+                if (Math.abs(video.currentTime - currentTime) > 0.01) {
+                    video.currentTime = currentTime;
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate); // Uruchomienie pętli
 
         const startDrag = (x) => {
             isDragging = true;
             startX = x;
-            startCurrentTime = video.currentTime;
-            video.pause();
+            targetTime = currentTime; // Zaczynamy od obecnego punktu
         };
 
         const onDrag = (x) => {
             if (!isDragging || isNaN(video.duration) || video.duration === 0) return;
             const deltaX = startX - x;
+            startX = x; // Resetujemy startX przy każdym ruchu palca
             
-            // Czułość: zmniejsz 0.015 jeśli auto kręci się za szybko, zwiększ jeśli za wolno
-            let newTime = startCurrentTime + (deltaX * 0.015); 
-            
-            // Płynne zapętlanie
-            if (newTime >= video.duration) newTime = newTime % video.duration;
-            if (newTime < 0) newTime = video.duration + (newTime % video.duration);
-            
-            video.currentTime = newTime;
+            // CZUŁOŚĆ OBROTU: Zmniejszona z 0.015 na 0.004 (auto jest "cięższe")
+            targetTime += (deltaX * 0.004); 
         };
 
         const stopDrag = () => { isDragging = false; };
 
-        // Myszka
+        // Myszka (Komputer)
         container.addEventListener('mousedown', (e) => startDrag(e.clientX));
         window.addEventListener('mousemove', (e) => onDrag(e.clientX));
         window.addEventListener('mouseup', stopDrag);
         window.addEventListener('mouseleave', stopDrag);
 
-        // Dotyk
-        container.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX));
+        // --- GESTY DOTYKOWE (Smartfony) ---
+        let initialPinchDistance = null;
+        let lastTap = 0;
+        let isZoomed = false;
+
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                // 1 palec - start obrotu
+                startDrag(e.touches[0].clientX);
+                
+                // Wykrywanie podwójnego tapnięcia (Double Tap) dla ZOOMU
+                const currentTimeTap = new Date().getTime();
+                const tapLength = currentTimeTap - lastTap;
+                if (tapLength < 300 && tapLength > 0) {
+                    isZoomed = !isZoomed;
+                    video.style.transform = isZoomed ? 'scale(1.8)' : 'scale(1)';
+                    video.style.transition = 'transform 0.3s ease-in-out';
+                    e.preventDefault(); // Blokujemy inne akcje
+                }
+                lastTap = currentTimeTap;
+                
+            } else if (e.touches.length === 2) {
+                // 2 palce - start wykrywania zsuwania (Pinch)
+                isDragging = false; 
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }
+        });
+
         window.addEventListener('touchmove', (e) => {
-            if (isDragging) e.preventDefault(); 
-            onDrag(e.touches[0].clientX);
+            if (e.touches.length === 1 && isDragging) {
+                e.preventDefault(); // Blokuje scrollowanie strony w dół
+                onDrag(e.touches[0].clientX);
+            } else if (e.touches.length === 2 && initialPinchDistance) {
+                e.preventDefault();
+                let currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                // Pinch-to-close: Jeśli palce zsunęły się o 60 pikseli
+                if (initialPinchDistance - currentDistance > 60) {
+                    close360Modal();
+                    initialPinchDistance = null;
+                    // Resetujemy powiększenie po zamknięciu
+                    isZoomed = false;
+                    video.style.transform = 'scale(1)';
+                }
+            }
         }, { passive: false });
-        window.addEventListener('touchend', stopDrag);
+        
+        window.addEventListener('touchend', () => {
+            stopDrag();
+            initialPinchDistance = null;
+        });
     });
 </script>
 {% endif %}
