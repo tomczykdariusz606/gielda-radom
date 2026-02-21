@@ -12,14 +12,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <title>Giełda Radom - Auta z Weryfikacją AI | Busy, Rowery, Części</title>
-    <meta name="description" content="Najnowocześniejsza giełda w Radomiu (26-600). Darmowe ogłoszenia: auta, busy, rowery. Jedyna platforma z analizą ekspercką Google Gemini 3.0.">
-    <meta name="keywords" content="giełda samochodowa radom, busy radom, rowery radom, tanie auta mazowieckie, sprzedaż samochodów radom, czerwiec 76 radom, ogłoszenia radom, wycena AI">
+    <title>Giełda Radom | Prawdziwe 360° z Twoich zdjęć dzięki Gemini AI</title>
+    <meta name="description" content="Żadnej ściemy! Giełda Radom jako pierwsza w Polsce używa Gemini AI, by z kilku zdjęć Twojego auta stworzyć kinowy obrót 360°. Wystaw za darmo i wygraj pakiet Premium!">
+    <meta name="keywords" content="giełda samochodowa radom, auta 360, wycena AI gemini, sprzedaż samochodów radom, darmowe ogłoszenia motoryzacyjne, wideo 360 z auta">
     <link rel="canonical" href="https://gieldaradom.pl/">
     <meta name="author" content="Giełda Radom AI Team">
 
-    <meta property="og:title" content="Giełda Radom - Rewolucja AI w Handlu Autami">
-    <meta property="og:description" content="Sprzedajesz? Zrób zdjęcie, a AI napisze opis i wyceni auto! Kupujesz? Zobacz raport ekspercki Gemini.">
+    <meta property="og:title" content="Twoje Prawdziwe Auto w 360° dzięki sztucznej inteligencji!">
+    <meta property="og:description" content="Jako jedyni w Polsce używamy AI do generowania interaktywnych widoków 360 z kilku prawdziwych zdjęć. Sprawdź rewolucję na Giełdzie Radom!">
     <meta property="og:image" content="{{ url_for('static', filename='radom_hero.png') }}">
     <meta property="og:url" content="https://gieldaradom.pl/">
     <meta property="og:type" content="website">
@@ -33,6 +33,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #0f0f0f; }
@@ -54,7 +55,7 @@
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); padding-top: max(10px, env(safe-area-inset-top)); }
 
         /* HERO & AI BANNER */
-        .hero-wrap { padding: 40px 0 40px 0; }
+        .hero-wrap { padding: 30px 0 40px 0; }
         .ai-hero-banner {
             background: rgba(20, 20, 20, 0.8);
             border-radius: 30px;
@@ -80,6 +81,131 @@
             transition: 0.3s;
         }
         .game-changer-box:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(206, 43, 55, 0.4); }
+
+        /* NOWY STYL EFEKTU SZKŁA DLA BANERA */
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.65) !important;
+            backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 16px;
+        }
+
+        /* WYSZUKIWARKA */
+        .search-pill-container {
+            background: white; border-radius: 50px; padding: 5px;
+            display: flex; align-items: center; max-width: 700px; margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); position: relative; z-index: 10;
+        }
+        .search-input { border: none; background: transparent; height: 55px; width: 100%; padding-left: 20px; font-size: 1.1rem; color: #333; outline: none; }
+        .btn-filters-icon { border: none; background: #f0f0f0; color: #555; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 5px; cursor: pointer; transition: 0.2s; }
+        .btn-filters-icon:hover { background: #e0e0e0; color: var(--radom-red); }
+        .btn-search-pill { background: var(--radom-red); color: white; border: none; padding: 0 40px; height: 50px; border-radius: 40px; font-weight: bold; font-size: 1.1rem; transition: 0.2s; }
+        .btn-search-pill:hover { background: #b01b25; transform: scale(1.05); }
+
+        .advanced-filters { margin-top: 15px; background: rgba(15, 15, 15, 0.95); border-radius: 15px; padding: 20px; max-width: 700px; margin-left: auto; margin-right: auto; text-align: left; border: 1px solid #333; backdrop-filter: blur(10px); }
+        
+        /* --- NOWE STYLE DLA CUSTOM LIST (ZAMIAST SELECT) --- */
+        .custom-dropdown-btn {
+            background-color: #222; border: 1px solid #444; color: #eee;
+            width: 100%; padding: 7px 12px; border-radius: 8px; text-align: left;
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; transition: 0.2s;
+        }
+        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] { background-color: #000; border-color: var(--radom-red); color: white; }
+        .dropdown-menu-dark { background-color: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.9); border-radius: 10px; max-height: 250px; overflow-y: auto; }
+        .dropdown-item { color: #ccc; padding: 8px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .dropdown-item:hover, .dropdown-item:focus { background-color: var(--radom-red); color: white; }
+        
+        .form-control-dark { background: #222; border: 1px solid #444; color: white; border-radius: 8px; font-size: 0.9rem; }
+        .form-control-dark:focus { border-color: var(--radom-red); box-shadow: none; background: #1a1a1a; color: white; }
+
+        /* KARTY SAMOCHODÓW */
+        .car-card { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
+            <img src="{{ url_for('static', filename='watermark.png') }}" alt="G" style="height: 40px; width: auto; margin-right: 10px;">
+            <span style="font-family: 'Anton', sans-serif; letter-spacing: 1px; font-size: 1.2rem;">GIEŁDA <span class="text-danger">RADOM</span></span>
+        </a>
+        <div class="d-flex gap-2">
+            {% if current_user.is_authenticated %}
+                <a href="/profil" class="btn btn-dark border-secondary btn-sm fw-bold"><i class="bi bi-person-fill"></i> {{ t.account }}</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold"><i class="bi bi-box-arrow-right"></i></a>
+            {% else %}
+                <a href="/login" class="btn btn-outline-light btn-sm fw-bold">{{ t.login }}</a>
+            {% endif %}
+            <a href="/dodaj" class="btn btn-danger btn-sm fw-bold shadow"><i class="bi bi-plus-circle me-1"></i> {{ t.add }}</a>
+        </div>
+    </div>
+</nav>
+
+<div class="hero-wrap text-center">
+    <div class="container mb-5">
+        
+        <div class="card glass-panel border-info border-opacity-25 shadow-lg overflow-hidden text-start mb-5" style="position: relative;">
+            <div style="height: 4px; background: linear-gradient(90deg, #198754, #0dcaf0, #ce2b37);"></div>
+            <div class="card-body p-4 p-md-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-8 mb-4 mb-lg-0">
+                        <span class="badge bg-danger mb-3 px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.8rem; letter-spacing: 1px;">
+                            <i class="bi bi-stars"></i> NOWOŚĆ W POLSCE
+                        </span>
+                        <h2 class="fw-bold text-white mb-3" style="font-family: 'Anton', sans-serif; letter-spacing: 1px; font-size: 2rem;">
+                            PIERWSZA GIEŁDA NAPĘDZANA PRZEZ <span class="text-info">GEMINI AI</span>
+                        </h2>
+                        <p class="text-white-50 fs-5 mb-4">
+                            Żadnej ściemy. Nasza sztuczna inteligencja odwala najcięższą pracę za Ciebie.
+                        </p>
+                        
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-camera-fill fs-2 text-success me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-white mb-1">Skanuj i Wystaw</h6>
+                                        <p class="small text-muted mb-0">Dodaj zdjęcie, a AI w 3 sekundy rozpozna auto i wypełni parametry.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-cpu-fill fs-2 text-warning me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-white mb-1">Ekspert & Wycena</h6>
+                                        <p class="small text-muted mb-0">Analiza kondycji lakieru ze zdjęcia, ocena ceny rynkowej i opis w locie.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-view-360 fs-2 text-info me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-white mb-1">Prawdziwe 360°</h6>
+                                        <p class="small text-muted mb-0">Interaktywny obrót generowany z kilku prawdziwych zdjęć. Bez utraty detali!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 text-center border-start border-secondary border-opacity-25 ps-lg-4 mt-4 mt-lg-0">
+                        <div class="bg-black bg-opacity-50 p-4 rounded-4 border border-secondary border-opacity-25 shadow">
+                            <h5 class="fw-bold text-white mb-2">Zgarnij Pakiet 360°</h5>
+                            <p class="small text-white-50 mb-4">Wystaw auto i sprawdź innowację. Codziennie losowo dodajemy wideo 360° do nowych ogłoszeń <strong>ZA DARMO</strong>!</p>
+                            <a href="/dodaj" class="btn btn-info btn-lg fw-bold rounded-pill shadow-lg w-100 text-dark">
+                                <i class="bi bi-plus-circle-fill me-2"></i> WYSTAW ZA DARMO
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ```
+
+Wklej to podmieniając od `<!DOCTYPE html>` w dół i ciesz się efektem!
 
         /* WYSZUKIWARKA */
         .search-pill-container {
