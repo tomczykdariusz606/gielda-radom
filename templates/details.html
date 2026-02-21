@@ -498,39 +498,62 @@
         let targetTime = 0;
         let currentTime = 0;
 
-        // Pętla animacji nadająca "poślizg" i płynność (Lerp)
+                // Pętla animacji - "Ciężka Maszyna"
         function animate() {
             if (!isNaN(video.duration) && video.duration > 0) {
-                // 0.15 to siła poślizgu. Mniejsze = bardziej miękkie, Większe = sztywniejsze
-                currentTime += (targetTime - currentTime) * 0.15;
                 
-                // Zapętlanie wartości
-                if (currentTime >= video.duration) currentTime %= video.duration;
-                if (currentTime < 0) currentTime = video.duration + (currentTime % video.duration);
+                // Obliczamy dystans między palcem a aktualną klatką
+                let diff = targetTime - currentTime;
                 
-                // Aktualizujemy wideo tylko jeśli zmiana jest zauważalna
+                // 1. Zabezpieczenie przed "nakręcaniem sprężyny" 
+                // Jeśli użytkownik pociągnie za daleko, ucinamy dystans
+                if (diff > 1.5) { targetTime = currentTime + 1.5; diff = 1.5; }
+                if (diff < -1.5) { targetTime = currentTime - 1.5; diff = -1.5; }
+
+                // 2. Bezwładność (zmniejszono z 0.15 na 0.08) - auto reaguje ciężej
+                let step = diff * 0.08; 
+                
+                // 3. TWARDY OGRANICZNIK PRĘDKOŚCI (MAX SPEED)
+                // To nie pozwala autu kręcić się szybciej niż założona prędkość
+                const maxSpeed = 0.035; 
+                if (step > maxSpeed) step = maxSpeed;
+                if (step < -maxSpeed) step = -maxSpeed;
+
+                currentTime += step;
+                
+                // Płynne zapętlanie
+                if (currentTime >= video.duration) {
+                    currentTime %= video.duration;
+                    targetTime %= video.duration; // synchronizujemy też cel!
+                }
+                if (currentTime < 0) {
+                    currentTime = video.duration + (currentTime % video.duration);
+                    targetTime = video.duration + (targetTime % video.duration);
+                }
+                
                 if (Math.abs(video.currentTime - currentTime) > 0.01) {
                     video.currentTime = currentTime;
                 }
             }
             requestAnimationFrame(animate);
         }
-        requestAnimationFrame(animate); // Uruchomienie pętli
+        requestAnimationFrame(animate); 
 
         const startDrag = (x) => {
             isDragging = true;
             startX = x;
-            targetTime = currentTime; // Zaczynamy od obecnego punktu
+            targetTime = currentTime; 
         };
 
         const onDrag = (x) => {
             if (!isDragging || isNaN(video.duration) || video.duration === 0) return;
             const deltaX = startX - x;
-            startX = x; // Resetujemy startX przy każdym ruchu palca
+            startX = x; 
             
-            // CZUŁOŚĆ OBROTU: Zmniejszona z 0.015 na 0.004 (auto jest "cięższe")
+            // Czułość pociągnięcia - dopasowana do nowej masy
             targetTime += (deltaX * 0.004); 
         };
+
 
         const stopDrag = () => { isDragging = false; };
 
