@@ -524,6 +524,55 @@
 </script>
 
 {% if car.is_360_premium %}
+<video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
+       style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;" 
+       muted playsinline webkit-playsinline preload="auto"></video>
+
+<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    
+    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="position-absolute top-0 start-0 m-3 z-3">
+        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
+    </div>
+
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize; position: relative;">
+        <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform;"></canvas>
+    </div>
+
+    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
+        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
+        </span>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
+    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
+    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
+    lightbox.init();
+</script>
+
+<script>
+    function shareOffer() {
+        if (navigator.share) {
+            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
+        }
+    }
+    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
+    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+</script>
+
+{% if car.is_360_premium %}
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
@@ -547,14 +596,15 @@
 
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
+        // Dodatkowa blokada systemowego odtwarzania
         video.addEventListener('play', (e) => { e.preventDefault(); video.pause(); });
+        
         video.addEventListener('loadedmetadata', () => { 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             video.currentTime = 0.01; 
         });
 
-        // Klatkowanie z wideo na Canvas
         function drawToCanvas() {
             if (video.readyState >= 2) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -569,7 +619,6 @@
         let currentTime = 0;
         let lastSetTime = -1;
 
-        // Parametry Zooma
         let targetScale = 1, currentScale = 1;
         let panX = 0, panY = 0, targetPanX = 0, targetPanY = 0;
         let lastPanX = 0, lastPanY = 0;
@@ -577,7 +626,6 @@
         let startScale = 1;
 
         function animatePhysics() {
-            // Fizyka Obracania Autem
             if (!isNaN(video.duration) && video.duration > 0) {
                 if (!isDragging) velocity *= 0.85; 
 
@@ -598,7 +646,7 @@
                 }
             }
 
-            // Fizyka gładkiego powiększania (Interpolacja CSS)
+            // Płynna interpolacja z wymuszoną akceleracją 3D dla Apple
             currentScale += (targetScale - currentScale) * 0.2;
             panX += (targetPanX - panX) * 0.2;
             panY += (targetPanY - panY) * 0.2;
@@ -610,7 +658,10 @@
             if (targetPanY > maxPanY) targetPanY = maxPanY;
             if (targetPanY < -maxPanY) targetPanY = -maxPanY;
 
-            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+            // Wymuszenie na iOS odrysowania zooma
+            const transformString = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
+            canvas.style.transform = transformString;
+            canvas.style.webkitTransform = transformString;
 
             requestAnimationFrame(animatePhysics);
         }
@@ -632,38 +683,35 @@
 
         const endInteraction = () => { isDragging = false; };
 
-        // --- OBSŁUGA KÓŁKA MYSZY (Płynny Zoom na komputerze) ---
+        // MYSZ I SCROLL (PC)
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
-            const zoomSensitivity = 0.005;
-            targetScale -= e.deltaY * zoomSensitivity;
+            targetScale -= e.deltaY * 0.005;
             if (targetScale < 1) { targetScale = 1; targetPanX = 0; targetPanY = 0; }
             if (targetScale > 4) targetScale = 4;
         }, { passive: false });
 
-        // --- OBSŁUGA MYSZY ---
         container.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
         window.addEventListener('mousemove', (e) => { if(isDragging) moveInteraction(e.clientX, e.clientY); });
         window.addEventListener('mouseup', endInteraction);
         window.addEventListener('mouseleave', endInteraction);
 
-        // --- OBSŁUGA DOTYKU (Naprawiony Pinch-to-Zoom pod iPhone) ---
+        // DOTYK I ZOOM (SMARTFON)
         let lastTap = 0;
         container.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Twarda blokada! Przeglądarka nic nie zrobi domyślnie.
+            
             if (e.touches.length === 1) {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
                 
-                // Double Tap Zoom
                 const currentTimeTap = new Date().getTime();
                 if (currentTimeTap - lastTap < 300 && currentTimeTap - lastTap > 0) {
-                    e.preventDefault(); // Blokada przed kliknięciem w tło na iOS
+                    // Double Tap Zoom - bez ryzyka pauzy!
                     targetScale = targetScale > 1.5 ? 1 : 2.5; 
                     if (targetScale === 1) { targetPanX = 0; targetPanY = 0; }
                 }
                 lastTap = currentTimeTap;
             } else if (e.touches.length === 2) {
-                // TWARDA BLOKADA na starcie dwupalcowego gestu
-                e.preventDefault(); 
                 isDragging = false; 
                 initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 startScale = targetScale;
@@ -671,8 +719,7 @@
         }, { passive: false });
 
         container.addEventListener('touchmove', (e) => {
-            // TWARDA BLOKADA scrollowania strony przez Safari
-            e.preventDefault(); 
+            e.preventDefault(); // Blokada przewijania strony
             
             if (e.touches.length === 1 && isDragging) {
                 moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
@@ -686,13 +733,15 @@
             }
         }, { passive: false });
         
-        window.addEventListener('touchend', (e) => { 
+        container.addEventListener('touchend', (e) => { 
+            e.preventDefault(); 
             endInteraction(); 
             if (e.touches.length < 2) initialPinchDistance = null; 
-        });
+        }, { passive: false });
     });
 </script>
 {% endif %}
 
 </body>
 </html>
+
