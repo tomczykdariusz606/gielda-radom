@@ -624,6 +624,58 @@
 </script>
 
 {% if car.is_360_premium %}
+<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    
+    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8); z-index: 1050;">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="position-absolute top-0 start-0 m-3" style="z-index: 1050;">
+        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
+    </div>
+
+    <div class="w-100 h-100 position-relative overflow-hidden" id="scrubContainer" style="touch-action: none;">
+        
+        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
+               style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;" 
+               muted playsinline webkit-playsinline preload="auto"></video>
+        
+        <canvas id="scrubCanvas" style="width: 100%; height: 100%; object-fit: contain; transform-origin: center center; will-change: transform;"></canvas>
+        
+        <div id="touchShield" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: ew-resize;"></div>
+    </div>
+
+    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none" style="z-index: 1050;">
+        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
+        </span>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
+    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
+    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
+    lightbox.init();
+</script>
+
+<script>
+    function shareOffer() {
+        if (navigator.share) {
+            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
+        }
+    }
+    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
+    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+</script>
+
+{% if car.is_360_premium %}
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
@@ -632,18 +684,11 @@
         document.body.style.overflow = 'hidden'; 
         
         if(video) {
-            // FIX IPHONE: Zmuszamy dekoder do startu ukrytym Play -> Pause
+            // FIX IPHONE: Rozbudzamy dekoder sprzętowy Apple
             let playPromise = video.play();
             if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    video.pause();
-                    video.currentTime = 0;
-                }).catch(error => {
-                    video.currentTime = 0;
-                });
-            } else {
-                video.currentTime = 0;
-            }
+                playPromise.then(() => { video.pause(); video.currentTime = 0; }).catch(() => { video.currentTime = 0; });
+            } else { video.currentTime = 0; }
         }
     }
 
@@ -654,10 +699,27 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Wszystkie listenery dodajemy do TARCZY (touchShield), a nie do wideo!
         const shield = document.getElementById('touchShield');
         const video = document.getElementById('scrubVideo');
-        if (!shield || !video) return;
+        const canvas = document.getElementById('scrubCanvas');
+        if (!shield || !video || !canvas) return;
+
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        video.addEventListener('loadedmetadata', () => { 
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            video.currentTime = 0.01; 
+        });
+
+        // WYMUSZONE PRZERYSTOWYWANIE (Odblokowuje płynność na Androidzie)
+        function drawToCanvas() {
+            if (video.readyState >= 2) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+            requestAnimationFrame(drawToCanvas);
+        }
+        drawToCanvas();
 
         let isDragging = false;
         let lastX = 0;
@@ -672,8 +734,9 @@
         let startScale = 1;
 
         function animatePhysics() {
+            // 1. Fizyka Obracania
             if (!isNaN(video.duration) && video.duration > 0) {
-                if (!isDragging) velocity *= 0.85; // Zwalnianie
+                if (!isDragging) velocity *= 0.85; 
 
                 if (velocity > 0.08) velocity = 0.08;
                 if (velocity < -0.08) velocity = -0.08;
@@ -683,8 +746,7 @@
                     if (currentTime >= video.duration) currentTime -= video.duration;
                     if (currentTime < 0) currentTime += video.duration;
                     
-                    // Optymalizacja klatkowania MP4 do tyłu
-                    if (Math.abs(lastSetTime - currentTime) > 0.04) {
+                    if (Math.abs(lastSetTime - currentTime) > 0.03) {
                         video.currentTime = currentTime;
                         lastSetTime = currentTime;
                     }
@@ -693,7 +755,7 @@
                 }
             }
 
-            // Aplikacja Zoomu bezpośrednio na sprzętowy dekoder Wideo
+            // 2. Fizyka Zoomowania na CANVASIE
             currentScale += (targetScale - currentScale) * 0.2;
             panX += (targetPanX - panX) * 0.2;
             panY += (targetPanY - panY) * 0.2;
@@ -705,10 +767,10 @@
             if (targetPanY > maxPanY) targetPanY = maxPanY;
             if (targetPanY < -maxPanY) targetPanY = -maxPanY;
 
-            // Wymuszenie sprzętowego 3D dla Apple
+            // Sprzętowa akceleracja transformacji
             const transformStr = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
-            video.style.transform = transformStr;
-            video.style.webkitTransform = transformStr;
+            canvas.style.transform = transformStr;
+            canvas.style.webkitTransform = transformStr;
 
             requestAnimationFrame(animatePhysics);
         }
@@ -730,7 +792,7 @@
 
         const endInteraction = () => { isDragging = false; };
 
-        // --- OBSŁUGA GESTÓW NA TARCZY (SHIELD) ---
+        // --- GESTY NA TARCZY (SHIELD) ---
         shield.addEventListener('wheel', (e) => {
             e.preventDefault();
             targetScale -= e.deltaY * 0.005;
@@ -741,17 +803,17 @@
         shield.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
         window.addEventListener('mousemove', (e) => { if(isDragging) moveInteraction(e.clientX, e.clientY); });
         window.addEventListener('mouseup', endInteraction);
-        
+        window.addEventListener('mouseleave', endInteraction);
+
         let lastTap = 0;
         shield.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // CAŁKOWICIE BLOKUJE NATIVE ZACHOWANIE (Brak pauz, brak scrolla)
+            e.preventDefault(); // ZABIERA KONTROLĘ PRZEGLĄDARCE! ŻADNYCH PAUZ!
             
             if (e.touches.length === 1) {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
                 
                 const currentTimeTap = new Date().getTime();
                 if (currentTimeTap - lastTap < 300 && currentTimeTap - lastTap > 0) {
-                    // Nasz własny Double-Tap Zoom
                     targetScale = targetScale > 1.5 ? 1 : 2.5; 
                     if (targetScale === 1) { targetPanX = 0; targetPanY = 0; }
                 }
@@ -764,11 +826,11 @@
         }, { passive: false });
 
         shield.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
+            e.preventDefault(); // ZABLOKOWANIE SCROLLA STRONY WWW
+            
             if (e.touches.length === 1 && isDragging) {
                 moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
             } else if (e.touches.length === 2 && initialPinchDistance) {
-                // Skalowanie Palcami
                 let currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 let scaleMultiplier = currentDistance / initialPinchDistance;
                 targetScale = startScale * scaleMultiplier;
