@@ -573,19 +573,73 @@
 </script>
 
 {% if car.is_360_premium %}
+<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    
+    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="position-absolute top-0 start-0 m-3 z-3">
+        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
+    </div>
+
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
+        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
+               style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center;" 
+               muted playsinline webkit-playsinline preload="auto"></video>
+    </div>
+
+    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
+        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ DWOJGIEM PALCÓW
+        </span>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
+    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
+    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
+    lightbox.init();
+</script>
+
+<script>
+    // SKRYPTY OGÓLNE: UDOSTĘPNIANIE I COOKIES
+    function shareOffer() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ car.marka }} {{ car.model }}',
+                text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}.',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Skopiowano link do ogłoszenia!');
+        }
+    }
+    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
+    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+</script>
+
+{% if car.is_360_premium %}
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
-        const video = document.getElementById('scrubVideo');
+        const scrubVideo = document.getElementById('scrubVideo');
         modal.classList.remove('d-none');
         document.body.style.overflow = 'hidden'; 
-        if(video) {
-            video.currentTime = 0;
-            // Wymuszenie startu dekodera na iOS dla Canvasa
-            let playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.then(_ => { video.pause(); }).catch(_ => {});
-            }
+        
+        // Zmuszamy wideo do resetu, co likwiduje czarny ekran na iPhone
+        if(scrubVideo) {
+           scrubVideo.currentTime = 0; 
+           let playPromise = scrubVideo.play();
+           if (playPromise !== undefined) {
+               playPromise.then(_ => { scrubVideo.pause(); }).catch(_ => {});
+           }
         }
     }
 
@@ -598,149 +652,126 @@
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('scrubContainer');
         const video = document.getElementById('scrubVideo');
-        const canvas = document.getElementById('scrubCanvas');
-        if (!container || !video || !canvas) return;
+        if (!container || !video) return;
 
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-        video.addEventListener('loadedmetadata', () => { 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-        });
-
-        // 1. PĘTLA RYSOWANIA KANWASU (Pełna moc, 60 FPS)
-        function drawToCanvas() {
-            if (video.readyState >= 2) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            }
-            requestAnimationFrame(drawToCanvas);
-        }
-        drawToCanvas();
+        video.addEventListener('loadedmetadata', () => { video.pause(); });
+        video.addEventListener('play', (e) => { e.preventDefault(); video.pause(); }); // Zabezpieczenie przed autostartem
 
         let isDragging = false;
-        let lastX = 0;
-        let velocity = 0;
-        let virtualTime = 0;
+        let startX = 0;
+        let targetTime = 0;
+        let currentTime = 0;
 
-        let targetScale = 1, currentScale = 1;
-        let panX = 0, panY = 0, targetPanX = 0, targetPanY = 0;
-        let lastPanX = 0, lastPanY = 0;
-        let initialPinchDistance = null;
-        let startScale = 1;
-
-        // 2. PĘTLA FIZYKI (Obrót + Zoom na Canvas)
-        function animatePhysics() {
-            // Fizyka obrotu "jak masło"
+        // FIZYKA OBROTU (Z Twojego oryginalnego pliku)
+        function animate() {
             if (!isNaN(video.duration) && video.duration > 0) {
-                if (!isDragging) { velocity *= 0.88; } 
+                let diff = targetTime - currentTime;
+                
+                if (diff > 1.5) { targetTime = currentTime + 1.5; diff = 1.5; }
+                if (diff < -1.5) { targetTime = currentTime - 1.5; diff = -1.5; }
 
-                if (velocity > 0.08) velocity = 0.08;
-                if (velocity < -0.08) velocity = -0.08;
+                let step = diff * 0.08; 
+                
+                const maxSpeed = 0.035; 
+                if (step > maxSpeed) step = maxSpeed;
+                if (step < -maxSpeed) step = -maxSpeed;
 
-                if (Math.abs(velocity) > 0.0005) {
-                    virtualTime += velocity;
-                    if (virtualTime >= video.duration) virtualTime -= video.duration;
-                    if (virtualTime < 0) virtualTime += video.duration;
-                    
-                    video.currentTime = virtualTime; // Zmiana klatki bez dławika
-                } else {
-                    velocity = 0;
+                currentTime += step;
+                
+                if (currentTime >= video.duration) {
+                    currentTime %= video.duration;
+                    targetTime %= video.duration; 
+                }
+                if (currentTime < 0) {
+                    currentTime = video.duration + (currentTime % video.duration);
+                    targetTime = video.duration + (targetTime % video.duration);
+                }
+                
+                if (Math.abs(video.currentTime - currentTime) > 0.01) {
+                    video.currentTime = currentTime;
                 }
             }
-
-            // Fizyka Zoomu
-            currentScale += (targetScale - currentScale) * 0.2;
-            panX += (targetPanX - panX) * 0.2;
-            panY += (targetPanY - panY) * 0.2;
-
-            let maxPanX = (currentScale - 1) * (window.innerWidth / 2); 
-            let maxPanY = (currentScale - 1) * (window.innerHeight / 2); 
-            if (targetPanX > maxPanX) targetPanX = maxPanX;
-            if (targetPanX < -maxPanX) targetPanX = -maxPanX;
-            if (targetPanY > maxPanY) targetPanY = maxPanY;
-            if (targetPanY < -maxPanY) targetPanY = -maxPanY;
-
-            // NAKŁADAMY ZOOM CSS NA CANVAS
-            const transformStr = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
-            canvas.style.transform = transformStr;
-            canvas.style.webkitTransform = transformStr;
-
-            requestAnimationFrame(animatePhysics);
+            requestAnimationFrame(animate);
         }
-        requestAnimationFrame(animatePhysics); 
+        requestAnimationFrame(animate); 
 
-        const startInteraction = (x, y) => {
-            isDragging = true; lastX = x; lastPanX = x; lastPanY = y; velocity = 0;
+        const startDrag = (x) => {
+            isDragging = true;
+            startX = x;
+            targetTime = currentTime; 
         };
 
-        const moveInteraction = (x, y) => {
-            if (!isDragging) return;
-            if (targetScale <= 1.05) {
-                // Skala 1:1 -> Obrót auta
-                const deltaX = lastX - x; lastX = x; velocity = deltaX * 0.002; 
-            } else {
-                // Powiększenie -> Przesuwanie po detalu
-                targetPanX += (x - lastPanX) * 1.5; targetPanY += (y - lastPanY) * 1.5;
-                lastPanX = x; lastPanY = y;
-            }
+        const onDrag = (x) => {
+            if (!isDragging || isNaN(video.duration) || video.duration === 0) return;
+            const deltaX = startX - x;
+            startX = x; 
+            targetTime += (deltaX * 0.004); 
         };
 
-        const endInteraction = () => { isDragging = false; };
+        const stopDrag = () => { isDragging = false; };
 
-        // --- MYSZ ---
-        container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            targetScale -= e.deltaY * 0.005;
-            if (targetScale < 1) { targetScale = 1; targetPanX = 0; targetPanY = 0; }
-            if (targetScale > 4) targetScale = 4;
-        }, { passive: false });
+        container.addEventListener('mousedown', (e) => startDrag(e.clientX));
+        window.addEventListener('mousemove', (e) => onDrag(e.clientX));
+        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('mouseleave', stopDrag);
 
-        container.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
-        window.addEventListener('mousemove', (e) => { if(isDragging) moveInteraction(e.clientX, e.clientY); });
-        window.addEventListener('mouseup', endInteraction);
-        window.addEventListener('mouseleave', endInteraction);
-
-        // --- DOTYK ---
+        // OBSŁUGA DOTYKU
+        let initialPinchDistance = null;
         let lastTap = 0;
+        let isZoomed = false;
+
         container.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Blokuje wchodzenie w systemową pauzę/zoom
+            e.preventDefault(); // KLUCZ! Blokuje natywne zachowania przeglądarki!
             
             if (e.touches.length === 1) {
-                startInteraction(e.touches[0].clientX, e.touches[0].clientY);
-                
+                startDrag(e.touches[0].clientX);
                 const currentTimeTap = new Date().getTime();
-                if (currentTimeTap - lastTap < 300 && currentTimeTap - lastTap > 0) {
-                    targetScale = targetScale > 1.5 ? 1 : 2.5; 
-                    if (targetScale === 1) { targetPanX = 0; targetPanY = 0; }
+                const tapLength = currentTimeTap - lastTap;
+                
+                // DOUBLE TAP ZOOM
+                if (tapLength < 300 && tapLength > 0) {
+                    isZoomed = !isZoomed;
+                    video.style.transform = isZoomed ? 'scale(2.5)' : 'scale(1)';
+                    video.style.transition = 'transform 0.3s ease-in-out';
                 }
                 lastTap = currentTimeTap;
             } else if (e.touches.length === 2) {
                 isDragging = false; 
-                initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                startScale = targetScale;
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
             }
         }, { passive: false });
 
-        container.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
+        window.addEventListener('touchmove', (e) => {
+            if(e.target === video || e.target === container) {
+                e.preventDefault(); // Twarda blokada przewijania okna
+            }
             
             if (e.touches.length === 1 && isDragging) {
-                moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
+                onDrag(e.touches[0].clientX);
             } else if (e.touches.length === 2 && initialPinchDistance) {
-                let currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                let scaleMultiplier = currentDistance / initialPinchDistance;
-                targetScale = startScale * scaleMultiplier;
+                let currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
                 
-                if (targetScale < 1) { targetScale = 1; targetPanX = 0; targetPanY = 0; }
-                if (targetScale > 4) targetScale = 4;
+                // PINCH TO ZOOM - bardzo proste skalowanie na sztywno
+                let scale = currentDistance / initialPinchDistance;
+                if(scale < 1) scale = 1;
+                if(scale > 4) scale = 4;
+                
+                video.style.transform = `scale(${scale})`;
+                video.style.transition = 'none'; // podczas rozciągania zdejmujemy animację
+                isZoomed = scale > 1;
             }
         }, { passive: false });
         
-        container.addEventListener('touchend', (e) => { 
-            e.preventDefault(); 
-            endInteraction(); 
-            if (e.touches.length < 2) initialPinchDistance = null; 
-        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            stopDrag();
+            initialPinchDistance = null;
+        });
     });
 </script>
 {% endif %}
