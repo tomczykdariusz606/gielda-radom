@@ -493,6 +493,29 @@
 </script>
 
 {% if car.is_360_premium %}
+<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    
+    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="position-absolute top-0 start-0 m-3 z-3">
+        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
+    </div>
+
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
+        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
+               style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center;" 
+               muted playsinline webkit-playsinline preload="auto"></video>
+    </div>
+
+    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
+        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ DWOJGIEM PALCÓW
+        </span>
+    </div>
+</div>
+
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
@@ -516,115 +539,151 @@
 
         video.addEventListener('loadedmetadata', () => { video.pause(); });
 
+        // FIZYKA OBROTU
         let isDragging = false;
-        let startX = 0;
-        
-        let targetTime = 0;
+        let lastX = 0;
+        let velocity = 0;
         let currentTime = 0;
 
+        // FIZYKA ZOOMU I PRZESUWANIA OBRAZU
+        let targetScale = 1, currentScale = 1;
+        let panX = 0, panY = 0, targetPanX = 0, targetPanY = 0;
+        let lastPanX = 0, lastPanY = 0;
+        let initialPinchDistance = null;
+        let startScale = 1;
+
+        // GŁÓWNA PĘTLA RENDERUJĄCA (60 FPS)
         function animate() {
+            // 1. Obliczanie obrotu auta (Momentum)
             if (!isNaN(video.duration) && video.duration > 0) {
-                let diff = targetTime - currentTime;
-                
-                if (diff > 1.5) { targetTime = currentTime + 1.5; diff = 1.5; }
-                if (diff < -1.5) { targetTime = currentTime - 1.5; diff = -1.5; }
-
-                let step = diff * 0.08; 
-                
-                const maxSpeed = 0.035; 
-                if (step > maxSpeed) step = maxSpeed;
-                if (step < -maxSpeed) step = -maxSpeed;
-
-                currentTime += step;
-                
-                if (currentTime >= video.duration) {
-                    currentTime %= video.duration;
-                    targetTime %= video.duration; 
+                if (!isDragging) {
+                    velocity *= 0.88; // Bezwładność - suwak płynnie hamuje
                 }
-                if (currentTime < 0) {
-                    currentTime = video.duration + (currentTime % video.duration);
-                    targetTime = video.duration + (targetTime % video.duration);
-                }
-                
-                if (Math.abs(video.currentTime - currentTime) > 0.01) {
-                    video.currentTime = currentTime;
+
+                // Limity prędkości
+                const maxSpeed = 0.08; 
+                if (velocity > maxSpeed) velocity = maxSpeed;
+                if (velocity < -maxSpeed) velocity = -maxSpeed;
+
+                if (Math.abs(velocity) > 0.0005) {
+                    currentTime += velocity;
+                    
+                    // Płynne zapętlanie
+                    if (currentTime >= video.duration) currentTime -= video.duration;
+                    if (currentTime < 0) currentTime += video.duration;
+                    
+                    if (Math.abs(video.currentTime - currentTime) > 0.01) {
+                        video.currentTime = currentTime;
+                    }
+                } else {
+                    velocity = 0;
                 }
             }
+
+            // 2. Płynny Zoom i przesuwanie (Interpolacja)
+            currentScale += (targetScale - currentScale) * 0.15;
+            panX += (targetPanX - panX) * 0.15;
+            panY += (targetPanY - panY) * 0.15;
+
+            // Blokada ucieczki obrazu poza ekran przy zoomie
+            let maxPan = (currentScale - 1) * 200; 
+            if (targetPanX > maxPan) targetPanX = maxPan;
+            if (targetPanX < -maxPan) targetPanX = -maxPan;
+            if (targetPanY > maxPan) targetPanY = maxPan;
+            if (targetPanY < -maxPan) targetPanY = -maxPan;
+
+            // Aplikacja płynnych przekształceń CSS
+            video.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+
             requestAnimationFrame(animate);
         }
         requestAnimationFrame(animate); 
 
-        const startDrag = (x) => {
+        // HANDLERY DOTYKU I MYSZY
+        const startInteraction = (x, y) => {
             isDragging = true;
-            startX = x;
-            targetTime = currentTime; 
+            lastX = x;
+            lastPanX = x;
+            lastPanY = y;
+            velocity = 0;
         };
 
-        const onDrag = (x) => {
-            if (!isDragging || isNaN(video.duration) || video.duration === 0) return;
-            const deltaX = startX - x;
-            startX = x; 
-            targetTime += (deltaX * 0.004); 
+        const moveInteraction = (x, y) => {
+            if (!isDragging) return;
+            
+            if (targetScale <= 1.05) {
+                // Skala 1:1 -> Obracamy auto
+                const deltaX = lastX - x;
+                lastX = x;
+                velocity = deltaX * 0.002; // Czułość obrotu
+            } else {
+                // Przybliżenie -> Przesuwamy widok detalu (Pan)
+                targetPanX += (x - lastPanX) * 1.5;
+                targetPanY += (y - lastPanY) * 1.5;
+                lastPanX = x;
+                lastPanY = y;
+            }
         };
 
-        const stopDrag = () => { isDragging = false; };
+        const endInteraction = () => { isDragging = false; };
 
-        container.addEventListener('mousedown', (e) => startDrag(e.clientX));
-        window.addEventListener('mousemove', (e) => onDrag(e.clientX));
-        window.addEventListener('mouseup', stopDrag);
-        window.addEventListener('mouseleave', stopDrag);
+        // Mysz
+        container.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
+        window.addEventListener('mousemove', (e) => { if(isDragging) moveInteraction(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', endInteraction);
+        window.addEventListener('mouseleave', endInteraction);
 
-        let initialPinchDistance = null;
+        // Dotyk (Multi-touch)
         let lastTap = 0;
-        let isZoomed = false;
 
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
-                startDrag(e.touches[0].clientX);
+                startInteraction(e.touches[0].clientX, e.touches[0].clientY);
+                
+                // Double Tap (Szybki zoom)
                 const currentTimeTap = new Date().getTime();
-                const tapLength = currentTimeTap - lastTap;
-                if (tapLength < 300 && tapLength > 0) {
-                    isZoomed = !isZoomed;
-                    video.style.transform = isZoomed ? 'scale(1.8)' : 'scale(1)';
-                    video.style.transition = 'transform 0.3s ease-in-out';
+                if (currentTimeTap - lastTap < 300 && currentTimeTap - lastTap > 0) {
+                    targetScale = targetScale > 1.5 ? 1 : 2.5; 
+                    if (targetScale === 1) { targetPanX = 0; targetPanY = 0; }
                     e.preventDefault(); 
                 }
                 lastTap = currentTimeTap;
             } else if (e.touches.length === 2) {
+                // Pinch to zoom start
                 isDragging = false; 
                 initialPinchDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
+                startScale = targetScale;
             }
-        });
+        }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
             if (e.touches.length === 1 && isDragging) {
                 e.preventDefault(); 
-                onDrag(e.touches[0].clientX);
+                moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
             } else if (e.touches.length === 2 && initialPinchDistance) {
                 e.preventDefault();
                 let currentDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                if (initialPinchDistance - currentDistance > 60) {
-                    close360Modal();
-                    initialPinchDistance = null;
-                    isZoomed = false;
-                    video.style.transform = 'scale(1)';
-                }
+                let scaleMultiplier = currentDistance / initialPinchDistance;
+                targetScale = startScale * scaleMultiplier;
+                
+                // Limity zooma
+                if (targetScale < 1) { targetScale = 1; targetPanX = 0; targetPanY = 0; }
+                if (targetScale > 4) targetScale = 4;
             }
         }, { passive: false });
         
-        window.addEventListener('touchend', () => {
-            stopDrag();
-            initialPinchDistance = null;
+        window.addEventListener('touchend', (e) => {
+            endInteraction();
+            if (e.touches.length < 2) initialPinchDistance = null;
         });
     });
 </script>
 {% endif %}
-
 </body>
 </html>
