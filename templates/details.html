@@ -637,12 +637,12 @@
     <div class="w-100 h-100 position-relative overflow-hidden" id="scrubContainer" style="touch-action: none;">
         
         <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;" 
+               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; opacity: 0.001; pointer-events: none; z-index: 1;" 
                muted playsinline webkit-playsinline preload="auto"></video>
         
-        <canvas id="scrubCanvas" style="width: 100%; height: 100%; object-fit: contain; transform-origin: center center; will-change: transform;"></canvas>
+        <canvas id="scrubCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 2; transform-origin: center center; will-change: transform;"></canvas>
         
-        <div id="touchShield" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: ew-resize;"></div>
+        <div id="touchShield" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: rgba(0,0,0,0); cursor: ew-resize;"></div>
     </div>
 
     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none" style="z-index: 1050;">
@@ -684,7 +684,6 @@
         document.body.style.overflow = 'hidden'; 
         
         if(video) {
-            // FIX IPHONE: Rozbudzamy dekoder sprzętowy Apple
             let playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => { video.pause(); video.currentTime = 0; }).catch(() => { video.currentTime = 0; });
@@ -712,7 +711,7 @@
             video.currentTime = 0.01; 
         });
 
-        // WYMUSZONE PRZERYSTOWYWANIE (Odblokowuje płynność na Androidzie)
+        // Wymuszone przerysowywanie na Canvas (Odblokowuje płynność)
         function drawToCanvas() {
             if (video.readyState >= 2) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -734,7 +733,6 @@
         let startScale = 1;
 
         function animatePhysics() {
-            // 1. Fizyka Obracania
             if (!isNaN(video.duration) && video.duration > 0) {
                 if (!isDragging) velocity *= 0.85; 
 
@@ -755,7 +753,7 @@
                 }
             }
 
-            // 2. Fizyka Zoomowania na CANVASIE
+            // Zoomowanie na Canvasie
             currentScale += (targetScale - currentScale) * 0.2;
             panX += (targetPanX - panX) * 0.2;
             panY += (targetPanY - panY) * 0.2;
@@ -767,7 +765,6 @@
             if (targetPanY > maxPanY) targetPanY = maxPanY;
             if (targetPanY < -maxPanY) targetPanY = -maxPanY;
 
-            // Sprzętowa akceleracja transformacji
             const transformStr = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
             canvas.style.transform = transformStr;
             canvas.style.webkitTransform = transformStr;
@@ -807,7 +804,7 @@
 
         let lastTap = 0;
         shield.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // ZABIERA KONTROLĘ PRZEGLĄDARCE! ŻADNYCH PAUZ!
+            e.preventDefault(); // CAŁKOWICIE ZABIERA KONTROLĘ PRZEGLĄDARCE! Brak pauz, brak problemów.
             
             if (e.touches.length === 1) {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
@@ -826,7 +823,7 @@
         }, { passive: false });
 
         shield.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // ZABLOKOWANIE SCROLLA STRONY WWW
+            e.preventDefault(); 
             
             if (e.touches.length === 1 && isDragging) {
                 moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
@@ -851,5 +848,6 @@
 
 </body>
 </html>
+
 
 
