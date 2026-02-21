@@ -522,6 +522,57 @@
 </script>
 
 {% if car.is_360_premium %}
+<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    
+    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
+        <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="position-absolute top-0 start-0 m-3 z-3">
+        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
+    </div>
+
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden position-relative" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
+        
+        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
+               style="position: absolute; width: 10px; height: 10px; opacity: 0.01; pointer-events: none; z-index: -1;" 
+               muted playsinline webkit-playsinline disablePictureInPicture preload="auto"></video>
+               
+        <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform; position: relative; z-index: 5;"></canvas>
+
+    </div>
+
+    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
+        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
+        </span>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
+    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
+    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
+    lightbox.init();
+</script>
+
+<script>
+    function shareOffer() {
+        if (navigator.share) {
+            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
+        }
+    }
+    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
+    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+</script>
+
+{% if car.is_360_premium %}
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
@@ -530,7 +581,7 @@
         document.body.style.overflow = 'hidden'; 
         if(video) {
             video.currentTime = 0;
-            // Hack na iOS/S24 - zmuszamy dekoder do startu, by klatki nie zamarzły!
+            // Wymuszenie startu dekodera na iOS dla Canvasa
             let playPromise = video.play();
             if (playPromise !== undefined) {
                 playPromise.then(_ => { video.pause(); }).catch(_ => {});
@@ -547,11 +598,25 @@
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('scrubContainer');
         const video = document.getElementById('scrubVideo');
-        if (!container || !video) return;
+        const canvas = document.getElementById('scrubCanvas');
+        if (!container || !video || !canvas) return;
 
-        // Zabijamy podwójne kliki na iPhonie
-        video.addEventListener('play', (e) => { e.preventDefault(); video.pause(); });
-        
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        video.addEventListener('loadedmetadata', () => { 
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        });
+
+        // 1. PĘTLA RYSOWANIA KANWASU (Pełna moc, 60 FPS)
+        function drawToCanvas() {
+            if (video.readyState >= 2) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+            requestAnimationFrame(drawToCanvas);
+        }
+        drawToCanvas();
+
         let isDragging = false;
         let lastX = 0;
         let velocity = 0;
@@ -563,29 +628,30 @@
         let initialPinchDistance = null;
         let startScale = 1;
 
+        // 2. PĘTLA FIZYKI (Obrót + Zoom na Canvas)
         function animatePhysics() {
-            // Fizyka obrotu i aktualizacja wideo (Brak dławików = pełna moc)
+            // Fizyka obrotu "jak masło"
             if (!isNaN(video.duration) && video.duration > 0) {
                 if (!isDragging) { velocity *= 0.88; } 
 
                 if (velocity > 0.08) velocity = 0.08;
                 if (velocity < -0.08) velocity = -0.08;
 
-                if (Math.abs(velocity) > 0.001) {
+                if (Math.abs(velocity) > 0.0005) {
                     virtualTime += velocity;
                     if (virtualTime >= video.duration) virtualTime -= video.duration;
                     if (virtualTime < 0) virtualTime += video.duration;
                     
-                    video.currentTime = virtualTime;
+                    video.currentTime = virtualTime; // Zmiana klatki bez dławika
                 } else {
                     velocity = 0;
                 }
             }
 
-            // Fizyka płynnego zoomu i panoramy
-            currentScale += (targetScale - currentScale) * 0.15;
-            panX += (targetPanX - panX) * 0.15;
-            panY += (targetPanY - panY) * 0.15;
+            // Fizyka Zoomu
+            currentScale += (targetScale - currentScale) * 0.2;
+            panX += (targetPanX - panX) * 0.2;
+            panY += (targetPanY - panY) * 0.2;
 
             let maxPanX = (currentScale - 1) * (window.innerWidth / 2); 
             let maxPanY = (currentScale - 1) * (window.innerHeight / 2); 
@@ -594,10 +660,10 @@
             if (targetPanY > maxPanY) targetPanY = maxPanY;
             if (targetPanY < -maxPanY) targetPanY = -maxPanY;
 
-            // Sprzętowa Transformacja Wideo (Powinna działać również na S24)
+            // NAKŁADAMY ZOOM CSS NA CANVAS
             const transformStr = `translate3d(${panX}px, ${panY}px, 0) scale(${currentScale})`;
-            video.style.transform = transformStr;
-            video.style.webkitTransform = transformStr;
+            canvas.style.transform = transformStr;
+            canvas.style.webkitTransform = transformStr;
 
             requestAnimationFrame(animatePhysics);
         }
@@ -610,8 +676,10 @@
         const moveInteraction = (x, y) => {
             if (!isDragging) return;
             if (targetScale <= 1.05) {
+                // Skala 1:1 -> Obrót auta
                 const deltaX = lastX - x; lastX = x; velocity = deltaX * 0.002; 
             } else {
+                // Powiększenie -> Przesuwanie po detalu
                 targetPanX += (x - lastPanX) * 1.5; targetPanY += (y - lastPanY) * 1.5;
                 lastPanX = x; lastPanY = y;
             }
@@ -619,7 +687,7 @@
 
         const endInteraction = () => { isDragging = false; };
 
-        // MYSZKA I SCROLL
+        // --- MYSZ ---
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
             targetScale -= e.deltaY * 0.005;
@@ -632,9 +700,10 @@
         window.addEventListener('mouseup', endInteraction);
         window.addEventListener('mouseleave', endInteraction);
 
+        // --- DOTYK ---
         let lastTap = 0;
         container.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // KLUCZOWE: Blokuje domyślne akcje (np. wchodzenie w fullscreen/pauze)
+            e.preventDefault(); // Blokuje wchodzenie w systemową pauzę/zoom
             
             if (e.touches.length === 1) {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
@@ -678,4 +747,5 @@
 
 </body>
 </html>
+
 
