@@ -503,27 +503,62 @@
         <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
     </div>
 
-    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
-        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="display: none;" muted playsinline webkit-playsinline preload="auto"></video>
+    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize; position: relative;">
         
-        <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center;"></canvas>
+        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
+               style="opacity: 0.01; position: absolute; z-index: -1; width: 1px; height: 1px;" 
+               muted playsinline webkit-playsinline preload="auto"></video>
+        
+        <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform;"></canvas>
+        
     </div>
 
     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
         <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
-            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ DWOJGIEM PALCÓW
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
         </span>
     </div>
 </div>
+{% endif %}
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module">
+    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
+    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
+    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
+    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
+    lightbox.init();
+</script>
+
+<script>
+    function shareOffer() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ car.marka }} {{ car.model }}',
+                text: 'Zobacz to auto na Giełdzie Radom! Cena: {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}.',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            alert('Skopiowano link do ogłoszenia!');
+        }
+    }
+    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
+    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+</script>
+
+{% if car.is_360_premium %}
 <script>
     function open360Modal() {
         const modal = document.getElementById('modal360');
         const scrubVideo = document.getElementById('scrubVideo');
         modal.classList.remove('d-none');
         document.body.style.overflow = 'hidden'; 
-        scrubVideo.currentTime = 0; 
+        
+        if(scrubVideo.readyState >= 1) {
+            scrubVideo.currentTime = 0; 
+        }
     }
 
     function close360Modal() {
@@ -538,30 +573,41 @@
         const canvas = document.getElementById('scrubCanvas');
         if (!container || !video || !canvas) return;
 
-        // Inicjalizacja kontekstu graficznego (renderowanie sprzętowe klienta)
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
+        // Ustawienie rozdzielczości płótna po załadowaniu wideo
         video.addEventListener('loadedmetadata', () => { 
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            video.currentTime = 0.01; // Wymuszenie załadowania pierwszej klatki
+            video.currentTime = 0.01; 
         });
+
+        // Ciągłe przerzucanie klatek wideo na Canvas
+        function drawToCanvas() {
+            if (video.readyState >= 2) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+            requestAnimationFrame(drawToCanvas);
+        }
+        drawToCanvas();
 
         let isDragging = false;
         let lastX = 0;
         let velocity = 0;
         let currentTime = 0;
+        let lastSetTime = -1;
 
+        // Zmienne do Zoomu i Panoramy
         let targetScale = 1, currentScale = 1;
         let panX = 0, panY = 0, targetPanX = 0, targetPanY = 0;
         let lastPanX = 0, lastPanY = 0;
         let initialPinchDistance = null;
         let startScale = 1;
 
-        function animate() {
-            // Fizyka obrotu i klatek
+        function animatePhysics() {
+            // FIZYKA OBROTU I BEZWŁADNOŚCI
             if (!isNaN(video.duration) && video.duration > 0) {
-                if (!isDragging) { velocity *= 0.88; } // Bezwładność
+                if (!isDragging) { velocity *= 0.88; } 
 
                 const maxSpeed = 0.08; 
                 if (velocity > maxSpeed) velocity = maxSpeed;
@@ -573,36 +619,34 @@
                     if (currentTime >= video.duration) currentTime -= video.duration;
                     if (currentTime < 0) currentTime += video.duration;
                     
-                    if (Math.abs(video.currentTime - currentTime) > 0.01) {
+                    // Ograniczenie odpytywania dekodera, zapobiega zacinaniu się MP4 w tył
+                    if (Math.abs(lastSetTime - currentTime) > 0.04) {
                         video.currentTime = currentTime;
+                        lastSetTime = currentTime;
                     }
                 } else {
                     velocity = 0;
                 }
             }
 
-            // Przerzucanie surowej klatki z wideo na Canvas
-            if (video.readyState >= 2) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            }
-
-            // Płynna interpolacja dla powiększenia
+            // FIZYKA ZOOMA I PRZESUWANIA (ZOOM TERAZ NAKŁADANY NA CANVAS)
             currentScale += (targetScale - currentScale) * 0.15;
             panX += (targetPanX - panX) * 0.15;
             panY += (targetPanY - panY) * 0.15;
 
-            let maxPan = (currentScale - 1) * 200; 
+            // Limity przesuwania po przybliżeniu
+            let maxPan = (currentScale - 1) * (window.innerWidth / 2); 
             if (targetPanX > maxPan) targetPanX = maxPan;
             if (targetPanX < -maxPan) targetPanX = -maxPan;
             if (targetPanY > maxPan) targetPanY = maxPan;
             if (targetPanY < -maxPan) targetPanY = -maxPan;
 
-            // Transformacja samego płótna, bez obciążania dekodera
+            // CSS Transform narzucony na Canvas!
             canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
 
-            requestAnimationFrame(animate);
+            requestAnimationFrame(animatePhysics);
         }
-        requestAnimationFrame(animate); 
+        requestAnimationFrame(animatePhysics); 
 
         const startInteraction = (x, y) => {
             isDragging = true; lastX = x; lastPanX = x; lastPanY = y; velocity = 0;
@@ -611,8 +655,10 @@
         const moveInteraction = (x, y) => {
             if (!isDragging) return;
             if (targetScale <= 1.05) {
+                // Skala 1:1 -> Obrót auta
                 const deltaX = lastX - x; lastX = x; velocity = deltaX * 0.002; 
             } else {
+                // Przybliżone -> Przesuwanie kamery po detalu
                 targetPanX += (x - lastPanX) * 1.5; targetPanY += (y - lastPanY) * 1.5;
                 lastPanX = x; lastPanY = y;
             }
@@ -620,15 +666,18 @@
 
         const endInteraction = () => { isDragging = false; };
 
+        // Mysz
         container.addEventListener('mousedown', (e) => startInteraction(e.clientX, e.clientY));
         window.addEventListener('mousemove', (e) => { if(isDragging) moveInteraction(e.clientX, e.clientY); });
         window.addEventListener('mouseup', endInteraction);
         window.addEventListener('mouseleave', endInteraction);
 
+        // Dotyk
         let lastTap = 0;
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 startInteraction(e.touches[0].clientX, e.touches[0].clientY);
+                
                 const currentTimeTap = new Date().getTime();
                 if (currentTimeTap - lastTap < 300 && currentTimeTap - lastTap > 0) {
                     targetScale = targetScale > 1.5 ? 1 : 2.5; 
@@ -651,6 +700,7 @@
                 let currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 let scaleMultiplier = currentDistance / initialPinchDistance;
                 targetScale = startScale * scaleMultiplier;
+                
                 if (targetScale < 1) { targetScale = 1; targetPanX = 0; targetPanY = 0; }
                 if (targetScale > 4) targetScale = 4;
             }
@@ -663,4 +713,3 @@
 
 </body>
 </html>
-
