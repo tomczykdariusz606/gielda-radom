@@ -157,11 +157,22 @@
         <div class="col-lg-8">
             
             <div class="mb-5 gallery-wrapper position-relative">
-                <div id="carCarousel" class="carousel slide" data-bs-interval="false">
+                                <div id="carCarousel" class="carousel slide" data-bs-touch="true" data-bs-interval="false">
+                    
+                    <div class="carousel-indicators mb-0 pb-2">
+                        <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="0" class="active"></button>
+                        {% for img in car.images %}
+                            {% if img.image_path != car.img %}
+                            <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ loop.index }}"></button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
                     <div class="carousel-inner" id="pswp-gallery">
                         
                         {% if car.is_360_premium %}
-                        <div class="carousel-item active" style="cursor: pointer;" onclick="open360Modal()">
+                        <div class="carousel-item active" id="trigger360" style="cursor: pointer;">
+
                             <div class="position-absolute top-0 start-0 m-3 z-3">
                                 <span class="badge bg-danger shadow fs-6"><i class="bi bi-arrow-repeat me-1"></i> WIDOK 360°</span>
                             </div>
@@ -622,6 +633,45 @@
         });
     });
 </script>
+        // --- INTELIGENTNE WYKRYWANIE: TAP vs SWIPE W GŁÓWNEJ GALERII ---
+        const trigger360 = document.getElementById('trigger360');
+        if (trigger360) {
+            let isGallerySwipe = false;
+            let startTouchX = 0;
+            let startTouchY = 0;
+
+            // Obsługa myszki
+            trigger360.addEventListener('mousedown', (e) => {
+                isGallerySwipe = false;
+                startTouchX = e.clientX;
+            });
+            trigger360.addEventListener('mousemove', (e) => {
+                if (Math.abs(e.clientX - startTouchX) > 10) isGallerySwipe = true;
+            });
+            trigger360.addEventListener('mouseup', () => {
+                if (!isGallerySwipe) open360Modal();
+            });
+
+            // Obsługa palca (Smartfon)
+            trigger360.addEventListener('touchstart', (e) => {
+                isGallerySwipe = false;
+                startTouchX = e.touches[0].clientX;
+                startTouchY = e.touches[0].clientY;
+            }, { passive: true });
+
+            trigger360.addEventListener('touchmove', (e) => {
+                // Jeśli palec przesuwa się po ekranie, to znaczy że klient przegląda galerię
+                if (Math.abs(e.touches[0].clientX - startTouchX) > 10 || Math.abs(e.touches[0].clientY - startTouchY) > 10) {
+                    isGallerySwipe = true;
+                }
+            }, { passive: true });
+
+            trigger360.addEventListener('touchend', () => {
+                // Odpalamy widok 360 TYLKO jeśli to było celowe "puknięcie", a nie przesunięcie
+                if (!isGallerySwipe) open360Modal(); 
+            });
+        }
+
 {% endif %}
 
 </body>
