@@ -48,6 +48,21 @@
             z-index: -1; will-change: transform;
         }
 
+        /* --- FIX IPHONE RETINA ORAZ RENDEROWANIE --- */
+        .text-danger, .fw-bold, h5, h2, .fs-1 {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            transform: translateZ(0); /* Wymuszenie sprzętowej akceleracji dla ostrości fontów */
+            backface-visibility: hidden;
+        }
+
+        .car-card, .glass-panel, .gallery-wrapper {
+            image-rendering: -webkit-optimize-contrast;
+            will-change: transform;
+        }
+        /* --- KONIEC FIX IPHONE --- */
+
         .navbar { 
             background: rgba(0,0,0,0.85); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -185,7 +200,7 @@
                             
                             <video src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
                                    class="d-block w-100 gallery-img" style="object-fit: cover;"
-                                   autoplay loop muted playsinline></video>
+                                   autoplay loop muted playsinline webkit-playsinline preload="auto"></video>
                         </div>
                         {% endif %}
 
@@ -439,7 +454,7 @@
     <div class="w-100 h-100 d-flex align-items-center justify-content-center" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
         <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
                style="width: 100%; max-height: 100vh; object-fit: contain;" 
-               muted playsinline preload="auto"></video>
+               muted playsinline webkit-playsinline preload="auto"></video>
     </div>
 
     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
@@ -479,7 +494,6 @@
 
 {% if car.is_360_premium %}
 <script>
-    // OTWIERANIE I ZAMYKANIE MODALA
     function open360Modal() {
         const modal = document.getElementById('modal360');
         const scrubVideo = document.getElementById('scrubVideo');
@@ -495,7 +509,6 @@
         document.body.style.overflow = ''; 
     }
 
-    // LOGIKA PRZESUWANIA, ZOOMU I GESTÓW PREMIUM
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('scrubContainer');
         const video = document.getElementById('scrubVideo');
@@ -509,7 +522,6 @@
         let targetTime = 0;
         let currentTime = 0;
 
-        // Pętla animacji - "Ciężka Maszyna"
         function animate() {
             if (!isNaN(video.duration) && video.duration > 0) {
                 let diff = targetTime - currentTime;
@@ -557,13 +569,11 @@
 
         const stopDrag = () => { isDragging = false; };
 
-        // Myszka
         container.addEventListener('mousedown', (e) => startDrag(e.clientX));
         window.addEventListener('mousemove', (e) => onDrag(e.clientX));
         window.addEventListener('mouseup', stopDrag);
         window.addEventListener('mouseleave', stopDrag);
 
-        // Gesty
         let initialPinchDistance = null;
         let lastTap = 0;
         let isZoomed = false;
