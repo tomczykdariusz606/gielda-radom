@@ -165,10 +165,11 @@
         {% endwith %}
 
         <div class="mb-4">
-            <a href="/login/google" class="btn-google text-decoration-none">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" height="22">
-                <span>{{ t['reg_google'] }}</span>
-            </a>
+           <a href="/login/google" onclick="gtag('event', 'sign_up', {'send_to': 'AW-17939880807', 'method': 'Google'});" class="btn-google text-decoration-none">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" height="22">
+    <span>{{ t['reg_google'] }}</span>
+</a>
+
         </div>
 
         <div class="d-flex align-items-center mb-4">
@@ -177,7 +178,8 @@
             <hr class="flex-grow-1 m-0 divider">
         </div>
 
-        <form method="POST">
+        <form method="POST" onsubmit="gtag('event', 'sign_up', {'send_to': 'AW-17939880807', 'method': 'Email'});">
+
             <div class="mb-3 text-start">
                 <label class="form-label-custom">{{ t['username_label'] }}</label>
                 <div class="input-group">
