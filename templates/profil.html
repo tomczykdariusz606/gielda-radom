@@ -721,5 +721,66 @@
             const markaField = document.querySelector('[name="marka"]'); if (this.files.length > 0 && markaField.value.trim() === "") { performAnalysis(this.files[0]); }
         });
     </script>
+
+        {% if current_user.username == 'admin' or current_user.id == 1 %}
+    <div class="modal fade" id="usersModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border border-secondary text-white">
+                <div class="modal-header border-secondary">
+                    <h5 class="fw-bold"><i class="bi bi-people-fill me-2 text-danger"></i> Baza Użytkowników</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 text-center align-middle">
+                            <thead>
+                                <tr class="text-secondary small text-uppercase">
+                                    <th>ID</th>
+                                    <th>Login</th>
+                                    <th>Typ Konta</th>
+                                    <th>Email</th>
+                                    <th>Akcja</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if all_users is defined %}
+                                    {% for u in all_users %}
+                                    <tr>
+                                        <td>{{ u.id }}</td>
+                                        <td class="fw-bold text-white">
+                                            <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" width="25" height="25" class="rounded-circle me-2" style="object-fit:cover;">
+                                            {{ u.username }}
+                                        </td>
+                                        <td class="small">
+                                            {% if u.account_type == 'company' %}
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-shop"></i> {{ u.company_name }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary"><i class="bi bi-person"></i> Prywatne</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="small text-muted">{{ u.email }}</td>
+                                        <td>
+                                            {% if u.id != current_user.id %}
+                                                <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Usunąć?');">
+                                                    <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button>
+                                                </form>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">TY</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="5" class="text-muted py-4">Brak zdefiniowanej zmiennej 'all_users' w backendzie.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </body>
 </html>
