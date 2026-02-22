@@ -9,6 +9,19 @@
       gtag('config', 'AW-17939880807');
     </script>
 
+    <script>
+      gtag('event', 'view_item', {
+        'send_to': 'AW-17939880807',
+        'value': {{ car.cena }},
+        'currency': '{{ car.waluta if car.waluta else "PLN" }}',
+        'items': [{
+          'id': '{{ car.id }}',
+          'category': '{{ car.typ }}',
+          'brand': '{{ car.marka }}'
+        }]
+      });
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="robots" content="index, follow">
@@ -313,12 +326,14 @@
                 </div>
 
                 <div class="d-grid gap-2 mb-4">
-                    <a href="tel:{{ car.telefon }}" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3 pulse-btn">
-                        <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
-                    </a>
-                    <a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl" class="btn btn-danger btn-lg fw-bold rounded-pill shadow py-2">
-                        <i class="bi bi-chat-text-fill me-2"></i> SMS
-                    </a>
+                    <a href="tel:{{ car.telefon }}" onclick="gtag('event', 'generate_lead', {'send_to': 'AW-17939880807', 'event_category': 'Kontakt', 'event_label': 'Telefon'});" class="btn btn-success btn-lg fw-bold rounded-pill shadow py-3 pulse-btn">
+    <i class="bi bi-telephone-fill me-2"></i> ZADZWOŃ
+</a>
+
+<a href="sms:{{ car.telefon }}?&body=Dzień dobry, piszę w sprawie ogłoszenia {{ car.marka }} {{ car.model }} na GiełdaRadom.pl" onclick="gtag('event', 'generate_lead', {'send_to': 'AW-17939880807', 'event_category': 'Kontakt', 'event_label': 'SMS'});" class="btn btn-danger btn-lg fw-bold rounded-pill shadow py-2">
+    <i class="bi bi-chat-text-fill me-2"></i> SMS
+</a>
+
                     <button onclick="shareOffer()" class="btn btn-dark border-secondary btn-lg fw-bold rounded-pill shadow py-2 text-info">
                         <i class="bi bi-share-fill me-2"></i> UDOSTĘPNIJ ZNAJOMEMU
                     </button>
