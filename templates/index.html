@@ -316,13 +316,29 @@
                 {% endif %}
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" loading="lazy" alt="{{ car.marka }} {{ car.model }}" style="height: 230px; object-fit: cover;">
-                        {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>{% endif %}
-                        <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
-                            <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
-                            <div class="d-flex justify-content-between align-items-center px-1"><span class="text-white-50 small">{{ car.rok }}r.</span><span class="text-danger fw-bold">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} PLN</span></div>
-                        </div>
-                    </div>
+    <img src="{{ car.img }}" class="card-img-top" loading="lazy" alt="{{ car.marka }} {{ car.model }}" style="height: 230px; object-fit: cover;">
+    
+    <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 5;">
+        {% if car.is_promoted %}
+            <span class="badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>
+        {% endif %}
+        
+        {% if car.is_360_premium %}
+            <span class="badge bg-danger shadow border border-light border-opacity-25" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                <i class="bi bi-view-360 me-1"></i> 360°
+            </span>
+        {% endif %}
+    </div>
+
+    <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+        <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
+        <div class="d-flex justify-content-between align-items-center px-1">
+            <span class="text-white-50 small">{{ car.rok }}r.</span>
+            <span class="text-danger fw-bold">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}</span>
+        </div>
+    </div>
+</div>
+
                 </a>
                 <div class="card-body pt-3 pb-3">
                     <div class="d-flex gap-2 small text-muted mb-2">
