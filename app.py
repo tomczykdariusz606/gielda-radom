@@ -685,62 +685,94 @@ def ustawienia_profilu():
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
-    files = request.files.getlist('zdjecia')
-    saved_paths = []
-    
-    if 'scan_image_cam' in request.files and request.files['scan_image_cam'].filename != '':
-        saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_cam'])))
-    elif 'scan_image_file' in request.files and request.files['scan_image_file'].filename != '':
-        saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(request.files['scan_image_file'])))
+    try:
+        files = request.files.getlist('zdjecia')
+        saved_paths = []
         
-    for file in files[:18]:
-        if file and allowed_file(file.filename):
-            saved_paths.append(url_for('static', filename='uploads/' + save_optimized_image(file)))
+        # 1. BEZPIECZNE POBIERANIE SKANÓW (Ochrona przed błędem "NoneType")
+        if 'scan_image_cam' in request.files and request.files['scan_image_cam'].filename != '':
+            fname = save_optimized_image(request.files['scan_image_cam'])
+            if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
             
-    main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
-    
-    try: lat = float(request.form.get('lat')) 
-    except: lat = None
-    try: lon = float(request.form.get('lon')) 
-    except: lon = None
-    
-    wyposazenie_list = request.form.getlist('wyposazenie')
-    wyposazenie_str = ",".join(wyposazenie_list)
-
-    new_car = Car(
-        marka=request.form.get('marka'),
-        model=request.form.get('model'),
-        rok=int(request.form.get('rok') or 0),
-        cena=float(request.form.get('cena') or 0),
-        waluta=request.form.get('waluta', 'PLN'), # --- ZAPISYWANIE WALUTY
-        typ=request.form.get('typ', 'Osobowe'),
-        opis=request.form.get('opis', ''),
-        vin=request.form.get('vin'),
-        telefon=request.form.get('telefon'),
-        skrzynia=request.form.get('skrzynia'),
-        paliwo=request.form.get('paliwo'),
-        nadwozie=request.form.get('nadwozie'),
-        wyposazenie=wyposazenie_str,
-        pojemnosc=request.form.get('pojemnosc'),
-        przebieg=int(request.form.get('przebieg') or 0),
-        moc=int(request.form.get('moc') or 0), 
-        kolor=request.form.get('kolor'),
-        img=main_img,
-        zrodlo=current_user.lokalizacja,
-        user_id=current_user.id,
-        latitude=lat,
-        longitude=lon,
-        data_dodania=datetime.utcnow()
-    )
-    db.session.add(new_car)
-    db.session.flush() 
-    
-    for p in saved_paths:
-        db.session.add(CarImage(image_path=p, car_id=new_car.id))
+        elif 'scan_image_file' in request.files and request.files['scan_image_file'].filename != '':
+            fname = save_optimized_image(request.files['scan_image_file'])
+            if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+            
+        for file in files[:18]:
+            if file and allowed_file(file.filename):
+                fname = save_optimized_image(file)
+                if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+                
+        main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
         
-    db.session.commit()
-    flash('Dodano ogłoszenie!', 'success')
-    return redirect(url_for('profil'))
+        # 2. BEZPIECZNE PARSOWANIE GPS
+        try: lat = float(request.form.get('lat', ''))
+        except ValueError: lat = None
+        
+        try: lon = float(request.form.get('lon', ''))
+        except ValueError: lon = None
+        
+        # 3. BEZPIECZNE PARSOWANIE LICZB (Odporne na spacje, przecinki i brak danych)
+        cena_str = str(request.form.get('cena', '0')).replace(',', '.').replace(' ', '').strip()
+        try: cena_val = float(cena_str)
+        except ValueError: cena_val = 0.0
+
+        try: rok_val = int(str(request.form.get('rok', '0')).replace(' ', '').strip() or 0)
+        except ValueError: rok_val = 0
+
+        try: przebieg_val = int(str(request.form.get('przebieg', '0')).replace(' ', '').strip() or 0)
+        except ValueError: przebieg_val = 0
+
+        try: moc_val = int(str(request.form.get('moc', '0')).replace(' ', '').strip() or 0)
+        except ValueError: moc_val = 0
+        
+        wyposazenie_list = request.form.getlist('wyposazenie')
+        wyposazenie_str = ",".join(wyposazenie_list)
+
+        new_car = Car(
+            marka=request.form.get('marka', ''),
+            model=request.form.get('model', ''),
+            rok=rok_val,
+            cena=cena_val,
+            waluta=request.form.get('waluta', 'PLN'),
+            typ=request.form.get('typ', 'Osobowe'),
+            opis=request.form.get('opis', ''),
+            vin=request.form.get('vin', ''),
+            telefon=request.form.get('telefon', ''),
+            skrzynia=request.form.get('skrzynia'),
+            paliwo=request.form.get('paliwo'),
+            nadwozie=request.form.get('nadwozie'),
+            wyposazenie=wyposazenie_str,
+            pojemnosc=request.form.get('pojemnosc', ''),
+            przebieg=przebieg_val,
+            moc=moc_val, 
+            kolor=request.form.get('kolor', ''),
+            img=main_img,
+            zrodlo=current_user.lokalizacja,
+            user_id=current_user.id,
+            latitude=lat,
+            longitude=lon,
+            data_dodania=datetime.utcnow()
+        )
+        
+        db.session.add(new_car)
+        db.session.flush() 
+        
+        for p in saved_paths:
+            db.session.add(CarImage(image_path=p, car_id=new_car.id))
+            
+        db.session.commit()
+        flash('Dodano ogłoszenie!', 'success')
+        return redirect(url_for('profil'))
+
+    except Exception as e:
+        # COFANIE ZMIAN W BAZIE W RAZIE AWARII (Zapobiega zablokowaniu bazy)
+        db.session.rollback()
+        print(f"BŁĄD PRZY DODAWANIU AUTA: {e}")
+        # Zamiast błędu 500, użytkownik zobaczy ładny komunikat z dokładną informacją, co poszło nie tak
+        flash(f'Wystąpił błąd przy zapisie: {str(e)}', 'danger')
+        return redirect(url_for('profil'))
+
 
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
