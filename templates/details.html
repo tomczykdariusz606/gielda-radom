@@ -48,7 +48,6 @@
             z-index: -1; will-change: transform;
         }
 
-        /* FIX IPHONE RETINA */
         .text-danger, .fw-bold, h5, h2, .fs-1 {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -422,104 +421,7 @@
         <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">OK</button>
     </div>
 </div>
-
 <footer class="mt-5 py-4 border-top border-secondary text-center text-muted small">© 2026 Giełda Radom.</footer>
-
-{% if car.is_360_premium %}
-<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    
-    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
-        <i class="bi bi-x-lg"></i>
-    </button>
-    
-    <div class="position-absolute top-0 start-0 m-3 z-3">
-        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
-    </div>
-
-    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
-        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center; will-change: transform;" 
-               muted playsinline webkit-playsinline preload="auto"></video>
-    </div>
-
-    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
-        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
-            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
-        </span>
-    </div>
-</div>
-{% endif %}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script type="module">
-    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
-    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
-    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
-    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
-    lightbox.init();
-</script>
-
-<script>
-    function shareOffer() {
-        if (navigator.share) {
-            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
-        } else {
-            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
-        }
-    }
-    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
-    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
-</script>
-
-{% if car.is_360_premium %}
-<div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    
-    <button onclick="close360Modal()" class="btn btn-dark text-white position-absolute top-0 end-0 m-3 z-3 shadow" style="border-radius: 50%; width: 50px; height: 50px; font-size: 1.5rem; background: rgba(50,50,50,0.8);">
-        <i class="bi bi-x-lg"></i>
-    </button>
-    
-    <div class="position-absolute top-0 start-0 m-3 z-3">
-        <span class="badge bg-danger shadow fs-6"><i class="bi bi-view-360 me-1"></i> WIDOK 360°</span>
-    </div>
-
-    <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
-        
-        <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center;" 
-               muted playsinline webkit-playsinline disablePictureInPicture preload="auto"></video>
-               
-    </div>
-
-    <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
-        <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
-            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
-        </span>
-    </div>
-</div>
-{% endif %}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script type="module">
-    import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
-    import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
-    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
-    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
-    lightbox.init();
-</script>
-
-<script>
-    function shareOffer() {
-        if (navigator.share) {
-            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
-        } else {
-            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
-        }
-    }
-    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
-    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
-</script>
 
 {% if car.is_360_premium %}
 <div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
@@ -535,7 +437,7 @@
     <div class="w-100 h-100 d-flex align-items-center justify-content-center overflow-hidden position-relative" id="scrubContainer" style="touch-action: none; cursor: ew-resize;">
         
         <video id="scrubVideo" src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-               style="position: absolute; opacity: 0.01; width: 1px; height: 1px; z-index: -1; pointer-events: none;" 
+               style="position: absolute; width: 100%; height: 100%; opacity: 0.001; z-index: -1; pointer-events: none;" 
                muted playsinline webkit-playsinline preload="auto"></video>
                
         <canvas id="scrubCanvas" style="width: 100%; max-height: 100vh; object-fit: contain; transform-origin: center center;"></canvas>
@@ -544,7 +446,7 @@
 
     <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-center pointer-events-none z-3">
         <span class="badge bg-dark bg-opacity-75 rounded-pill px-4 py-3 border border-secondary shadow-lg fs-6">
-            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ DWOJGIEM PALCÓW
+            <i class="bi bi-arrows-left-right me-2"></i> PRZESUWAJ LUB PRZYBLIŻAJ (2 PALCE)
         </span>
     </div>
 </div>
@@ -555,21 +457,47 @@
 <script type="module">
     import PhotoSwipeLightbox from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe-lightbox.esm.js';
     import PhotoSwipe from 'https://cdn.jsdelivr.net/npm/photoswipe@5.4.3/dist/photoswipe.esm.js';
-    document.querySelectorAll('#pswp-gallery a').forEach(link => { const img = new Image(); img.src = link.href; img.onload = function() { link.setAttribute('data-pswp-width', this.width); link.setAttribute('data-pswp-height', this.height); } });
-    const lightbox = new PhotoSwipeLightbox({ gallery: '#pswp-gallery', children: 'a', pswpModule: PhotoSwipe, zoom: true, wheelToZoom: true, pinchToClose: true, bgOpacity: 0.9 });
+    document.querySelectorAll('#pswp-gallery a').forEach(link => { 
+        const img = new Image(); 
+        img.src = link.href; 
+        img.onload = function() { 
+            link.setAttribute('data-pswp-width', this.width); 
+            link.setAttribute('data-pswp-height', this.height); 
+        } 
+    });
+    const lightbox = new PhotoSwipeLightbox({ 
+        gallery: '#pswp-gallery', 
+        children: 'a', 
+        pswpModule: PhotoSwipe, 
+        zoom: true, 
+        wheelToZoom: true, 
+        pinchToClose: true, 
+        bgOpacity: 0.9 
+    });
     lightbox.init();
 </script>
 
 <script>
     function shareOffer() {
         if (navigator.share) {
-            navigator.share({ title: '{{ car.marka }} {{ car.model }}', text: 'Zobacz to auto na Giełdzie Radom!', url: window.location.href }).catch(console.error);
+            navigator.share({ 
+                title: '{{ car.marka }} {{ car.model }}', 
+                text: 'Zobacz to auto na Giełdzie Radom!', 
+                url: window.location.href 
+            }).catch(console.error);
         } else {
-            navigator.clipboard.writeText(window.location.href); alert('Skopiowano link do ogłoszenia!');
+            navigator.clipboard.writeText(window.location.href); 
+            alert('Skopiowano link do ogłoszenia!');
         }
     }
-    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
-    function acceptCookies() { localStorage.setItem('cookiesAccepted', 'true'); document.getElementById('cookie-banner').style.display = 'none'; }
+    
+    if (!localStorage.getItem('cookiesAccepted')) { 
+        document.getElementById('cookie-banner').style.display = 'block'; 
+    }
+    function acceptCookies() { 
+        localStorage.setItem('cookiesAccepted', 'true'); 
+        document.getElementById('cookie-banner').style.display = 'none'; 
+    }
 </script>
 
 {% if car.is_360_premium %}
@@ -582,10 +510,12 @@
         
         if(video) {
             video.currentTime = 0;
-            // FIX DLA IPHONE: Wymusza start dekodera, żeby obraz od razu pojawił się na Canvasie
+            // FIX DLA IPHONE: Wymusza start dekodera wewnątrz zdarzenia kliknięcia
             let playPromise = video.play();
             if (playPromise !== undefined) {
-                playPromise.then(_ => { video.pause(); }).catch(_ => {});
+                playPromise.then(_ => { 
+                    video.pause(); 
+                }).catch(e => console.log('Autoplay issue:', e));
             }
         }
     }
@@ -596,7 +526,7 @@
         modal.classList.add('d-none');
         document.body.style.overflow = ''; 
         if(canvas) {
-            canvas.style.transform = 'scale(1)'; // Reset zooma przy wyjściu
+            canvas.style.transform = 'scale(1)';
         }
     }
 
@@ -614,7 +544,6 @@
             video.pause(); 
         });
 
-        // 1. RYSOWANIE KANWASU (Zapewnia masłową płynność)
         function renderCanvas() {
             if (video.readyState >= 2) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -628,7 +557,6 @@
         let targetTime = 0;
         let currentTime = 0;
 
-        // 2. FIZYKA OBROTU (Z Twojego oryginalnego, ulubionego pliku)
         function animateRotation() {
             if (!isNaN(video.duration) && video.duration > 0) {
                 let diff = targetTime - currentTime;
@@ -680,21 +608,19 @@
         window.addEventListener('mouseup', stopDrag);
         window.addEventListener('mouseleave', stopDrag);
 
-        // 3. OBSŁUGA DOTYKU I BEZPROBLEMOWY ZOOM CSS (Nałożony sztywno na Canvas)
         let initialPinchDistance = null;
         let lastTap = 0;
         let currentScale = 1;
         let startScale = 1;
 
         container.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // ODCINA DOMYŚLNE PAUZY SYSTEMU APPLE/ANDROID
+            e.preventDefault(); 
             
             if (e.touches.length === 1) {
                 startDrag(e.touches[0].clientX);
                 const currentTimeTap = new Date().getTime();
                 const tapLength = currentTimeTap - lastTap;
                 
-                // PODWÓJNY KLIK - BŁYSKAWICZNY ZOOM
                 if (tapLength < 300 && tapLength > 0) {
                     currentScale = currentScale > 1.5 ? 1 : 2.5;
                     canvas.style.transform = `scale(${currentScale})`;
@@ -702,32 +628,30 @@
                 }
                 lastTap = currentTimeTap;
             } else if (e.touches.length === 2) {
-                // START SZCZYPANIA (PINCH)
                 isDragging = false; 
                 initialPinchDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
                 startScale = currentScale;
-                canvas.style.transition = 'none'; // Płynne reagowanie na palce w czasie rzeczywistym
+                canvas.style.transition = 'none'; 
             }
         }, { passive: false });
 
         container.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Blokada przewijania całej strony Giełdy
+            e.preventDefault(); 
             
             if (e.touches.length === 1 && isDragging) {
                 onDrag(e.touches[0].clientX);
             } else if (e.touches.length === 2 && initialPinchDistance) {
-                // MATEMATYKA SZCZYPANIA
                 let currentDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
                 
                 let scale = startScale * (currentDistance / initialPinchDistance);
-                if (scale < 1) scale = 1; // Nie pozwalamy pomniejszyć bardziej niż oryginał
-                if (scale > 4) scale = 4; // Max przybliżenie
+                if (scale < 1) scale = 1; 
+                if (scale > 4) scale = 4; 
                 
                 currentScale = scale;
                 canvas.style.transform = `scale(${currentScale})`;
@@ -745,5 +669,3 @@
 
 </body>
 </html>
-
-
