@@ -911,22 +911,48 @@ def generuj_opis_ai():
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
 def delete_car(car_id):
-    c = Car.query.get(car_id)
-    if c and (c.user_id == current_user.id or current_user.username == 'admin'):
-        # --- USUNIĘCIE FOLDERU 360° Z SERWERA ---
-        # Tworzymy ścieżkę do folderu: static/uploads/360_renders/[ID_AUTA]
-        render_path = os.path.join(app.config['RENDERS_360_FOLDER'], str(car_id))
-        
-        try:
+    try:
+        c = Car.query.get(car_id)
+        if c and (c.user_id == current_user.id or current_user.username == 'admin'):
+            
+            # 1. Usuwanie folderu ze zdjęciami 360 (jeśli auto miało status premium)
+            render_path = os.path.join(app.root_path, 'static', 'uploads', '360_renders', str(car_id))
             if os.path.exists(render_path):
                 import shutil
-                shutil.rmtree(render_path) # Kasuje folder i wszystkie klatki w środku
-        except Exception as e:
-            print(f"Błąd usuwania folderu 360: {e}")
+                shutil.rmtree(render_path, ignore_errors=True)
+            
+            # 2. Usuwanie pliku wideo 360 (jeśli istnieje)
+            video_path = os.path.join(app.root_path, 'static', 'uploads', '360_videos', f"{car_id}.mp4")
+            if os.path.exists(video_path):
+                os.remove(video_path)
 
-        db.session.delete(c)
-        db.session.commit()
-    return redirect('/profil')
+            # 3. Usuwanie zwykłych zdjęć z serwera (żeby nie zapchać dysku)
+            for img in c.images:
+                # Oczyszczanie ścieżki (np. usuwanie początkowego slasha, by os.path.join zadziałał)
+                img_relative_path = img.image_path.lstrip('/') 
+                img_full_path = os.path.join(app.root_path, img_relative_path)
+                
+                # Nie usuwamy systemowych placeholderów ani znaków wodnych
+                if os.path.exists(img_full_path) and 'placehold' not in img_full_path and 'watermark' not in img_full_path:
+                    try:
+                        os.remove(img_full_path)
+                    except Exception as e:
+                        print(f"Nie udało się usunąć fizycznego zdjęcia {img_full_path}: {e}")
+
+            # 4. Usunięcie rekordu z bazy (Cascade automatycznie usunie powiązane CarImage z bazy SQL)
+            db.session.delete(c)
+            db.session.commit()
+            flash('Ogłoszenie zostało pomyślnie usunięte.', 'success')
+        else:
+            flash('Brak uprawnień do usunięcia tego ogłoszenia.', 'danger')
+            
+    except Exception as e:
+        db.session.rollback()
+        print(f"BŁĄD PRZY USUWANIU AUTA: {e}")
+        flash(f'Wystąpił błąd podczas usuwania: {str(e)}', 'danger')
+        
+    return redirect(url_for('profil'))
+
 
 
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
