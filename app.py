@@ -313,7 +313,66 @@ def load_user(user_id):
 
 # --- FUNKCJE POMOCNICZE ---
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def save_optimized_image(file):
+    if not file or not allowed_file(file.filename):
+        return None
+    
+    try:
+        ext = 'webp' 
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Otwieranie obrazu przez PIL i poprawa rotacji
+        image = Image.open(file)
+        image = ImageOps.exif_transpose(image)
+        
+        # Konwersja do RGBA, jeśli oryginalny obraz to wymaga (np. PNG z przezroczystością)
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+
+        # Skalowanie głównego obrazu
+        image.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
+        
+        # --- NAKŁADANIE ZNAKU WODNEGO ---
+        watermark_path = os.path.join(app.root_path, 'static', 'watermark.png')
+        if os.path.exists(watermark_path):
+            watermark = Image.open(watermark_path).convert("RGBA")
+            
+            # Dostosowanie rozmiaru znaku wodnego (np. 20% szerokości obrazu)
+            wm_width = int(image.width * 0.20)
+            wm_ratio = wm_width / float(watermark.width)
+            wm_height = int(float(watermark.height) * float(wm_ratio))
+            watermark = watermark.resize((wm_width, wm_height), Image.Resampling.LANCZOS)
+            
+            # Dodanie przezroczystości do znaku wodnego (np. 50%)
+            alpha = watermark.split()[3]
+            alpha = alpha.point(lambda p: p * 0.5)
+            watermark.putalpha(alpha)
+            
+            # Obliczanie pozycji (np. w prawym dolnym rogu z marginesem 20px)
+            margin = 20
+            position = (image.width - wm_width - margin, image.height - wm_height - margin)
+            
+            # Nałożenie na nowy obraz kompozytowy
+            transparent = Image.new('RGBA', image.size, (0,0,0,0))
+            transparent.paste(image, (0,0))
+            transparent.paste(watermark, position, mask=watermark)
+            image = transparent
+        
+        # --- ZAPIS JAKO WEBP ---
+        # Dla WebP trzeba zrzucić przezroczystość na czarne lub białe tło przed kompresją
+        final_image = Image.new("RGB", image.size, (255, 255, 255))
+        final_image.paste(image, mask=image.split()[3])
+        
+        final_image.save(filepath, format='WEBP', quality=80)
+        
+        return filename
+    except Exception as e:
+        print(f"Błąd zapisu i znaku wodnego: {e}")
+        return None
 
 
 
