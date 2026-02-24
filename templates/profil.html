@@ -340,11 +340,21 @@
                     <div class="col-4"><div class="p-3 rounded-3 border border-success bg-success bg-opacity-10"><h3 class="fw-bold text-success mb-0">{{ online_count }}</h3><small class="text-success fw-bold" style="font-size:0.6rem;">ONLINE</small></div></div>
                     <div class="col-4"><div class="p-3 rounded-3 border border-info bg-info bg-opacity-10"><h3 class="fw-bold text-info mb-0">{{ total_views }}</h3><small class="text-info fw-bold" style="font-size:0.6rem;">WIDOKI</small></div></div>
                 </div>
-                <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
-                    <button class="btn btn-danger w-100 fw-bold shadow-sm mb-3" data-bs-toggle="modal" data-bs-target="#usersModal"><i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI</button>
-                    <div class="d-flex gap-2"><a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2"><i class="bi bi-database"></i> SQL</a><a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark"><i class="bi bi-archive-fill"></i> ZIP</a></div>
+                                <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
+                    <button class="btn btn-danger w-100 fw-bold shadow-sm mb-2" data-bs-toggle="modal" data-bs-target="#usersModal"><i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI</button>
+                    
+                    <form action="/admin/wyslij_powitania" method="POST" class="mb-3" onsubmit="return confirm('Czy na pewno chcesz wysłać e-mail powitalny do WSZYSTKICH użytkowników w bazie?');">
+                        <button type="submit" class="btn btn-info w-100 fw-bold shadow-sm text-dark" style="letter-spacing: 0.5px;">
+                            <i class="bi bi-envelope-paper-fill me-2"></i> WYŚLIJ MAILE POWITALNE
+                        </button>
+                    </form>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2"><i class="bi bi-database"></i> SQL</a>
+                        <a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark"><i class="bi bi-archive-fill"></i> ZIP</a>
+                    </div>
                 </div>
-            </div>
+
         </div>
         {% endif %}
         
