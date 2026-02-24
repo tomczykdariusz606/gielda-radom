@@ -1535,9 +1535,7 @@ https://gieldaradom.pl
         except Exception as e:
             print(f"Błąd wysyłania przypomnienia na {email}: {e}")
 
-def wyslij_przypomnienia(email, username, marka, model):
-    if email:
-        Thread(target=wyslij_przypomnienie_async, args=(app, email, username, marka, model)).start()
+
 
 # ==========================================
 # --- AUTOMATYZACJA W TLE (APSCHEDULER) ---
