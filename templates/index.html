@@ -311,7 +311,7 @@
         <h4 class="fw-bold text-white mb-0">{{ t['available'] }}</h4>
         <span class="text-white small fw-bold" style="letter-spacing: 0.5px;">
             <i class="bi bi-speedometer me-1 text-danger"></i> 
-            OFERT W BAZIE: <span class="text-danger">{{ pagination.total + 1582 }}</span>
+            OFERT W BAZIE: <span class="text-danger">{{ pagination.total + 1682 }}</span>
 
         </span>
     </div>
@@ -331,9 +331,18 @@
     <div class="position-absolute top-50 start-50" style="z-index: 20; transform: translate(-50%, -50%) rotate(-15deg); width: 100%; text-align: center; pointer-events: none;">
         <span class="badge bg-danger text-white shadow-lg" style="font-size: 1.6rem; letter-spacing: 4px; padding: 12px 25px; text-transform: uppercase; border: 4px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.9) !important; font-family: 'Anton', sans-serif;">
             REZERWACJA
+            {% if car.owner and car.owner.kraj and car.owner.kraj != 'Polska' %}
+    <div class="position-absolute bottom-0 end-0 m-2" style="z-index: 10;">
+        <span class="badge bg-dark border border-secondary shadow-lg fs-4" title="Pojazd z: {{ car.owner.kraj }}" style="border-radius: 10px;">
+            {% if car.owner.kraj == 'Niemcy' %}🇩🇪
+            {% elif car.owner.kraj == 'Belgia' %}🇧🇪
+            {% elif car.owner.kraj == 'Holandia' %}🇳🇱
+            {% elif car.owner.kraj == 'Francja' %}🇫🇷
+            {% else %}🌍{% endif %}
         </span>
     </div>
     {% endif %}
+
 
     
     <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 5;">
