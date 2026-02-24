@@ -1005,6 +1005,17 @@ def generuj_opis_ai():
     except:
         return jsonify({"opis": "Błąd generowania"}), 500
 
+@app.route('/rezerwacja/<int:car_id>', methods=['POST'])
+@login_required
+def toggle_rezerwacja(car_id):
+    c = Car.query.get_or_404(car_id)
+    if c.user_id == current_user.id or current_user.username == 'admin':
+        c.is_reserved = not c.is_reserved
+        db.session.commit()
+        flash('Status rezerwacji został zmieniony!', 'success')
+    return redirect(request.referrer or url_for('profil'))
+
+
 @app.route('/usun/<int:car_id>', methods=['POST'])
 @login_required
 def delete_car(car_id):
