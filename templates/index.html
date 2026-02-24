@@ -336,22 +336,19 @@
     </div>
     {% endif %}
 
+        <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 10;">
+        
         {% if car.owner and car.owner.kraj and car.owner.kraj != 'Polska' %}
-    <div class="position-absolute" style="bottom: 65px; right: 10px; z-index: 10;">
-        <span class="badge bg-dark border border-secondary shadow-lg fs-4" title="Pojazd z: {{ car.owner.kraj }}" style="border-radius: 10px;">
+        <span class="badge bg-dark border border-secondary shadow-lg fs-5" title="Pojazd z: {{ car.owner.kraj }}" style="border-radius: 8px; padding: 4px 8px;">
             {% if car.owner.kraj == 'Niemcy' %}🇩🇪
             {% elif car.owner.kraj == 'Belgia' %}🇧🇪
             {% elif car.owner.kraj == 'Holandia' %}🇳🇱
             {% elif car.owner.kraj == 'Francja' %}🇫🇷
             {% else %}🌍{% endif %}
         </span>
-    </div>
-    {% endif %}
+        {% endif %}
 
-
-    <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 5;">
         {% if car.is_promoted %}
-
             <span class="badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>
         {% endif %}
         
@@ -361,6 +358,7 @@
             </span>
         {% endif %}
     </div>
+
 
     <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
         <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
