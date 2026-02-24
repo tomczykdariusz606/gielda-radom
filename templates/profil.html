@@ -294,6 +294,16 @@
                             <div class="d-flex gap-2">
                                 <form action="/odswiez/{{ car.id }}" method="POST" class="w-50"><button class="btn btn-success btn-sm w-100 fw-bold text-white"><i class="bi bi-arrow-clockwise"></i></button></form>
                                 <form action="/usun/{{ car.id }}" method="POST" class="w-50" onsubmit="return confirm('?')"><button class="btn btn-dark btn-sm w-100 fw-bold border-secondary text-danger"><i class="bi bi-trash"></i></button></form>
+                                 <form action="/rezerwacja/{{ car.id }}" method="POST" class="d-inline">
+    <button type="submit" class="btn btn-sm {% if car.is_reserved %}btn-success{% else %}btn-outline-danger{% endif %} fw-bold shadow-sm" title="Oznacz jako Zarezerwowane">
+        {% if car.is_reserved %}
+            <i class="bi bi-unlock-fill"></i> ODBLOKUJ
+        {% else %}
+            <i class="bi bi-lock-fill"></i> ZAREZERWUJ
+        {% endif %}
+    </button>
+</form>
+
                             </div>
                         </div>
                     </div>
