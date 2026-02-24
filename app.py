@@ -119,6 +119,10 @@ def update_last_seen():
 # --- TŁUMACZENIA (Słownik Rozbudowany) ---
 TRANSLATIONS = {
     'pl': {
+        'eq_cat_basic': 'PODSTAWOWE WYPOSAŻENIE', 
+        'eq_cat_comfort': 'KOMFORT & DODATKI', 
+        'eq_cat_premium': 'PREMIUM & NOWE TECHNOLOGIE',
+
         'search_ph': 'Wpisz np. Audi A4, Automat...', 'btn_search': 'SZUKAJ', 'filters': 'Filtry', 
         'cat': 'Kategoria', 'fuel': 'Paliwo', 'gear': 'Skrzynia', 'year': 'Rok od', 'price': 'Cena do', 'mileage': 'Przebieg do', 
         'all': 'Wszystkie', 'man': 'Manualna', 'auto': 'Automatyczna', 'available': 'Dostępne Oferty', 'found': 'Znaleziono',
@@ -160,6 +164,10 @@ TRANSLATIONS = {
     },
     
     'en': {
+        'eq_cat_basic': 'BASIC EQUIPMENT', 
+        'eq_cat_comfort': 'COMFORT & ADD-ONS', 
+        'eq_cat_premium': 'PREMIUM & NEW TECH',
+
         'search_ph': 'E.g. Audi A4, Automatic...', 'btn_search': 'SEARCH', 'filters': 'Filters', 
         'cat': 'Category', 'fuel': 'Fuel', 'gear': 'Transmission', 'year': 'Year from', 'price': 'Price to', 'mileage': 'Mileage to', 
         'all': 'All', 'man': 'Manual', 'auto': 'Automatic', 'available': 'Available Offers', 'found': 'Found',
@@ -201,6 +209,10 @@ TRANSLATIONS = {
     },
     
     'de': {
+        'eq_cat_basic': 'BASISAUSSTATTUNG', 
+        'eq_cat_comfort': 'KOMFORT & EXTRAS', 
+        'eq_cat_premium': 'PREMIUM & NEUE TECHNIK',
+
         'search_ph': 'Z.B. Audi A4, Automatik...', 'btn_search': 'SUCHEN', 'filters': 'Filter', 
         'cat': 'Kategorie', 'fuel': 'Kraftstoff', 'gear': 'Getriebe', 'year': 'Baujahr ab', 'price': 'Preis bis', 'mileage': 'KM bis', 
         'all': 'Alle', 'man': 'Schaltgetriebe', 'auto': 'Automatik', 'available': 'Verfügbare Angebote', 'found': 'Gefunden',
