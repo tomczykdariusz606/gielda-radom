@@ -277,34 +277,64 @@
                             <div class="col-6"><i class="bi bi-speedometer2"></i> {{ car.przebieg }}</div>
                             <div class="col-6"><i class="bi bi-eye"></i> {{ car.views }}</div>
                         </div>
-                        <div class="mt-auto pt-3 border-top border-secondary d-grid gap-2">
-                            <div class="d-flex gap-2">
-                                <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-info btn-sm w-50 fw-bold"><i class="bi bi-eye"></i></a>
-
-{% if current_user.username == 'admin' or current_user.id == 1 %}
-<div class="mb-2">
-    <a href="/generate_360/{{ car.id }}" class="btn btn-warning btn-sm w-100 fw-bold shadow-sm" style="background: linear-gradient(135deg, #FFD700, #b8860b); color: #000; border: none;">
-        <i class="bi bi-view-360"></i> GENERUJ 360° PREMIUM
-    </a>
-</div>
-{% endif %}
-
-                                <a href="/edytuj/{{ car.id }}" class="btn btn-outline-light btn-sm w-50 fw-bold"><i class="bi bi-pencil"></i></a>
+                                                <div class="mt-auto pt-3 border-top border-secondary border-opacity-50">
+                            
+                            <div class="row g-2 mb-2">
+                                <div class="col-4">
+                                    <a href="/ogloszenie/{{ car.id }}" class="btn btn-outline-info btn-sm w-100 fw-bold py-2" title="Podgląd ogłoszenia">
+                                        <i class="bi bi-eye fs-6"></i>
+                                    </a>
+                                </div>
+                                <div class="col-4">
+                                    <a href="/edytuj/{{ car.id }}" class="btn btn-outline-light btn-sm w-100 fw-bold py-2" title="Edytuj ogłoszenie">
+                                        <i class="bi bi-pencil-square fs-6"></i>
+                                    </a>
+                                </div>
+                                <div class="col-4">
+                                    {% set roznica_godzin = (now - car.data_dodania).total_seconds() / 3600 %}
+                                    {% set mozna_podbic = (roznica_godzin >= 72) or (current_user.username == 'admin' or current_user.id == 1) %}
+                                    
+                                    <form action="/odswiez/{{ car.id }}" method="POST">
+                                        <button type="submit" class="btn {% if mozna_podbic %}btn-success{% else %}btn-secondary opacity-50{% endif %} btn-sm w-100 fw-bold text-white py-2 shadow-sm" title="{% if mozna_podbic %}Podbij na samą górę{% else %}Podbicie możliwe co 3 dni{% endif %}" {% if not mozna_podbic %}disabled{% endif %}>
+                                            <i class="bi bi-arrow-up-circle-fill fs-6"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="d-flex gap-2">
-                                <form action="/odswiez/{{ car.id }}" method="POST" class="w-50"><button class="btn btn-success btn-sm w-100 fw-bold text-white"><i class="bi bi-arrow-clockwise"></i></button></form>
-                                <form action="/usun/{{ car.id }}" method="POST" class="w-50" onsubmit="return confirm('?')"><button class="btn btn-dark btn-sm w-100 fw-bold border-secondary text-danger"><i class="bi bi-trash"></i></button></form>
-                                 <form action="/rezerwacja/{{ car.id }}" method="POST" class="d-inline">
-    <button type="submit" class="btn btn-sm {% if car.is_reserved %}btn-success{% else %}btn-outline-danger{% endif %} fw-bold shadow-sm" title="Oznacz jako Zarezerwowane">
-        {% if car.is_reserved %}
-            <i class="bi bi-unlock-fill"></i> ODBLOKUJ
-        {% else %}
-            <i class="bi bi-lock-fill"></i> ZAREZERWUJ
-        {% endif %}
-    </button>
-</form>
 
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">
+                                    <form action="/rezerwacja/{{ car.id }}" method="POST">
+                                        <button type="submit" class="btn btn-sm w-100 fw-bold py-2 shadow-sm {% if car.is_reserved %}btn-success{% else %}btn-outline-warning{% endif %}" style="letter-spacing: 1px;">
+                                            {% if car.is_reserved %}
+                                                <i class="bi bi-unlock-fill me-1"></i> ODBLOKUJ
+                                            {% else %}
+                                                <i class="bi bi-lock-fill me-1"></i> ZAREZERWUJ
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-4">
+                                    <form action="/usun/{{ car.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz bezpowrotnie usunąć to ogłoszenie ze zdjęciami?');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold py-2" title="Usuń trwale">
+                                            <i class="bi bi-trash3-fill fs-6"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
+
+                            {% if current_user.username == 'admin' or current_user.id == 1 %}
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <a href="/generate_360/{{ car.id }}" class="btn btn-sm w-100 fw-bold py-2 shadow-sm text-dark" style="background: linear-gradient(135deg, #f0c420, #d4a017); border: none; letter-spacing: 0.5px;">
+                                        <i class="bi bi-view-360 me-1"></i> GENERUJ 360° PREMIUM
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                      
                         </div>
                     </div>
                 </div>
