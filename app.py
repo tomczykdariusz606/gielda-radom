@@ -1420,7 +1420,8 @@ def update_db():
             ("user", "opis_firmy", "TEXT"),
             ("user", "kraj", "TEXT DEFAULT 'Polska'"),
             # --- NOWA KOLUMNA DLA FUNKCJI 360 ---
-            ("car", "is_360_premium", "BOOLEAN DEFAULT 0") 
+            ("car", "is_360_premium", "BOOLEAN DEFAULT 0"),
+            ("car", "is_reserved", "BOOLEAN DEFAULT 0") # <--- TO DODAJ (pamiętaj o przecinku w linijce wyżej!)
         ]
         
         for table, col, dtype in columns_to_add:
