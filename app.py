@@ -136,7 +136,6 @@ TRANSLATIONS = {
         'photos': 'ZDJĘCIA', 'max': 'MAX', 'brand': 'Marka', 'model': 'Model', 'vin': 'VIN', 'year_prod': 'Rok produkcji', 'price_ad': 'Cena', 'mileage_ad': 'Przebieg',
         'power': 'Moc (KM)', 'color': 'Kolor', 'engine_cap': 'Pojemność', 'phone': 'Telefon', 'desc': 'Opis',
         'equip': 'WYPOSAŻENIE (Zaznacz opcje)', 'petrol': 'Benzyna', 'diesel': 'Diesel', 'hybrid': 'Hybryda', 'electric': 'Elektryczny', 'lpg': 'LPG',
-        # --- NOWE DO REJESTRACJI ---
         'create_acc_desc': 'Wystawiaj auta za darmo i korzystaj z AI', 'reg_google': 'Zarejestruj przez Google', 'or_manual': 'LUB RĘCZNIE',
         'username_label': 'Nazwa użytkownika (Login)', 'username_ph': 'np. JanKowalski',
         'email_label': 'Adres E-mail', 'email_ph': 'np. jan@gmail.com',
@@ -144,8 +143,22 @@ TRANSLATIONS = {
         'country': 'Kraj', 'city': 'Miasto', 'city_ph': 'np. Radom', 'acc_type': 'Typ konta', 'company_ph': 'np. Auto-Handel Kowalski',
         'gemini_title': 'Powered by Gemini AI', 'gemini_desc_1': 'Wyceny aut, analiza uszkodzeń ze zdjęć i generowanie opisów.', 'gemini_desc_2': 'Zyskujesz to za darmo po założeniu konta!',
         'already_have_acc': 'Masz już konto?',
-        'country_pl': 'Polska', 'country_de': 'Niemcy', 'country_be': 'Belgia', 'country_nl': 'Holandia', 'country_fr': 'Francja', 'country_other': 'Inny'
+        'country_pl': 'Polska', 'country_de': 'Niemcy', 'country_be': 'Belgia', 'country_nl': 'Holandia', 'country_fr': 'Francja', 'country_other': 'Inny',
+        'select_multiple': 'Zaznacz kilka zdjęć na raz', 'files_ready': 'gotowych zdjęć',
+        
+        # WYPOSAŻENIE PREMIUM (Klucze eq_)
+        'eq_safety': 'BEZPIECZEŃSTWO & ASYSTENCI', 'eq_comfort': 'KOMFORT PREMIUM', 'eq_multi': 'MULTIMEDIA & TECHNOLOGIA', 'eq_exterior': 'WYGLĄD & INNE',
+        'eq_abs': 'ABS', 'eq_esp': 'ESP / ASR', 'eq_airbags': 'Poduszki powietrzne', 'eq_isofix': 'Isofix', 'eq_lane': 'Asystent pasa ruchu', 'eq_blind': 'Czujnik martwego pola',
+        'eq_signs': 'Rozpoznawanie znaków', 'eq_front_assist': 'Front Assist (Hamowanie)', 'eq_night_vision': 'Night Vision',
+        'eq_ac': 'Klimatyzacja manualna', 'eq_climatronic': 'Klimatronik', 'eq_4zone': 'Klimatronik 4-strefowy', 'eq_leather': 'Skórzana tapicerka', 
+        'eq_heated_seats': 'Podgrzewane fotele', 'eq_vent_seats': 'Wentylowane fotele', 'eq_massage': 'Fotele z masażem', 'eq_heated_steer': 'Podgrzewana kierownica',
+        'eq_heated_wind': 'Podgrzewana przednia szyba', 'eq_photochrom': 'Lusterka fotochromatyczne', 'eq_windows': 'El. szyby', 'eq_mirrors': 'El. lusterka',
+        'eq_cruise': 'Tempomat', 'eq_cruise_adapt': 'Tempomat aktywny (ACC)', 'eq_keyless': 'Keyless / Bezkluczykowy', 'eq_air_susp': 'Zawieszenie pneumatyczne', 'eq_soft_close': 'Dociąganie drzwi',
+        'eq_navi': 'Nawigacja', 'eq_bt': 'Bluetooth / USB', 'eq_android': 'Android Auto / CarPlay', 'eq_cam_back': 'Kamera cofania', 'eq_cam_360': 'Kamera 360', 
+        'eq_sensors': 'Czujniki parkowania', 'eq_park_assist': 'Asystent parkowania', 'eq_hud': 'Head-Up Display', 'eq_wireless': 'Ładowarka indukcyjna', 'eq_sound': 'Nagłośnienie Premium',
+        'eq_alloys': 'Alufelgi', 'eq_led': 'Reflektory Matrix LED / Laser', 'eq_sunroof': 'Szyberdach', 'eq_pano': 'Dach panoramiczny', 'eq_trunk': 'Elektryczna klapa bagażnika', 'eq_ambient': 'Oświetlenie Ambient', 'eq_tow': 'Hak'
     },
+    
     'en': {
         'search_ph': 'E.g. Audi A4, Automatic...', 'btn_search': 'SEARCH', 'filters': 'Filters', 
         'cat': 'Category', 'fuel': 'Fuel', 'gear': 'Transmission', 'year': 'Year from', 'price': 'Price to', 'mileage': 'Mileage to', 
@@ -164,7 +177,6 @@ TRANSLATIONS = {
         'photos': 'PHOTOS', 'max': 'MAX', 'brand': 'Brand', 'model': 'Model', 'vin': 'VIN', 'year_prod': 'Year', 'price_ad': 'Price', 'mileage_ad': 'Mileage',
         'power': 'Power (HP)', 'color': 'Color', 'engine_cap': 'Engine (CC)', 'phone': 'Phone', 'desc': 'Description',
         'equip': 'EQUIPMENT (Check options)', 'petrol': 'Petrol', 'diesel': 'Diesel', 'hybrid': 'Hybrid', 'electric': 'Electric', 'lpg': 'LPG',
-        # --- NOWE DO REJESTRACJI ---
         'create_acc_desc': 'List cars for free and use AI tools', 'reg_google': 'Register with Google', 'or_manual': 'OR MANUALLY',
         'username_label': 'Username', 'username_ph': 'e.g. JohnDoe',
         'email_label': 'Email Address', 'email_ph': 'e.g. john@gmail.com',
@@ -172,8 +184,22 @@ TRANSLATIONS = {
         'country': 'Country', 'city': 'City', 'city_ph': 'e.g. Warsaw', 'acc_type': 'Account Type', 'company_ph': 'e.g. Auto-Trade John',
         'gemini_title': 'Powered by Gemini AI', 'gemini_desc_1': 'Car valuations, visual damage analysis and description generation.', 'gemini_desc_2': 'All this for free after registration!',
         'already_have_acc': 'Already have an account?',
-        'country_pl': 'Poland', 'country_de': 'Germany', 'country_be': 'Belgium', 'country_nl': 'Netherlands', 'country_fr': 'France', 'country_other': 'Other'
+        'country_pl': 'Poland', 'country_de': 'Germany', 'country_be': 'Belgium', 'country_nl': 'Netherlands', 'country_fr': 'France', 'country_other': 'Other',
+        'select_multiple': 'Select multiple photos at once', 'files_ready': 'photos ready',
+        
+        # WYPOSAŻENIE PREMIUM
+        'eq_safety': 'SAFETY & ASSISTANTS', 'eq_comfort': 'PREMIUM COMFORT', 'eq_multi': 'MULTIMEDIA & TECH', 'eq_exterior': 'EXTERIOR & OTHER',
+        'eq_abs': 'ABS', 'eq_esp': 'ESP / Traction Control', 'eq_airbags': 'Airbags', 'eq_isofix': 'Isofix', 'eq_lane': 'Lane Assist', 'eq_blind': 'Blind Spot Monitor',
+        'eq_signs': 'Traffic Sign Recognition', 'eq_front_assist': 'Emergency Braking', 'eq_night_vision': 'Night Vision',
+        'eq_ac': 'Manual A/C', 'eq_climatronic': 'Auto Climate Control', 'eq_4zone': '4-Zone Climate Control', 'eq_leather': 'Leather Seats', 
+        'eq_heated_seats': 'Heated Seats', 'eq_vent_seats': 'Ventilated Seats', 'eq_massage': 'Massage Seats', 'eq_heated_steer': 'Heated Steering Wheel',
+        'eq_heated_wind': 'Heated Windshield', 'eq_photochrom': 'Auto-dimming Mirrors', 'eq_windows': 'Power Windows', 'eq_mirrors': 'Power Mirrors',
+        'eq_cruise': 'Cruise Control', 'eq_cruise_adapt': 'Adaptive Cruise Control', 'eq_keyless': 'Keyless Entry', 'eq_air_susp': 'Air Suspension', 'eq_soft_close': 'Soft-Close Doors',
+        'eq_navi': 'Navigation System', 'eq_bt': 'Bluetooth / USB', 'eq_android': 'Android Auto / CarPlay', 'eq_cam_back': 'Backup Camera', 'eq_cam_360': '360° Camera', 
+        'eq_sensors': 'Parking Sensors', 'eq_park_assist': 'Park Assist', 'eq_hud': 'Head-Up Display', 'eq_wireless': 'Wireless Charging', 'eq_sound': 'Premium Sound System',
+        'eq_alloys': 'Alloy Wheels', 'eq_led': 'Matrix LED / Laser Lights', 'eq_sunroof': 'Sunroof', 'eq_pano': 'Panoramic Roof', 'eq_trunk': 'Power Trunk', 'eq_ambient': 'Ambient Lighting', 'eq_tow': 'Tow Hook'
     },
+    
     'de': {
         'search_ph': 'Z.B. Audi A4, Automatik...', 'btn_search': 'SUCHEN', 'filters': 'Filter', 
         'cat': 'Kategorie', 'fuel': 'Kraftstoff', 'gear': 'Getriebe', 'year': 'Baujahr ab', 'price': 'Preis bis', 'mileage': 'KM bis', 
@@ -192,7 +218,6 @@ TRANSLATIONS = {
         'photos': 'FOTOS', 'max': 'MAX', 'brand': 'Marke', 'model': 'Modell', 'vin': 'FIN', 'year_prod': 'Baujahr', 'price_ad': 'Preis', 'mileage_ad': 'Kilometer',
         'power': 'Leistung (PS)', 'color': 'Farbe', 'engine_cap': 'Hubraum', 'phone': 'Telefon', 'desc': 'Beschreibung',
         'equip': 'AUSSTATTUNG', 'petrol': 'Benzin', 'diesel': 'Diesel', 'hybrid': 'Hybrid', 'electric': 'Elektro', 'lpg': 'Autogas (LPG)',
-        # --- NOWE DO REJESTRACJI ---
         'create_acc_desc': 'Autos kostenlos inserieren & AI nutzen', 'reg_google': 'Mit Google registrieren', 'or_manual': 'ODER MANUELL',
         'username_label': 'Benutzername', 'username_ph': 'z.B. MaxMustermann',
         'email_label': 'E-Mail Adresse', 'email_ph': 'z.B. max@gmail.com',
@@ -200,7 +225,20 @@ TRANSLATIONS = {
         'country': 'Land', 'city': 'Stadt', 'city_ph': 'z.B. Berlin', 'acc_type': 'Kontotyp', 'company_ph': 'z.B. Auto-Handel Max',
         'gemini_title': 'Powered by Gemini AI', 'gemini_desc_1': 'Fahrzeugbewertungen, Schadensanalyse und Beschreibungserstellung.', 'gemini_desc_2': 'Alles kostenlos nach der Registrierung!',
         'already_have_acc': 'Haben Sie bereits ein Konto?',
-        'country_pl': 'Polen', 'country_de': 'Deutschland', 'country_be': 'Belgien', 'country_nl': 'Niederlande', 'country_fr': 'Frankreich', 'country_other': 'Andere'
+        'country_pl': 'Polen', 'country_de': 'Deutschland', 'country_be': 'Belgien', 'country_nl': 'Niederlande', 'country_fr': 'Frankreich', 'country_other': 'Andere',
+        'select_multiple': 'Mehrere Fotos auf einmal auswählen', 'files_ready': 'Fotos bereit',
+        
+        # WYPOSAŻENIE PREMIUM
+        'eq_safety': 'SICHERHEIT & ASSISTENZ', 'eq_comfort': 'PREMIUM KOMFORT', 'eq_multi': 'MULTIMEDIA & TECHNIK', 'eq_exterior': 'EXTERIEUR & SONSTIGES',
+        'eq_abs': 'ABS', 'eq_esp': 'ESP / ASR', 'eq_airbags': 'Airbags', 'eq_isofix': 'Isofix', 'eq_lane': 'Spurhalteassistent', 'eq_blind': 'Totwinkel-Assistent',
+        'eq_signs': 'Verkehrszeichenerkennung', 'eq_front_assist': 'Notbremsassistent', 'eq_night_vision': 'Nachtsichtassistent',
+        'eq_ac': 'Klimaanlage manuell', 'eq_climatronic': 'Klimaautomatik', 'eq_4zone': '4-Zonen Klimaautomatik', 'eq_leather': 'Lederausstattung', 
+        'eq_heated_seats': 'Sitzheizung', 'eq_vent_seats': 'Sitzbelüftung', 'eq_massage': 'Massagesitze', 'eq_heated_steer': 'Lenkradheizung',
+        'eq_heated_wind': 'Beheizbare Frontscheibe', 'eq_photochrom': 'Innenspiegel autom. abblendend', 'eq_windows': 'Elektr. Fensterheber', 'eq_mirrors': 'Elektr. Seitenspiegel',
+        'eq_cruise': 'Tempomat', 'eq_cruise_adapt': 'Abstandstempomat (ACC)', 'eq_keyless': 'Schlüssellose Zentralverriegelung', 'eq_air_susp': 'Luftfederung', 'eq_soft_close': 'Soft-Close-Automatik',
+        'eq_navi': 'Navigationssystem', 'eq_bt': 'Bluetooth / USB', 'eq_android': 'Android Auto / CarPlay', 'eq_cam_back': 'Rückfahrkamera', 'eq_cam_360': '360°-Kamera', 
+        'eq_sensors': 'Einparkhilfe', 'eq_park_assist': 'Parklenkassistent', 'eq_hud': 'Head-Up Display', 'eq_wireless': 'Induktionsladen für Smartphones', 'eq_sound': 'Premium Soundsystem',
+        'eq_alloys': 'Leichtmetallfelgen', 'eq_led': 'Matrix LED / Laserlicht', 'eq_sunroof': 'Schiebedach', 'eq_pano': 'Panoramadach', 'eq_trunk': 'Elektr. Heckklappe', 'eq_ambient': 'Ambiente-Beleuchtung', 'eq_tow': 'Anhängerkupplung'
     }
 }
 
