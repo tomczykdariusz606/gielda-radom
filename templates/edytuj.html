@@ -420,20 +420,26 @@
         document.getElementById('btn_' + name).innerText = label;
     }
 
-    async function generujOpis() {
+        async function generujOpis() {
+        // Magia: Szukamy zaznaczonych opcji TYLKO w sekcjach Komfort i Premium!
+        const zaznaczoneOpcje = Array.from(document.querySelectorAll('#colComfort input:checked, #colPremium input:checked'))
+                                     .map(cb => cb.value)
+                                     .join(', ');
+
         const data = {
-            marka: document.getElementById('i_marka').value,
-            model: document.getElementById('i_model').value,
-            rok: document.getElementById('i_rok').value,
-            przebieg: document.getElementById('i_przebieg').value,
-            cena: document.getElementById('i_cena').value,
+            marka: document.getElementById('i_marka') ? document.getElementById('i_marka').value : document.querySelector('[name="marka"]').value,
+            model: document.getElementById('i_model') ? document.getElementById('i_model').value : document.querySelector('[name="model"]').value,
+            rok: document.getElementById('i_rok') ? document.getElementById('i_rok').value : document.querySelector('[name="rok"]').value,
+            przebieg: document.getElementById('i_przebieg') ? document.getElementById('i_przebieg').value : document.querySelector('[name="przebieg"]').value,
+            cena: document.getElementById('i_cena') ? document.getElementById('i_cena').value : document.querySelector('[name="cena"]').value,
             paliwo: document.getElementById('val_paliwo').value,
-            pojemnosc: document.getElementById('i_pojemnosc').value
+            pojemnosc: document.getElementById('i_pojemnosc') ? document.getElementById('i_pojemnosc').value : document.querySelector('[name="pojemnosc"]').value,
+            wyposazenie: zaznaczoneOpcje // AI dostanie tylko mięsko, zero zapychaczy!
         };
 
-        const loader = document.getElementById('aiLoader');
-        const area = document.getElementById('opisArea');
-        loader.style.display = 'block';
+        const loader = document.getElementById('aiLoader') || document.getElementById('scanLoader');
+        const area = document.getElementById('opisArea') || document.querySelector('[name="opis"]');
+        if(loader) loader.style.display = 'block';
 
         try {
             const resp = await fetch('/api/generuj-opis', {
@@ -450,7 +456,7 @@
         } catch(e) {
             alert('Wystąpił błąd połączenia z AI.');
         }
-        loader.style.display = 'none';
+        if(loader) loader.style.display = 'none';
     }
 
     async function usunZdjecie(id) {
