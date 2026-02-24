@@ -1295,7 +1295,7 @@ def admin_wyslij_powitania():
                     subject="Dziękuję za zaufanie! Wspólnie zmieniamy rynek aut w Radomiu 🤝",
                     recipients=[u.email]
                 )
-                        msg.body = f"""Cześć {username}! 👋
+                msg.body = f"""Cześć {u.username}! 👋
 
 Piszę do Ciebie osobiście, ponieważ właśnie dołączyłeś do platformy Giełda Radom. Chciałem Ci za to bardzo serdecznie podziękować!
 
@@ -1320,7 +1320,6 @@ Dariusz
 Właściciel serwisu | ADT & AI Team
 https://gieldaradom.pl
 """
-
                 try:
                     conn.send(msg)
                     wyslane += 1
