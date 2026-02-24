@@ -142,6 +142,17 @@
         .user-price-label::after { content: ''; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); border-width: 0 5px 5px 5px; border-style: solid; border-color: transparent transparent #ce2b37 transparent; }
         .paint-gauge { width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0,0,0,0.5); border: 1px solid #333; }
         .paint-inner { width: 60px; height: 60px; background: #161616; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: white; }
+            /* STYLE DLA NOWEJ STOPKI (BEZ DOLNEGO MENU) */
+        .seo-footer {
+            background: rgba(10,10,10,0.95);
+            padding: 40px 0 30px 0; /* Usunięto 110px marginesu, stopka przylega ładnie do dołu */
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #777;
+            font-size: 0.85rem;
+        }
+        .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
+        .footer-link:hover { color: var(--radom-red); }
+
     </style>
 </head>
 <body>
@@ -436,7 +447,38 @@
         <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">OK</button>
     </div>
 </div>
-<footer class="mt-5 py-4 border-top border-secondary text-center text-muted small">© 2026 Giełda Radom.</footer>
+
+<footer class="seo-footer mt-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-md-4 text-center text-md-start">
+                <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
+                <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+            </div>
+            <div class="col-6 col-md-4 text-center">
+                <h6 class="text-white fw-bold mb-3">MENU</h6>
+                <ul class="list-unstyled">
+                    <li><a href="/" class="footer-link">Strona Główna</a></li>
+                    <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                    <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                    <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-4 text-center text-md-end">
+                <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
+                <a href="/sitemap.xml" style="display: none;">Sitemap</a>
+                
+                <p class="small mb-1 text-muted">Napisz do nas:</p>
+                <a href="mailto:dariusztom@go2.pl" class="text-danger fw-bold text-decoration-none">dariusztom@go2.pl</a>
+            </div>
+        </div>
+        <hr class="border-secondary my-4">
+        <div class="text-center small opacity-50">
+            &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
+        </div>
+    </div>
+</footer>
+
 
 {% if car.is_360_premium %}
 <div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
