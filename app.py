@@ -877,6 +877,7 @@ def dodaj_ogloszenie():
         wyposazenie_list = request.form.getlist('wyposazenie')
         wyposazenie_str = ",".join(wyposazenie_list)
 
+        # 4. TWORZENIE NOWEGO AUTA
         new_car = Car(
             marka=request.form.get('marka', ''),
             model=request.form.get('model', ''),
@@ -903,23 +904,28 @@ def dodaj_ogloszenie():
             data_dodania=datetime.utcnow()
         )
         
+        # 5. ZAPIS DO BAZY
         db.session.add(new_car)
-        db.session.flush() 
+        db.session.flush() # Pobranie ID przed całkowitym zapisem
         
         for p in saved_paths:
             db.session.add(CarImage(image_path=p, car_id=new_car.id))
             
         db.session.commit()
-        for p in saved_paths:
-            db.session.add(CarImage(image_path=p, car_id=new_car.id))
-            
-        db.session.commit()
         
-        # --- TĘ LINIJKĘ DODAJESZ ---
+        # 6. WYSYŁKA MAILA (Działa w tle)
         wyslij_potwierdzenie_ogloszenia(current_user.email, current_user.username, new_car.marka, new_car.model)
         
         flash('Dodano ogłoszenie!', 'success')
         return redirect(url_for('profil'))
+
+    except Exception as e:
+        # COFANIE ZMIAN W BAZIE W RAZIE AWARII
+        db.session.rollback()
+        print(f"BŁĄD PRZY DODAWANIU AUTA: {e}")
+        flash(f'Wystąpił błąd przy zapisie: {str(e)}', 'danger')
+        return redirect(url_for('profil'))
+
 
     except Exception as e:
         # COFANIE ZMIAN W BAZIE W RAZIE AWARII (Zapobiega zablokowaniu bazy)
@@ -1262,7 +1268,7 @@ def edytuj(id):
                     pass # Jeśli admin wpisze bzdury (np. litery), system to zignoruje
             # ----------------------------------
 
-            wyposazenie_list = request.form.getlist('wyposazenie')
+            
 
             wyposazenie_list = request.form.getlist('wyposazenie')
             car.wyposazenie = ",".join(wyposazenie_list)
