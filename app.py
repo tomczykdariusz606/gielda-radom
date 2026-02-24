@@ -664,8 +664,11 @@ def index():
     max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
-    cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
-    return render_template('index.html', cars=cars, now=datetime.utcnow())
+        page = request.args.get('page', 1, type=int)
+    pagination = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
+    
+    return render_template('index.html', cars=pagination.items, pagination=pagination, now=datetime.utcnow())
+
 
 @app.route('/szukaj')
 def szukaj():
@@ -718,9 +721,12 @@ def szukaj():
         if moc_min is not None: 
             query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
         
-        cars = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).limit(100).all()
+                            page = request.args.get('page', 1, type=int)
+        pagination = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
         
-        return render_template('szukaj.html', cars=cars, now=datetime.utcnow(), args=request.args)
+        return render_template('szukaj.html', cars=pagination.items, pagination=pagination, now=datetime.utcnow(), args=request.args)
+
+
 
     except Exception as e:
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
