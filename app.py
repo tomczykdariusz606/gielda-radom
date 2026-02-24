@@ -719,7 +719,7 @@ def szukaj():
         if przebieg_min is not None: query = query.filter(Car.przebieg >= przebieg_min)
         if przebieg_max is not None: query = query.filter(Car.przebieg <= przebieg_max)
         
-                if moc_min is not None: 
+        if moc_min is not None: 
             query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
         
         page = request.args.get('page', 1, type=int)
@@ -727,7 +727,8 @@ def szukaj():
         
         return render_template('szukaj.html', cars=pagination.items, pagination=pagination, now=datetime.utcnow(), args=request.args)
 
-
+    except Exception as e:
+        return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
 
 
     except Exception as e:
