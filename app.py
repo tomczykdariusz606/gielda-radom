@@ -499,6 +499,42 @@ https://gieldaradom.pl
 def wyslij_powitanie(email, username):
     Thread(target=wyslij_email_powitalny_async, args=(app, email, username)).start()
 
+# --- WYSYŁKA POTWIERDZENIA DODANIA OGŁOSZENIA ---
+def wyslij_potwierdzenie_ogloszenia_async(app, email, username, marka, model):
+    with app.app_context():
+        msg = Message(
+            subject=f"🚗 Twoje ogłoszenie: {marka} {model} jest już aktywne! - Giełda Radom",
+            recipients=[email]
+        )
+        msg.body = f"""Cześć {username}! 👋
+
+Twoje ogłoszenie dotyczące samochodu {marka} {model} zostało pomyślnie dodane i jest już widoczne dla kupujących na Giełdzie Radom!
+
+Krótkie podsumowanie:
+✅ Pojazd: {marka} {model}
+✅ Czas trwania: Twoje ogłoszenie będzie aktywne i całkowicie darmowe przez najbliższe 30 dni.
+
+Co dalej?
+W każdej chwili możesz zaktualizować cenę, dodać nowe zdjęcia, odświeżyć ofertę lub ją usunąć. Wszystko to zrobisz z poziomu swojego Garażu:
+https://gieldaradom.pl/profil
+
+Trzymamy kciuki za szybką sprzedaż! Oby telefon dzwonił bez przerwy. 😉
+
+Pozdrawiam serdecznie,
+Dariusz
+Właściciel serwisu | ADT & AI Team
+https://gieldaradom.pl
+"""
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print(f"Błąd wysyłania potwierdzenia na {email}: {e}")
+
+def wyslij_potwierdzenie_ogloszenia(email, username, marka, model):
+    if email: # Upewniamy się, że użytkownik ma podany email
+        Thread(target=wyslij_potwierdzenie_ogloszenia_async, args=(app, email, username, marka, model)).start()
+
+
 
 # --- TRASY GOOGLE LOGIN ---
 @app.route('/login/google')
