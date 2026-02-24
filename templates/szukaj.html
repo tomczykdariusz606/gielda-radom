@@ -266,7 +266,8 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-search">SZUKAJ ({{ cars|length }} WYNIKÓW)</button>
+                <button type="submit" class="btn-search">SZUKAJ ({{ pagination.total }} WYNIKÓW)</button>
+
             </form>
         </div>
 
@@ -304,6 +305,41 @@
                 <p class="text-muted mt-3">Brak wyników.</p>
             </div>
             {% endfor %}
+        {% if pagination and pagination.pages > 1 %}
+        
+        {% set args_without_page = [] %}
+        {% for key, value in request.args.items() %}
+            {% if key != 'page' and value %}
+                {% set _ = args_without_page.append(key ~ '=' ~ value) %}
+            {% endif %}
+        {% endfor %}
+        {% set base_query = '?' ~ args_without_page|join('&') ~ ('&' if args_without_page else '') %}
+
+        <nav aria-label="Nawigacja stron" class="mt-5 mb-5 pb-5">
+            <ul class="pagination justify-content-center mb-0 shadow-sm">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ base_query }}page={{ pagination.prev_num if pagination.has_prev else 1 }}">&laquo; Poprzednia</a>
+                </li>
+
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if pagination.page == page_num %}
+                            <li class="page-item active"><span class="page-link bg-danger border-danger text-white fw-bold">{{ page_num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="{{ base_query }}page={{ page_num }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link bg-dark text-white border-secondary" href="{{ base_query }}page={{ pagination.next_num if pagination.has_next else pagination.pages }}">Następna &raquo;</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+
         </div>
     </div>
 
