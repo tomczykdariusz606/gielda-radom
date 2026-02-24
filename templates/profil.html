@@ -316,7 +316,33 @@
             </div>
             {% endfor %}
         </div>
+            </div>
 
+        {% if pagination and pagination.pages > 1 %}
+        <nav aria-label="Nawigacja stron" class="mt-4 mb-5">
+            <ul class="pagination justify-content-center mb-0 shadow-sm">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link bg-dark text-white border-secondary" href="?page={{ pagination.prev_num if pagination.has_prev else 1 }}">&laquo; Poprzednia</a>
+                </li>
+
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if pagination.page == page_num %}
+                            <li class="page-item active"><span class="page-link bg-danger border-danger text-white fw-bold">{{ page_num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="?page={{ page_num }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link bg-dark text-white border-secondary" href="?page={{ pagination.next_num if pagination.has_next else pagination.pages }}">Następna &raquo;</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
         <h5 class="fw-bold text-white mb-3 mt-5 ps-2 border-start border-4 border-warning ps-3">{{ t.get('observed', 'OBSERWOWANE OFERTY') }}</h5>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for fav in favorites %}
