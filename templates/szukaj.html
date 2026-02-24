@@ -266,7 +266,8 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn-search">SZUKAJ ({{ pagination.total }} WYNIKÓW)</button>
+               <button type="submit" class="btn-search">SZUKAJ {% if pagination %}({{ pagination.total }} WYNIKÓW){% endif %}</button>
+
 
             </form>
         </div>
