@@ -1248,9 +1248,11 @@ def admin_wyslij_powitania():
                     subject="Dziękuję za zaufanie! Wspólnie zmieniamy rynek aut w Radomiu 🤝",
                     recipients=[u.email]
                 )
-                msg.body = f"""Cześć {u.username}! 👋
+                        msg.body = f"""Cześć {username}! 👋
 
 Piszę do Ciebie osobiście, ponieważ właśnie dołączyłeś do platformy Giełda Radom. Chciałem Ci za to bardzo serdecznie podziękować!
+
+Przy okazji chciałbym Cię gorąco przeprosić za wszelkie utrudnienia, na które mogłeś natrafić w ostatnich dniach (np. podczas dodawania ogłoszeń). Cały czas intensywnie pracujemy nad rozbudową platformy i na bieżąco usuwamy usterki, by wszystko działało perfekcyjnie.
 
 Tworząc ten portal, przyświecał nam jeden cel: skończyć z nudnym, ręcznym wpisywaniem danych i ułatwić lokalny handel. Jako pierwsi w Polsce zaprzęgliśmy do pracy sztuczną inteligencję (Gemini AI), która z samego zdjęcia rozpoznaje auto, generuje profesjonalny opis i tworzy kinowe widoki 360°.
 
@@ -1271,6 +1273,7 @@ Dariusz
 Właściciel serwisu | ADT & AI Team
 https://gieldaradom.pl
 """
+
                 try:
                     conn.send(msg)
                     wyslane += 1
