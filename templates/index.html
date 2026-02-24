@@ -49,7 +49,17 @@
             z-index: -1;
         }
 
-        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); padding-top: max(10px, env(safe-area-inset-top)); }
+                .navbar { 
+            background: rgba(0,0,0,0.9); 
+            border-bottom: 2px solid var(--radom-red); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
+            padding-top: max(10px, env(safe-area-inset-top));
+            transition: top 0.3s ease-in-out; /* Ta linijka robi magię */
+        }
+
 
         .hero-wrap { padding: 30px 0 40px 0; }
         
@@ -514,5 +524,27 @@
     <video id="introVid" muted playsinline autoplay><source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4"></video>
     <button id="skipBtn" onclick="finishIntro()" style="position: absolute; bottom: 30px; right: 30px; background: transparent; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.3); padding: 5px 15px; font-size: 0.7rem; border-radius: 20px; cursor: pointer; z-index: 100000;">POMIŃ >></button>
 </div>
+<script>
+    // --- SMART NAVBAR (Chowanie paska przy scrollowaniu) ---
+    document.addEventListener("DOMContentLoaded", function() {
+        let lastScrollTop = 0;
+        const navbar = document.querySelector('.navbar');
+        const scrollThreshold = 150; // Na stronie głównej dajemy trochę większy margines (150px) ze względu na duży baner AI
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > scrollThreshold) {
+                // Scroll w dół - chowaj pasek
+                navbar.style.top = "-100px";
+            } else {
+                // Scroll w górę - pokaż pasek
+                navbar.style.top = "0";
+            }
+            lastScrollTop = scrollTop;
+        });
+    });
+</script>
+
 </body>
 </html>
