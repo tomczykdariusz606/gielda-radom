@@ -1247,7 +1247,23 @@ def edytuj(id):
             car.nadwozie = request.form.get('nadwozie')
             car.telefon = request.form.get('telefon')
             car.opis = request.form.get('opis')
+    
+                        # ... (tutaj masz inne rzeczy jak car.opis, car.pojemnosc) ...
             
+            # --- ZAPIS GPS TYLKO DLA ADMINA ---
+            if current_user.username == 'admin' or current_user.id == 1:
+                try:
+                    lat_str = request.form.get('lat', '').replace(',', '.')
+                    car.latitude = float(lat_str) if lat_str else None
+                    
+                    lon_str = request.form.get('lon', '').replace(',', '.')
+                    car.longitude = float(lon_str) if lon_str else None
+                except ValueError:
+                    pass # Jeśli admin wpisze bzdury (np. litery), system to zignoruje
+            # ----------------------------------
+
+            wyposazenie_list = request.form.getlist('wyposazenie')
+
             wyposazenie_list = request.form.getlist('wyposazenie')
             car.wyposazenie = ",".join(wyposazenie_list)
             
@@ -1297,6 +1313,26 @@ def admin_delete_user(user_id):
     db.session.commit()
     flash(f'Usunięto użytkownika {user.username}.', 'success')
     return redirect('/profil')
+
+@app.route('/admin/edytuj_user/<int:user_id>', methods=['POST'])
+@login_required
+def admin_edytuj_user(user_id):
+    if current_user.username != 'admin' and current_user.id != 1: 
+        abort(403)
+        
+    user = User.query.get_or_404(user_id)
+    
+    # Podmieniamy dane na te przesłane przez admina
+    user.kraj = request.form.get('kraj', user.kraj)
+    user.adres = request.form.get('adres', user.adres)
+    user.lokalizacja = request.form.get('lokalizacja', user.lokalizacja)
+    user.company_name = request.form.get('company_name', user.company_name)
+    user.nip = request.form.get('nip', user.nip)
+    
+    db.session.commit()
+    flash(f'Zaktualizowano dane adresowe/firmowe dla: {user.username}.', 'success')
+    return redirect('/profil')
+
 
 @app.route('/admin/wyslij_powitania', methods=['POST'])
 @login_required
