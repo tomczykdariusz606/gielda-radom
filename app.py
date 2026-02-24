@@ -278,8 +278,8 @@ class Car(db.Model):
     telefon = db.Column(db.String(20), nullable=False)
     img = db.Column(db.String(200), nullable=False)
     zrodlo = db.Column(db.String(50), default='Radom')
-    is_360_premium = db.Column(db.Boolean, default=False) # Dodaj to tutaj!
-
+    is_360_premium = db.Column(db.Boolean, default=False)
+    is_reserved = db.Column(db.Boolean, default=False)
     
     # Dane techniczne
     latitude = db.Column(db.Float, nullable=True)
