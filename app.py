@@ -9,7 +9,10 @@ import string
 import shutil
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageOps
-from threading import Thread  
+from threading import Thread 
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
+ 
 # Importy Flask
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, make_response, session
 # Importy Bazy i Logowania
