@@ -12,6 +12,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ legal.title }} - Giełda Radom</title>
+    <meta name="robots" content="index, follow">
+
     
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -98,6 +100,37 @@
             </div>
         </div>
     </div>
+
+    <footer class="seo-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-12 col-md-4 text-center text-md-start">
+                    <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
+                    <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+                </div>
+                <div class="col-6 col-md-4 text-center">
+                    <h6 class="text-white fw-bold mb-3">MENU</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="footer-link">Strona Główna</a></li>
+                        <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                        <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                        <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4 text-center text-md-end">
+                    <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/sitemap.xml" class="footer-link fw-bold text-info"><i class="bi bi-diagram-3 me-1"></i> Mapa Witryny (Sitemap)</a></li>
+                    </ul>
+                    <a href="mailto:dariusztom@go2.pl" class="text-danger fw-bold text-decoration-none">dariusztom@go2.pl</a>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="text-center small opacity-50">
+                &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: AI Team.
+            </div>
+        </div>
+    </footer>
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
