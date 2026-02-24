@@ -12,6 +12,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Sprawdź oferty sprzedawcy {{ sprzedawca.company_name if sprzedawca.account_type == 'company' else sprzedawca.username }} na Giełda Radom. Bezpieczne transakcje, raporty AI i najlepsze auta w regionie.">
+    <meta property="og:title" content="Oferty sprzedawcy: {{ sprzedawca.company_name if sprzedawca.account_type == 'company' else sprzedawca.username }} - Giełda Radom">
+    <meta property="og:description" content="Zobacz aktualną listę pojazdów od tego sprzedawcy. Przejrzyste opisy i weryfikacja pojazdów przez Gemini AI.">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="profile">
+    
     <title>Oferty sprzedawcy: {{ sprzedawca.company_name if sprzedawca.account_type == 'company' else sprzedawca.username }} - Giełda Radom</title>
 
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -24,7 +31,7 @@
 
         body { 
             background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Inter', sans-serif; 
-            min-height: 100vh; padding-bottom: calc(100px + env(safe-area-inset-bottom));
+            min-height: 100vh; padding-bottom: 0; /* Usunięty stary padding, teraz obsługuje go stopka */
         }
 
         body::before {
@@ -65,6 +72,17 @@
         .car-card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
         .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); box-shadow: 0 10px 30px rgba(206, 43, 55, 0.2); }
         .car-img { height: 220px; object-fit: cover; width: 100%; opacity: 0.95; }
+
+        /* STYLE DLA NOWEJ STOPKI */
+        .seo-footer {
+            background: rgba(10,10,10,0.95);
+            padding: 40px 0 110px 0; /* 110px paddingu na dole robi miejsce dla paska nawigacji nav-bottom */
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #777;
+            font-size: 0.85rem;
+        }
+        .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
+        .footer-link:hover { color: var(--radom-red); }
 
         .nav-bottom {
             position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a; z-index: 99999;
@@ -129,7 +147,7 @@
         </div>
         <h5 class="text-white mb-4 ps-3 border-start border-4 border-danger fw-bold text-uppercase">OFERTY SPRZEDAWCY ({{ cars|length }})</h5>
 
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for car in cars %}
             <div class="col">
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
@@ -167,6 +185,39 @@
             {% endfor %}
         </div>
     </div>
+
+    <footer class="seo-footer mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-12 col-md-4 text-center text-md-start">
+                    <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
+                    <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+                </div>
+                <div class="col-6 col-md-4 text-center">
+                    <h6 class="text-white fw-bold mb-3">MENU</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="footer-link">Strona Główna</a></li>
+                        <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                        <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                        <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4 text-center text-md-end">
+                    <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
+                    <a href="/sitemap.xml" style="display: none;">Sitemap</a>
+                    
+                    <p class="small mb-2 text-muted">Masz pytania?</p>
+                    <a href="/kontakt" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
+                        <i class="bi bi-envelope-fill me-1"></i> Napisz do nas
+                    </a>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="text-center small opacity-50">
+                &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
+            </div>
+        </div>
+    </footer>
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item">
