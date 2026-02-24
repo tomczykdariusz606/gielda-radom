@@ -323,7 +323,7 @@
                                 </div>
                             </div>
 
-                            {% if current_user.username == 'admin' or current_user.id == 1 %}
+                                                       {% if current_user.username == 'admin' or current_user.id == 1 %}
                             <div class="row g-2">
                                 <div class="col-12">
                                     <a href="/generate_360/{{ car.id }}" class="btn btn-sm w-100 fw-bold py-2 shadow-sm text-dark" style="background: linear-gradient(135deg, #f0c420, #d4a017); border: none; letter-spacing: 0.5px;">
@@ -333,22 +333,13 @@
                             </div>
                             {% endif %}
 
-                        </div>
-                      
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% else %}
+                        </div> </div> </div> </div> {% else %}
             <div class="col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25">
                 <i class="bi bi-car-front fs-1 mb-3 d-block opacity-25"></i>
                 <h5 class="text-white opacity-50">{{ t.get('empty_garage', 'Garaż jest pusty') }}</h5>
             </div>
             {% endfor %}
-        </div>
-            </div>
-
-        {% if pagination and pagination.pages > 1 %}
+        </div> {% if pagination and pagination.pages > 1 %}
         <nav aria-label="Nawigacja stron" class="mt-4 mb-5">
             <ul class="pagination justify-content-center mb-0 shadow-sm">
                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
