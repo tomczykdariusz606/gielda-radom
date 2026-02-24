@@ -495,10 +495,21 @@
                             <div id="scanLoader" class="mt-3 small text-warning fw-bold" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Analiza AI...</div>
                         </div>
                         
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center"><label class="small fw-bold text-muted mb-1" id="photoLabel">{{ t.get('photos', 'ZDJĘCIA') }}</label><span class="small text-warning fw-bold">{{ t.get('max', 'MAX') }} 18</span></div>
-                            <input type="file" name="zdjecia" class="form-control" multiple accept="image/*" id="fileInput">
+                                                <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="small fw-bold text-muted mb-0" id="photoLabel">{{ t.get('photos', 'ZDJĘCIA') }}</label>
+                                <span class="small text-warning fw-bold">{{ t.get('max', 'MAX') }} 18</span>
+                            </div>
+                            
+                            <input type="file" name="zdjecia" multiple accept="image/*" id="fileInput" class="d-none">
+                            <label for="fileInput" class="form-control text-center d-flex flex-column justify-content-center align-items-center" style="cursor: pointer; background-color: rgba(0,0,0,0.5); border: 2px dashed rgba(255,255,255,0.2); min-height: 90px; transition: 0.3s;" onmouseover="this.style.borderColor='var(--radom-red)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">
+                                <i class="bi bi-images fs-3 text-white-50 mb-1"></i>
+                                <span id="fileCountText" class="text-white fw-bold" style="letter-spacing: 0.5px;">
+                                    {{ t.get('select_multiple', 'Zaznacz kilka zdjęć na raz') }}
+                                </span>
+                            </label>
                         </div>
+
 
                         <div class="row g-2">
                             <div class="col-6"><label class="small fw-bold text-muted">{{ t.get('brand', 'Marka') }}</label><input type="text" name="marka" class="form-control" placeholder="np. BMW"></div>
@@ -796,11 +807,35 @@
             performAnalysis(input.files[0]);
         }
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const headerLabel = document.getElementById('photoLabel'); if(headerLabel.innerText.includes("SKAN")) { headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; }
-            if (this.files.length > 18) { alert('⚠️ MAX 18 zdjęć.'); const dt = new DataTransfer(); for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } this.files = dt.files; }
-            const markaField = document.querySelector('[name="marka"]'); if (this.files.length > 0 && markaField.value.trim() === "") { performAnalysis(this.files[0]); }
+                document.getElementById('fileInput').addEventListener('change', function(e) {
+            const headerLabel = document.getElementById('photoLabel'); 
+            if(headerLabel.innerText.includes("SKAN")) { headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; }
+            
+            // Limit 18 zdjęć
+            if (this.files.length > 18) { 
+                alert('⚠️ MAX 18 zdjęć.'); 
+                const dt = new DataTransfer(); 
+                for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } 
+                this.files = dt.files; 
+            }
+            
+            // WIZUALNA ZMIANA TEKSTU NA ZIELONY PO WYBORZE PLIKÓW
+            const countText = document.getElementById('fileCountText');
+            if(this.files.length > 0) {
+                countText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> ' + this.files.length + ' ' + '{{ t.get("files_ready", "gotowych zdjęć") }}' + '</span>';
+                countText.parentElement.style.borderColor = '#198754'; // Zmienia ramkę na zieloną
+            } else {
+                countText.innerHTML = "{{ t.get('select_multiple', 'Zaznacz kilka zdjęć na raz') }}";
+                countText.parentElement.style.borderColor = 'rgba(255,255,255,0.2)';
+            }
+
+            // Automatyczne odpalenie AI, jeśli brakuje marki
+            const markaField = document.querySelector('[name="marka"]'); 
+            if (this.files.length > 0 && markaField.value.trim() === "") { 
+                performAnalysis(this.files[0]); 
+            }
         });
+
     </script>
 
         {% if current_user.username == 'admin' or current_user.id == 1 %}
