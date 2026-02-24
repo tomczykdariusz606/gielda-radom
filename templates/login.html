@@ -132,8 +132,8 @@
             {% endif %}
         {% endwith %}
 
-        <div class="mb-4">
-            <a href="/login/google" class="btn-google text-decoration-none">
+                <div class="mb-4">
+            <a href="/login/google" onclick="gtag('event', 'sign_up', {'send_to': 'AW-17939880807', 'method': 'Google'});" class="btn-google text-decoration-none">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="22" height="22">
                 <span>{{ t.get('login_google', 'Zaloguj przez Google') }}</span>
             </a>
