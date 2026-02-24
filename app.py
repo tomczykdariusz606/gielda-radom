@@ -1053,6 +1053,9 @@ def register():
                 lokalizacja=user_lokal   # Zapisywanie miejscowości
             ))
             db.session.commit()
+            
+            wyslij_powitanie(request.form['email'], request.form['username']) # <--- DODANO WYSYŁKĘ MAILA
+            
             flash('Konto założone! Zaloguj się.', 'success')
             return redirect(url_for('login'))
     return render_template('register.html')
