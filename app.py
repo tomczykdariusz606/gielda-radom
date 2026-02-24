@@ -541,6 +541,7 @@ def google_callback():
             )
             db.session.add(user)
             db.session.commit()
+            wyslij_powitanie(user.email, user.username) # <--- DODANO WYSYŁKĘ MAILA
             flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
         else:
             changed = False
