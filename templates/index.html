@@ -336,8 +336,8 @@
     </div>
     {% endif %}
 
-    {% if car.owner and car.owner.kraj and car.owner.kraj != 'Polska' %}
-    <div class="position-absolute bottom-0 end-0 m-2" style="z-index: 10;">
+        {% if car.owner and car.owner.kraj and car.owner.kraj != 'Polska' %}
+    <div class="position-absolute" style="bottom: 65px; right: 10px; z-index: 10;">
         <span class="badge bg-dark border border-secondary shadow-lg fs-4" title="Pojazd z: {{ car.owner.kraj }}" style="border-radius: 10px;">
             {% if car.owner.kraj == 'Niemcy' %}🇩🇪
             {% elif car.owner.kraj == 'Belgia' %}🇧🇪
@@ -347,6 +347,7 @@
         </span>
     </div>
     {% endif %}
+
 
     <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 5;">
         {% if car.is_promoted %}
