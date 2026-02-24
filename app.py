@@ -1444,6 +1444,38 @@ https://gieldaradom.pl
 def wyslij_przypomnienia(email, username, marka, model):
     if email:
         Thread(target=wyslij_przypomnienie_async, args=(app, email, username, marka, model)).start()
+# --- WYSYŁKA PRZYPOMNIENIA O WYGAŚNIĘCIU (2 DNI DO KOŃCA) ---
+def wyslij_przypomnienie_async(app, email, username, marka, model):
+    with app.app_context():
+        msg = Message(
+            subject=f"⏰ Twoje ogłoszenie {marka} {model} niedługo wygasa! Nie poddawaj się!",
+            recipients=[email]
+        )
+        msg.body = f"""Cześć {username}! 👋
+
+Piszę, by przypomnieć Ci, że Twoje ogłoszenie dotyczące {marka} {model} jest u nas już od 28 dni i za 2 dni straci ważność.
+
+Jeśli auto jeszcze nie znalazło nowego właściciela – absolutnie się nie martw! Sprzedaż samochodu to czasem kwestia trafienia na odpowiednią osobę w odpowiednim momencie. Prawdziwy kupiec na pewno się znajdzie, więc nie ma co się poddawać! 💪
+
+Zaloguj się do swojego Garażu i kliknij zielony przycisk "Odśwież" (ikona strzałek) przy swoim ogłoszeniu. Dzięki temu auto znów powędruje na samą górę listy wyszukiwania i zyska kolejne 30 dni ważności. Wszystko oczywiście całkowicie za darmo.
+
+👉 https://gieldaradom.pl/profil
+
+Trzymam kciuki za udaną transakcję! W razie pytań, jestem do dyspozycji.
+
+Pozdrawiam serdecznie,
+Dariusz
+Właściciel serwisu | ADT & AI Team
+https://gieldaradom.pl
+"""
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print(f"Błąd wysyłania przypomnienia na {email}: {e}")
+
+def wyslij_przypomnienia(email, username, marka, model):
+    if email:
+        Thread(target=wyslij_przypomnienie_async, args=(app, email, username, marka, model)).start()
 
 # ==========================================
 # --- AUTOMATYZACJA W TLE (APSCHEDULER) ---
@@ -1476,8 +1508,6 @@ scheduler.start()
 # Zabezpieczenie: grzeczne zamykanie harmonogramu przy restarcie aplikacji
 atexit.register(lambda: scheduler.shutdown())
 # ==========================================
-
-
 
 if __name__ == '__main__':
     update_db()
