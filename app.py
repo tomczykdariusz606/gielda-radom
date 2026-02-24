@@ -119,6 +119,10 @@ def update_last_seen():
 # --- TŁUMACZENIA (Słownik Rozbudowany) ---
 TRANSLATIONS = {
     'pl': {
+        'eq_led_basic': 'Światła LED',
+        'eq_matrix': 'Reflektory Matrix / Laser',
+        'eq_rails': 'Relingi dachowe',
+
         'eq_cat_basic': 'PODSTAWOWE WYPOSAŻENIE', 
         'eq_cat_comfort': 'KOMFORT & DODATKI', 
         'eq_cat_premium': 'PREMIUM & NOWE TECHNOLOGIE',
@@ -164,6 +168,10 @@ TRANSLATIONS = {
     },
     
     'en': {
+        'eq_led_basic': 'LED Headlights',
+        'eq_matrix': 'Matrix / Laser Headlights',
+        'eq_rails': 'Roof Rails',
+
         'eq_cat_basic': 'BASIC EQUIPMENT', 
         'eq_cat_comfort': 'COMFORT & ADD-ONS', 
         'eq_cat_premium': 'PREMIUM & NEW TECH',
@@ -209,6 +217,10 @@ TRANSLATIONS = {
     },
     
     'de': {
+        'eq_led_basic': 'LED-Scheinwerfer',
+        'eq_matrix': 'Matrix / Laser-Scheinwerfer',
+        'eq_rails': 'Dachreling',
+
         'eq_cat_basic': 'BASISAUSSTATTUNG', 
         'eq_cat_comfort': 'KOMFORT & EXTRAS', 
         'eq_cat_premium': 'PREMIUM & NEUE TECHNIK',
@@ -1022,7 +1034,7 @@ def analyze_car():
         Twoje zadania:
         1. Rozpoznaj markę, model, typ nadwozia i przybliżony rok.
         2. Rozpoznaj KOLOR (np. Czarny Metalik, Biała Perła).
-        3. WYGLĄD: Czy auto ma felgi aluminiowe (Alufelgi)? Czy ma reflektory soczewkowe/LED/Xenon (Światła LED)?
+        3. WYGLĄD: Czy auto ma felgi aluminiowe (Alufelgi)? Czy ma reflektory soczewkowe/LED/Xenon (Światła LED)? Czy ma na dachu relingi (Relingi dachowe)?
         4. MOC: Na podstawie modelu i wyglądu (np. wersja GTI, RS, lub zwykła) OSZACUJ typową moc (KM) dla tego auta. Wpisz najpopularniejszą wartość (np. 150).
         5. Stwórz profesjonalny opis handlowy.
         
@@ -1036,10 +1048,10 @@ def analyze_car():
             "typ_nadwozia": "String", 
             "kolor": "String",       
             "moc_sugestia": Integer,
-            "wyposazenie_wykryte": ["Alufelgi", "Światła LED"], 
+            "wyposazenie_wykryte": ["Alufelgi", "Światła LED", "Relingi dachowe"], 
             "opis_wizualny": "String" 
         }
-        Jeśli nie wykryjesz alufelg lub LED, nie wpisuj ich do listy 'wyposazenie_wykryte'.
+        Jeśli nie wykryjesz alufelg, LED lub relingów, nie wpisuj ich do listy 'wyposazenie_wykryte'.
         """
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
@@ -1052,21 +1064,58 @@ def analyze_car():
         print(f"Błąd AI: {e}")
         return jsonify({"error": "Nie udało się przeanalizować zdjęcia."}), 500
 
+
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
 def generuj_opis_ai():
-    if not model_ai: return jsonify({"opis": "Błąd AI"}), 500
-    if not check_ai_limit(): return jsonify({"opis": "Limit wyczerpany"}), 429
+    if not model_ai: 
+        return jsonify({"error": "Błąd połączenia z serwerami Google AI"}), 500
+        
+    if not check_ai_limit(): 
+        return jsonify({"error": "Osiągnięto dzienny limit zapytań do AI."}), 429
     
     data = request.json
     try:
-        prompt = f"Opisz przedmiot: {data}. Styl: zachęcający, profesjonalny handlarz."
+        # 1. Wyciągamy pięknie wyselekcjonowane dane z frontendu
+        marka = data.get('marka', '')
+        model = data.get('model', '')
+        rok = data.get('rok', '')
+        przebieg = data.get('przebieg', '')
+        cena = data.get('cena', '')
+        paliwo = data.get('paliwo', '')
+        pojemnosc = data.get('pojemnosc', '')
+        wyposazenie = data.get('wyposazenie', '') # Tu są nasze Matrixy i Masaże!
+
+        # 2. Tworzymy dedykowany, precyzyjny prompt dla modelu Flash
+        prompt = f"""
+        Jesteś profesjonalnym copywriterem i ekspertem sprzedaży aut Premium.
+        Napisz chwytliwy, rzetelny i zachęcający do zakupu opis dla tego pojazdu:
+        
+        Pojazd: {marka} {model}
+        Rok produkcji: {rok}
+        Przebieg: {przebieg} km
+        Silnik: {pojemnosc}, {paliwo}
+        Cena: {cena}
+        
+        WYPOSAŻENIE (Zwróć na to szczególną uwagę!): {wyposazenie}
+        
+        ZASADY:
+        1. Opis ma być w języku polskim, podzielony na czytelne, krótkie akapity.
+        2. Użyj estetycznych, nienachalnych emotikon (np. ✅, 💎, 🚀).
+        3. NIE WYMIENIAJ wyposażenia po przecinku! Zamiast tego zgrabnie wpleć opcje (np. z sekcji Wyposażenie) w tekst, opisując, jak podnoszą one prestiż, komfort i bezpieczeństwo. Niech klient poczuje, że kupuje luksus.
+        4. Zachowaj ton profesjonalnego salonu samochodowego – bez sztucznego lania wody, konkretnie i z klasą.
+        """
+        
         resp = model_ai.generate_content(prompt)
+        
         current_user.ai_requests_today += 1
         db.session.commit()
+        
         return jsonify({"opis": resp.text.strip()})
-    except:
-        return jsonify({"opis": "Błąd generowania"}), 500
+    except Exception as e:
+        print(f"Błąd generowania opisu: {e}")
+        return jsonify({"error": "Wystąpił błąd podczas generowania opisu."}), 500
+
 
 @app.route('/rezerwacja/<int:car_id>', methods=['POST'])
 @login_required
