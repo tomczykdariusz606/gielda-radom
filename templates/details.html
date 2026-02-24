@@ -74,7 +74,7 @@
             will-change: transform;
         }
 
-                .navbar { 
+        .navbar { 
             background: rgba(0,0,0,0.9); 
             border-bottom: 2px solid var(--radom-red); 
             position: sticky; 
@@ -82,9 +82,8 @@
             z-index: 1000; 
             box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
             padding-top: max(10px, env(safe-area-inset-top));
-            transition: top 0.3s ease-in-out; /* DODANA LINIJKA */
+            transition: top 0.3s ease-in-out;
         }
-
 
         .gallery-wrapper {
             background: #000; border-radius: 20px; overflow: hidden;
@@ -147,10 +146,10 @@
         .user-price-label::after { content: ''; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); border-width: 0 5px 5px 5px; border-style: solid; border-color: transparent transparent #ce2b37 transparent; }
         .paint-gauge { width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0,0,0,0.5); border: 1px solid #333; }
         .paint-inner { width: 60px; height: 60px; background: #161616; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: white; }
-            /* STYLE DLA NOWEJ STOPKI (BEZ DOLNEGO MENU) */
+        
         .seo-footer {
             background: rgba(10,10,10,0.95);
-            padding: 40px 0 30px 0; /* Usunięto 110px marginesu, stopka przylega ładnie do dołu */
+            padding: 40px 0 30px 0;
             border-top: 1px solid rgba(255,255,255,0.05);
             color: #777;
             font-size: 0.85rem;
@@ -158,6 +157,13 @@
         .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
         .footer-link:hover { color: var(--radom-red); }
 
+        /* =========================================
+           ULTIMATE iPHONE / iOS FIXES
+        ========================================= */
+        @supports (-webkit-touch-callout: none) {
+            body { min-height: -webkit-fill-available; min-height: 100dvh; }
+            * { -webkit-tap-highlight-color: transparent; }
+        }
     </style>
 </head>
 <body>
@@ -312,27 +318,85 @@
             </div>
 
             {% if car.wyposazenie %}
-            <div class="card glass-panel mb-4 shadow-sm">
+            <div class="card glass-panel mb-4 shadow-sm border-0" style="background: rgba(15, 15, 18, 0.8);">
                 <div class="card-header bg-transparent border-secondary text-muted small fw-bold text-uppercase p-3">
-                    <i class="bi bi-ui-checks-grid me-2"></i> WYPOSAŻENIE
+                    <i class="bi bi-ui-checks-grid me-2"></i> WYPOSAŻENIE POJAZDU
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-3">
-                        {% for opcja in car.wyposazenie.split(',') %}
-                            {% if opcja|length > 1 %}
-                            <div class="col-6 col-md-4">
-                                <div class="d-flex align-items-center text-white-50">
-                                    <i class="bi bi-check-circle-fill text-success me-2"></i> 
-                                    <span class="small fw-bold">{{ opcja }}</span>
-                                </div>
-                            </div>
+                        {% set wyposazenie_lista = car.wyposazenie.split(',') %}
+
+                        {% for opcja in wyposazenie_lista %}
+                            {% set item = opcja.strip() %}
+                            {% if item|length > 1 %}
+                                {% set is_premium = false %}
+                                {% if 'Matrix' in item or 'Laser' in item or 'Pneumatycz' in item or 'Masaż' in item or 'Wentylowan' in item or 'Dociągani' in item or 'Head-Up' in item or 'Night Vision' in item or '4-strefow' in item or 'Ambient' in item or '360' in item or 'Premium' in item %}
+                                    {% set is_premium = true %}
+                                {% endif %}
+                                
+                                {% if is_premium %}
+                                    {% set icon = 'bi-star-fill' %}
+                                    {% if 'Matrix' in item or 'Laser' in item or 'Ambient' in item %}{% set icon = 'bi-lightbulb-fill text-warning' %}{% endif %}
+                                    {% if 'Masaż' in item or 'Wentylowan' in item %}{% set icon = 'bi-person-seat text-warning' %}{% endif %}
+                                    {% if '360' in item or 'Night Vision' in item %}{% set icon = 'bi-camera-video text-warning' %}{% endif %}
+                                    
+                                    {% set var_name = 'eq_' + item.split(' ')[0].lower().replace('.', '') %}
+                                    <div class="col-6 col-md-4 col-lg-4">
+                                        <div class="d-flex align-items-center p-3 rounded-3 position-relative overflow-hidden h-100" style="background: linear-gradient(145deg, rgba(60, 45, 10, 0.9), rgba(15, 15, 15, 0.95)); border: 1px solid #f0c420; transition: 0.3s; box-shadow: 0 5px 15px rgba(240, 196, 32, 0.15); cursor: default;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(240, 196, 32, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(240, 196, 32, 0.15)';">
+                                            <div class="position-absolute top-0 end-0 bg-warning text-dark fw-bold px-2 py-1" style="font-size: 0.55rem; border-bottom-left-radius: 8px; letter-spacing: 1px; box-shadow: -2px 2px 10px rgba(0,0,0,0.5);">
+                                                <i class="bi bi-star-fill me-1"></i>PREMIUM
+                                            </div>
+                                            <i class="bi {{ icon }} fs-4 me-3 text-warning" style="text-shadow: 0 0 10px rgba(240, 196, 32, 0.5);"></i>
+                                            <span class="small text-warning fw-bold lh-sm mt-2" style="letter-spacing: 0.5px;">{{ item }}</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% for opcja in wyposazenie_lista %}
+                            {% set item = opcja.strip() %}
+                            {% if item|length > 1 %}
+                                {% set is_premium = false %}
+                                {% if 'Matrix' in item or 'Laser' in item or 'Pneumatycz' in item or 'Masaż' in item or 'Wentylowan' in item or 'Dociągani' in item or 'Head-Up' in item or 'Night Vision' in item or '4-strefow' in item or 'Ambient' in item or '360' in item or 'Premium' in item %}
+                                    {% set is_premium = true %}
+                                {% endif %}
+                                
+                                {% if not is_premium %}
+                                    {% set icon = 'bi-check2-circle text-white-50' %}
+                                    {% if 'Klima' in item or 'Webasto' in item %}{% set icon = 'bi-snow text-info' %}{% endif %}
+                                    {% if 'Skór' in item or 'fotel' in item %}{% set icon = 'bi-person-seat text-secondary' %}{% endif %}
+                                    {% if 'Kamera' in item %}{% set icon = 'bi-camera-video text-primary' %}{% endif %}
+                                    {% if 'Tempomat' in item %}{% set icon = 'bi-speedometer2 text-success' %}{% endif %}
+                                    {% if 'Navi' in item or 'Nawigacja' in item %}{% set icon = 'bi-map text-success' %}{% endif %}
+                                    {% if 'Bluetooth' in item or 'Android' in item or 'USB' in item %}{% set icon = 'bi-bluetooth text-primary' %}{% endif %}
+                                    {% if 'LED' in item or 'Oświetlenie' in item %}{% set icon = 'bi-lightbulb-fill text-warning' %}{% endif %}
+                                    {% if 'Alufelgi' in item %}{% set icon = 'bi-vinyl-fill text-secondary' %}{% endif %}
+                                    {% if 'Czujnik' in item or 'Park' in item %}{% set icon = 'bi-p-circle text-info' %}{% endif %}
+                                    {% if 'Poduszk' in item or 'ABS' in item or 'ESP' in item or 'Isofix' in item or 'Assist' in item %}{% set icon = 'bi-shield-check text-success' %}{% endif %}
+                                    {% if 'Dach' in item or 'Szyberdach' in item %}{% set icon = 'bi-sun text-warning' %}{% endif %}
+                                    {% if 'Nagłośnienie' in item or 'Audio' in item %}{% set icon = 'bi-speaker text-danger' %}{% endif %}
+                                    {% if 'Kierownica' in item %}{% set icon = 'bi-vinyl text-white-50' %}{% endif %}
+                                    {% if 'Relingi' in item %}{% set icon = 'bi-distribute-vertical text-secondary' %}{% endif %}
+                                    
+                                    {% set var_name = 'eq_' + item.split(' ')[0].lower().replace('.', '') %}
+                                    {% if item == 'Poduszki powietrzne' %}{% set var_name = 'eq_airbags' %}{% endif %}
+                                    {% if item == 'Skórzana tapicerka' %}{% set var_name = 'eq_leather' %}{% endif %}
+
+                                    <div class="col-6 col-md-4 col-lg-4">
+                                        <div class="d-flex align-items-center p-3 rounded-3 bg-black bg-opacity-50 border border-secondary border-opacity-25 h-100" style="transition: 0.3s; cursor: default;" onmouseover="this.style.borderColor='var(--radom-red)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.25)'; this.style.transform='translateY(0)';">
+                                            <i class="bi {{ icon }} fs-4 me-3"></i>
+                                            <span class="small text-white-50 fw-bold lh-sm" style="letter-spacing: 0.5px;">{{ item }}</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             {% endif %}
                         {% endfor %}
                     </div>
                 </div>
             </div>
             {% endif %}
-        </div>
+            </div>
 
         <div class="col-lg-4">
             <div class="sticky-top" style="top: 20px; z-index: 10;">
@@ -355,7 +419,7 @@
                     </button>
                 </div>
                 
-                                {% if car.owner.username != 'admin' and car.owner.id != 1 %}
+                {% if car.owner.username != 'admin' and car.owner.id != 1 %}
                 <div class="card glass-panel mb-4 shadow-sm border-0" style="background: linear-gradient(145deg, rgba(30,30,30,0.6), rgba(15,15,15,0.8)); border-top: 2px solid var(--radom-red) !important;">
                     <div class="card-body text-center p-4">
                         <div class="mb-2">
@@ -404,7 +468,6 @@
                     </div>
                 </div>
                 {% endif %}
-
 
                 <div class="mb-4">
                     <label class="text-muted small fw-bold text-uppercase mb-2 ms-1">Bezpieczeństwo</label>
@@ -461,6 +524,7 @@
         </div> 
     </div> 
 </div> 
+
 <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
     <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
         <span class="text-light small">🍪 Ta strona używa cookies.</span>
@@ -496,12 +560,10 @@
         </div>
         <hr class="border-secondary my-4">
         <div class="text-center small opacity-50">
-            &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
+            © 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
         </div>
     </div>
 </footer>
-
-
 
 {% if car.is_360_premium %}
 <div id="modal360" class="d-none" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;">
@@ -746,6 +808,7 @@
     });
 </script>
 {% endif %}
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         let lastScrollTop = 0;
@@ -768,7 +831,6 @@
         });
     });
 </script>
-
 
 </body>
 </html>
