@@ -9,6 +9,7 @@ import string
 import shutil
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageOps
+from threading import Thread  
 # Importy Flask
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, send_from_directory, send_file, make_response, session
 # Importy Bazy i Logowania
@@ -456,6 +457,45 @@ def send_reset_email(user):
 Jeśli to nie Ty prosiłeś o reset, zignoruj tę wiadomość.
 '''
     mail.send(msg)
+
+# --- WYSYŁKA MAILI (POWITANIE ONBOARDING) ---
+def wyslij_email_powitalny_async(app, email, username):
+    with app.app_context():
+        msg = Message(
+            subject="Dziękuję za zaufanie! Wspólnie zmieniamy rynek aut w Radomiu 🤝",
+            recipients=[email]
+        )
+        msg.body = f"""Cześć {username}! 👋
+
+Piszę do Ciebie osobiście, ponieważ właśnie dołączyłeś do platformy Giełda Radom. Chciałem Ci za to bardzo serdecznie podziękować!
+
+Tworząc ten portal, przyświecał nam jeden cel: skończyć z nudnym, ręcznym wpisywaniem danych i ułatwić lokalny handel. Jako pierwsi w Polsce zaprzęgliśmy do pracy sztuczną inteligencję (Gemini AI), która z samego zdjęcia rozpoznaje auto, generuje profesjonalny opis i tworzy kinowe widoki 360°.
+
+Co się u nas teraz dzieje?
+* Nasza baza rośnie w błyskawicznym tempie (przekroczyliśmy już 1500 aktywnych ofert na stronie!), a ruch z całego Mazowsza bije kolejne rekordy.
+* Wystartowaliśmy z silną kampanią reklamową w Google, skupioną wyłącznie na naszym regionie. Ściągamy na stronę konkretnych kupców z okolicy, by ułatwić Ci szybką sprzedaż.
+
+Masz auto na sprzedaż?
+To idealny moment, żeby je dodać. Przypominam, że nasza AI odwali za Ciebie 90% roboty – wystarczy, że zrobisz zdjęcie, a system sam uzupełni model, parametry i wyposażenie w zaledwie 3 sekundy. Wszystko całkowicie za darmo.
+
+Zaloguj się na swoje konto i przetestuj nasz skaner AI:
+https://gieldaradom.pl/login
+
+Jeszcze raz dziękuję, że tworzysz z nami nowoczesną motoryzację na Mazowszu. W razie jakichkolwiek pytań – po prostu odpisz na tę wiadomość.
+
+Pozdrawiam serdecznie,
+Dariusz
+Właściciel serwisu | ADT & AI Team
+https://gieldaradom.pl
+"""
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print(f"Błąd wysyłania powitania na {email}: {e}")
+
+def wyslij_powitanie(email, username):
+    Thread(target=wyslij_email_powitalny_async, args=(app, email, username)).start()
+
 
 # --- TRASY GOOGLE LOGIN ---
 @app.route('/login/google')
