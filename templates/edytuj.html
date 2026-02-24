@@ -305,6 +305,22 @@
                             {% endfor %}
                         </div>
                     </div>
+                        {% if current_user.username == 'admin' or current_user.id == 1 %}
+                    <label class="text-uppercase text-danger fw-bold small mb-3 mt-4"><i class="bi bi-geo-alt-fill"></i> Panel Administratora (Opcje Ukryte)</label>
+                    <div class="row g-3 mb-4 p-4 bg-danger bg-opacity-10 rounded-4 border border-danger border-opacity-50">
+                        <div class="col-6">
+                            <label class="small text-danger fw-bold mb-1">Koordynaty GPS - Latitude</label>
+                            <input type="text" name="lat" class="form-control border-danger bg-dark" value="{{ car.latitude or '' }}" placeholder="np. 51.4027">
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-danger fw-bold mb-1">Koordynaty GPS - Longitude</label>
+                            <input type="text" name="lon" class="form-control border-danger bg-dark" value="{{ car.longitude or '' }}" placeholder="np. 21.1471">
+                        </div>
+                        <div class="col-12 text-muted small">
+                            <i class="bi bi-info-circle"></i> Zmiana tych wartości przesunie pinezkę auta na mapie dla tego konkretnego ogłoszenia. Format: z kropką (np. 52.123).
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
