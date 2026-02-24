@@ -1079,13 +1079,29 @@ def delete_car(car_id):
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
 def refresh_car(car_id):
-    c = Car.query.get(car_id)
-    if c and (c.user_id == current_user.id or current_user.username == 'admin'):
-        c.data_dodania = datetime.utcnow()
+    c = Car.query.get_or_404(car_id)
+    
+    if c.user_id == current_user.id or current_user.username == 'admin' or current_user.id == 1:
+        now = datetime.utcnow()
+        
+        # --- LIMIT PODBIJANIA CO 3 DNI (Dla zwykłych użytkowników) ---
+        if current_user.username != 'admin' and current_user.id != 1:
+            roznica = now - c.data_dodania
+            if roznica < timedelta(days=3):
+                pozostalo_h = int(72 - (roznica.total_seconds() / 3600))
+                flash(f'Ogłoszenie można podbijać co 3 dni. Spróbuj ponownie za ok. {pozostalo_h} godz.', 'warning')
+                return redirect(request.referrer or url_for('profil'))
+        # -------------------------------------------------------------
+        
+        c.data_dodania = now
         if current_user.username == 'admin' or current_user.id == 1:
             c.ai_valuation_data = None 
+            
         db.session.commit()
-    return redirect('/profil')
+        flash('Ogłoszenie zaktualizowane i podbite na samą górę!', 'success')
+        
+    return redirect(request.referrer or url_for('profil'))
+
 
 
 @app.route('/toggle_favorite/<int:car_id>')
