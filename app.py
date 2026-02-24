@@ -797,8 +797,12 @@ def profil():
     total_views = 0
     all_users = []
     
+    # Zmienna odpowiedzialna za to, na której stronie jesteśmy
+    page = request.args.get('page', 1, type=int)
+    
     if current_user.username == 'admin' or current_user.id == 1:
-        cars = Car.query.order_by(Car.data_dodania.desc()).all()
+        # Zmiana: paginate zamiast all()
+        pagination = Car.query.order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
         all_users = User.query.all() 
         user_count = len(all_users)
         try:
@@ -808,12 +812,15 @@ def profil():
             online_count = 1
         total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
     else:
-        cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).all()
+        # Zmiana: paginate zamiast all() dla zwykłego usera
+        pagination = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
         
     favorites = Favorite.query.filter_by(user_id=current_user.id).all()
     
-    return render_template('profil.html', cars=cars, favorites=favorites, now=datetime.utcnow(), 
+    # Dodane 'pagination=pagination' oraz 'cars=pagination.items', reszta Twoja
+    return render_template('profil.html', cars=pagination.items, pagination=pagination, favorites=favorites, now=datetime.utcnow(), 
                            user_count=user_count, online_count=online_count, total_views=total_views, all_users=all_users)
+
 
 # --- USTAWIENIA PROFILU Z ZAPISEM DANYCH (NIP, KRAJ, ADRES) ---
 @app.route('/ustawienia_profilu', methods=['POST'])
