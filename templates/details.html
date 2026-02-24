@@ -74,12 +74,17 @@
             will-change: transform;
         }
 
-        .navbar { 
-            background: rgba(0,0,0,0.85); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                .navbar { 
+            background: rgba(0,0,0,0.9); 
             border-bottom: 2px solid var(--radom-red); 
-            padding-top: max(10px, env(safe-area-inset-top)); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
+            padding-top: max(10px, env(safe-area-inset-top));
+            transition: top 0.3s ease-in-out; /* DODANA LINIJKA */
         }
+
 
         .gallery-wrapper {
             background: #000; border-radius: 20px; overflow: hidden;
@@ -741,6 +746,29 @@
     });
 </script>
 {% endif %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let lastScrollTop = 0;
+        const navbar = document.querySelector('.navbar');
+        // Zabezpieczenie, by pasek nie chował się od razu na samej górze strony
+        const scrollThreshold = 100; 
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Jeśli scrollujemy w dół i minęliśmy próg
+            if (scrollTop > lastScrollTop && scrollTop > scrollThreshold) {
+                // Schowaj pasek (przesuń go w górę poza ekran)
+                navbar.style.top = "-100px";
+            } else {
+                // Scrollujemy w górę - pokaż pasek
+                navbar.style.top = "0";
+            }
+            lastScrollTop = scrollTop;
+        });
+    });
+</script>
+
 
 </body>
 </html>
