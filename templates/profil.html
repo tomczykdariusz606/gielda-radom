@@ -786,15 +786,22 @@
                                             {% endif %}
                                         </td>
                                         <td class="small text-muted">{{ u.email }}</td>
-                                        <td>
+                                                                                <td>
                                             {% if u.id != current_user.id %}
-                                                <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Usunąć?');">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-warning border-0" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="Edytuj dane firmy/adres">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                                
+                                                <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
                                                     <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button>
                                                 </form>
+                                            </div>
                                             {% else %}
                                                 <span class="badge bg-warning text-dark">TY</span>
                                             {% endif %}
                                         </td>
+
                                     </tr>
                                     {% endfor %}
                                 {% else %}
@@ -807,6 +814,60 @@
             </div>
         </div>
     </div>
+    {% endif %}
+    {% if all_users is defined %}
+        {% for u in all_users %}
+            {% if u.id != current_user.id %}
+            <div class="modal fade text-start" id="editUserModal{{ u.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+                  <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-warning fw-bold"><i class="bi bi-pencil-square"></i> Edycja: {{ u.username }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                  </div>
+                  
+                  <form action="/admin/edytuj_user/{{ u.id }}" method="POST">
+                      <div class="modal-body p-4">
+                          <div class="row g-3">
+                              <div class="col-md-6">
+                                  <label class="small text-muted mb-1">Kraj</label>
+                                  <input type="text" name="kraj" class="form-control bg-black text-white border-secondary" value="{{ u.kraj or '' }}" placeholder="np. Niemcy">
+                              </div>
+                              <div class="col-md-6">
+                                  <label class="small text-muted mb-1">Miejscowość</label>
+                                  <input type="text" name="lokalizacja" class="form-control bg-black text-white border-secondary" value="{{ u.lokalizacja or '' }}">
+                              </div>
+                              <div class="col-12">
+                                  <label class="small text-muted mb-1">Dokładny adres</label>
+                                  <input type="text" name="adres" class="form-control bg-black text-white border-secondary" value="{{ u.adres or '' }}">
+                              </div>
+                          </div>
+                          
+                          <hr class="border-secondary my-4">
+                          
+                          <div class="row g-3">
+                              <div class="col-12">
+                                  <label class="small text-muted mb-1">Nazwa Firmy / Komisu</label>
+                                  <input type="text" name="company_name" class="form-control bg-black text-white border-secondary" value="{{ u.company_name or '' }}">
+                              </div>
+                              <div class="col-12">
+                                  <label class="small text-muted mb-1">NIP</label>
+                                  <input type="text" name="nip" class="form-control bg-black text-white border-secondary" value="{{ u.nip or '' }}">
+                              </div>
+                          </div>
+                      </div>
+                      
+                      <div class="modal-footer border-secondary pt-0 border-0">
+                        <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 shadow">ZAPISZ ZMIANY</button>
+                      </div>
+                  </form>
+                  
+                </div>
+              </div>
+            </div>
+            {% endif %}
+        {% endfor %}
     {% endif %}
 
 </body>
