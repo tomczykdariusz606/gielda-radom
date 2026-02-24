@@ -12,225 +12,262 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <title>Oferty sprzedawcy: {% if sprzedawca.account_type == 'company' %}{{ sprzedawca.company_name }}{% else %}{{ sprzedawca.username }}{% endif %} - Giełda Radom</title>
+    <meta name="description" content="Sprawdź wszystkie aktualne oferty samochodów od sprzedawcy {% if sprzedawca.account_type == 'company' %}{{ sprzedawca.company_name }}{% else %}{{ sprzedawca.username }}{% endif %} z miasta {{ sprzedawca.lokalizacja }}. Pewne auta na platformie Giełda Radom.">
+    <meta name="keywords" content="oferty sprzedawcy, komis samochodowy {{ sprzedawca.lokalizacja }}, samochody używane, giełda radom, auto na sprzedaż">
+    <meta name="author" content="Giełda Radom">
     <meta name="robots" content="index, follow">
-    <meta name="description" content="Sprawdź oferty sprzedawcy {{ sprzedawca.company_name if sprzedawca.account_type == 'company' else sprzedawca.username }} na Giełda Radom. Bezpieczne transakcje, raporty AI i najlepsze auta w regionie.">
-    <meta property="og:title" content="Oferty sprzedawcy: {{ sprzedawca.company_name if sprzedawca.account_type == 'company' else sprzedawca.username }} - Giełda Radom">
-    <meta property="og:description" content="Zobacz aktualną listę pojazdów od tego sprzedawcy. Przejrzyste opisy i weryfikacja pojazdów przez Gemini AI.">
-    <meta property="og:url" content="{{ request.url }}">
+
     <meta property="og:type" content="profile">
-    
-    <title>Oferty sprzedawcy: {{ sprzedawca.company_name if sprzedawca.account_type == 'company' else sprzedawca.username }} - Giełda Radom</title>
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="Oferty od: {% if sprzedawca.account_type == 'company' %}{{ sprzedawca.company_name }}{% else %}{{ sprzedawca.username }}{% endif %}">
+    <meta property="og:description" content="Zobacz aktualne oferty pojazdów tego sprzedawcy. Kupuj pewnie na Giełdzie Radom.">
+    <meta property="og:image" content="{{ sprzedawca.avatar_url or url_for('static', filename='watermark.png', _external=True) }}">
 
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Anton&display=swap" rel="stylesheet">
 
     <style>
-        :root { --radom-red: #ce2b37; --bg-dark: #121212; }
-
+        :root { --radom-red: #ce2b37; --bg-dark: #0f0f0f; }
+        
         body { 
-            background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Inter', sans-serif; 
-            min-height: 100vh; padding-bottom: 0; /* Usunięty stary padding, teraz obsługuje go stopka */
+            background-color: var(--bg-dark); 
+            color: #eee; font-family: 'Inter', sans-serif; 
+            min-height: 100vh;
+            padding-bottom: calc(90px + env(safe-area-inset-bottom));
         }
-
         body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
             background-size: cover; background-position: center;
             z-index: -1;
         }
-        body::after {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(18, 18, 18, 0.7), rgba(18, 18, 18, 0.95)); 
-            z-index: -1;
-        }
 
-        .navbar { 
-            background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.08); position: sticky; top: 0; z-index: 1000; 
-            padding-top: max(10px, env(safe-area-inset-top));
-        }
+        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--radom-red); position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); padding-top: max(10px, env(safe-area-inset-top)); }
 
-        /* --- WIZYTÓWKA SPRZEDAWCY --- */
-        .seller-header {
-            background: rgba(30, 30, 35, 0.8); 
-            border: 1px solid rgba(255, 255, 255, 0.1); border-top: 3px solid var(--radom-red);
-            padding: 40px 30px; border-radius: 24px; margin-bottom: 40px; margin-top: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-        }
+        /* --- STYL OKŁADKI --- */
+        .seller-cover { position: relative; border-radius: 0 0 40px 40px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.7); margin-bottom: 3rem; }
+        .seller-cover-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}"); background-size: cover; background-position: center; filter: blur(8px) brightness(0.3); z-index: 1; }
+        .seller-cover-gradient { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(15,15,15,1) 0%, rgba(15,15,15,0) 100%); z-index: 2; }
+        .seller-cover-line { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(90deg, #ce2b37, #ff6b6b, #ce2b37); z-index: 5; }
+        .seller-content { position: relative; z-index: 10; padding: 4rem 0 3rem 0; }
 
-        .seller-avatar-large {
-            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
-            border: 4px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            background: #000; margin-bottom: 20px;
-            display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
-        }
+        .avatar-container { position: relative; display: inline-block; }
+        .seller-avatar { width: 150px; height: 150px; object-fit: cover; border-radius: 50%; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: transform 0.3s; }
+        .seller-avatar:hover { transform: scale(1.05); }
+        .flag-badge { position: absolute; bottom: 5px; right: 5px; font-size: 2rem; background: #111; border-radius: 50%; padding: 2px; line-height: 1; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 2px solid #333; }
 
-        .car-card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
-        .car-card:hover { transform: translateY(-5px); border-color: var(--radom-red); box-shadow: 0 10px 30px rgba(206, 43, 55, 0.2); }
-        .car-img { height: 220px; object-fit: cover; width: 100%; opacity: 0.95; }
-
-        /* STYLE DLA NOWEJ STOPKI */
-        .seo-footer {
-            background: rgba(10,10,10,0.95);
-            padding: 40px 0 110px 0; /* 110px paddingu na dole robi miejsce dla paska nawigacji nav-bottom */
-            border-top: 1px solid rgba(255,255,255,0.05);
-            color: #777;
-            font-size: 0.85rem;
-        }
+        /* --- KARTY AUT --- */
+        .car-card { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; position: relative; }
+        .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
+        
+        /* --- STOPKA I NAWIGACJA --- */
+        .seo-footer { background: rgba(10,10,10,0.95); padding: 40px 0 110px 0; border-top: 1px solid rgba(255,255,255,0.05); color: #777; font-size: 0.85rem; margin-top: 50px; }
         .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
         .footer-link:hover { color: var(--radom-red); }
 
-        .nav-bottom {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a; z-index: 99999;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.8); border-top: 1px solid #333;
-        }
-        .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 0.75rem; flex: 1; }
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); z-index: 1000; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+        .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 0.75rem; transition: 0.3s; }
         .nav-item.active { color: var(--radom-red); font-weight: 700; }
-        .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
+        .nav-item i { font-size: 1.4rem; display: block; margin-bottom: 2px; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-dark py-3 mb-2">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
-                <i class="bi bi-arrow-left me-3 text-white-50 fs-4"></i>
-                <img src="{{ url_for('static', filename='watermark.png') }}" alt="G" style="height: 40px; width: auto; margin-right: 10px;">
-                <span style="font-family: 'Inter', sans-serif;">GIEŁDA <span class="text-danger">RADOM</span></span>
-            </a>
-        </div>
-    </nav>
+<nav class="navbar navbar-dark py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
+            <img src="{{ url_for('static', filename='watermark.png') }}" alt="G" style="height: 45px; width: auto; margin-right: 10px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
+            <span style="font-family: 'Inter', sans-serif; letter-spacing: 1px;">GIEŁDA <span class="text-danger">RADOM</span></span>
+        </a>
+        <a href="/" class="btn btn-outline-light rounded-pill btn-sm fw-bold px-3 shadow-sm"><i class="bi bi-arrow-left me-1"></i> Wróć do serwisu</a>
+    </div>
+</nav>
 
-    <div class="container">
-        
-        <div class="seller-header position-relative overflow-hidden">
-            {% if sprzedawca.account_type == 'company' %}
-                <div class="seller-avatar-large text-warning border-warning border-opacity-50" style="background: rgba(255,193,7,0.1);">
-                    <i class="bi bi-shop"></i>
+<div class="seller-cover">
+    <div class="seller-cover-bg"></div>
+    <div class="seller-cover-gradient"></div>
+    <div class="seller-cover-line"></div>
+
+    <div class="container seller-content">
+        <div class="row align-items-center text-center text-md-start">
+            
+            <div class="col-12 col-md-auto mb-4 mb-md-0 d-flex justify-content-center">
+                <div class="avatar-container">
+                    <img src="{{ sprzedawca.avatar_url or url_for('static', filename='watermark.png') }}" alt="{{ sprzedawca.username }}" class="seller-avatar border border-4 {% if sprzedawca.account_type == 'company' %}border-warning{% else %}border-secondary{% endif %}">
+                    
+                    <span class="flag-badge">
+                        {% if sprzedawca.kraj == 'Niemcy' %}🇩🇪
+                        {% elif sprzedawca.kraj == 'Belgia' %}🇧🇪
+                        {% elif sprzedawca.kraj == 'Holandia' %}🇳🇱
+                        {% elif sprzedawca.kraj == 'Francja' %}🇫🇷
+                        {% elif sprzedawca.kraj == 'Polska' %}🇵🇱
+                        {% else %}🌍{% endif %}
+                    </span>
                 </div>
-                <h2 class="fw-bold text-white mb-1">{{ sprzedawca.company_name }}</h2>
-                <span class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-bold shadow-sm">KONTO FIRMOWE</span>
-                
-                <div class="text-white-50 small mb-3">
-                    {% if sprzedawca.nip %}<div class="mb-1"><strong>NIP:</strong> {{ sprzedawca.nip }}</div>{% endif %}
-                    {% if sprzedawca.adres %}<div><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ sprzedawca.adres }}, {{ sprzedawca.lokalizacja }} {% if sprzedawca.kraj %}({{ sprzedawca.kraj }}){% endif %}</div>{% endif %}
+            </div>
+
+            <div class="col-12 col-md">
+                {% if sprzedawca.account_type == 'company' %}
+                    <span class="badge bg-warning text-dark mb-2 px-3 py-2 shadow-sm fw-bold" style="letter-spacing: 1px;"><i class="bi bi-shop me-1"></i> AUTORYZOWANY SPRZEDAWCA</span>
+                    <h1 class="fw-bold text-white mb-1 text-uppercase" style="font-family: 'Anton', sans-serif; letter-spacing: 2px; font-size: 2.5rem; text-shadow: 0 5px 15px rgba(0,0,0,0.8);">{{ sprzedawca.company_name }}</h1>
+                    <p class="text-white-50 mb-3 small fw-bold"><i class="bi bi-file-earmark-text text-warning"></i> NIP: {{ sprzedawca.nip }} &nbsp;|&nbsp; <i class="bi bi-geo-alt-fill text-danger"></i> {{ sprzedawca.adres }}</p>
+                {% else %}
+                    <span class="badge bg-secondary mb-2 px-3 py-2 shadow-sm fw-bold" style="letter-spacing: 1px;"><i class="bi bi-person me-1"></i> OSOBA PRYWATNA</span>
+                    <h1 class="fw-bold text-white mb-2 text-uppercase" style="font-family: 'Anton', sans-serif; letter-spacing: 2px; font-size: 2.5rem; text-shadow: 0 5px 15px rgba(0,0,0,0.8);">{{ sprzedawca.username }}</h1>
+                {% endif %}
+
+                <div class="d-inline-block bg-black bg-opacity-50 border border-secondary border-opacity-50 rounded-pill px-4 py-2 mt-2 shadow-lg">
+                    <span class="text-white fw-bold">
+                        {% if sprzedawca.kraj == 'Niemcy' %}
+                            <i class="bi bi-stars text-warning me-1"></i> Perełki prosto z serca miasta <span class="text-warning text-uppercase">{{ sprzedawca.lokalizacja or 'Berlin' }}</span>!
+                        {% elif sprzedawca.kraj == 'Holandia' %}
+                            <i class="bi bi-stars text-warning me-1"></i> Zadbane auta z miasta <span class="text-warning text-uppercase">{{ sprzedawca.lokalizacja or 'Amsterdam' }}</span>!
+                        {% elif sprzedawca.kraj == 'Polska' %}
+                            <i class="bi bi-shield-check text-success me-1"></i> Pewne auta z polecenia – <span class="text-success text-uppercase">{{ sprzedawca.lokalizacja or 'Radom' }}</span> nadaje!
+                        {% else %}
+                            <i class="bi bi-car-front-fill text-info me-1"></i> Najciekawsze oferty – <span class="text-info text-uppercase">{{ sprzedawca.lokalizacja or 'Europa' }}</span> nadaje!
+                        {% endif %}
+                    </span>
                 </div>
-                {% if sprzedawca.opis_firmy %}
-                <div class="text-white fst-italic mx-auto mb-3 px-3 py-2 rounded" style="max-width: 600px; font-size: 0.95rem; background: rgba(0,0,0,0.3); border-left: 3px solid var(--radom-red);">
+            </div>
+            
+            <div class="col-12 col-md-auto mt-4 mt-md-0 text-center text-md-end">
+                <div class="bg-black bg-opacity-50 border border-secondary border-opacity-50 rounded-4 p-4 shadow-lg d-inline-block text-center" style="backdrop-filter: blur(10px);">
+                    <h1 class="fw-bold text-danger mb-0" style="font-family: 'Anton', sans-serif; font-size: 3rem; line-height: 1;">{{ cars|length }}</h1>
+                    <small class="text-white-50 fw-bold" style="font-size: 0.8rem; letter-spacing: 2px;">AKTYWNYCH<br>OFERT</small>
+                </div>
+            </div>
+        </div>
+
+        {% if sprzedawca.account_type == 'company' and sprzedawca.opis_firmy %}
+        <div class="row mt-4 pt-4 border-top border-secondary border-opacity-25">
+            <div class="col-12">
+                <h6 class="text-warning fw-bold mb-2 small"><i class="bi bi-info-circle-fill me-1"></i> O NAS</h6>
+                <div class="p-3 bg-black bg-opacity-25 border-start border-3 border-warning rounded text-white-50 small" style="line-height: 1.6;">
                     "{{ sprzedawca.opis_firmy }}"
                 </div>
-                {% endif %}
-            {% else %}
-                {% if sprzedawca.avatar_url %}
-                    <img src="{{ sprzedawca.avatar_url }}" class="seller-avatar-large border-secondary">
-                {% else %}
-                    <div class="seller-avatar-large text-white-50 border-secondary">
-                        <i class="bi bi-person"></i>
-                    </div>
-                {% endif %}
-                <h2 class="fw-bold text-white mb-1">{{ sprzedawca.username }}</h2>
-                <span class="badge bg-secondary mb-3 px-3 py-2 rounded-pill shadow-sm">OSOBA PRYWATNA</span>
-
-                <div class="text-white-50 small mb-3">
-                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ sprzedawca.lokalizacja or 'Radom' }} {% if sprzedawca.kraj and sprzedawca.kraj != 'Polska' %}({{ sprzedawca.kraj }}){% endif %}
-                </div>
-            {% endif %}
-
-            <div class="d-flex gap-4 justify-content-center text-white-50 mb-2 mt-2">
-                <span class="small fw-bold"><i class="bi bi-car-front-fill text-info me-1"></i> W bazie: <span class="text-white">{{ cars|length }} ofert</span></span>
             </div>
         </div>
-        <h5 class="text-white mb-4 ps-3 border-start border-4 border-danger fw-bold text-uppercase">OFERTY SPRZEDAWCY ({{ cars|length }})</h5>
+        {% endif %}
 
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
-            {% for car in cars %}
-            <div class="col">
+    </div>
+</div>
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+        <h4 class="fw-bold text-white mb-0"><i class="bi bi-car-front-fill text-danger me-2"></i>Oferty sprzedawcy</h4>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for car in cars %}
+        <div class="col">
+            <div class="card car-card h-100">
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
-                    <div class="card car-card h-100">
-                        <div class="position-relative">
-                            <img src="{{ car.img }}" class="car-img" loading="lazy">
-                            <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);">
-                                <h5 class="fw-bold text-white mb-1">{{ car.marka }} {{ car.model }}</h5>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-white-50 small">{{ car.rok }}r. &bull; {{ car.przebieg }} km</span>
-                                    <span class="text-danger fw-bold fs-5">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}</span>
-                                </div>
+                    <div class="position-relative">
+                        <img src="{{ car.img }}" class="card-img-top" loading="lazy" alt="{{ car.marka }} {{ car.model }}" style="height: 230px; object-fit: cover;">
+                        
+                        {% if car.is_reserved %}
+                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 15;"></div>
+                        <div class="position-absolute top-50 start-50" style="z-index: 20; transform: translate(-50%, -50%) rotate(-15deg); width: 100%; text-align: center;">
+                            <span class="badge bg-danger text-white shadow-lg" style="font-size: 1.6rem; letter-spacing: 4px; padding: 12px 25px; text-transform: uppercase; border: 4px solid white; font-family: 'Anton', sans-serif;">REZERWACJA</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 10;">
+                            {% if car.is_promoted %}
+                                <span class="badge bg-warning text-dark border border-white fw-bold shadow">GOLD</span>
+                            {% endif %}
+                            {% if car.is_360_premium %}
+                                <span class="badge bg-danger shadow border border-light border-opacity-25" style="font-size: 0.75rem;"><i class="bi bi-view-360 me-1"></i> 360°</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="position-absolute bottom-0 start-0 w-100 p-2" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+                            <h5 class="fw-bold text-white mb-0 text-truncate px-1">{{ car.marka }} {{ car.model }}</h5>
+                            <div class="d-flex justify-content-between align-items-center px-1">
+                                <span class="text-white-50 small">{{ car.rok }}r.</span>
+                                <span class="text-danger fw-bold">{{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}</span>
                             </div>
                         </div>
-
-                        {% if car.ai_label %}
-                        {% set ai = car.ai_label|from_json %}
-                        {% if ai %}
-                        <div class="px-3 py-2 bg-black bg-opacity-25 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-{{ ai.color }} text-dark fw-bold" style="font-size:0.65rem;">
-                                <i class="bi bi-stars"></i> {{ ai.label }}
-                            </span>
-                            <small class="text-white-50" style="font-size:0.65rem;">{{ ai.expert_comment[:30] if ai.expert_comment else '' }}...</small>
-                        </div>
-                        {% endif %}
-                        {% endif %}
                     </div>
                 </a>
-            </div>
-            {% else %}
-            <div class="col-12 text-center py-5 mt-4 border border-secondary border-opacity-25 rounded-4" style="background: rgba(0,0,0,0.5);">
-                <i class="bi bi-car-front display-1 text-secondary opacity-25"></i>
-                <p class="text-muted mt-3 fw-bold">Ten sprzedawca nie ma aktualnie żadnych ofert.</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <footer class="seo-footer mt-5">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-12 col-md-4 text-center text-md-start">
-                    <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
-                    <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+                <div class="card-body pt-3 pb-3">
+                    <div class="d-flex gap-2 small text-muted mb-2">
+                        {% if car.typ=='Inne' %}<span>{{ car.typ }}</span>
+                        {% else %}<span><i class="bi bi-fuel-pump text-secondary me-1"></i>{{ car.paliwo }}</span><span class="border-start border-secondary mx-1"></span><span><i class="bi bi-speedometer2 text-secondary me-1"></i>{{ car.przebieg }} km</span>{% endif %}
+                    </div>
+                    {% if car.ai_label %}{% set ai = car.ai_label|from_json %}{% if ai %}
+                    <div class="bg-black bg-opacity-25 p-2 rounded border border-secondary border-opacity-25 mt-2">
+                        <div class="d-flex justify-content-between align-items-center small mb-1"><span class="text-{{ ai.color }} fw-bold text-uppercase" style="font-size: 0.7rem;"><i class="bi bi-robot"></i> {{ ai.label }}</span></div>
+                    </div>
+                    {% endif %}{% endif %}
                 </div>
-                <div class="col-6 col-md-4 text-center">
-                    <h6 class="text-white fw-bold mb-3">MENU</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/" class="footer-link">Strona Główna</a></li>
-                        <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
-                        <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
-                        <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-4 text-center text-md-end">
-                    <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
-                    <a href="/sitemap.xml" style="display: none;">Sitemap</a>
-                    
-                    <p class="small mb-2 text-muted">Masz pytania?</p>
-                    <a href="/kontakt" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
-                        <i class="bi bi-envelope-fill me-1"></i> Napisz do nas
-                    </a>
-                </div>
-            </div>
-            <hr class="border-secondary my-4">
-            <div class="text-center small opacity-50">
-                &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
             </div>
         </div>
-    </footer>
-
-    <div class="nav-bottom">
-        <a href="/szukaj" class="nav-item">
-            <i class="bi bi-search"></i> Szukaj
-        </a>
-        <a href="/profil" class="nav-item">
-            <i class="bi bi-speedometer2"></i> Garaż
-        </a>
-        <a href="/kontakt" class="nav-item">
-            <i class="bi bi-envelope"></i> Kontakt
-        </a>
+        {% else %}
+        <div class="col-12 text-center py-5 bg-black bg-opacity-50 rounded-4 border border-secondary shadow-lg">
+            <i class="bi bi-emoji-frown text-muted" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-white fw-bold">Ten sprzedawca nie ma aktualnie żadnych ofert.</h4>
+            <p class="text-muted small">Wróć tu za jakiś czas!</p>
+        </div>
+        {% endfor %}
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div id="cookie-banner" style="position: fixed; bottom: 85px; left: 10px; right: 10px; background: rgba(26,26,26,0.95); border: 1px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.8); border-radius: 15px; backdrop-filter: blur(10px);">
+    <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+        <span class="text-light small">🍪 Używamy plików cookies do obsługi Twojej sesji.</span>
+        <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">Zgoda</button>
+    </div>
+</div>
+
+<footer class="seo-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-12 col-md-4 text-center text-md-start">
+                <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
+                <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+            </div>
+            <div class="col-6 col-md-4 text-center">
+                <h6 class="text-white fw-bold mb-3">MENU</h6>
+                <ul class="list-unstyled">
+                    <li><a href="/" class="footer-link">Strona Główna</a></li>
+                    <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                    <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                    <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-4 text-center text-md-end">
+                <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
+                <a href="/sitemap.xml" style="display: none;">Sitemap</a>
+                <p class="small mb-2 text-muted">Masz pytania?</p>
+                <a href="/kontakt" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
+                    <i class="bi bi-envelope-fill me-1"></i> Napisz do nas
+                </a>
+            </div>
+        </div>
+        <hr class="border-secondary my-4">
+        <div class="text-center small opacity-50">
+            &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
+        </div>
+    </div>
+</footer>
+
+<div class="nav-bottom d-md-none">
+    <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> {{ t.get('search', 'Szukaj') }}</a>
+    <a href="/profil" class="nav-item"><i class="bi bi-speedometer2"></i> {{ t.get('garage', 'Garaż') }}</a>
+    <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> {{ t.get('contact', 'Kontakt') }}</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
+    function acceptCookies() { 
+        localStorage.setItem('cookiesAccepted', 'true'); 
+        document.getElementById('cookie-banner').style.display = 'none'; 
+    }
+</script>
 </body>
 </html>
