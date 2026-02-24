@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl" data-bs-theme="dark">
+<html lang="{{ lang }}" data-bs-theme="dark">
 <head>
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
     <script>
@@ -12,6 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Edycja - Giełda Radom</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -19,12 +20,10 @@
     <style>
         :root { --radom-red: #ce2b37; --bg-dark: #121212; --card-dark: #1e1e1e; }
         
-        /* --- TŁO I FIX DLA IPHONE --- */
         body { 
             background-color: var(--bg-dark); 
             color: #e4e6eb; 
             font-family: 'Inter', sans-serif; 
-            min-height: 100vh;
             padding-bottom: calc(40px + env(safe-area-inset-bottom));
         }
 
@@ -34,10 +33,9 @@
             background-size: cover; background-position: center;
             z-index: -1;
         }
-        /* Ciemna warstwa na tło dla lepszej czytelności formularza */
         body::after {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 10, 0.7); 
+            background: rgba(10, 10, 10, 0.75); 
             z-index: -1;
         }
 
@@ -51,64 +49,53 @@
             background: rgba(30, 30, 30, 0.85); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 40px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
         }
 
-        .form-control { 
-            background-color: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; font-size: 0.95rem;
-        }
-        .form-control:focus { 
-            background-color: #1a1a1a; border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206, 43, 55, 0.3); outline: none;
-        }
+        .form-control { background-color: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 10px; font-size: 0.95rem; }
+        .form-control:focus { background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206, 43, 55, 0.3); outline: none; }
 
-        /* --- CUSTOMOWE LISTY (ZAMIAST SELECT) --- */
         .custom-dropdown-btn {
-            background-color: #222; border: 1px solid #444; color: #eee;
+            background-color: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #eee;
             width: 100%; padding: 12px; border-radius: 10px; text-align: left;
             display: flex; justify-content: space-between; align-items: center;
             transition: 0.2s; font-size: 0.95rem;
         }
-        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] {
-            background-color: #000; border-color: var(--radom-red); color: white;
-        }
-        .dropdown-menu-dark {
-            background-color: #1a1a1a; border: 1px solid #333;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9); border-radius: 12px;
-            max-height: 300px; overflow-y: auto; z-index: 1050;
-        }
+        .custom-dropdown-btn:hover, .custom-dropdown-btn[aria-expanded="true"] { background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); color: white; }
+        .dropdown-menu-dark { background-color: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 40px rgba(0,0,0,0.9); border-radius: 12px; max-height: 300px; overflow-y: auto; z-index: 1050; }
         .dropdown-item { color: #ccc; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .dropdown-item:hover { background-color: var(--radom-red); color: white; }
 
-        .btn-ai { 
-            background: linear-gradient(135deg, #2b1a1b, #000); border: 1px solid var(--radom-red); 
-            color: var(--radom-red); font-weight: bold; transition: 0.3s;
-        }
+        .btn-ai { background: linear-gradient(135deg, #2b1a1b, #000); border: 1px solid var(--radom-red); color: var(--radom-red); font-weight: bold; transition: 0.3s; }
         .btn-ai:hover { background: var(--radom-red); color: white; box-shadow: 0 0 20px rgba(206, 43, 55, 0.4); }
 
         .img-preview-container { position: relative; width: 120px; height: 90px; border-radius: 10px; overflow: hidden; border: 1px solid #444; }
         .img-preview { width: 100%; height: 100%; object-fit: cover; }
-        .btn-delete-img { 
-            position: absolute; top: 5px; right: 5px; width: 25px; height: 25px; 
-            background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: 0.2s;
-        }
+        .btn-delete-img { position: absolute; top: 5px; right: 5px; width: 25px; height: 25px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: 0.2s; }
         .btn-delete-img:hover { background: var(--radom-red); transform: scale(1.1); }
         .badge-main { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(206, 43, 55, 0.8); color: white; font-size: 0.7rem; text-align: center; padding: 2px 0; }
 
-        .btn-save-glow {
-            background-color: var(--radom-red); color: white; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 1px; padding: 16px; width: 100%; border-radius: 50px; border: none;
-            box-shadow: 0 5px 20px rgba(206, 43, 55, 0.4); font-size: 1.1rem; transition: 0.3s;
+        .btn-save-glow { background: linear-gradient(135deg, var(--radom-red), #911620); color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 16px; width: 100%; border-radius: 50px; border: none; box-shadow: 0 5px 20px rgba(206, 43, 55, 0.4); font-size: 1.1rem; transition: 0.3s; }
+        .btn-save-glow:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(206, 43, 55, 0.6); }
+
+        @media (max-width: 768px) { .edit-box { padding: 20px; border-radius: 15px; } }
+
+        /* =========================================
+           ULTIMATE iPHONE / iOS FIXES
+        ========================================= */
+        @supports (-webkit-touch-callout: none) {
+            body { min-height: -webkit-fill-available; min-height: 100dvh; }
+            input, select, textarea, .form-control, .custom-dropdown-btn { font-size: 16px !important; }
+            * { -webkit-tap-highlight-color: transparent; }
         }
-        .btn-save-glow:hover { background-color: #b01b25; transform: scale(1.02); box-shadow: 0 10px 30px rgba(206, 43, 55, 0.6); }
     </style>
 </head>
 <body>
 
 <nav class="navbar navbar-dark p-3 mb-5">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/profil"><i class="bi bi-arrow-left me-2"></i> Wróć do Profilu</a>
-        <span class="badge bg-dark border border-secondary text-secondary">ID: {{ car.id }}</span>
+    <div class="container d-flex justify-content-between align-items-center">
+        <a class="navbar-brand fw-bold fs-6" href="/profil"><i class="bi bi-arrow-left me-2"></i> {{ t.get('garage', 'Wróć do Garażu') }}</a>
+        <span class="badge bg-dark border border-secondary text-secondary d-flex align-items-center">ID: {{ car.id }}</span>
     </div>
 </nav>
 
@@ -130,7 +117,7 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-9">
-            <div class="edit-box">
+            <div class="edit-box mb-5">
                 <div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
                     <i class="bi bi-pencil-square fs-3 text-danger me-3"></i>
                     <div>
@@ -144,48 +131,48 @@
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Dane Podstawowe</label>
                     <div class="row g-3 mb-4">
                         <div class="col-12">
-                            <label class="small text-muted mb-1">Kategoria</label>
+                            <label class="small text-muted mb-1">{{ t.get('cat', 'Kategoria') }}</label>
                             <input type="hidden" name="typ" id="val_typ" value="{{ car.typ }}">
                             <div class="dropdown">
                                 <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_typ">
                                     {{ car.typ }}
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-dark w-100">
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Osobowe', 'Osobowe')">Osobowe</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'SUV', 'SUV')">SUV</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Minivan', 'Minivan')">Minivan</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Ciezarowe', 'Dostawcze')">Dostawcze</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Moto/Rower', 'Moto/Rower')">Moto/Rower</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Inne', 'Inne')">Inne</a></li>
+                                <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Osobowe', `{{ t.get('car_passenger', 'Osobowe') }}`); return false;">{{ t.get('car_passenger', 'Osobowe') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'SUV', `{{ t.get('car_suv', 'SUV') }}`); return false;">{{ t.get('car_suv', 'SUV') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Minivan', `{{ t.get('car_minivan', 'Minivan') }}`); return false;">{{ t.get('car_minivan', 'Minivan') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Ciezarowe', `{{ t.get('car_bus', 'Bus/Dostawcze') }}`); return false;">{{ t.get('car_bus', 'Bus/Dostawcze') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Moto/Rower', `{{ t.get('car_moto', 'Moto/Rower') }}`); return false;">{{ t.get('car_moto', 'Moto/Rower') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('typ', 'Inne', `{{ t.get('car_other', 'Inne') }}`); return false;">{{ t.get('car_other', 'Inne') }}</a></li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="small text-muted mb-1">Marka</label>
+                            <label class="small text-muted mb-1">{{ t.get('brand', 'Marka') }}</label>
                             <input type="text" name="marka" id="i_marka" class="form-control" value="{{ car.marka }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="small text-muted mb-1">Model</label>
+                            <label class="small text-muted mb-1">{{ t.get('model', 'Model') }}</label>
                             <input type="text" name="model" id="i_model" class="form-control" value="{{ car.model }}" required>
                         </div>  
                         <div class="col-12">
-                            <label class="form-label fw-bold text-success"><i class="bi bi-shield-lock"></i> Numer VIN</label>
+                            <label class="form-label fw-bold text-success"><i class="bi bi-shield-lock"></i> {{ t.get('vin', 'VIN') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-dark border-secondary text-success"><i class="bi bi-upc-scan"></i></span>
-                                <input type="text" class="form-control text-uppercase" name="vin" placeholder="Wpisz 17 znaków..." maxlength="17" value="{{ car.vin or '' }}">
+                                <input type="text" class="form-control text-uppercase" name="vin" placeholder="VIN..." maxlength="17" value="{{ car.vin or '' }}">
                             </div>
                         </div>
-                                                <div class="col-6 col-md-3">
-                            <label class="small text-muted mb-1">Rok produkcji</label>
+                        <div class="col-6 col-md-3">
+                            <label class="small text-muted mb-1">{{ t.get('year_prod', 'Rok produkcji') }}</label>
                             <input type="number" name="rok" id="i_rok" class="form-control" value="{{ car.rok }}">
                         </div>
                         <div class="col-6 col-md-3">
-                            <label class="small text-muted mb-1">Przebieg (km)</label>
+                            <label class="small text-muted mb-1">{{ t.get('mileage_ad', 'Przebieg') }}</label>
                             <input type="number" name="przebieg" id="i_przebieg" class="form-control" value="{{ car.przebieg }}">
                         </div>
                         <div class="col-8 col-md-4">
-                            <label class="small text-muted mb-1 fw-bold text-danger">Cena</label>
+                            <label class="small text-muted mb-1 fw-bold text-danger">{{ t.get('price_ad', 'Cena') }}</label>
                             <input type="number" name="cena" id="i_cena" class="form-control border-danger text-danger fw-bold" value="{{ car.cena|int }}" required>
                         </div>
                         <div class="col-4 col-md-2">
@@ -196,59 +183,57 @@
                                     {{ car.waluta or 'PLN' }}
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark min-w-0" style="min-width: 5rem;">
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('waluta', 'PLN', 'PLN')">PLN</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('waluta', 'EUR', 'EUR')">EUR</a></li>
+                                    <li><a class="dropdown-item text-center fw-bold" href="#" onclick="setVal('waluta', 'PLN', 'PLN'); return false;">PLN</a></li>
+                                    <li><a class="dropdown-item text-center fw-bold" href="#" onclick="setVal('waluta', 'EUR', 'EUR'); return false;">EUR</a></li>
                                 </ul>
                             </div>
                         </div>
-
                     </div>
 
                     <label class="text-uppercase text-secondary fw-bold small mb-3">Szczegóły Techniczne</label>
                     <div class="row g-3 mb-4 p-4 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25">
-
                         <div class="col-6">
-                            <label class="small fw-bold text-warning mb-1">Moc Silnika (KM)</label>
+                            <label class="small fw-bold text-warning mb-1">{{ t.get('power', 'Moc (KM)') }}</label>
                             <input type="number" name="moc" id="i_moc" class="form-control border-warning text-warning fw-bold" value="{{ car.moc or '' }}">
                         </div>
                         <div class="col-6">
-                            <label class="small fw-bold text-warning mb-1">Kolor</label>
+                            <label class="small fw-bold text-warning mb-1">{{ t.get('color', 'Kolor') }}</label>
                             <input type="text" name="kolor" id="i_kolor" class="form-control border-warning" value="{{ car.kolor or '' }}">
                         </div>
 
                         <div class="col-6 col-md-4">
-                            <label class="small text-muted mb-1">Paliwo</label>
+                            <label class="small text-muted mb-1">{{ t.get('fuel', 'Paliwo') }}</label>
                             <input type="hidden" name="paliwo" id="val_paliwo" value="{{ car.paliwo }}">
                             <div class="dropdown">
                                 <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_paliwo">
                                     {{ car.paliwo or 'Wybierz' }}
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark">
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Benzyna', 'Benzyna')">Benzyna</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Diesel', 'Diesel')">Diesel</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'LPG', 'LPG')">LPG</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Hybryda', 'Hybryda')">Hybryda</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Elektryczny', 'Elektryczny')">Elektryczny</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Benzyna', `{{ t.get('petrol', 'Benzyna') }}`); return false;">{{ t.get('petrol', 'Benzyna') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Diesel', `{{ t.get('diesel', 'Diesel') }}`); return false;">{{ t.get('diesel', 'Diesel') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'LPG', `{{ t.get('lpg', 'LPG') }}`); return false;">{{ t.get('lpg', 'LPG') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Hybryda', `{{ t.get('hybrid', 'Hybryda') }}`); return false;">{{ t.get('hybrid', 'Hybryda') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('paliwo', 'Elektryczny', `{{ t.get('electric', 'Elektryczny') }}`); return false;">{{ t.get('electric', 'Elektryczny') }}</a></li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-6 col-md-4">
-                            <label class="small text-muted mb-1">Skrzynia</label>
+                            <label class="small text-muted mb-1">{{ t.get('gear', 'Skrzynia') }}</label>
                             <input type="hidden" name="skrzynia" id="val_skrzynia" value="{{ car.skrzynia }}">
                             <div class="dropdown">
                                 <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_skrzynia">
                                     {{ car.skrzynia or 'Wybierz' }}
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark">
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna', 'Manualna')">Manualna</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna', 'Automatyczna')">Automatyczna</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Manualna', `{{ t.get('man', 'Manualna') }}`); return false;">{{ t.get('man', 'Manualna') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('skrzynia', 'Automatyczna', `{{ t.get('auto', 'Automatyczna') }}`); return false;">{{ t.get('auto', 'Automatyczna') }}</a></li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-6 col-md-4">
-                            <label class="small text-muted mb-1">Pojemność</label>
+                            <label class="small text-muted mb-1">{{ t.get('engine_cap', 'Pojemność') }}</label>
                             <input type="text" name="pojemnosc" id="i_pojemnosc" class="form-control" value="{{ car.pojemnosc or '' }}">
                         </div>
 
@@ -260,52 +245,112 @@
                                     {{ car.nadwozie or 'Wybierz' }}
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="max-height: 250px;">
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Sedan', 'Sedan')">Sedan</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Kombi', 'Kombi')">Kombi</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Hatchback', 'Hatchback')">Hatchback</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'SUV', 'SUV')">SUV</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Minivan', 'Minivan')">Minivan</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Coupe', 'Coupe')">Coupe</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Kabriolet', 'Kabriolet')">Kabriolet</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Pick-up', 'Pick-up')">Pick-up</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Motocykl', 'Motocykl')">Motocykl</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Inne', 'Inne')">Inne</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Sedan', 'Sedan'); return false;">Sedan</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Kombi', 'Kombi'); return false;">Kombi</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Hatchback', 'Hatchback'); return false;">Hatchback</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'SUV', 'SUV'); return false;">SUV</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Minivan', 'Minivan'); return false;">Minivan</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Coupe', 'Coupe'); return false;">Coupe</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Kabriolet', 'Kabriolet'); return false;">Kabriolet</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Pick-up', 'Pick-up'); return false;">Pick-up</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Motocykl', 'Motocykl'); return false;">Motocykl</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setVal('nadwozie', 'Inne', 'Inne'); return false;">Inne</a></li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="col-md-8">
-                             <label class="small text-muted mb-1">Telefon</label>
+                             <label class="small text-muted mb-1">{{ t.get('phone', 'Telefon') }}</label>
                              <input type="text" name="telefon" class="form-control" value="{{ car.telefon }}" required>
                         </div>
                     </div>
 
-                    <label class="text-uppercase text-secondary fw-bold small mb-3">Wyposażenie Pojazdu</label>
-                    <div class="p-4 mb-4 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25" style="max-height: 250px; overflow-y: auto;">
-                        <div class="row g-2">
-                            {% set current_options = car.wyposazenie.split(',') if car.wyposazenie else [] %}
-                            {% set all_options = [
-                                'ABS', 'ESP', 'Poduszki powietrzne', 'Isofix', 'Asystent pasa ruchu', 'Czujnik martwego pola',
-                                'Klimatyzacja', 'Klimatyzacja automatyczna', 'Skórzana tapicerka', 'Podgrzewane fotele', 'El. szyby', 'El. lusterka', 
-                                'Tempomat', 'Tempomat aktywny', 'Keyless', 'Szyberdach', 'Webasto',
-                                'Nawigacja', 'Bluetooth', 'Android Auto', 'Kamera cofania', 'Kamera 360', 
-                                'Czujniki parkowania', 'Alufelgi', 'Światła LED', 'Hak'
-                            ] %}
-
-                            {% for opcja in all_options %}
-                            <div class="col-6 col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="{{ opcja }}" id="w_{{ loop.index }}" 
-                                    {% if opcja in current_options %}checked{% endif %}>
-                                    <label class="form-check-label small text-white" for="w_{{ loop.index }}">
-                                        {{ opcja }}
-                                    </label>
+                    {% set current_options = car.wyposazenie.split(',') if car.wyposazenie else [] %}
+                    <label class="text-uppercase text-secondary fw-bold small mb-3">{{ t.get('equip', 'WYPOSAŻENIE (Zaznacz opcje)') }}</label>
+                    
+                    <div class="accordion accordion-flush mb-4" id="equipAccordion" style="border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+                        
+                        <div class="accordion-item bg-black bg-opacity-25 border-0 border-bottom border-secondary">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button bg-dark text-success fw-bold p-3 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#colBasic" aria-expanded="true">
+                                    <i class="bi bi-check2-square me-2"></i> {{ t.get('eq_cat_basic', 'PODSTAWOWE WYPOSAŻENIE') }}
+                                </button>
+                            </h2>
+                            <div id="colBasic" class="accordion-collapse collapse show" data-bs-parent="#equipAccordion">
+                                <div class="accordion-body row g-2 p-3">
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ABS" id="w1" {% if 'ABS' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w1">{{ t.get('eq_abs', 'ABS') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="ESP" id="w2" {% if 'ESP' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w2">{{ t.get('eq_esp', 'ESP / ASR') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Poduszki powietrzne" id="w3" {% if 'Poduszki powietrzne' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w3">{{ t.get('eq_airbags', 'Poduszki powietrzne') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="El. szyby" id="w11" {% if 'El. szyby' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w11">{{ t.get('eq_windows', 'El. szyby') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="El. lusterka" id="w12" {% if 'El. lusterka' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w12">{{ t.get('eq_mirrors', 'El. lusterka') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatyzacja" id="w7" {% if 'Klimatyzacja' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w7">{{ t.get('eq_ac', 'Klimatyzacja manualna') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Isofix" id="w4" {% if 'Isofix' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w4">{{ t.get('eq_isofix', 'Isofix') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Bluetooth / USB" id="w19" {% if 'Bluetooth / USB' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w19">{{ t.get('eq_bt', 'Bluetooth / USB') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w24" {% if 'Alufelgi' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w24">{{ t.get('eq_alloys', 'Alufelgi') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Hak" id="w26" {% if 'Hak' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w26">{{ t.get('eq_tow', 'Hak') }}</label></div></div>
                                 </div>
                             </div>
-                            {% endfor %}
+                        </div>
+
+                        <div class="accordion-item bg-black bg-opacity-25 border-0 border-bottom border-secondary">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-dark text-info fw-bold p-3 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#colComfort" aria-expanded="false">
+                                    <i class="bi bi-car-front-fill me-2"></i> {{ t.get('eq_cat_comfort', 'KOMFORT & DODATKI') }}
+                                </button>
+                            </h2>
+                            <div id="colComfort" class="accordion-collapse collapse" data-bs-parent="#equipAccordion">
+                                <div class="accordion-body row g-2 p-3">
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatronik" id="wc1" {% if 'Klimatronik' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc1">{{ t.get('eq_climatronic', 'Klimatronik') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujniki parkowania" id="wc2" {% if 'Czujniki parkowania' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc2">{{ t.get('eq_sensors', 'Czujniki parkowania') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera cofania" id="wc3" {% if 'Kamera cofania' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc3">{{ t.get('eq_cam_back', 'Kamera cofania') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Tempomat" id="wc4" {% if 'Tempomat' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc4">{{ t.get('eq_cruise', 'Tempomat') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewane fotele" id="wc5" {% if 'Podgrzewane fotele' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc5">{{ t.get('eq_heated_seats', 'Podgrzewane fotele') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Skórzana tapicerka" id="wc6" {% if 'Skórzana tapicerka' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc6">{{ t.get('eq_leather', 'Skórzana tapicerka') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nawigacja" id="wc7" {% if 'Nawigacja' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc7">{{ t.get('eq_navi', 'Nawigacja') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Szyberdach" id="wc8" {% if 'Szyberdach' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc8">{{ t.get('eq_sunroof', 'Szyberdach') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Elektryczna klapa bagażnika" id="wc9" {% if 'Elektryczna klapa bagażnika' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc9">{{ t.get('eq_trunk', 'Elektryczna klapa') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewana przednia szyba" id="wc10" {% if 'Podgrzewana przednia szyba' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc10">{{ t.get('eq_heated_wind', 'Podgrzewana przednia szyba') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Lusterka fotochromatyczne" id="wc11" {% if 'Lusterka fotochromatyczne' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wc11">{{ t.get('eq_photochrom', 'Lusterka fotochromatyczne') }}</label></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item bg-black bg-opacity-25 border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-dark text-warning fw-bold p-3 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#colPremium" aria-expanded="false">
+                                    <i class="bi bi-star-fill me-2"></i> {{ t.get('eq_cat_premium', 'PREMIUM & NOWE TECHNOLOGIE') }}
+                                </button>
+                            </h2>
+                            <div id="colPremium" class="accordion-collapse collapse" data-bs-parent="#equipAccordion">
+                                <div class="accordion-body row g-2 p-3">
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Klimatronik 4-strefowy" id="wp1" {% if 'Klimatronik 4-strefowy' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp1">{{ t.get('eq_4zone', 'Klimatronik 4-strefowy') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Wentylowane fotele" id="wp2" {% if 'Wentylowane fotele' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp2">{{ t.get('eq_vent_seats', 'Wentylowane fotele') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Fotele z masażem" id="wp3" {% if 'Fotele z masażem' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp3">{{ t.get('eq_massage', 'Fotele z masażem') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewana kierownica" id="wp4" {% if 'Podgrzewana kierownica' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp4">{{ t.get('eq_heated_steer', 'Podgrzewana kierownica') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Zawieszenie pneumatyczne" id="wp5" {% if 'Zawieszenie pneumatyczne' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp5">{{ t.get('eq_air_susp', 'Zawieszenie pneumatyczne') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Dociąganie drzwi" id="wp6" {% if 'Dociąganie drzwi' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp6">{{ t.get('eq_soft_close', 'Dociąganie drzwi') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Reflektory Matrix LED / Laser" id="wp7" {% if 'Reflektory Matrix LED / Laser' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp7">{{ t.get('eq_led', 'Reflektory Matrix LED') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Dach panoramiczny" id="wp8" {% if 'Dach panoramiczny' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp8">{{ t.get('eq_pano', 'Dach panoramiczny') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Oświetlenie Ambient" id="wp9" {% if 'Oświetlenie Ambient' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp9">{{ t.get('eq_ambient', 'Oświetlenie Ambient') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera 360" id="wp10" {% if 'Kamera 360' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp10">{{ t.get('eq_cam_360', 'Kamera 360') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Asystent parkowania" id="wp11" {% if 'Asystent parkowania' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp11">{{ t.get('eq_park_assist', 'Asystent parkowania') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Head-Up Display" id="wp12" {% if 'Head-Up Display' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp12">{{ t.get('eq_hud', 'Head-Up Display') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Ładowarka indukcyjna" id="wp13" {% if 'Ładowarka indukcyjna' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp13">{{ t.get('eq_wireless', 'Ładowarka indukcyjna') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nagłośnienie Premium" id="wp14" {% if 'Nagłośnienie Premium' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp14">{{ t.get('eq_sound', 'Nagłośnienie Premium') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Android Auto / CarPlay" id="wp15" {% if 'Android Auto / CarPlay' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp15">{{ t.get('eq_android', 'Android Auto / CarPlay') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Tempomat aktywny" id="wp16" {% if 'Tempomat aktywny' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp16">{{ t.get('eq_cruise_adapt', 'Tempomat aktywny (ACC)') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Keyless" id="wp17" {% if 'Keyless' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp17">{{ t.get('eq_keyless', 'Keyless') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Asystent pasa ruchu" id="wp18" {% if 'Asystent pasa ruchu' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp18">{{ t.get('eq_lane', 'Asystent pasa ruchu') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Czujnik martwego pola" id="wp19" {% if 'Czujnik martwego pola' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp19">{{ t.get('eq_blind', 'Czujnik martwego pola') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Rozpoznawanie znaków" id="wp20" {% if 'Rozpoznawanie znaków' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp20">{{ t.get('eq_signs', 'Rozpoznawanie znaków') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Front Assist" id="wp21" {% if 'Front Assist' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp21">{{ t.get('eq_front_assist', 'Front Assist') }}</label></div></div>
+                                    <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Night Vision" id="wp22" {% if 'Night Vision' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp22">{{ t.get('eq_night_vision', 'Night Vision') }}</label></div></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                        {% if current_user.username == 'admin' or current_user.id == 1 %}
+
+                    {% if current_user.username == 'admin' or current_user.id == 1 %}
                     <label class="text-uppercase text-danger fw-bold small mb-3 mt-4"><i class="bi bi-geo-alt-fill"></i> Panel Administratora (Opcje Ukryte)</label>
                     <div class="row g-3 mb-4 p-4 bg-danger bg-opacity-10 rounded-4 border border-danger border-opacity-50">
                         <div class="col-6">
@@ -324,7 +369,7 @@
 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="text-uppercase text-secondary fw-bold small">OPIS POJAZDU</label>
+                            <label class="text-uppercase text-secondary fw-bold small">{{ t.get('desc', 'Opis') }}</label>
                             <button type="button" class="btn btn-sm btn-ai rounded-pill px-3 shadow" onclick="generujOpis()">
                                 <i class="bi bi-stars"></i> Ulepsz Opis (AI)
                             </button>
@@ -336,7 +381,7 @@
                     </div>
 
                     <div class="mb-5">
-                        <label class="text-uppercase text-secondary fw-bold small mb-3">Galeria Zdjęć</label>
+                        <label class="text-uppercase text-secondary fw-bold small mb-3">{{ t.get('photos', 'ZDJĘCIA') }}</label>
 
                         <div class="d-flex gap-3 flex-wrap mb-3">
                             <div class="img-preview-container border-danger">
@@ -353,9 +398,9 @@
                             {% endfor %}
                         </div>
 
-                        <div class="input-group">
-                            <input type="file" name="zdjecia" class="form-control" multiple accept="image/*" id="fileInput">
-                            <label class="input-group-text bg-secondary text-white border-secondary" for="fileInput"><i class="bi bi-plus-lg me-2"></i> Dodaj nowe</label>
+                        <div class="input-group mt-3">
+                            <input type="file" name="zdjecia" class="form-control border-secondary" multiple accept="image/*" id="fileInput">
+                            <label class="input-group-text bg-dark text-white border-secondary" for="fileInput"><i class="bi bi-plus-lg me-2"></i> Dodaj nowe</label>
                         </div>
                     </div>
 
@@ -370,13 +415,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Funkcja do obsługi nowych list (dropdownów)
     function setVal(name, val, label) {
         document.getElementById('val_' + name).value = val;
         document.getElementById('btn_' + name).innerText = label;
     }
 
-    // Twoje funkcje AI i usuwania zdjęć
     async function generujOpis() {
         const data = {
             marka: document.getElementById('i_marka').value,
@@ -384,7 +427,7 @@
             rok: document.getElementById('i_rok').value,
             przebieg: document.getElementById('i_przebieg').value,
             cena: document.getElementById('i_cena').value,
-            paliwo: document.getElementById('val_paliwo').value, // Pobieramy z hidden input
+            paliwo: document.getElementById('val_paliwo').value,
             pojemnosc: document.getElementById('i_pojemnosc').value
         };
 
