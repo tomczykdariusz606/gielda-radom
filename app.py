@@ -865,6 +865,14 @@ def dodaj_ogloszenie():
             db.session.add(CarImage(image_path=p, car_id=new_car.id))
             
         db.session.commit()
+        for p in saved_paths:
+            db.session.add(CarImage(image_path=p, car_id=new_car.id))
+            
+        db.session.commit()
+        
+        # --- TĘ LINIJKĘ DODAJESZ ---
+        wyslij_potwierdzenie_ogloszenia(current_user.email, current_user.username, new_car.marka, new_car.model)
+        
         flash('Dodano ogłoszenie!', 'success')
         return redirect(url_for('profil'))
 
@@ -1368,6 +1376,38 @@ def update_db():
                 
         conn.commit()
         conn.close()
+# ==========================================
+# --- AUTOMATYZACJA W TLE (APSCHEDULER) ---
+# ==========================================
+def automatyczne_sprawdzanie_wygasajacych():
+    """Funkcja odpalana automatycznie przez harmonogram."""
+    with app.app_context():
+        now = datetime.utcnow()
+        # Szukamy aut dodanych między 28 a 29 dni temu
+        start_date = now - timedelta(days=29)
+        end_date = now - timedelta(days=28)
+        
+        wygasajace_auta = Car.query.filter(and_(Car.data_dodania >= start_date, Car.data_dodania <= end_date)).all()
+        
+        wyslane = 0
+        for car in wygasajace_auta:
+            wlasciciel = User.query.get(car.user_id)
+            if wlasciciel and wlasciciel.email:
+                wyslij_przypomnienia(wlasciciel.email, wlasciciel.username, car.marka, car.model)
+                wyslane += 1
+                
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] AUTO-CRON: Wysłano {wyslane} przypomnień o wygasaniu ogłoszeń.")
+
+# Uruchamiamy harmonogram
+scheduler = BackgroundScheduler(daemon=True)
+# Ustawiamy, aby system sam wysyłał maile CODZIENNIE rano o 10:00
+scheduler.add_job(automatyczne_sprawdzanie_wygasajacych, 'cron', hour=10, minute=0)
+scheduler.start()
+
+# Zabezpieczenie: grzeczne zamykanie harmonogramu przy restarcie aplikacji
+atexit.register(lambda: scheduler.shutdown())
+# ==========================================
+
 
 
 if __name__ == '__main__':
