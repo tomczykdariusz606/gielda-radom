@@ -159,16 +159,18 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;
         }
 
-        /* STOPKA */
-        .footer-main {
+                /* STOPKA */
+        .seo-footer {
             background: rgba(10,10,10,0.95);
             padding: 40px 0 110px 0; /* padding bottom dla nav-bottom */
             border-top: 1px solid rgba(255,255,255,0.05);
             color: #777;
             font-size: 0.85rem;
+            margin-top: 50px;
         }
         .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
         .footer-link:hover { color: var(--radom-red); }
+
     </style>
 </head>
 <body class="pb-0">
@@ -350,7 +352,7 @@
         </div>
     </div>
 
-    <footer class="footer-main">
+       <footer class="seo-footer">
         <div class="container">
             <div class="row g-4">
                 <div class="col-12 col-md-4 text-center text-md-start">
@@ -363,12 +365,17 @@
                         <li><a href="/" class="footer-link">Strona Główna</a></li>
                         <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
                         <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                        <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md-4 text-center text-md-end">
                     <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
-                    <p class="small mb-1">Masz pytania?</p>
-                    <a href="mailto:kontakt@gieldaradom.pl" class="text-danger fw-bold text-decoration-none">kontakt@gieldaradom.pl</a>
+                    <a href="/sitemap.xml" style="display: none;">Sitemap</a>
+                    
+                    <p class="small mb-2 text-muted">Masz pytania?</p>
+                    <a href="/kontakt" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
+                        <i class="bi bi-envelope-fill me-1"></i> Napisz do nas
+                    </a>
                 </div>
             </div>
             <hr class="border-secondary my-4">
@@ -377,6 +384,7 @@
             </div>
         </div>
     </footer>
+
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> {{ t.get('search', 'Szukaj') }}</a>
