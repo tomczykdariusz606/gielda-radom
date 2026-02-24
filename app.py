@@ -661,13 +661,14 @@ def index():
     max_cena = request.args.get('max_cena', type=float)
     if max_cena: query = query.filter(Car.cena <= max_cena)
     
-    max_przebieg = request.args.get('max_przebieg', type=int)
+        max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
-        page = request.args.get('page', 1, type=int)
+    page = request.args.get('page', 1, type=int)
     pagination = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
     
     return render_template('index.html', cars=pagination.items, pagination=pagination, now=datetime.utcnow())
+
 
 
 @app.route('/szukaj')
@@ -718,13 +719,14 @@ def szukaj():
         if przebieg_min is not None: query = query.filter(Car.przebieg >= przebieg_min)
         if przebieg_max is not None: query = query.filter(Car.przebieg <= przebieg_max)
         
-        if moc_min is not None: 
+                if moc_min is not None: 
             query = query.filter(and_(Car.moc.isnot(None), Car.moc >= moc_min))
         
-                            page = request.args.get('page', 1, type=int)
+        page = request.args.get('page', 1, type=int)
         pagination = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
         
         return render_template('szukaj.html', cars=pagination.items, pagination=pagination, now=datetime.utcnow(), args=request.args)
+
 
 
 
