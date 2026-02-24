@@ -1231,6 +1231,56 @@ def admin_delete_user(user_id):
     flash(f'Usunięto użytkownika {user.username}.', 'success')
     return redirect('/profil')
 
+@app.route('/admin/wyslij_powitania', methods=['POST'])
+@login_required
+def admin_wyslij_powitania():
+    if current_user.username != 'admin' and current_user.id != 1:
+        flash('Brak uprawnień.', 'danger')
+        return redirect(url_for('profil'))
+
+    users = User.query.all()
+    wyslane = 0
+
+    with mail.connect() as conn:
+        for u in users:
+            if u.email:
+                msg = Message(
+                    subject="Dziękuję za zaufanie! Wspólnie zmieniamy rynek aut w Radomiu 🤝",
+                    recipients=[u.email]
+                )
+                msg.body = f"""Cześć {u.username}! 👋
+
+Piszę do Ciebie osobiście, ponieważ właśnie dołączyłeś do platformy Giełda Radom. Chciałem Ci za to bardzo serdecznie podziękować!
+
+Tworząc ten portal, przyświecał nam jeden cel: skończyć z nudnym, ręcznym wpisywaniem danych i ułatwić lokalny handel. Jako pierwsi w Polsce zaprzęgliśmy do pracy sztuczną inteligencję (Gemini AI), która z samego zdjęcia rozpoznaje auto, generuje profesjonalny opis i tworzy kinowe widoki 360°.
+
+Co się u nas teraz dzieje?
+* Nasza baza rośnie w błyskawicznym tempie (przekroczyliśmy już 1500 aktywnych ofert na stronie!), a ruch z całego Mazowsza bije kolejne rekordy.
+* Wystartowaliśmy z silną kampanią reklamową w Google, skupioną wyłącznie na naszym regionie. Ściągamy na stronę konkretnych kupców z okolicy, by ułatwić Ci szybką sprzedaż.
+
+Masz auto na sprzedaż?
+To idealny moment, żeby je dodać. Przypominam, że nasza AI odwali za Ciebie 90% roboty – wystarczy, że zrobisz zdjęcie, a system sam uzupełni model, parametry i wyposażenie w zaledwie 3 sekundy. Wszystko całkowicie za darmo.
+
+Zaloguj się na swoje konto i przetestuj nasz skaner AI:
+https://gieldaradom.pl/login
+
+Jeszcze raz dziękuję, że tworzysz z nami nowoczesną motoryzację na Mazowszu. W razie jakichkolwiek pytań – po prostu odpisz na tę wiadomość.
+
+Pozdrawiam serdecznie,
+Dariusz
+Właściciel serwisu | ADT & AI Team
+https://gieldaradom.pl
+"""
+                try:
+                    conn.send(msg)
+                    wyslane += 1
+                except Exception as e:
+                    print(f"Błąd wysyłania do {u.email}: {e}")
+
+    flash(f'Sukces! Wysłano powitalnego e-maila do {wyslane} użytkowników.', 'success')
+    return redirect(url_for('profil'))
+
+
 @app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
 @login_required
 def usun_zdjecie(image_id):
