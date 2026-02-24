@@ -11,15 +11,14 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-    <title>Giełda Radom | Prawdziwe 360° z Twoich zdjęć dzięki Gemini AI</title>
-    <meta name="description" content="Żadnej ściemy! Giełda Radom jako pierwsza w Polsce używa Gemini AI, by z kilku prawdziwych zdjęć Twojego auta stworzyć kinowy obrót 360°. Zachowujemy każdy detal!">
-    <meta name="keywords" content="giełda samochodowa radom, auta 360, wycena AI gemini, sprzedaż samochodów radom, darmowe ogłoszenia radom, wideo 360 z auta">
-    <link rel="canonical" href="https://gieldaradom.pl/">
-    <meta name="author" content="Giełda Radom AI Team">
-
-    <meta property="og:title" content="Twoje Prawdziwe Auto w 360° dzięki mocy Gemini AI">
-    <meta property="og:description" content="Jako jedyni w Polsce używamy AI do generowania interaktywnych widoków 360 z kilku prawdziwych zdjęć. Sprawdź rewolucję!">
+    
+    <meta name="robots" content="index, follow">
+    <title>Giełda Radom | Wystaw auto ze zdjęcia i stwórz widok 360° dzięki AI</title>
+    <meta name="description" content="Giełda Radom: Wystaw auto ze zdjęcia w 3 sekundy! Gemini AI automatycznie rozpozna model, wygeneruje profesjonalny opis i stworzy obrót 360°. Sprzedawaj nowocześnie i za darmo.">
+    <meta name="keywords" content="giełda samochodowa radom, wystaw auto ze zdjęcia, generowanie opisu auta AI, auta 360, wycena AI gemini, sprzedaż samochodów radom, darmowe ogłoszenia radom">
+    
+    <meta property="og:title" content="Giełda Radom - Wystaw auto ze zdjęcia z pomocą Gemini AI">
+    <meta property="og:description" content="Zrób zdjęcie i gotowe! Nasza sztuczna inteligencja automatycznie wygeneruje opis, uzupełni dane pojazdu i stworzy kinowy widok 360°. Sprawdź rewolucję na rynku!">
     <meta property="og:image" content="{{ url_for('static', filename='radom_hero.png') }}">
     <meta property="og:url" content="https://gieldaradom.pl/">
     <meta property="og:type" content="website">
@@ -91,8 +90,17 @@
         .lang-btn { text-decoration: none; font-size: 1.3rem; margin-left: 8px; opacity: 0.7; transition: 0.2s; }
         .lang-btn:hover { opacity: 1; transform: scale(1.2); }
         
-        .seo-footer { background: #050505; color: #777; padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; font-size: 0.9rem; }
-        .seo-footer a { color: #999; text-decoration: none; } .seo-footer a:hover { color: var(--radom-red); }
+                .seo-footer { 
+            background: rgba(10,10,10,0.95); 
+            padding: 40px 0 110px 0; /* 110px robi miejsce dla nav-bottom! */
+            border-top: 1px solid rgba(255,255,255,0.05); 
+            color: #777; 
+            font-size: 0.85rem; 
+            margin-top: 50px;
+        }
+        .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
+        .footer-link:hover { color: var(--radom-red); }
+
 
         .video-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -377,19 +385,39 @@
     </div>
 </div>
 
-<footer class="seo-footer">
+<footer class="seo-footer mt-5">
     <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-4"><h5 class="text-white">Giełda Radom</h5><p>Lokalny lider. Weryfikacja <strong>Gemini AI</strong>.</p></div>
-            <div class="col-md-4 mb-4"><h5 class="text-white">Linki</h5><ul class="list-unstyled lh-lg"><li><a href="/?typ=Osobowe">Samochody</a></li><li><a href="/?typ=Ciezarowe">Dostawcze</a></li><li><a href="/?typ=Moto/Rower">Motocykle i Rowery</a></li></ul></div>
-            <div class="col-md-4 mb-4"><h5 class="text-white">Pomoc</h5><ul class="list-unstyled lh-lg"><li><a href="/regulamin">Regulamin</a></li><li><a href="/polityka">Polityka</a></li><li><a href="/kontakt">Kontakt</a></li><li><a href="/sitemap.xml">Sitemap</a></li></ul></div>
+        <div class="row g-4">
+            <div class="col-12 col-md-4 text-center text-md-start">
+                <h5 class="text-white fw-bold mb-3">Giełda <span class="text-danger">Radom</span></h5>
+                <p class="small">Innowacyjna platforma sprzedaży pojazdów wykorzystująca najnowsze technologie AI. Twoje auto, nasza pasja.</p>
+            </div>
+            <div class="col-6 col-md-4 text-center">
+                <h6 class="text-white fw-bold mb-3">MENU</h6>
+                <ul class="list-unstyled">
+                    <li><a href="/" class="footer-link">Strona Główna</a></li>
+                    <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                    <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                    <li><a href="/polityka" class="footer-link">Polityka prywatności</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-4 text-center text-md-end">
+                <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
+                <a href="/sitemap.xml" style="display: none;">Sitemap</a>
+                
+                <p class="small mb-2 text-muted">Masz pytania?</p>
+                <a href="/kontakt" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
+                    <i class="bi bi-envelope-fill me-1"></i> Napisz do nas
+                </a>
+            </div>
         </div>
+        <hr class="border-secondary my-4">
         <div class="text-center small opacity-50">
-    &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
+            &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
         </div>
-
     </div>
 </footer>
+
 
 <div class="nav-bottom">
     <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
