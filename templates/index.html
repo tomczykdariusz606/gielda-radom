@@ -311,7 +311,8 @@
         <h4 class="fw-bold text-white mb-0">{{ t['available'] }}</h4>
         <span class="text-white small fw-bold" style="letter-spacing: 0.5px;">
             <i class="bi bi-speedometer me-1 text-danger"></i> 
-            OFERT W BAZIE: <span class="text-danger">{{ cars|length + 1582 }}</span>
+            OFERT W BAZIE: <span class="text-danger">{{ pagination.total + 1582 }}</span>
+
         </span>
     </div>
 
@@ -325,6 +326,15 @@
                 <a href="/ogloszenie/{{ car.id }}" class="text-decoration-none">
                     <div class="position-relative">
     <img src="{{ car.img }}" class="card-img-top" loading="lazy" alt="{{ car.marka }} {{ car.model }}" style="height: 230px; object-fit: cover;">
+    {% if car.is_reserved %}
+    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50" style="z-index: 15; pointer-events: none;"></div>
+    <div class="position-absolute top-50 start-50" style="z-index: 20; transform: translate(-50%, -50%) rotate(-15deg); width: 100%; text-align: center; pointer-events: none;">
+        <span class="badge bg-danger text-white shadow-lg" style="font-size: 1.6rem; letter-spacing: 4px; padding: 12px 25px; text-transform: uppercase; border: 4px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.9) !important; font-family: 'Anton', sans-serif;">
+            REZERWACJA
+        </span>
+    </div>
+    {% endif %}
+
     
     <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 align-items-start" style="z-index: 5;">
         {% if car.is_promoted %}
@@ -367,13 +377,32 @@
         {% endfor %}
     </div>
 
-    {% if cars|length > 30 %}
-    <div class="text-center mt-5 mb-4">
-        <button id="loadMoreBtn" class="btn btn-outline-danger btn-lg rounded-pill px-5 fw-bold shadow-sm">
-            NASTĘPNA STRONA &raquo;
-        </button>
-    </div>
+        {% if pagination and pagination.pages > 1 %}
+    <nav aria-label="Nawigacja stron" class="mt-5 mb-4">
+        <ul class="pagination justify-content-center mb-0 shadow-sm">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link bg-dark text-white border-secondary" href="?q={{ request.args.get('q', '') }}&typ={{ request.args.get('typ', '') }}&page={{ pagination.prev_num if pagination.has_prev else 1 }}">&laquo; Poprzednia</a>
+            </li>
+
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if pagination.page == page_num %}
+                        <li class="page-item active"><span class="page-link bg-danger border-danger text-white fw-bold">{{ page_num }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link bg-dark text-white border-secondary" href="?q={{ request.args.get('q', '') }}&typ={{ request.args.get('typ', '') }}&page={{ page_num }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link bg-dark text-white border-secondary">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link bg-dark text-white border-secondary" href="?q={{ request.args.get('q', '') }}&typ={{ request.args.get('typ', '') }}&page={{ pagination.next_num if pagination.has_next else pagination.pages }}">Następna &raquo;</a>
+            </li>
+        </ul>
+    </nav>
     {% endif %}
+
 </div>
 
 <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; border-top: 2px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);">
