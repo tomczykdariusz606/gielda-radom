@@ -661,7 +661,7 @@ def index():
     max_cena = request.args.get('max_cena', type=float)
     if max_cena: query = query.filter(Car.cena <= max_cena)
     
-        max_przebieg = request.args.get('max_przebieg', type=int)
+    max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
     page = request.args.get('page', 1, type=int)
