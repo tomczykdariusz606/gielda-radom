@@ -290,16 +290,23 @@
                                         <i class="bi bi-pencil-square fs-6"></i>
                                     </a>
                                 </div>
-                                <div class="col-4">
+                                                                <div class="col-4">
                                     {% set roznica_godzin = (now - car.data_dodania).total_seconds() / 3600 %}
+                                    {% set pozostalo_godzin = (72 - roznica_godzin)|int %}
+                                    {% if pozostalo_godzin < 0 %}{% set pozostalo_godzin = 0 %}{% endif %}
                                     {% set mozna_podbic = (roznica_godzin >= 72) or (current_user.username == 'admin' or current_user.id == 1) %}
                                     
                                     <form action="/odswiez/{{ car.id }}" method="POST">
-                                        <button type="submit" class="btn {% if mozna_podbic %}btn-success{% else %}btn-secondary opacity-50{% endif %} btn-sm w-100 fw-bold text-white py-2 shadow-sm" title="{% if mozna_podbic %}Podbij na samą górę{% else %}Podbicie możliwe co 3 dni{% endif %}" {% if not mozna_podbic %}disabled{% endif %}>
-                                            <i class="bi bi-arrow-up-circle-fill fs-6"></i>
+                                        <button type="submit" class="btn {% if mozna_podbic %}btn-success{% else %}btn-secondary bg-opacity-50{% endif %} btn-sm w-100 fw-bold text-white shadow-sm d-flex align-items-center justify-content-center" style="height: 38px;" {% if not mozna_podbic %}disabled{% endif %}>
+                                            {% if mozna_podbic %}
+                                                <i class="bi bi-arrow-up-circle-fill fs-6"></i>
+                                            {% else %}
+                                                <i class="bi bi-clock-history me-1"></i> <span style="font-size: 0.75rem;">{{ pozostalo_godzin }}h</span>
+                                            {% endif %}
                                         </button>
                                     </form>
                                 </div>
+
                             </div>
 
                             <div class="row g-2 mb-2">
