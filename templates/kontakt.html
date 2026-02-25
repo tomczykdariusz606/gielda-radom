@@ -89,14 +89,14 @@
     <nav class="navbar navbar-dark p-3 sticky-top">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold fs-4" href="/">GIEŁDA <span class="text-danger">RADOM</span></a>
-            <a href="/" class="btn btn-sm btn-outline-danger rounded-pill px-3">{{ legal.contact_back }}</a>
+            <a href="/" class="btn btn-sm btn-outline-danger rounded-pill px-3">{{ legal.contact_back if legal else 'Wróć' }}</a>
         </div>
     </nav>
 
     <header class="contact-hero">
         <div>
-            <h1>{{ legal.contact_title }}</h1>
-            <p class="lead fw-bold text-white-50">{{ legal.contact_hero_sub }}</p>
+            <h1>{{ legal.contact_title if legal else 'Kontakt' }}</h1>
+            <p class="lead fw-bold text-white-50">{{ legal.contact_hero_sub if legal else 'Skontaktuj się z nami' }}</p>
         </div>
     </header>
 
@@ -108,16 +108,16 @@
                         <div class="col-md-6">
                             <div class="info-box">
                                 <i class="bi bi-envelope-at-fill info-icon"></i>
-                                <h4 class="fw-bold text-white">{{ legal.contact_mail_title }}</h4>
-                                <p class="text-muted small">{{ legal.contact_mail_sub }}</p>
+                                <h4 class="fw-bold text-white">{{ legal.contact_mail_title if legal else 'Napisz do nas' }}</h4>
+                                <p class="text-muted small">{{ legal.contact_mail_sub if legal else 'Odpowiadamy zazwyczaj w kilka godzin' }}</p>
                                 <a href="mailto:kontakt@gieldaradom.pl" class="text-danger fw-bold text-decoration-none fs-5">kontakt@gieldaradom.pl</a>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="info-box">
                                 <i class="bi bi-geo-alt-fill info-icon"></i>
-                                <h4 class="fw-bold text-white">{{ legal.contact_loc_title }}</h4>
-                                <p class="text-muted small">{{ legal.contact_loc_sub }}</p>
+                                <h4 class="fw-bold text-white">{{ legal.contact_loc_title if legal else 'Lokalizacja' }}</h4>
+                                <p class="text-muted small">{{ legal.contact_loc_sub if legal else 'Działamy głównie na terenie Mazowsza' }}</p>
                                 <span class="fw-bold fs-5 text-white">26-600 Radom, Polska</span>
                             </div>
                         </div>
@@ -125,7 +125,15 @@
 
                     <div class="row justify-content-center">
                         <div class="col-md-10">
-                            <h3 class="fw-bold mb-4 text-center text-white">{{ legal.contact_form_title }}</h3>
+                            <h3 class="fw-bold mb-4 text-center text-white">{{ legal.contact_form_title if legal else 'Formularz kontaktowy' }}</h3>
+                            
+                            {% if sukces %}
+                            <div class="alert alert-success alert-dismissible fade show text-start shadow-sm mb-4" role="alert" style="border-left: 5px solid #198754;">
+                                <i class="bi bi-check-circle-fill me-2 fs-5"></i> 
+                                <strong>Wiadomość została wysłana!</strong> Odpowiemy na nią najszybciej jak to możliwe.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            {% endif %}
                             
                             {% with messages = get_flashed_messages(with_categories=true) %}
                                 {% if messages %}
@@ -141,7 +149,7 @@
                             <form action="/kontakt" method="POST">
                                 <div class="row g-3 text-start">
                                     <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">{{ legal.contact_form_name }}</label>
+                                        <label class="form-label small fw-bold text-muted">{{ legal.contact_form_name if legal else 'Imię' }}</label>
                                         <input type="text" name="imie" class="form-control" placeholder="..." required>
                                     </div>
                                     <div class="col-md-6">
@@ -149,12 +157,12 @@
                                         <input type="email" name="email" class="form-control" placeholder="email@domena.pl" required>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted">{{ legal.contact_form_msg }}</label>
+                                        <label class="form-label small fw-bold text-muted">{{ legal.contact_form_msg if legal else 'Wiadomość' }}</label>
                                         <textarea name="wiadomosc" class="form-control" rows="4" placeholder="..." required></textarea>
                                     </div>
                                     <div class="col-12 text-center mt-4">
                                         <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-lg">
-                                            {{ legal.contact_form_btn }} <i class="bi bi-send ms-2"></i>
+                                            {{ legal.contact_form_btn if legal else 'Wyślij Wiadomość' }} <i class="bi bi-send ms-2"></i>
                                         </button>
                                     </div>
                                 </div>
