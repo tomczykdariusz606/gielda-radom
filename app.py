@@ -85,7 +85,7 @@ if not os.path.exists(VIDEOS_360_FOLDER):
 
 # --- KONFIGURACJA MAILA (HOME.PL) ---
 app.config['MAIL_SERVER'] = 'poczta.home.pl'
-app.config['MAIL_PORT'] = 465
+app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 # LOGIN: Musi być identyczny jak "Nazwa użytkownika" na Twoim screenie
