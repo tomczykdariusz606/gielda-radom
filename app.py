@@ -87,9 +87,9 @@ if not os.path.exists(VIDEOS_360_FOLDER):
 app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'kontakt@gieldaradom.pl'
-app.config['MAIL_PASSWORD'] = MAIL_PWD  # Pamiętaj, żeby zaktualizować to hasło w pliku z sekretami!
-app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl')
+app.config['MAIL_USERNAME'] = 'kontakt.serwer2602674@serwer2602674.home.pl' # <--- TYLKO TO ZMIENIAMY
+app.config['MAIL_PASSWORD'] = MAIL_PWD  
+app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl') # To zostaje, żeby klienci widzieli ładny adres!
 
 
 db = SQLAlchemy(app)
