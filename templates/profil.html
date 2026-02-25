@@ -866,34 +866,45 @@
             performAnalysis(input.files[0]);
         }
 
-                document.getElementById('fileInput').addEventListener('change', function(e) {
-            const headerLabel = document.getElementById('photoLabel'); 
-            if(headerLabel.innerText.includes("SKAN")) { headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; }
-            
-            // Limit 18 zdjęć
-            if (this.files.length > 18) { 
-                alert('⚠️ MAX 18 zdjęć.'); 
-                const dt = new DataTransfer(); 
-                for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } 
-                this.files = dt.files; 
-            }
-            
-            // WIZUALNA ZMIANA TEKSTU NA ZIELONY PO WYBORZE PLIKÓW
-            const countText = document.getElementById('fileCountText');
-            if(this.files.length > 0) {
-                countText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> ' + this.files.length + ' ' + '{{ t.get("files_ready", "gotowych zdjęć") }}' + '</span>';
-                countText.parentElement.style.borderColor = '#198754'; // Zmienia ramkę na zieloną
-            } else {
-                countText.innerHTML = "{{ t.get('select_multiple', 'Zaznacz kilka zdjęć na raz') }}";
-                countText.parentElement.style.borderColor = 'rgba(255,255,255,0.2)';
-            }
+                        // BARDZO BEZPIECZNY SKRYPT OBSŁUGI NOWYCH ZDJĘĆ
+        const galleryInput = document.getElementById('mainGalleryInput');
+        if (galleryInput) {
+            galleryInput.addEventListener('change', function(e) {
+                const headerLabel = document.getElementById('photoLabel'); 
+                if(headerLabel && headerLabel.innerText.includes("SKAN")) { 
+                    headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; 
+                }
+                
+                // Limit 18 zdjęć
+                if (this.files.length > 18) { 
+                    alert('⚠️ MAX 18 zdjęć.'); 
+                    const dt = new DataTransfer(); 
+                    for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } 
+                    this.files = dt.files; 
+                }
+                
+                // WIZUALNA ZMIANA TEKSTU NA ZIELONY
+                const countText = document.getElementById('fileCountText');
+                if(countText) {
+                    if(this.files.length > 0) {
+                        countText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> ' + this.files.length + ' ' + '{{ t.get("files_ready", "gotowych zdjęć") }}' + '</span>';
+                        countText.parentElement.style.borderColor = '#198754';
+                    } else {
+                        countText.innerHTML = "{{ t.get('select_multiple', 'Zaznacz kilka zdjęć na raz') }}";
+                        countText.parentElement.style.borderColor = 'rgba(255,255,255,0.2)';
+                    }
+                }
 
-            // Automatyczne odpalenie AI, jeśli brakuje marki
-            const markaField = document.querySelector('[name="marka"]'); 
-            if (this.files.length > 0 && markaField.value.trim() === "") { 
-                performAnalysis(this.files[0]); 
-            }
-        });
+                // Automatyczne odpalenie AI, jeśli funkcja istnieje
+                const markaField = document.querySelector('[name="marka"]'); 
+                if (this.files.length > 0 && markaField && markaField.value.trim() === "") { 
+                    if (typeof performAnalysis === "function") {
+                        performAnalysis(this.files[0]); 
+                    }
+                }
+            });
+        }
+
 
     </script>
 
