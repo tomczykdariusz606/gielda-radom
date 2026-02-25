@@ -88,13 +88,13 @@ app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 587                       # Port dla SSL z Twojego panelu
 app.config['MAIL_USE_TLS'] = True                   # TUTAJ MUSI BYĆ TRUE
 app.config['MAIL_USE_SSL'] = False  
-app.config['MAIL_USERNAME'] = 'kontakt@gieldaradom.pl' # Pełny adres e-mail jako login
+app.config['MAIL_USERNAME'] = 'kontakt@serwer2602674.home.pl' # Pełny adres e-mail jako login
     
 # Jeśli używasz 2-etapowej weryfikacji, wygeneruj nowe Hasło Aplikacyjne dla Poczty.
 # Jeśli wyłączyłeś 2FA, użyj głównego hasła.
 app.config['MAIL_PASSWORD'] = '3331343Daro@' 
 
-app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl')
+app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@serwer2602674.home.pl')
 app.config['MAIL_DEBUG'] = True
  
 
