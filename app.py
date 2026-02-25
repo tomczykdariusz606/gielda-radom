@@ -800,9 +800,6 @@ def szukaj():
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
 
 
-    except Exception as e:
-        return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
-
 # --- TRASA DLA PROFILU SPRZEDAWCY ---
 @app.route('/sprzedawca/<int:user_id>')
 def sprzedawca_oferty(user_id):
