@@ -1330,25 +1330,47 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 # --- STRONY STATYCZNE ---
-@app.route('/kontakt')
+@app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
-    # Pobieramy język z ciasteczek (domyślnie 'pl')
+    # --- 1. TWOJA LOGIKA TŁUMACZEŃ (NIETKNIĘTA) ---
     lang = request.cookies.get('lang', 'pl')
-    
-    # Ścieżka do pliku z tłumaczeniami
     path = os.path.join(app.root_path, 'translations', 'legal.json')
     
     try:
         with open(path, encoding='utf-8') as f:
             all_texts = json.load(f)
-        # Pobieramy sekcję dla danego języka
         current_texts = all_texts.get(lang, all_texts.get('pl'))
     except Exception as e:
         print(f"Błąd wczytywania tłumaczeń: {e}")
         current_texts = {}
 
-    # Zwracamy szablon z odpowiednimi danymi
+    # --- 2. NOWA LOGIKA WYSYŁANIA MAILA ---
+    if request.method == 'POST':
+        imie = request.form.get('imie')
+        email_nadawcy = request.form.get('email')
+        wiadomosc = request.form.get('wiadomosc')
+        
+        try:
+            # Tworzymy paczkę z e-mailem
+            msg = Message(
+                subject=f"Formularz kontaktowy Giełda Radom: {imie}",
+                recipients=['kontakt@gieldaradom.pl'], # Adres docelowy (Twój na home.pl)
+                body=f"Wiadomość z formularza na stronie Giełda Radom.\n\nOd: {imie} ({email_nadawcy})\n\nTreść:\n{wiadomosc}",
+                reply_to=email_nadawcy # Pozwala na szybkie kliknięcie "Odpowiedz" w skrzynce
+            )
+            mail.send(msg)
+            
+            # Komunikat o sukcesie
+            flash('Wiadomość została wysłana! Odpowiemy najszybciej jak to możliwe.', 'success')
+        except Exception as e:
+            print(f"Błąd wysyłania formularza: {e}")
+            flash('Błąd serwera. Spróbuj wysłać e-mail bezpośrednio na kontakt@gieldaradom.pl', 'danger')
+            
+        return redirect(url_for('kontakt'))
+
+    # --- 3. ZWROT SZABLONU DLA ZWYKŁEGO WEJŚCIA (GET) ---
     return render_template('kontakt.html', legal=current_texts, lang=lang)
+
 
 @app.route('/regulamin')
 def regulamin():
