@@ -1327,12 +1327,26 @@ def reset_token(token):
     return render_template('reset_token.html')
 
 # --- STRONY STATYCZNE ---
+# --- FUNKCJA WYSYŁAJĄCA MAIL W TLE ---
+def wyslij_wiadomosc_z_formularza(app, imie, email_nadawcy, wiadomosc):
+    with app.app_context():
+        try:
+            msg = Message(
+                subject=f"Nowa wiadomość z Giełda Radom od: {imie}",
+                recipients=['kontakt@gieldaradom.pl'], 
+                body=f"Otrzymałeś nową wiadomość z formularza kontaktowego.\n\nOd: {imie} ({email_nadawcy})\n\nTreść wiadomości:\n{wiadomosc}",
+                reply_to=email_nadawcy 
+            )
+            mail.send(msg)
+        except Exception as e:
+            print(f"Błąd wysyłania formularza kontaktowego w tle: {e}")
+
+# --- ODBIÓR DANYCH ZE STRONY ---
 @app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
-    # --- 1. TWOJA LOGIKA TŁUMACZEŃ (NIETKNIĘTA) ---
+    # 1. Logika tłumaczeń
     lang = request.cookies.get('lang', 'pl')
     path = os.path.join(app.root_path, 'translations', 'legal.json')
-    
     try:
         with open(path, encoding='utf-8') as f:
             all_texts = json.load(f)
@@ -1341,29 +1355,22 @@ def kontakt():
         print(f"Błąd wczytywania tłumaczeń: {e}")
         current_texts = {}
 
-    # --- 2. NOWA LOGIKA WYSYŁANIA MAILA ---
+    sukces = False # Flaga oznaczająca udane wysłanie
+    
+    # 2. Reakcja na kliknięcie "Wyślij"
     if request.method == 'POST':
         imie = request.form.get('imie')
         email_nadawcy = request.form.get('email')
         wiadomosc = request.form.get('wiadomosc')
         
-        try:
-            # Tworzymy paczkę z e-mailem
-            msg = Message(
-                subject=f"Formularz kontaktowy Giełda Radom: {imie}",
-                recipients=['kontakt@gieldaradom.pl'], # Adres docelowy (Twój na home.pl)
-                body=f"Wiadomość z formularza na stronie Giełda Radom.\n\nOd: {imie} ({email_nadawcy})\n\nTreść:\n{wiadomosc}",
-                reply_to=email_nadawcy # Pozwala na szybkie kliknięcie "Odpowiedz" w skrzynce
-            )
-            mail.send(msg)
-            
-            # Komunikat o sukcesie
-            flash('Wiadomość została wysłana! Odpowiemy najszybciej jak to możliwe.', 'success')
-        except Exception as e:
-            print(f"Błąd wysyłania formularza: {e}")
-            flash('Błąd serwera. Spróbuj wysłać e-mail bezpośrednio na kontakt@gieldaradom.pl', 'danger')
-            
-        return redirect(url_for('kontakt'))
+        # Odpalamy maila w tle (strona odświeży się natychmiast, zero czekania!)
+        Thread(target=wyslij_wiadomosc_z_formularza, args=(app, imie, email_nadawcy, wiadomosc)).start()
+        
+        sukces = True # Zmieniamy flagę, żeby HTML wiedział, co pokazać
+
+    # 3. Zwracamy widok (przekazując bezpośrednio flagę 'sukces')
+    return render_template('kontakt.html', legal=current_texts, lang=lang, sukces=sukces)
+
 
     # --- 3. ZWROT SZABLONU DLA ZWYKŁEGO WEJŚCIA (GET) ---
     return render_template('kontakt.html', legal=current_texts, lang=lang)
