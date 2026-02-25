@@ -86,7 +86,7 @@ if not os.path.exists(VIDEOS_360_FOLDER):
 # --- KONFIGURACJA MAILA (HOME.PL) ---
  
 
-app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', '# --- OSTATECZNA KONFIGURACJA POCZTY (HOME.PL) ---
+# --- OSTATECZNA KONFIGURACJA POCZTY (HOME.PL) ---
 app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 587                       
 app.config['MAIL_USE_TLS'] = True                   
@@ -98,7 +98,7 @@ app.config['MAIL_PASSWORD'] = '3331343Daro@'
 
 # Klienci zobaczą pełen profesjonalizm
 app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl')
-app.config['MAIL_DEBUG'] = True
+
  
 
 
