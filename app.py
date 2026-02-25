@@ -88,8 +88,8 @@ app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 587                       # <-- ZMIANA NA 587
 app.config['MAIL_USE_TLS'] = True                   # <-- WŁĄCZAMY TLS
 app.config['MAIL_USE_SSL'] = False                  # <-- WYŁĄCZAMY SSL
-app.config['MAIL_USERNAME'] = str('kontakt.serwer2602674@serwer2602674.home.pl')
-app.config['MAIL_PASSWORD'] = str(MAIL_PWD).strip() # .strip() usunie ewentualne ukryte spacje
+app.config['MAIL_USERNAME'] = "kontakt.serwer2602674'
+app.config['MAIL_PASSWORD'] = MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl') # To zostaje, żeby klienci widzieli ładny adres!
 # WŁĄCZENIE PODSŁUCHU SMTP W TERMINALU:
 app.config['MAIL_DEBUG'] = True 
