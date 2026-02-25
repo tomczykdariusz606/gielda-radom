@@ -86,8 +86,8 @@ if not os.path.exists(VIDEOS_360_FOLDER):
 # --- KONFIGURACJA MAILA (HOME.PL) ---
 app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 587                       # Port dla SSL z Twojego panelu
-app.config['MAIL_USE_TLS'] = False                  # Wyłączamy TLS
-app.config['MAIL_USE_SSL'] = True                   # WŁĄCZAMY SSL
+app.config['MAIL_USE_TLS'] = True                   # TUTAJ MUSI BYĆ TRUE
+app.config['MAIL_USE_SSL'] = False  
 app.config['MAIL_USERNAME'] = 'kontakt@serwer2602674.home.pl' # Pełny adres e-mail jako login
     
 # Jeśli używasz 2-etapowej weryfikacji, wygeneruj nowe Hasło Aplikacyjne dla Poczty.
