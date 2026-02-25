@@ -119,6 +119,8 @@ def update_last_seen():
 # --- TŁUMACZENIA (Słownik Rozbudowany) ---
 TRANSLATIONS = {
     'pl': {
+        'eq_tinted': 'Przyciemniane szyby',
+
         'eq_led_basic': 'Światła LED',
         'eq_matrix': 'Reflektory Matrix / Laser',
         'eq_rails': 'Relingi dachowe',
@@ -168,6 +170,8 @@ TRANSLATIONS = {
     },
     
     'en': {
+        'eq_tinted': 'Tinted windows',
+
         'eq_led_basic': 'LED Headlights',
         'eq_matrix': 'Matrix / Laser Headlights',
         'eq_rails': 'Roof Rails',
@@ -217,6 +221,8 @@ TRANSLATIONS = {
     },
     
     'de': {
+        'eq_tinted': 'Getönte Scheiben',
+
         'eq_led_basic': 'LED-Scheinwerfer',
         'eq_matrix': 'Matrix / Laser-Scheinwerfer',
         'eq_rails': 'Dachreling',
@@ -1009,11 +1015,13 @@ def dodaj_ogloszenie():
 @login_required
 def analyze_car():
     dzisiaj = datetime.utcnow().date()
+    # Reset dziennego limitu zapytań
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
 
+    # Ustalanie limitów (Admin = 500, Użytkownik = 6)
     if current_user.username == 'admin' or current_user.id == 1:
         LIMIT = 500
     else:
@@ -1028,38 +1036,66 @@ def analyze_car():
 
     try:
         image_data = file.read()
+        
+        # Mózg operacji: Precyzyjny prompt dla Gemini 3.0 Flash
         prompt = """
-        Jesteś ekspertem motoryzacyjnym. Przeanalizuj zdjęcie pojazdu.
+        Jesteś ekspertem motoryzacyjnym. Przeanalizuj to zdjęcie samochodu i zwróć TYLKO czysty obiekt JSON.
         
         Twoje zadania:
-        1. Rozpoznaj markę, model, typ nadwozia i przybliżony rok.
-        2. Rozpoznaj KOLOR (np. Czarny Metalik, Biała Perła).
-        3. WYGLĄD: Czy auto ma felgi aluminiowe (Alufelgi)? Czy ma reflektory soczewkowe/LED/Xenon (Światła LED)? Czy ma na dachu relingi (Relingi dachowe)?
-        4. MOC: Na podstawie modelu i wyglądu (np. wersja GTI, RS, lub zwykła) OSZACUJ typową moc (KM) dla tego auta. Wpisz najpopularniejszą wartość (np. 150).
-        5. Stwórz profesjonalny opis handlowy.
+        1. Rozpoznaj markę, model, sugerowany rok produkcji, kolor oraz rodzaj nadwozia (kategoria).
+        2. Zaproponuj typ paliwa (sugestia na podstawie modelu).
+        3. OSZACUJ typową moc (KM) dla tego auta na podstawie modelu/wersji i zapisz w 'moc_sugestia'.
+        4. Napisz krótki, atrakcyjny 'opis_wizualny' zachęcający do zakupu na podstawie tego, co widzisz (np. stan lakieru, agresywna sylwetka).
         
-        Zwróć TYLKO czysty JSON:
+        5. WYPOSAŻENIE (BARDZO WAŻNE): Zwróć ogromną uwagę na:
+           - Dach (czy ma relingi, szyberdach lub dach panoramiczny)
+           - Reflektory (czy to nowoczesne światła LED/soczewkowe)
+           - Szyby (czy tylne szyby są przyciemniane)
+           - Koła (czy ma felgi aluminiowe)
+           
+        Wykryj elementy wyposażenia, ale WYBIERAJ TYLKO Z TEJ DOKŁADNEJ LISTY:
+        "Alufelgi", "Światła LED", "Relingi dachowe", "Dach panoramiczny", "Szyberdach", "Przyciemniane szyby".
+        Zwróć je jako listę stringów w polu 'wyposazenie_wykryte'. Jeśli nie jesteś w 100% pewien elementu ze zdjęcia, po prostu go nie dodawaj.
+
+        Format JSON:
         { 
             "kategoria": "Osobowe/SUV/Minivan/Ciezarowe/Moto",
-            "marka": "String", 
-            "model": "String", 
-            "rok_sugestia": Integer, 
-            "paliwo_sugestia": "Diesel/Benzyna/LPG", 
-            "typ_nadwozia": "String", 
-            "kolor": "String",       
-            "moc_sugestia": Integer,
-            "wyposazenie_wykryte": ["Alufelgi", "Światła LED", "Relingi dachowe"], 
-            "opis_wizualny": "String" 
+            "marka": "BMW", 
+            "model": "X5", 
+            "rok_sugestia": 2018, 
+            "paliwo_sugestia": "Diesel", 
+            "typ_nadwozia": "SUV", 
+            "kolor": "Czarny Metalik",       
+            "moc_sugestia": 258,
+            "wyposazenie_wykryte": ["Alufelgi", "Światła LED", "Relingi dachowe", "Przyciemniane szyby"], 
+            "opis_wizualny": "Auto prezentuje się zjawiskowo, lakier w świetnym stanie..." 
         }
-        Jeśli nie wykryjesz alufelg, LED lub relingów, nie wpisuj ich do listy 'wyposazenie_wykryte'.
         """
+        
+        # Odpytanie modelu Gemini
         resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
+        
+        # Czyszczenie odpowiedzi do czystego JSONa
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
         data = json.loads(text_response)
         
+        # --- DORZUCANIE PODSTAW NA ŚLEPO (EFEKT BOGATEGO WYPOSAŻENIA) ---
+        if "wyposazenie_wykryte" not in data or not isinstance(data["wyposazenie_wykryte"], list):
+            data["wyposazenie_wykryte"] = []
+            
+        podstawy_do_zaznaczenia = ["ABS", "ESP", "Poduszki powietrzne", "El. lusterka", "El. szyby"]
+        
+        for opcja in podstawy_do_zaznaczenia:
+            if opcja not in data["wyposazenie_wykryte"]:
+                data["wyposazenie_wykryte"].append(opcja)
+        # ---------------------------------------------------------------
+
+        # Zapisanie użycia limitu do bazy
         current_user.ai_requests_today += 1
         db.session.commit()
+        
         return jsonify(data)
+        
     except Exception as e:
         print(f"Błąd AI: {e}")
         return jsonify({"error": "Nie udało się przeanalizować zdjęcia."}), 500
