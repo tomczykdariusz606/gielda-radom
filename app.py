@@ -85,8 +85,9 @@ if not os.path.exists(VIDEOS_360_FOLDER):
 
 # --- KONFIGURACJA MAILA (HOME.PL) ---
 app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_PORT'] = 587                       # <-- ZMIANA NA 587
+app.config['MAIL_USE_TLS'] = True                   # <-- WŁĄCZAMY TLS
+app.config['MAIL_USE_SSL'] = False                  # <-- WYŁĄCZAMY SSL
 app.config['MAIL_USERNAME'] = 'kontakt@2602674.home.pl' # <--- TYLKO TO ZMIENIAMY
 app.config['MAIL_PASSWORD'] = MAIL_PWD  
 app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl') # To zostaje, żeby klienci widzieli ładny adres!
