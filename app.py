@@ -83,13 +83,14 @@ if not os.path.exists(VIDEOS_360_FOLDER):
     os.makedirs(VIDEOS_360_FOLDER)
 
 
-# --- KONFIGURACJA MAILA (O2.PL) ---
-app.config['MAIL_SERVER'] = 'poczta.o2.pl'
+# --- KONFIGURACJA MAILA (HOME.PL) ---
+app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'gieldaradom@o2.pl'
-app.config['MAIL_PASSWORD'] = MAIL_PWD
-app.config['MAIL_DEFAULT_SENDER'] = 'gieldaradom@o2.pl'
+app.config['MAIL_USERNAME'] = 'kontakt@gieldaradom.pl'
+app.config['MAIL_PASSWORD'] = MAIL_PWD  # Pamiętaj, żeby zaktualizować to hasło w pliku z sekretami!
+app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl')
+
 
 db = SQLAlchemy(app)
 mail = Mail(app)
