@@ -89,7 +89,7 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 # LOGIN: Musi być identyczny jak "Nazwa użytkownika" na Twoim screenie
-app.config['MAIL_USERNAME'] = 'kontakt@serwer2602674.home.pl' 
+app.config['MAIL_USERNAME'] = 'asystent@serwer2602674.home.pl' 
 # HASŁO: Pobierane z sekrety.py (upewnij się, że tam jest to z myślnikami)
 app.config['MAIL_PASSWORD'] = MAIL_PWD
 app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl')
