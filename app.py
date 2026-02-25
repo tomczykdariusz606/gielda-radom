@@ -90,6 +90,8 @@ app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'kontakt@2602674.home.pl' # <--- TYLKO TO ZMIENIAMY
 app.config['MAIL_PASSWORD'] = MAIL_PWD  
 app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl') # To zostaje, żeby klienci widzieli ładny adres!
+# WŁĄCZENIE PODSŁUCHU SMTP W TERMINALU:
+app.config['MAIL_DEBUG'] = True 
 
 
 db = SQLAlchemy(app)
@@ -1328,8 +1330,11 @@ def reset_token(token):
 
 # --- STRONY STATYCZNE ---
 # --- FUNKCJA WYSYŁAJĄCA MAIL W TLE ---
+# --- FUNKCJA WYSYŁAJĄCA MAIL W TLE (Z DEBUGOWANIEM) ---
 def wyslij_wiadomosc_z_formularza(app, imie, email_nadawcy, wiadomosc):
     with app.app_context():
+        print("\n" + "="*50)
+        print(f"⏳ PRÓBA WYSŁANIA MAILA OD: {email_nadawcy}")
         try:
             msg = Message(
                 subject=f"Nowa wiadomość z Giełda Radom od: {imie}",
@@ -1338,8 +1343,12 @@ def wyslij_wiadomosc_z_formularza(app, imie, email_nadawcy, wiadomosc):
                 reply_to=email_nadawcy 
             )
             mail.send(msg)
+            print("✅ SUKCES! Wiadomość zaakceptowana przez home.pl.")
+            print("="*50 + "\n")
         except Exception as e:
-            print(f"Błąd wysyłania formularza kontaktowego w tle: {e}")
+            print("❌ BŁĄD KRYTYCZNY SMTP (HOME.PL ODRZUCIŁ POŁĄCZENIE):")
+            print(f"SZCZEGÓŁY: {str(e)}")
+            print("="*50 + "\n")
 
 # --- ODBIÓR DANYCH ZE STRONY ---
 @app.route('/kontakt', methods=['GET', 'POST'])
