@@ -38,7 +38,7 @@
             z-index: -1;
         }
 
-                .navbar { 
+        .navbar { 
             background: rgba(0,0,0,0.9); 
             border-bottom: 2px solid var(--radom-red); 
             position: sticky; 
@@ -46,9 +46,8 @@
             z-index: 1000; 
             box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
             padding-top: max(10px, env(safe-area-inset-top));
-            transition: top 0.3s ease-in-out; /* Dodajemy płynne wsuwanie */
+            transition: top 0.3s ease-in-out; 
         }
-
 
         .search-panel {
             background: rgba(30, 30, 35, 0.8); 
@@ -57,6 +56,32 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
+
+        /* --- KATEGORIE POJAZDÓW --- */
+        .cat-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-bottom: 25px; 
+        }
+        @media (min-width: 768px) {
+            .cat-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        .cat-item input { display: none; }
+        .cat-label { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 80px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); 
+            border-radius: 12px; cursor: pointer; font-size: 0.8rem; text-align: center; 
+            color: #b0b3b8; transition: 0.2s; 
+        }
+        .cat-label i { font-size: 1.8rem; margin-bottom: 5px; opacity: 0.7; transition: 0.2s; }
+        .cat-item input:checked + .cat-label { 
+            background: rgba(206,43,55,0.25); border-color: var(--radom-red); 
+            color: white; font-weight: bold; box-shadow: 0 0 15px rgba(206, 43, 55, 0.5); 
+        }
+        .cat-item input:checked + .cat-label i { opacity: 1; color: var(--radom-red); }
+        .cat-item:hover .cat-label { border-color: rgba(255,255,255,0.5); }
+
 
         /* --- STYLIZACJA INPUTÓW --- */
         .form-control, .input-group-text {
@@ -69,7 +94,6 @@
         }
         .input-group-text { border-right: none; color: #888 !important; }
 
-        /* --- CUSTOM DROPDOWN (Zastępstwo dla Select) --- */
         .custom-dropdown-btn {
             background-color: rgba(0, 0, 0, 0.5);
             border: 1px solid #444;
@@ -102,7 +126,6 @@
             background-color: var(--radom-red); color: white;
         }
         
-        /* Złoty przycisk AI */
         .btn-ai-special {
             border-color: #f0c420 !important; color: #f0c420 !important; background: rgba(240, 196, 32, 0.05);
         }
@@ -148,6 +171,33 @@
 
             <form action="/szukaj" method="GET" id="searchForm">
                 
+                <div class="cat-grid">
+                    <div class="cat-item">
+                        <input type="radio" name="typ" id="c_all" value="" {% if not args.get('typ') %}checked{% endif %}>
+                        <label for="c_all" class="cat-label"><i class="bi bi-collection"></i>Wszystkie</label>
+                    </div>
+                    <div class="cat-item">
+                        <input type="radio" name="typ" id="c1" value="Osobowe" {% if args.get('typ') == 'Osobowe' %}checked{% endif %}>
+                        <label for="c1" class="cat-label"><i class="bi bi-car-front"></i>Osobowe</label>
+                    </div>
+                    <div class="cat-item">
+                        <input type="radio" name="typ" id="c2" value="SUV" {% if args.get('typ') == 'SUV' %}checked{% endif %}>
+                        <label for="c2" class="cat-label"><i class="bi bi-truck-front"></i>SUV</label>
+                    </div>
+                    <div class="cat-item">
+                        <input type="radio" name="typ" id="c3" value="Minivan" {% if args.get('typ') == 'Minivan' %}checked{% endif %}>
+                        <label for="c3" class="cat-label"><i class="bi bi-people-fill"></i>Minivan</label>
+                    </div>
+                    <div class="cat-item">
+                        <input type="radio" name="typ" id="c4" value="Ciezarowe" {% if args.get('typ') == 'Ciezarowe' %}checked{% endif %}>
+                        <label for="c4" class="cat-label"><i class="bi bi-truck"></i>Bus</label>
+                    </div>
+                    <div class="cat-item">
+                        <input type="radio" name="typ" id="c5" value="Moto/Rower" {% if args.get('typ') == 'Moto/Rower' %}checked{% endif %}>
+                        <label for="c5" class="cat-label"><i class="bi bi-bicycle"></i>Moto</label>
+                    </div>
+                </div>
+
                 <input type="hidden" name="ai_ocena" id="val_ai" value="{{ args.get('ai_ocena', '') }}">
                 <input type="hidden" name="paliwo" id="val_paliwo" value="{{ args.get('paliwo', '') }}">
                 <input type="hidden" name="skrzynia" id="val_skrzynia" value="{{ args.get('skrzynia', '') }}">
