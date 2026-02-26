@@ -925,6 +925,12 @@ def ustawienia_profilu():
         current_user.opis_firmy = request.form.get('opis_firmy', '')
         current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
         current_user.kraj = request.form.get('kraj', 'Polska')
+    if 'avatar' in request.files:
+    file = request.files['avatar']
+    if file and file.filename != '' and allowed_file(file.filename):
+        filename = save_optimized_image(file)
+        if filename:
+            u.avatar_url = url_for('static', filename='uploads/' + filename)
         db.session.commit()
         flash('Dane profilu zostały zapisane!', 'success')
         return redirect(url_for('profil'))
@@ -1542,17 +1548,31 @@ def admin_edytuj_user(user_id):
     user = User.query.get_or_404(user_id)
     
     if request.method == 'POST':
+        # 1. Zapis danych tekstowych
         user.kraj = request.form.get('kraj', user.kraj)
         user.adres = request.form.get('adres', user.adres)
         user.lokalizacja = request.form.get('lokalizacja', user.lokalizacja)
         user.company_name = request.form.get('company_name', user.company_name)
         user.nip = request.form.get('nip', user.nip)
+        user.account_type = request.form.get('account_type', user.account_type) # Dodane, żeby admin mógł zmienić typ konta
+        user.opis_firmy = request.form.get('opis_firmy', user.opis_firmy)
+
+        # 2. Obsługa zdjęcia (awatara)
+        if 'avatar' in request.files:
+            file = request.files['avatar']
+            if file and file.filename != '' and allowed_file(file.filename):
+                filename = save_optimized_image(file)
+                if filename:
+                    user.avatar_url = url_for('static', filename='uploads/' + filename)
+
+        # 3. Zapis w bazie i powrót
         db.session.commit()
-        flash(f'Zaktualizowano dane dla: {user.username}.', 'success')
-        return redirect(url_for('admin_uzytkownicy')) # Wracamy do listy, nie do profilu
+        flash(f'Zaktualizowano profil użytkownika: {user.username}.', 'success')
+        return redirect(url_for('admin_uzytkownicy')) 
     
-    # Wyświetlamy formularz edycji (ten sam co dla profilu, ale z danymi innego usera)
+    # Wyświetlamy formularz edycji dla metody GET
     return render_template('edytuj_profil.html', edit_user=user)
+
 
 
 
