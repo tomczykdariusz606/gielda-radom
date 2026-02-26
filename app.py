@@ -865,22 +865,18 @@ def car_details(car_id):
     db.session.commit()
     return render_template('details.html', car=car, now=datetime.utcnow())
 
+# --- POPRAWIONY PROFIL (Z OBSŁUGĄ PAGINACJI I STATYSTYK) ---
 @app.route('/profil')
 @login_required
 def profil():
     user_count = 0
     online_count = 0
     total_views = 0
-    all_users = []
-    
-    # Zmienna odpowiedzialna za to, na której stronie jesteśmy
     page = request.args.get('page', 1, type=int)
     
     if current_user.username == 'admin' or current_user.id == 1:
-        # Zmiana: paginate zamiast all()
         pagination = Car.query.order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
-        all_users = User.query.all() 
-        user_count = len(all_users)
+        user_count = User.query.count()
         try:
             active_since = datetime.utcnow() - timedelta(minutes=5)
             online_count = User.query.filter(User.last_seen >= active_since).count()
@@ -888,14 +884,23 @@ def profil():
             online_count = 1
         total_views = db.session.query(db.func.sum(Car.views)).scalar() or 0
     else:
-        # Zmiana: paginate zamiast all() dla zwykłego usera
         pagination = Car.query.filter_by(user_id=current_user.id).order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
         
     favorites = Favorite.query.filter_by(user_id=current_user.id).all()
     
-    # Dodane 'pagination=pagination' oraz 'cars=pagination.items', reszta Twoja
     return render_template('profil.html', cars=pagination.items, pagination=pagination, favorites=favorites, now=datetime.utcnow(), 
-                           user_count=user_count, online_count=online_count, total_views=total_views, all_users=all_users)
+                           user_count=user_count, online_count=online_count, total_views=total_views)
+
+
+
+# --- NOWOŚĆ: LISTA UŻYTKOWNIKÓW DLA ADMINA ---
+@app.route('/admin/uzytkownicy')
+@login_required
+def admin_uzytkownicy():
+    if current_user.username != 'admin' and current_user.id != 1:
+        abort(403)
+    users = User.query.all()
+    return render_template('admin_users.html', users=users, now=datetime.utcnow())
 
 
 # --- USTAWIENIA PROFILU Z ZAPISEM DANYCH (NIP, KRAJ, ADRES) ---
@@ -1517,7 +1522,7 @@ def admin_delete_user(user_id):
     flash(f'Usunięto użytkownika {user.username}.', 'success')
     return redirect('/profil')
 
-@app.route('/admin/edytuj_user/<int:user_id>', methods=['POST'])
+@app.route('/admin/edytuj_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def admin_edytuj_user(user_id):
     if current_user.username != 'admin' and current_user.id != 1: 
@@ -1525,16 +1530,19 @@ def admin_edytuj_user(user_id):
         
     user = User.query.get_or_404(user_id)
     
-    # Podmieniamy dane na te przesłane przez admina
-    user.kraj = request.form.get('kraj', user.kraj)
-    user.adres = request.form.get('adres', user.adres)
-    user.lokalizacja = request.form.get('lokalizacja', user.lokalizacja)
-    user.company_name = request.form.get('company_name', user.company_name)
-    user.nip = request.form.get('nip', user.nip)
+    if request.method == 'POST':
+        user.kraj = request.form.get('kraj', user.kraj)
+        user.adres = request.form.get('adres', user.adres)
+        user.lokalizacja = request.form.get('lokalizacja', user.lokalizacja)
+        user.company_name = request.form.get('company_name', user.company_name)
+        user.nip = request.form.get('nip', user.nip)
+        db.session.commit()
+        flash(f'Zaktualizowano dane dla: {user.username}.', 'success')
+        return redirect(url_for('admin_uzytkownicy')) # Wracamy do listy, nie do profilu
     
-    db.session.commit()
-    flash(f'Zaktualizowano dane adresowe/firmowe dla: {user.username}.', 'success')
+    # Wyświetlamy formularz edycji (ten sam co dla profilu, ale z danymi innego usera)
     return render_template('edytuj_profil.html', edit_user=user)
+
 
 
 @app.route('/admin/wyslij_powitania', methods=['POST'])
