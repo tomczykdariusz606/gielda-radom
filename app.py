@@ -753,9 +753,9 @@ def index():
 @app.route('/szukaj')
 def szukaj():
     try:
-  # ---> DODANE: Pobieranie kategorii (typ) z kafelków
-        typ = request.args.get('typ', '')
-
+        # 1. POBIERAMY TYP AUTA Z KAFELKÓW (Z LINKU)
+        typ_auta = request.args.get('typ', '')
+        
         marka = request.args.get('marka', '').strip()
         model = request.args.get('model', '').strip()
         kolor = request.args.get('kolor', '').strip()
@@ -784,6 +784,11 @@ def szukaj():
 
         query = Car.query
 
+        # 2. NAJWAŻNIEJSZE: FILTRUJEMY BAZĘ PO KLIKNIĘTYM KAFELKU
+        if typ_auta: 
+            query = query.filter(Car.typ == typ_auta)
+
+        # Reszta standardowych filtrów
         if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
         if model: query = query.filter(Car.model.ilike(f'%{model}%'))
         if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
@@ -811,6 +816,7 @@ def szukaj():
 
     except Exception as e:
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
+
 
 
 
