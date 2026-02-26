@@ -1092,6 +1092,26 @@
                         for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } 
                         this.files = dt.files; 
                     }
+// --- WYZWALACZ AUTOMATYCZNEJ ANALIZY AI PO DODANIU ZDJĘĆ ---
+const galleryInput = document.getElementById('mainGalleryInput');
+if (galleryInput) {
+    galleryInput.addEventListener('change', function() {
+        // Jeśli użytkownik wybrał jakiekolwiek pliki
+        if (this.files && this.files.length > 0) {
+            
+            // Pobieramy pierwsze zdjęcie z zestawu do analizy
+            const mainFile = this.files[0];
+            
+            // Wywołujemy funkcję analizy (którą masz już zdefiniowaną w kodzie)
+            // performAnalysis wyświetli Toast "Wykryłem zdjęcia! AI analizuje..." 
+            // i wypełni pola: marka, model, rok, kolor, opis oraz wyposażenie.
+            performAnalysis(mainFile);
+            
+            console.log("Automatyczny wyzwalacz AI: Przesyłam pierwsze zdjęcie do Gemini...");
+        }
+    });
+}
+
                     
                     const countText = document.getElementById('fileCountText');
                     if(countText) {
