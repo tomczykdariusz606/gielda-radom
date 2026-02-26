@@ -11,73 +11,132 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admina - Giełda Radom</title>
+    <title>Zarządzanie Użytkownikami - Giełda Radom</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { --radom-red: #ce2b37; }
+        :root { --radom-red: #ce2b37; --premium-gold: #f0c420; }
         body { 
             background-color: #050505;
             background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
             background-size: cover; background-attachment: fixed;
             color: #e4e6eb; font-family: 'Inter', sans-serif;
         }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: -1; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: -1; }
         
+        .navbar { background: rgba(15, 15, 15, 0.9); border-bottom: 2px solid var(--radom-red); backdrop-filter: blur(10px); }
+
         .glass-card {
-            background: rgba(25, 25, 30, 0.75);
-            backdrop-filter: blur(15px);
+            background: rgba(25, 25, 30, 0.8);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px; padding: 20px;
+            border-radius: 20px; padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
         
-        .table { color: #e4e6eb; vertical-align: middle; }
-        .table thead { border-bottom: 2px solid var(--radom-red); }
+        .table { --bs-table-bg: transparent; color: #e4e6eb; vertical-align: middle; margin-bottom: 0; }
+        .table thead th { border-bottom: 2px solid var(--radom-red); color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        .table td { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 15px 10px; }
         
-        .user-row:hover { background: rgba(255,255,255,0.05); }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--radom-red); }
+        .badge-account { padding: 5px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
+        .badge-company { background: rgba(240, 196, 32, 0.15); color: var(--premium-gold); border: 1px solid rgba(240, 196, 32, 0.3); }
+        .badge-private { background: rgba(13, 202, 240, 0.15); color: #0dcaf0; border: 1px solid rgba(13, 202, 240, 0.3); }
+
+        .btn-action { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; transition: 0.2s; }
         
-        .badge-user { background: rgba(206, 43, 55, 0.2); color: #ff4d5a; border: 1px solid rgba(206, 43, 55, 0.5); }
+        /* SEO FOOTER & NAV */
+        .seo-footer { background: rgba(10,10,10,0.95); padding: 40px 0 110px 0; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 50px; color: #777; font-size: 0.85rem; }
+        .nav-bottom { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); backdrop-filter: blur(15px); z-index: 1000; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { text-align: center; color: #777; text-decoration: none; font-size: 0.75rem; flex: 1; }
+        .nav-item.active { color: var(--radom-red); font-weight: 700; }
+        .nav-item i { font-size: 1.4rem; display: block; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-dark p-3" style="background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--radom-red);">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">GIEŁDA <span class="text-danger">RADOM</span> [ADMIN]</a>
-            <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill">Powrót</a>
+    <nav class="navbar navbar-dark p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4" href="/">
+                GIEŁDA <span class="text-danger">RADOM</span> <span class="badge bg-danger ms-2" style="font-size: 0.6rem;">ADMIN</span>
+            </a>
+            <a href="/profil" class="btn btn-sm btn-outline-light rounded-pill px-3">Wróć do Garażu</a>
         </div>
     </nav>
 
     <div class="container py-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} rounded-4 border-0 mb-4 shadow">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <div class="glass-card">
-            <h3 class="fw-bold mb-4"><i class="bi bi-people me-2 text-danger"></i> Zarządzanie Użytkownikami</h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-800 m-0"><i class="bi bi-people-fill text-danger me-2"></i>BAZA UŻYTKOWNIKÓW</h3>
+                <span class="badge bg-black border border-secondary rounded-pill px-3 py-2">Razem: {{ users|length }}</span>
+            </div>
             
             <div class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Email</th>
-                            <th>Typ</th>
+                            <th>Użytkownik</th>
+                            <th>Typ Konta</th>
                             <th>Lokalizacja</th>
-                            <th class="text-end">Akcje</th>
+                            <th>Status</th>
+                            <th class="text-end">Zarządzaj</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
-                        <tr class="user-row">
-                            <td>#{{ user.id }}</td>
-                            <td class="fw-bold">{{ user.email }}</td>
+                        <tr>
                             <td>
-                                <span class="badge badge-user">
-                                    {{ 'Firma' if user.account_type == 'company' else 'Prywatny' }}
-                                </span>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ user.avatar_url or url_for('static', filename='watermark.png') }}" class="user-avatar me-3">
+                                    <div>
+                                        <div class="fw-bold text-white">{{ user.username }}</div>
+                                        <div class="small text-muted" style="font-size: 0.7rem;">{{ user.email }}</div>
+                                    </div>
+                                </div>
                             </td>
-                            <td>{{ user.lokalizacja or 'Brak' }}</td>
+                            <td>
+                                {% if user.account_type == 'company' %}
+                                    <span class="badge-account badge-company"><i class="bi bi-shop me-1"></i> FIRMA</span>
+                                {% else %}
+                                    <span class="badge-account badge-private"><i class="bi bi-person me-1"></i> PRYWATNE</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small text-white-50">{{ user.kraj or 'Polska' }}</div>
+                                <div class="small fw-bold">{{ user.lokalizacja or 'Radom' }}</div>
+                            </td>
+                            <td>
+                                {% if user.last_seen and (now - user.last_seen).total_seconds() < 300 %}
+                                    <span class="text-success small"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Online</span>
+                                {% else %}
+                                    <span class="text-muted small">Offline</span>
+                                {% endif %}
+                            </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary disabled"><i class="bi bi-pencil"></i></button>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('admin_edytuj_user', user_id=user.id) }}" class="btn-action btn btn-outline-warning" title="Edytuj dane">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    {% if user.id != current_user.id and user.username != 'admin' %}
+                                    <form action="{{ url_for('usun_usera', user_id=user.id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz bezpowrotnie usunąć tego użytkownika i wszystkie jego auta?');">
+                                        <button type="submit" class="btn-action btn btn-outline-danger">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -87,10 +146,17 @@
         </div>
     </div>
 
-    <div style="position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05); z-index: 1000;">
-        <a href="/szukaj" style="text-decoration: none; color: #777; text-align: center; flex: 1;"><i class="bi bi-search d-block fs-4"></i>Szukaj</a>
-        <a href="/profil" style="text-decoration: none; color: var(--radom-red); text-align: center; flex: 1; font-weight: bold;"><i class="bi bi-speedometer2 d-block fs-4"></i>Garaż</a>
-        <a href="/kontakt" style="text-decoration: none; color: #777; text-align: center; flex: 1;"><i class="bi bi-envelope d-block fs-4"></i>Kontakt</a>
+    <footer class="seo-footer text-center">
+        <div class="container">
+            <h5 class="text-white fw-bold mb-2">GIEŁDA RADOM ADMIN SYSTEM</h5>
+            <p class="small opacity-50">Zarządzaj bezpiecznie bazą danych i użytkownikami Mazowsza.</p>
+        </div>
+    </footer>
+
+    <div class="nav-bottom">
+        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
+        <a href="/profil" class="nav-item active"><i class="bi bi-speedometer2"></i> Garaż</a>
+        <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> Kontakt</a>
     </div>
 
 </body>
