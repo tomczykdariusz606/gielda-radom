@@ -11,11 +11,8 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <title>{{ t.get('account', 'Konto') }} - Giełda Radom</title>
-    <meta name="description" content="Zarządzaj swoim profilem na Giełdzie Radom. Ustaw dane firmowe, NIP oraz personalizuj swój garaż.">
-    <meta name="robots" content="noindex, nofollow">
-
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -40,16 +37,14 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
-        /* Avatar */
         .avatar-wrapper { position: relative; width: 130px; height: 130px; margin: 0 auto 25px; }
-        .avatar-img { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 3px solid var(--radom-red); padding: 5px; background: #000; box-shadow: 0 0 20px rgba(206, 43, 55, 0.4); }
+        .avatar-img { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 3px solid var(--radom-red); padding: 5px; background: #000; }
         .avatar-upload-btn {
             position: absolute; bottom: 5px; right: 5px;
             background: var(--radom-red); color: white; border-radius: 50%;
             width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
             border: 3px solid #1a1a1a; cursor: pointer; transition: 0.3s;
         }
-        .avatar-upload-btn:hover { transform: scale(1.1); background: #911620; }
 
         .form-control { 
             background-color: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.2); 
@@ -62,9 +57,7 @@
             width: 100%; padding: 12px; text-align: left; border-radius: 12px;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .dropdown-menu-dark { background-color: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .dropdown-item { padding: 10px 20px; transition: 0.2s; color: #ccc; }
-        .dropdown-item:hover { background-color: var(--radom-red); color: white; }
+        .dropdown-menu-dark { background-color: #1a1a1a; border: 1px solid #333; }
 
         .btn-submit {
             background: linear-gradient(135deg, var(--radom-red), #911620);
@@ -93,7 +86,7 @@
                 <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; margin-right: 10px;">
                 <span>GIEŁDA <span class="text-danger">RADOM</span></span>
             </a>
-            <a href="{% if edit_user %}/admin/uzytkownicy{% else %}/profil{% endif %}" class="btn btn-sm btn-outline-light rounded-pill px-4">{{ t.get('back_home', 'Wróć') }}</a>
+            <a href="{% if edit_user %}/admin/uzytkownicy{% else %}/profil{% endif %}" class="btn btn-sm btn-outline-light rounded-pill px-3">{{ t.get('back_home', 'Wróć') }}</a>
         </div>
     </nav>
 
@@ -101,7 +94,7 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="glass-card">
-                    <h2 class="fw-900 text-white text-center mb-1 text-uppercase">
+                    <h2 class="fw-900 text-white text-center mb-1">
                         {% if edit_user %}<i class="bi bi-shield-lock text-warning me-2"></i>{{ u.username }}{% else %}{{ t.get('account', 'USTAWIENIA KONTA') }}{% endif %}
                     </h2>
                     <p class="text-center text-white-50 small mb-4">{{ u.email }}</p>
@@ -110,7 +103,7 @@
                         
                         <div class="avatar-wrapper">
                             <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" id="preview" class="avatar-img shadow-lg">
-                            <label for="avatarFile" class="avatar-upload-btn shadow">
+                            <label for="avatarFile" class="avatar-upload-btn">
                                 <i class="bi bi-camera-fill"></i>
                             </label>
                             <input type="file" name="avatar" id="avatarFile" hidden accept="image/*" onchange="previewImage(this)">
@@ -122,15 +115,11 @@
                                 <input type="hidden" name="account_type" id="val_acc_type" value="{{ u.account_type or 'private' }}">
                                 <div class="dropdown">
                                     <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_acc_type">
-                                        {% if u.account_type == 'company' %}
-                                            <i class="bi bi-shop me-2 text-warning"></i> {{ t.get('company', 'Firma') }}
-                                        {% else %}
-                                            <i class="bi bi-person me-2 text-info"></i> {{ t.get('private_person', 'Osoba Prywatna') }}
-                                        {% endif %}
+                                        {% if u.account_type == 'company' %}{{ t.get('company', 'Firma') }}{% else %}{{ t.get('private_person', 'Osoba Prywatna') }}{% endif %}
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-dark w-100">
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'private', '<i class=\'bi bi-person me-2 text-info\'></i> {{ t.get(\'private_person\', \'Osoba Prywatna\') }}'); toggleFirma('private'); return false;"><i class="bi bi-person me-2 text-info"></i> {{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'company', '<i class=\'bi bi-shop me-2 text-warning\'></i> {{ t.get(\'company\', \'Firma / Handlarz\') }}'); toggleFirma('company'); return false;"><i class="bi bi-shop me-2 text-warning"></i> {{ t.get('company', 'Firma / Handlarz') }}</a></li>
+                                    <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'private', `{{ t.get('private_person', 'Osoba Prywatna') }}`); toggleFirmaSection('private'); return false;">{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'company', `{{ t.get('company', 'Firma') }}`); toggleFirmaSection('company'); return false;">{{ t.get('company', 'Firma') }}</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -140,21 +129,15 @@
                                 <input type="hidden" name="kraj" id="val_kraj" value="{{ u.kraj or 'Polska' }}">
                                 <div class="dropdown">
                                     <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_kraj">
-                                        {% if u.kraj == 'Niemcy' %}🇩🇪 Niemcy
-                                        {% elif u.kraj == 'Belgia' %}🇧🇪 Belgia
-                                        {% elif u.kraj == 'Holandia' %}🇳🇱 Holandia
-                                        {% elif u.kraj == 'Francja' %}🇫🇷 Francja
-                                        {% elif u.kraj == 'Inny' %}🌍 {{ t.get('country_other', 'Inny') }}
-                                        {% else %}🇵🇱 Polska{% endif %}
+                                        {{ u.kraj or 'Polska' }}
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-dark w-100">
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Polska', '🇵🇱 Polska'); return false;">🇵🇱 Polska</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Niemcy', '🇩🇪 Niemcy'); return false;">🇩🇪 Niemcy</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Belgia', '🇧🇪 Belgia'); return false;">🇧🇪 Belgia</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Holandia', '🇳🇱 Holandia'); return false;">🇳🇱 Holandia</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Francja', '🇫🇷 Francja'); return false;">🇫🇷 Francja</a></li>
-                                        <li><hr class="dropdown-divider border-secondary opacity-25"></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Inny', '🌍 {{ t.get(\'country_other\', \'Inny\') }}'); return false;">🌍 {{ t.get('country_other', 'Inny') }}</a></li>
+                                    <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Polska', 'Polska'); return false;">Polska</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Niemcy', 'Niemcy'); return false;">Niemcy</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Belgia', 'Belgia'); return false;">Belgia</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Holandia', 'Holandia'); return false;">Holandia</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Francja', 'Francja'); return false;">Francja</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Inny', 'Inny'); return false;">Inny</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -164,13 +147,13 @@
                                 <input type="text" name="lokalizacja" class="form-control" value="{{ u.lokalizacja or 'Radom' }}" placeholder="{{ t.get('city_ph', 'np. Radom') }}">
                             </div>
 
-                            <div id="firmaFields" class="col-12" style="display: {% if u.account_type == 'company' %}block{% else %}none{% endif %};">
+                            <div id="firmaSection" class="col-12" style="display: {% if u.account_type == 'company' %}block{% else %}none{% endif %};">
                                 <div class="p-4 rounded-4 bg-black bg-opacity-40 border border-secondary border-opacity-20 shadow-inner">
-                                    <h6 class="text-danger fw-bold mb-3 small"><i class="bi bi-briefcase me-2"></i>{{ t.get('company', 'DANE FIRMOWE') }}</h6>
+                                    <h6 class="text-danger fw-bold mb-3"><i class="bi bi-shop me-2"></i>{{ t.get('company', 'DANE FIRMOWE') }}</h6>
                                     <div class="row g-3">
                                         <div class="col-12">
                                             <label class="small text-muted fw-bold">{{ t.get('company_name', 'Nazwa Firmy') }}</label>
-                                            <input type="text" name="company_name" class="form-control" value="{{ u.company_name or '' }}">
+                                            <input type="text" name="company_name" class="form-control" value="{{ u.company_name or '' }}" placeholder="{{ t.get('company_ph', '') }}">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="small text-muted fw-bold">NIP</label>
@@ -178,20 +161,18 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="small text-muted fw-bold">{{ t.get('adres', 'Adres siedziby') }}</label>
-                                            <input type="text" name="adres" class="form-control" value="{{ u.adres or '' }}" placeholder="Ulica, nr domu">
+                                            <input type="text" name="adres" class="form-control" value="{{ u.adres or '' }}">
                                         </div>
                                         <div class="col-12">
-                                            <label class="small text-muted fw-bold">{{ t.get('desc', 'Opis / Wizytówka') }}</label>
-                                            <textarea name="opis_firmy" class="form-control" rows="3" placeholder="Opisz swój komis...">{{ u.opis_firmy or '' }}</textarea>
+                                            <label class="small text-muted fw-bold">{{ t.get('desc', 'Opis działalności') }}</label>
+                                            <textarea name="opis_firmy" class="form-control" rows="3">{{ u.opis_firmy or '' }}</textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-12 mt-4">
-                                <button type="submit" class="btn-submit w-100 shadow" onclick="document.getElementById('loaderOverlay').style.display='flex';">
-                                    {{ t.get('login_btn', 'ZAPISZ ZMIANY') }}
-                                </button>
+                                <button type="submit" class="btn-submit w-100 shadow" onclick="document.getElementById('loaderOverlay').style.display='flex';">{{ t.get('login_btn', 'ZAPISZ ZMIANY') }}</button>
                             </div>
                         </div>
                     </form>
@@ -208,26 +189,21 @@
 
     <div id="loaderOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px);">
         <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;"></div>
-        <div class="mt-3 fw-bold text-white" style="letter-spacing: 2px;">AKTUALIZACJA PROFILU...</div>
+        <div class="mt-3 fw-bold letter-spacing-2">AKTUALIZACJA...</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Funkcja obsługująca wszystkie rozwijane listy
         function setDropdownVal(name, val, label) {
-            const input = document.getElementById('val_' + name);
-            const btn = document.getElementById('btn_' + name);
-            if (input) input.value = val;
-            if (btn) btn.innerHTML = label; // Używamy innerHTML ze względu na flagi/ikony
+            document.getElementById('val_' + name).value = val;
+            document.getElementById('btn_' + name).innerText = label;
         }
 
-        // Ukrywanie/pokazywanie sekcji z NIPem i adresem
-        function toggleFirma(type) {
-            const section = document.getElementById('firmaFields');
-            if (section) section.style.display = (type === 'company' ? 'block' : 'none');
+        function toggleFirmaSection(type) {
+            const section = document.getElementById('firmaSection');
+            section.style.display = (type === 'company' ? 'block' : 'none');
         }
 
-        // Błyskawiczny podgląd wgrywanego zdjęcia
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
