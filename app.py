@@ -753,6 +753,9 @@ def index():
 @app.route('/szukaj')
 def szukaj():
     try:
+  # ---> DODANE: Pobieranie kategorii (typ) z kafelków
+        typ = request.args.get('typ', '')
+
         marka = request.args.get('marka', '').strip()
         model = request.args.get('model', '').strip()
         kolor = request.args.get('kolor', '').strip()
