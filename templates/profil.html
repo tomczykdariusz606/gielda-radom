@@ -11,7 +11,6 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
     
     <title>{{ t.get('garage', 'Twój Garaż') }} - Giełda Radom</title>
     <meta name="description" content="Giełda Radom - Najnowocześniejszy marketplace samochodowy w regionie. Sprzedaj swoje auto z pomocą sztucznej inteligencji Gemini.">
@@ -160,10 +159,14 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;
         }
 
-                /* STOPKA */
+        /* Wymuszenie z-index dla stabilności modali */
+        .modal { z-index: 10000 !important; }
+        .modal-backdrop { z-index: 9999 !important; }
+        body.modal-open { overflow: hidden !important; padding-right: 0 !important; }
+
         .seo-footer {
             background: rgba(10,10,10,0.95);
-            padding: 40px 0 110px 0; /* padding bottom dla nav-bottom */
+            padding: 40px 0 110px 0; 
             border-top: 1px solid rgba(255,255,255,0.05);
             color: #777;
             font-size: 0.85rem;
@@ -234,7 +237,6 @@
                     <div class="glass-stat">
                         <div class="d-flex justify-content-between text-white-50 small mb-1"><span>Aktywne</span> <i class="bi bi-car-front"></i></div>
                         <h4 class="fw-bold m-0 text-white">{% if pagination %}{{ pagination.total }}{% else %}{{ cars|length }}{% endif %} <span class="fs-6 text-muted">ofert</span></h4>
-
                     </div>
                 </div>
             </div>
@@ -278,7 +280,7 @@
                             <div class="col-6"><i class="bi bi-speedometer2"></i> {{ car.przebieg }}</div>
                             <div class="col-6"><i class="bi bi-eye"></i> {{ car.views }}</div>
                         </div>
-                                                <div class="mt-auto pt-3 border-top border-secondary border-opacity-50">
+                        <div class="mt-auto pt-3 border-top border-secondary border-opacity-50">
                             
                             <div class="row g-2 mb-2">
                                 <div class="col-4">
@@ -291,7 +293,7 @@
                                         <i class="bi bi-pencil-square fs-6"></i>
                                     </a>
                                 </div>
-                                                                <div class="col-4">
+                                <div class="col-4">
                                     {% set roznica_godzin = (now - car.data_dodania).total_seconds() / 3600 %}
                                     {% set pozostalo_godzin = (72 - roznica_godzin)|int %}
                                     {% if pozostalo_godzin < 0 %}{% set pozostalo_godzin = 0 %}{% endif %}
@@ -307,7 +309,6 @@
                                         </button>
                                     </form>
                                 </div>
-
                             </div>
 
                             <div class="row g-2 mb-2">
@@ -331,7 +332,7 @@
                                 </div>
                             </div>
 
-                                                       {% if current_user.username == 'admin' or current_user.id == 1 %}
+                            {% if current_user.username == 'admin' or current_user.id == 1 %}
                             <div class="row g-2">
                                 <div class="col-12">
                                     <a href="/generate_360/{{ car.id }}" class="btn btn-sm w-100 fw-bold py-2 shadow-sm text-dark" style="background: linear-gradient(135deg, #f0c420, #d4a017); border: none; letter-spacing: 0.5px;">
@@ -340,14 +341,19 @@
                                 </div>
                             </div>
                             {% endif %}
-
-                        </div> </div> </div> </div> {% else %}
+                        </div> 
+                    </div> 
+                </div> 
+            </div> 
+            {% else %}
             <div class="col-12 text-center text-muted py-5 border border-secondary rounded-4 bg-dark bg-opacity-25">
                 <i class="bi bi-car-front fs-1 mb-3 d-block opacity-25"></i>
                 <h5 class="text-white opacity-50">{{ t.get('empty_garage', 'Garaż jest pusty') }}</h5>
             </div>
             {% endfor %}
-        </div> {% if pagination and pagination.pages > 1 %}
+        </div> 
+        
+        {% if pagination and pagination.pages > 1 %}
         <nav aria-label="Nawigacja stron" class="mt-4 mb-5">
             <ul class="pagination justify-content-center mb-0 shadow-sm">
                 <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
@@ -372,6 +378,7 @@
             </ul>
         </nav>
         {% endif %}
+
         <h5 class="fw-bold text-white mb-3 mt-5 ps-2 border-start border-4 border-warning ps-3">{{ t.get('observed', 'OBSERWOWANE OFERTY') }}</h5>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
             {% for fav in favorites %}
@@ -392,7 +399,6 @@
             <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10"><p class="small mb-0 opacity-25">{{ t.get('no_favorites', 'Nie obserwujesz jeszcze żadnych ogłoszeń.') }}</p></div>
             {% endfor %}
         </div>
-
         {% if current_user.username == 'admin' or current_user.id == 1 %}
         <div class="card admin-box shadow-lg mb-5 border-0" style="background: linear-gradient(145deg, #1a1a1a, #000); border-left: 5px solid #ffc107;">
             <div class="card-header bg-transparent border-warning d-flex justify-content-between align-items-center pt-3 pb-2">
@@ -405,19 +411,17 @@
                     <div class="col-4"><div class="p-3 rounded-3 border border-success bg-success bg-opacity-10"><h3 class="fw-bold text-success mb-0">{{ online_count }}</h3><small class="text-success fw-bold" style="font-size:0.6rem;">ONLINE</small></div></div>
                     <div class="col-4"><div class="p-3 rounded-3 border border-info bg-info bg-opacity-10"><h3 class="fw-bold text-info mb-0">{{ total_views }}</h3><small class="text-info fw-bold" style="font-size:0.6rem;">WIDOKI</small></div></div>
                 </div>
-                             <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
+                <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
                     <button class="btn btn-danger w-100 fw-bold shadow-sm mb-3" data-bs-toggle="modal" data-bs-target="#usersModal"><i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI</button>
-<form action="/admin/wyslij_powitania" method="POST" class="mb-3" onsubmit="return confirm('Czy na pewno chcesz wysłać e-mail powitalny do WSZYSTKICH użytkowników w bazie?');">
-    <button type="submit" class="btn btn-info w-100 fw-bold shadow-sm text-dark" style="letter-spacing: 0.5px;">
-        <i class="bi bi-envelope-paper-fill me-2"></i> WYŚLIJ MAILE POWITALNE
-    </button>
-</form>
+                    <form action="/admin/wyslij_powitania" method="POST" class="mb-3" onsubmit="return confirm('Czy na pewno chcesz wysłać e-mail powitalny do WSZYSTKICH użytkowników w bazie?');">
+                        <button type="submit" class="btn btn-info w-100 fw-bold shadow-sm text-dark" style="letter-spacing: 0.5px;">
+                            <i class="bi bi-envelope-paper-fill me-2"></i> WYŚLIJ MAILE POWITALNE
+                        </button>
+                    </form>
 
                     <div class="d-flex gap-2"><a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2"><i class="bi bi-database"></i> SQL</a><a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark"><i class="bi bi-archive-fill"></i> ZIP</a></div>
-
-                    </div>
                 </div>
-
+            </div>
         </div>
         {% endif %}
         
@@ -426,7 +430,7 @@
         </div>
     </div>
 
-       <footer class="seo-footer">
+    <footer class="seo-footer">
         <div class="container">
             <div class="row g-4">
                 <div class="col-12 col-md-4 text-center text-md-start">
@@ -458,7 +462,6 @@
             </div>
         </div>
     </footer>
-
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> {{ t.get('search', 'Szukaj') }}</a>
@@ -493,10 +496,9 @@
                                 <label class="btn btn-gold-premium rounded-pill px-4 py-2 shadow-lg"><i class="bi bi-camera-fill me-2 fs-5"></i> {{ t.get('scan_cam', 'SKANUJ (APARAT)') }}<input type="file" name="scan_image_cam" accept="image/*" capture="environment" hidden onchange="scanCar(this)"></label>
                                 <label class="btn btn-outline-light rounded-pill px-3 py-2 fw-bold"><i class="bi bi-folder-fill me-2"></i> {{ t.get('scan_file', 'WGRAJ (PLIK)') }}<input type="file" name="scan_image_file" accept="image/*" hidden onchange="scanCar(this)"></label>
                             </div>
-                            <div id="scanLoader" class="mt-3 small text-warning fw-bold" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Analiza AI...</div>
                         </div>
                         
-                                                                        <div class="mb-3">
+                        <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <label class="small fw-bold text-muted mb-0" id="photoLabel">{{ t.get('photos', 'ZDJĘCIA') }}</label>
                                 <span class="small text-warning fw-bold">{{ t.get('max', 'MAX') }} 18</span>
@@ -511,8 +513,6 @@
                                 </span>
                             </label>
                         </div>
-
-
 
                         <div class="row g-2">
                             <div class="col-6"><label class="small fw-bold text-muted">{{ t.get('brand', 'Marka') }}</label><input type="text" name="marka" class="form-control" placeholder="np. BMW"></div>
@@ -536,10 +536,8 @@
                             </div>
                             
                             <div class="col-6 tech"><label class="small fw-bold text-muted">{{ t.get('mileage_ad', 'Przebieg') }}</label><input type="number" name="przebieg" class="form-control"></div>
-                            
                             <div class="col-6 tech"><label class="small fw-bold text-warning">{{ t.get('power', 'Moc (KM)') }}</label><input type="number" name="moc" class="form-control border-warning text-warning fw-bold" placeholder="np. 150"></div>
                             <div class="col-6 tech"><label class="small fw-bold text-warning">{{ t.get('color', 'Kolor') }}</label><input type="text" name="kolor" class="form-control border-warning" placeholder="np. Czarny"></div>
-
                             <div class="col-6 tech"><label class="small fw-bold text-muted">{{ t.get('engine_cap', 'Pojemność') }}</label><input type="text" name="pojemnosc" class="form-control"></div>
                             
                             <div class="col-6 tech">
@@ -574,13 +572,11 @@
                             </div>
                             
                             <div class="col-6"><label class="small fw-bold text-muted">{{ t.get('year_prod', 'Rok produkcji') }}</label><input type="number" name="rok" class="form-control"></div>
-
                             <div class="col-12"><label class="small fw-bold text-muted">{{ t.get('phone', 'Telefon') }}</label><input type="text" name="telefon" class="form-control" required></div>
                             <div class="col-12"><label class="small fw-bold text-muted">{{ t.get('desc', 'Opis') }}</label><textarea name="opis" class="form-control" rows="3" placeholder="..."></textarea></div>
 
-                                                        <div class="col-12 mt-3">
+                            <div class="col-12 mt-3">
                                 <label class="small fw-bold text-muted mb-2">{{ t.get('equip', 'WYPOSAŻENIE (Zaznacz opcje)') }}</label>
-                                
                                 <div class="accordion accordion-flush" id="equipAccordion" style="border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
                                     
                                     <div class="accordion-item bg-black bg-opacity-25 border-0 border-bottom border-secondary">
@@ -600,10 +596,8 @@
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Isofix" id="w4"><label class="form-check-label small text-white" for="w4">{{ t.get('eq_isofix', 'Isofix') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Bluetooth / USB" id="w19"><label class="form-check-label small text-white" for="w19">{{ t.get('eq_bt', 'Bluetooth / USB') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Alufelgi" id="w24"><label class="form-check-label small text-white" for="w24">{{ t.get('eq_alloys', 'Alufelgi') }}</label></div></div>
-
-<div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Światła LED" id="w_led_basic" {% if 'Światła LED' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w_led_basic">{{ t.get('eq_led_basic', 'Światła LED') }}</label></div></div>
-<div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Relingi dachowe" id="w_rails" {% if 'Relingi dachowe' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w_rails">{{ t.get('eq_rails', 'Relingi dachowe') }}</label></div></div>
-
+                                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Światła LED" id="w_led_basic"><label class="form-check-label small text-white" for="w_led_basic">{{ t.get('eq_led_basic', 'Światła LED') }}</label></div></div>
+                                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Relingi dachowe" id="w_rails"><label class="form-check-label small text-white" for="w_rails">{{ t.get('eq_rails', 'Relingi dachowe') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Hak" id="w26"><label class="form-check-label small text-white" for="w26">{{ t.get('eq_tow', 'Hak') }}</label></div></div>
                                             </div>
                                         </div>
@@ -624,8 +618,7 @@
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewane fotele" id="w10"><label class="form-check-label small text-white" for="w10">{{ t.get('eq_heated_seats', 'Podgrzewane fotele') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Skórzana tapicerka" id="w9"><label class="form-check-label small text-white" for="w9">{{ t.get('eq_leather', 'Skórzana tapicerka') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Nawigacja" id="w18"><label class="form-check-label small text-white" for="w18">{{ t.get('eq_navi', 'Nawigacja') }}</label></div></div>
-<div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Przyciemniane szyby" id="w_tinted" {% if 'Przyciemniane szyby' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="w_tinted">{{ t.get('eq_tinted', 'Przyciemniane szyby') }}</label></div></div>
-
+                                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Przyciemniane szyby" id="w_tinted"><label class="form-check-label small text-white" for="w_tinted">{{ t.get('eq_tinted', 'Przyciemniane szyby') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Szyberdach" id="w16"><label class="form-check-label small text-white" for="w16">{{ t.get('eq_sunroof', 'Szyberdach') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Elektryczna klapa bagażnika" id="w_trunk"><label class="form-check-label small text-white" for="w_trunk">{{ t.get('eq_trunk', 'Elektryczna klapa') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewana przednia szyba" id="w_wind"><label class="form-check-label small text-white" for="w_wind">{{ t.get('eq_heated_wind', 'Podgrzewana przednia szyba') }}</label></div></div>
@@ -648,8 +641,7 @@
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Podgrzewana kierownica" id="w_steer"><label class="form-check-label small text-white" for="w_steer">{{ t.get('eq_heated_steer', 'Podgrzewana kierownica') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Zawieszenie pneumatyczne" id="w_susp"><label class="form-check-label small text-white" for="w_susp">{{ t.get('eq_air_susp', 'Zawieszenie pneumatyczne') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Dociąganie drzwi" id="w_soft"><label class="form-check-label small text-white" for="w_soft">{{ t.get('eq_soft_close', 'Dociąganie drzwi') }}</label></div></div>
-                                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Reflektory Matrix / Laser" id="wp7" {% if 'Reflektory Matrix / Laser' in current_options %}checked{% endif %}><label class="form-check-label small text-white" for="wp7">{{ t.get('eq_matrix', 'Reflektory Matrix / Laser') }}</label></div></div>
-
+                                                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Reflektory Matrix / Laser" id="wp7"><label class="form-check-label small text-white" for="wp7">{{ t.get('eq_matrix', 'Reflektory Matrix / Laser') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Dach panoramiczny" id="w_pano"><label class="form-check-label small text-white" for="w_pano">{{ t.get('eq_pano', 'Dach panoramiczny') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Oświetlenie Ambient" id="w_ambient"><label class="form-check-label small text-white" for="w_ambient">{{ t.get('eq_ambient', 'Oświetlenie Ambient') }}</label></div></div>
                                                 <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input bg-dark border-secondary" type="checkbox" name="wyposazenie" value="Kamera 360" id="w22"><label class="form-check-label small text-white" for="w22">{{ t.get('eq_cam_360', 'Kamera 360') }}</label></div></div>
@@ -668,389 +660,12 @@
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
-
                         <div class="mt-3"><button type="button" class="btn btn-outline-success w-100 btn-sm rounded-pill py-2" onclick="getGPS(this)"><i class="bi bi-geo-alt-fill"></i> GPS</button></div>
                     </div>
                     <div class="modal-footer border-secondary pt-0 border-0"><button class="btn-submit-fix">{{ t.get('add', 'DODAJ OGŁOSZENIE') }}</button></div>
                 </form>
-
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="ustawieniaModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg rounded-4 border border-secondary">
-                <div class="modal-header border-secondary">
-                    <h5 class="fw-bold text-white"><i class="bi bi-person-gear me-2 text-danger"></i>Ustawienia Konta</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="/ustawienia_profilu" method="POST">
-                    <div class="modal-body p-4">
-                        
-                        <div class="mb-3">
-                            <label class="small text-muted fw-bold mb-2">Typ Konta</label>
-                            <input type="hidden" name="account_type" id="val_profile_account" value="{{ current_user.account_type or 'private' }}">
-                            <div class="dropdown">
-                                <button class="btn custom-dropdown-btn dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" id="btn_profile_account">
-                                    {% if current_user.account_type == 'company' %}{{ t.get('company', 'Firma / Handlarz') }}{% else %}{{ t.get('private_person', 'Osoba Prywatna') }}{% endif %}
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
-                                    <li><a class="dropdown-item" href="#" onclick="setProfileAccountType('private', `{{ t.get('private_person', 'Osoba Prywatna') }}`); return false;">{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
-                                    <li><a class="dropdown-item" href="#" onclick="setProfileAccountType('company', `{{ t.get('company', 'Firma / Handlarz') }}`); return false;">{{ t.get('company', 'Firma / Handlarz') }}</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-5">
-                                <label class="small text-muted fw-bold">Kraj</label>
-                                <input type="hidden" name="kraj" id="val_profile_kraj" value="{{ current_user.kraj or 'Polska' }}">
-                                <div class="dropdown h-100">
-                                    <button class="btn custom-dropdown-btn dropdown-toggle w-100 h-100" type="button" data-bs-toggle="dropdown" id="btn_profile_kraj">
-                                        {% if current_user.kraj == 'Niemcy' %}🇩🇪 Niemcy{% elif current_user.kraj == 'Belgia' %}🇧🇪 Belgia{% elif current_user.kraj == 'Holandia' %}🇳🇱 Holandia{% elif current_user.kraj == 'Francja' %}🇫🇷 Francja{% elif current_user.kraj == 'Inny' %}🌍 Inny{% else %}🇵🇱 Polska{% endif %}
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
-                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Polska', '🇵🇱 Polska'); return false;">🇵🇱 Polska</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Niemcy', '🇩🇪 Niemcy'); return false;">🇩🇪 Niemcy</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Belgia', '🇧🇪 Belgia'); return false;">🇧🇪 Belgia</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Holandia', '🇳🇱 Holandia'); return false;">🇳🇱 Holandia</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Francja', '🇫🇷 Francja'); return false;">🇫🇷 Francja</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Inny', '🌍 Inny'); return false;">🌍 Inny</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="col-7">
-                                <label class="small text-muted fw-bold">Miejscowość (np. Radom)</label>
-                                <input type="text" name="lokalizacja" class="form-control" value="{{ current_user.lokalizacja }}">
-                            </div>
-                        </div>
-
-                        <div id="sekcja_firma" style="display: {% if current_user.account_type == 'company' %}block{% else %}none{% endif %};">
-                            <hr class="border-secondary my-4">
-                            <h6 class="text-warning fw-bold small mb-3"><i class="bi bi-shop me-1"></i> DANE FIRMY</h6>
-                            
-                            <div class="mb-3">
-                                <label class="small text-muted fw-bold">Nazwa Firmy</label>
-                                <input type="text" name="company_name" class="form-control" value="{{ current_user.company_name or '' }}">
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="small text-muted fw-bold">NIP</label>
-                                    <input type="text" name="nip" class="form-control" value="{{ current_user.nip or '' }}">
-                                </div>
-                                <div class="col-6">
-                                    <label class="small text-muted fw-bold">Adres (Ulica, Nr)</label>
-                                    <input type="text" name="adres" class="form-control" placeholder="np. Warszawska 10" value="{{ current_user.adres or '' }}">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="small text-muted fw-bold">Wizytówka (Krótki opis działalności)</label>
-                                <textarea name="opis_firmy" class="form-control" rows="3" placeholder="np. Import aut z Niemiec. Działamy od 10 lat...">{{ current_user.opis_firmy or '' }}</textarea>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="modal-footer border-secondary pt-0 border-0">
-                        <button type="submit" class="btn btn-danger w-100 fw-bold rounded-pill">ZAPISZ ZMIANY</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div id="cookie-banner" style="position: fixed; bottom: 85px; left: 10px; right: 10px; background: rgba(26,26,26,0.95); border: 1px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.8); border-radius: 15px; backdrop-filter: blur(10px);">
-        <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
-            <span class="text-light small">🍪 Używamy plików cookies do obsługi Twojej sesji.</span>
-            <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">Zgoda</button>
-        </div>
-    </div>
-
-    <div id="loaderOverlay">
-        <video autoplay muted loop playsinline id="loaderVideo">
-            <source src="{{ url_for('static', filename='loading.mp4') }}" type="video/mp4">
-            <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
-        </video> 
-        <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
-    </div>
-
-    <div id="aiToast"><i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...</div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function adj() { 
-            const v = document.querySelector('input[name="typ"]:checked').value; 
-            const ukryj = (v === 'Inne'); 
-            document.querySelectorAll('.tech').forEach(e => { e.style.display = ukryj ? 'none' : 'block'; }); 
-        }
-        
-        function getGPS(btn) { 
-            if(!navigator.geolocation) { alert('Brak GPS'); return; } 
-            btn.innerHTML='...'; 
-            navigator.geolocation.getCurrentPosition(pos => { 
-                document.getElementById('gps_lat').value=pos.coords.latitude; 
-                document.getElementById('gps_lon').value=pos.coords.longitude; 
-                btn.className="btn btn-success w-100 btn-sm rounded-pill py-2"; 
-                btn.innerHTML="<i class='bi bi-check-lg'></i> OK"; 
-            }, err => { alert('Błąd GPS'); }); 
-        }
-        
-        function loadingEfekt(form) { 
-            document.getElementById('loaderOverlay').style.display = 'flex'; 
-        }
-
-        if (!localStorage.getItem('cookiesAccepted')) { document.getElementById('cookie-banner').style.display = 'block'; }
-        
-        function acceptCookies() { 
-            localStorage.setItem('cookiesAccepted', 'true'); 
-            document.getElementById('cookie-banner').style.display = 'none'; 
-        }
-        
-        function setVal(name, val, label) {
-            document.getElementById('val_' + name).value = val;
-            if(label) document.getElementById('btn_' + name).innerText = label;
-            else document.getElementById('btn_' + name).innerText = val;
-        }
-
-        function setProfileDropdown(name, val, label) {
-            document.getElementById('val_' + name).value = val;
-            document.getElementById('btn_' + name).innerText = label;
-        }
-
-        function setProfileAccountType(val, label) {
-            document.getElementById('val_profile_account').value = val;
-            document.getElementById('btn_profile_account').innerText = label;
-            document.getElementById('sekcja_firma').style.display = val === 'company' ? 'block' : 'none';
-        }
-
-        async function performAnalysis(file) {
-            const toast = document.getElementById('aiToast'); toast.style.display = 'block';
-            const fd=new FormData(); fd.append('scan_image', file); 
-            try { 
-                const r=await fetch('/api/analyze-car', {method:'POST', body:fd}); const d=await r.json(); 
-                if(d.marka){ 
-                    if(d.kategoria){ let r=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(r){ r.checked=true; adj(); }} 
-                    document.querySelector('[name="marka"]').value=d.marka; 
-                    document.querySelector('[name="model"]').value=d.model;
-                    if(d.vin) document.querySelector('[name="vin"]').value=d.vin; 
-                    document.querySelector('[name="rok"]').value=d.rok_sugestia||''; 
-                    document.querySelector('[name="opis"]').value=d.opis_wizualny;
-                    if(d.moc_sugestia) document.querySelector('[name="moc"]').value=d.moc_sugestia;
-                    if(d.kolor) document.querySelector('[name="kolor"]').value=d.kolor;
-                    if (d.wyposazenie_wykryte) {
-                        d.wyposazenie_wykryte.forEach(item => {
-                            let chk = document.querySelector(`input[name="wyposazenie"][value="${item}"]`);
-                            if (chk) chk.checked = true;
-                        });
-                    }
-                    if(d.paliwo_sugestia && d.kategoria!=='Inne'){
-                        let t_label = d.paliwo_sugestia;
-                        if(d.paliwo_sugestia === 'Benzyna') t_label = "{{ t.get('petrol', 'Benzyna') }}";
-                        else if(d.paliwo_sugestia === 'Diesel') t_label = "{{ t.get('diesel', 'Diesel') }}";
-                        else if(d.paliwo_sugestia === 'Hybryda') t_label = "{{ t.get('hybrid', 'Hybryda') }}";
-                        else if(d.paliwo_sugestia === 'Elektryczny') t_label = "{{ t.get('electric', 'Elektryczny') }}";
-                        else if(d.paliwo_sugestia === 'LPG') t_label = "{{ t.get('lpg', 'LPG') }}";
-                        setVal('paliwo', d.paliwo_sugestia, t_label);
-                    } 
-                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione!'; setTimeout(() => { toast.style.display = 'none'; }, 3000);
-                } else { toast.style.display = 'none'; } 
-            } catch(e){ console.error(e); toast.style.display = 'none'; } 
-        }
-
-        async function scanCar(input){ 
-            if(!input.files[0]) return; 
-            const mainInput = document.getElementById('fileInput'); const dt = new DataTransfer(); dt.items.add(input.files[0]); mainInput.files = dt.files;
-            const headerLabel = document.getElementById('photoLabel'); headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }} <span class="text-success ms-2">✅ SKAN DODANY!</span>';
-            performAnalysis(input.files[0]);
-        }
-
-                        // BARDZO BEZPIECZNY SKRYPT OBSŁUGI NOWYCH ZDJĘĆ
-        const galleryInput = document.getElementById('mainGalleryInput');
-        if (galleryInput) {
-            galleryInput.addEventListener('change', function(e) {
-                const headerLabel = document.getElementById('photoLabel'); 
-                if(headerLabel && headerLabel.innerText.includes("SKAN")) { 
-                    headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; 
-                }
-                
-                // Limit 18 zdjęć
-                if (this.files.length > 18) { 
-                    alert('⚠️ MAX 18 zdjęć.'); 
-                    const dt = new DataTransfer(); 
-                    for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } 
-                    this.files = dt.files; 
-                }
-                
-                // WIZUALNA ZMIANA TEKSTU NA ZIELONY
-                const countText = document.getElementById('fileCountText');
-                if(countText) {
-                    if(this.files.length > 0) {
-                        countText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> ' + this.files.length + ' ' + '{{ t.get("files_ready", "gotowych zdjęć") }}' + '</span>';
-                        countText.parentElement.style.borderColor = '#198754';
-                    } else {
-                        countText.innerHTML = "{{ t.get('select_multiple', 'Zaznacz kilka zdjęć na raz') }}";
-                        countText.parentElement.style.borderColor = 'rgba(255,255,255,0.2)';
-                    }
-                }
-
-                // Automatyczne odpalenie AI, jeśli funkcja istnieje
-                const markaField = document.querySelector('[name="marka"]'); 
-                if (this.files.length > 0 && markaField && markaField.value.trim() === "") { 
-                    if (typeof performAnalysis === "function") {
-                        performAnalysis(this.files[0]); 
-                    }
-                }
-            });
-        }
-
-        // BARDZO BEZPIECZNY SKRYPT OBSŁUGI NOWYCH ZDJĘĆ
-        // ... (Twój obecny kod galerii zostaje bez zmian) ...
-
-       // --- DODAJ TO NA SAMYM DOLE (ZAMIAST POPRZEDNIEJ WERSJI) ---
-function openEditUserModal(userId) {
-    // 1. Złap główną tabelę i ją schowaj
-    const usersModalEl = document.getElementById('usersModal');
-    const usersModal = bootstrap.Modal.getInstance(usersModalEl);
-    if(usersModal) {
-        usersModal.hide();
-    }
-
-    // 2. Poczekaj 400ms, aż szare tło zniknie, a potem pokaż edycję usera
-    setTimeout(() => {
-        const editModalEl = document.getElementById('editUserModal' + userId);
-        if(editModalEl) {
-            const editModal = new bootstrap.Modal(editModalEl);
-            editModal.show();
-        }
-    }, 400); 
-}
-
-    </script>
-
-        {% if current_user.username == 'admin' or current_user.id == 1 %}
-    <div class="modal fade" id="usersModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border border-secondary text-white">
-                <div class="modal-header border-secondary">
-                    <h5 class="fw-bold"><i class="bi bi-people-fill me-2 text-danger"></i> Baza Użytkowników</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-dark table-hover mb-0 text-center align-middle">
-                            <thead>
-                                <tr class="text-secondary small text-uppercase">
-                                    <th>ID</th>
-                                    <th>Login</th>
-                                    <th>Typ Konta</th>
-                                    <th>Email</th>
-                                    <th>Akcja</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if all_users is defined %}
-                                    {% for u in all_users %}
-                                    <tr>
-                                        <td>{{ u.id }}</td>
-                                        <td class="fw-bold text-white">
-                                            <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" width="25" height="25" class="rounded-circle me-2" style="object-fit:cover;">
-                                            {{ u.username }}
-                                        </td>
-                                        <td class="small">
-                                            {% if u.account_type == 'company' %}
-                                                <span class="badge bg-warning text-dark"><i class="bi bi-shop"></i> {{ u.company_name }}</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary"><i class="bi bi-person"></i> Prywatne</span>
-                                            {% endif %}
-                                        </td>
-                                        <td class="small text-muted">{{ u.email }}</td>
-                                                                                <td>
-                                            {% if u.id != current_user.id %}
-                                            <div class="d-flex justify-content-center gap-2">
-                                                <button type="button" class="btn btn-sm btn-outline-warning border-0" onclick="openEditUserModal('{{ u.id }}')" title="Edytuj dane firmy/adres">
-    <i class="bi bi-pencil-square"></i>
-</button>
-
-                                                
-                                                <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
-                                                    <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button>
-                                                </form>
-                                            </div>
-                                            {% else %}
-                                                <span class="badge bg-warning text-dark">TY</span>
-                                            {% endif %}
-                                        </td>
-
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr><td colspan="5" class="text-muted py-4">Brak zdefiniowanej zmiennej 'all_users' w backendzie.</td></tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% if all_users is defined %}
-        {% for u in all_users %}
-            {% if u.id != current_user.id %}
-            <div class="modal fade text-start" id="editUserModal{{ u.id }}" tabindex="-1" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content bg-dark text-white border-secondary shadow-lg">
-                  <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-warning fw-bold"><i class="bi bi-pencil-square"></i> Edycja: {{ u.username }}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zamknij"></button>
-                  </div>
-                  
-                  <form action="/admin/edytuj_user/{{ u.id }}" method="POST">
-                      <div class="modal-body p-4">
-                          <div class="row g-3">
-                              <div class="col-md-6">
-                                  <label class="small text-muted mb-1">Kraj</label>
-                                  <input type="text" name="kraj" class="form-control bg-black text-white border-secondary" value="{{ u.kraj or '' }}" placeholder="np. Niemcy">
-                              </div>
-                              <div class="col-md-6">
-                                  <label class="small text-muted mb-1">Miejscowość</label>
-                                  <input type="text" name="lokalizacja" class="form-control bg-black text-white border-secondary" value="{{ u.lokalizacja or '' }}">
-                              </div>
-                              <div class="col-12">
-                                  <label class="small text-muted mb-1">Dokładny adres</label>
-                                  <input type="text" name="adres" class="form-control bg-black text-white border-secondary" value="{{ u.adres or '' }}">
-                              </div>
-                          </div>
-                          
-                          <hr class="border-secondary my-4">
-                          
-                          <div class="row g-3">
-                              <div class="col-12">
-                                  <label class="small text-muted mb-1">Nazwa Firmy / Komisu</label>
-                                  <input type="text" name="company_name" class="form-control bg-black text-white border-secondary" value="{{ u.company_name or '' }}">
-                              </div>
-                              <div class="col-12">
-                                  <label class="small text-muted mb-1">NIP</label>
-                                  <input type="text" name="nip" class="form-control bg-black text-white border-secondary" value="{{ u.nip or '' }}">
-                              </div>
-                          </div>
-                      </div>
-                      
-                      <div class="modal-footer border-secondary pt-0 border-0">
-                        <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
-                        <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 shadow">ZAPISZ ZMIANY</button>
-                      </div>
-                  </form>
-                  
-                </div>
-              </div>
-            </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-
-</body>
-</html>
