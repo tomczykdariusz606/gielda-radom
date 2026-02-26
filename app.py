@@ -882,12 +882,20 @@ def car_details(car_id):
             
     if should_update and model_ai:
         try:
-            update_market_valuation(car)
+            # ZABEZPIECZENIE: Uruchamiamy wycenę AI TYLKO dla samochodów
+            if car.typ not in ['Rozmaitosci', 'DomOgrad', 'Inne']:
+                update_market_valuation(car)
         except:
             pass
             
     db.session.commit()
-    return render_template('details.html', car=car, now=datetime.utcnow())
+    
+    # ROZDZIELENIE SZABLONÓW: Inny dla części, inny dla aut
+    if car.typ in ['Rozmaitosci', 'DomOgrad', 'Inne']:
+        return render_template('inne.html', car=car, now=datetime.utcnow())
+    else:
+        return render_template('details.html', car=car, now=datetime.utcnow())
+
 
 # --- POPRAWIONY PROFIL ---
 @app.route('/profil')
