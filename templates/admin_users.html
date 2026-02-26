@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pl" data-bs-theme="dark">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admina - Giełda Radom</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root { --radom-red: #ce2b37; }
+        body { 
+            background-color: #050505;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-attachment: fixed;
+            color: #e4e6eb; font-family: 'Inter', sans-serif;
+        }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: -1; }
+        
+        .glass-card {
+            background: rgba(25, 25, 30, 0.75);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 20px;
+        }
+        
+        .table { color: #e4e6eb; vertical-align: middle; }
+        .table thead { border-bottom: 2px solid var(--radom-red); }
+        
+        .user-row:hover { background: rgba(255,255,255,0.05); }
+        
+        .badge-user { background: rgba(206, 43, 55, 0.2); color: #ff4d5a; border: 1px solid rgba(206, 43, 55, 0.5); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark p-3" style="background: rgba(0,0,0,0.8); border-bottom: 2px solid var(--radom-red);">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">GIEŁDA <span class="text-danger">RADOM</span> [ADMIN]</a>
+            <a href="/profil" class="btn btn-outline-light btn-sm rounded-pill">Powrót</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="glass-card">
+            <h3 class="fw-bold mb-4"><i class="bi bi-people me-2 text-danger"></i> Zarządzanie Użytkownikami</h3>
+            
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Typ</th>
+                            <th>Lokalizacja</th>
+                            <th class="text-end">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="user-row">
+                            <td>#{{ user.id }}</td>
+                            <td class="fw-bold">{{ user.email }}</td>
+                            <td>
+                                <span class="badge badge-user">
+                                    {{ 'Firma' if user.account_type == 'company' else 'Prywatny' }}
+                                </span>
+                            </td>
+                            <td>{{ user.lokalizacja or 'Brak' }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-secondary disabled"><i class="bi bi-pencil"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05); z-index: 1000;">
+        <a href="/szukaj" style="text-decoration: none; color: #777; text-align: center; flex: 1;"><i class="bi bi-search d-block fs-4"></i>Szukaj</a>
+        <a href="/profil" style="text-decoration: none; color: var(--radom-red); text-align: center; flex: 1; font-weight: bold;"><i class="bi bi-speedometer2 d-block fs-4"></i>Garaż</a>
+        <a href="/kontakt" style="text-decoration: none; color: #777; text-align: center; flex: 1;"><i class="bi bi-envelope d-block fs-4"></i>Kontakt</a>
+    </div>
+
+</body>
+</html>
