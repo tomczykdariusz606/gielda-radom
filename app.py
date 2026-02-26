@@ -914,12 +914,13 @@ def ustawienia_profilu():
     current_user.opis_firmy = request.form.get('opis_firmy', '')
     current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
     current_user.kraj = request.form.get('kraj', 'Polska')
-    db.session.commit()
+        db.session.commit()
     flash('Dane profilu zostały zapisane!', 'success')
-        return redirect(url_for('profil'))
+        return redirect(url_for('profil')) # <-- TU JEST BŁĄD (za duże wcięcie)
     
     # TO JEST KLUCZOWE: Jeśli wejdziesz na /ustawienia_profilu przez link, pokaż stronę
     return render_template('edytuj_profil.html')
+
 
 
 @app.route('/dodaj', methods=['POST'])
