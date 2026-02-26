@@ -233,7 +233,8 @@
                 <div class="col-6">
                     <div class="glass-stat">
                         <div class="d-flex justify-content-between text-white-50 small mb-1"><span>Aktywne</span> <i class="bi bi-car-front"></i></div>
-                        <h4 class="fw-bold m-0 text-white">{{ cars|length }} <span class="fs-6 text-muted">ofert</span></h4>
+                        <h4 class="fw-bold m-0 text-white">{% if pagination %}{{ pagination.total }}{% else %}{{ cars|length }}{% endif %} <span class="fs-6 text-muted">ofert</span></h4>
+
                     </div>
                 </div>
             </div>
