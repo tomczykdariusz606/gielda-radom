@@ -822,14 +822,20 @@ def szukaj():
 
 @app.route('/rozmaitosci')
 def rozmaitosci():
-    # Pobieramy auta, które mają typ "Inne"
-    # Tutaj w przyszłości możesz rozbudować logikę o części, opony itp.
+    sub = request.args.get('sub')
     page = request.args.get('page', 1, type=int)
     
-    # Filtrujemy bazę tylko dla kategorii "Inne"
-    pagination = Car.query.filter(Car.typ == 'Inne').order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
+    # Podstawowe filtrowanie: tylko rzeczy niebędące autami
+    query = Car.query.filter(Car.typ.in_(['Rozmaitosci', 'DomOgrad', 'Inne']))
+    
+    # Jeśli użytkownik kliknął konkretną podkategorię (zapisaliśmy ją w 'nadwozie')
+    if sub:
+        query = query.filter(Car.nadwozie == sub)
+    
+    pagination = query.order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
     
     return render_template('rozmaitosci.html', items=pagination.items, pagination=pagination, now=datetime.utcnow())
+
 
 
 
