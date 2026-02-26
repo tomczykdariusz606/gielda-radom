@@ -115,11 +115,11 @@
                                 <input type="hidden" name="account_type" id="val_acc_type" value="{{ u.account_type or 'private' }}">
                                 <div class="dropdown">
                                     <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_acc_type">
-                                        {% if u.account_type == 'company' %}{{ t.get('company', 'Firma') }}{% else %}{{ t.get('private_person', 'Osoba Prywatna') }}{% endif %}
+                                        {% if u.account_type == 'company' %}<i class="bi bi-shop text-warning me-2"></i>{{ t.get('company', 'Firma') }}{% else %}<i class="bi bi-person text-info me-2"></i>{{ t.get('private_person', 'Osoba Prywatna') }}{% endif %}
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'private', `{{ t.get('private_person', 'Osoba Prywatna') }}`); toggleFirmaSection('private'); return false;">{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'company', `{{ t.get('company', 'Firma') }}`); toggleFirmaSection('company'); return false;">{{ t.get('company', 'Firma') }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'private', '<i class=\'bi bi-person text-info me-2\'></i>{{ t.get('private_person', 'Osoba Prywatna') }}'); toggleFirmaSection('private'); return false;"><i class="bi bi-person text-info me-2"></i>{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('acc_type', 'company', '<i class=\'bi bi-shop text-warning me-2\'></i>{{ t.get('company', 'Firma') }}'); toggleFirmaSection('company'); return false;"><i class="bi bi-shop text-warning me-2"></i>{{ t.get('company', 'Firma') }}</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -129,15 +129,15 @@
                                 <input type="hidden" name="kraj" id="val_kraj" value="{{ u.kraj or 'Polska' }}">
                                 <div class="dropdown">
                                     <button class="btn custom-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn_kraj">
-                                        {{ u.kraj or 'Polska' }}
+                                        {% if u.kraj == 'Niemcy' %}🇩🇪 Niemcy{% elif u.kraj == 'Belgia' %}🇧🇪 Belgia{% elif u.kraj == 'Holandia' %}🇳🇱 Holandia{% elif u.kraj == 'Francja' %}🇫🇷 Francja{% elif u.kraj == 'Inny' %}🌍 Inny{% else %}🇵🇱 Polska{% endif %}
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Polska', 'Polska'); return false;">Polska</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Niemcy', 'Niemcy'); return false;">Niemcy</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Belgia', 'Belgia'); return false;">Belgia</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Holandia', 'Holandia'); return false;">Holandia</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Francja', 'Francja'); return false;">Francja</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Inny', 'Inny'); return false;">Inny</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Polska', '🇵🇱 Polska'); return false;">🇵🇱 Polska</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Niemcy', '🇩🇪 Niemcy'); return false;">🇩🇪 Niemcy</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Belgia', '🇧🇪 Belgia'); return false;">🇧🇪 Belgia</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Holandia', '🇳🇱 Holandia'); return false;">🇳🇱 Holandia</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Francja', '🇫🇷 Francja'); return false;">🇫🇷 Francja</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setDropdownVal('kraj', 'Inny', '🌍 Inny'); return false;">🌍 Inny</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -196,12 +196,12 @@
     <script>
         function setDropdownVal(name, val, label) {
             document.getElementById('val_' + name).value = val;
-            document.getElementById('btn_' + name).innerText = label;
+            document.getElementById('btn_' + name).innerHTML = label; // Zmienione z innerText na innerHTML dla flag!
         }
 
         function toggleFirmaSection(type) {
             const section = document.getElementById('firmaSection');
-            section.style.display = (type === 'company' ? 'block' : 'none');
+            if(section) section.style.display = (type === 'company' ? 'block' : 'none');
         }
 
         function previewImage(input) {
