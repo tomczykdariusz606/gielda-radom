@@ -1010,15 +1010,6 @@ def dodaj_ogloszenie():
         return redirect(url_for('profil'))
 
 
-    except Exception as e:
-        # COFANIE ZMIAN W BAZIE W RAZIE AWARII (Zapobiega zablokowaniu bazy)
-        db.session.rollback()
-        print(f"BŁĄD PRZY DODAWANIU AUTA: {e}")
-        # Zamiast błędu 500, użytkownik zobaczy ładny komunikat z dokładną informacją, co poszło nie tak
-        flash(f'Wystąpił błąd przy zapisie: {str(e)}', 'danger')
-        return redirect(url_for('profil'))
-
-
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
