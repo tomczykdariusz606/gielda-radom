@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" data-bs-theme="dark">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Edytuj Profil - Giełda Radom</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --radom-red: #ce2b37; --premium-gold: #f0c420; }
+        body { 
+            color: #e4e6eb; font-family: 'Inter', sans-serif; 
+            background-color: #050505;
+            background-image: url("{{ url_for('static', filename='czerwiec_tlo1.jpg') }}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+            position: relative; min-height: 100vh;
+        }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.70); z-index: -1; }
+        
+        .navbar { 
+            background: rgba(15, 15, 15, 0.85); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border-bottom: 2px solid var(--radom-red); 
+        }
+
+        .glass-card {
+            background: rgba(25, 25, 30, 0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .form-control, .form-select { 
+            background-color: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.2); 
+            color: white; padding: 12px; border-radius: 12px;
+        }
+        .form-control:focus { background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206,43,55,0.4); }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, var(--radom-red), #911620);
+            color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            padding: 15px; border-radius: 12px; border: none; transition: 0.3s;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(206,43,55,0.5); }
+
+        .seo-footer {
+            background: rgba(10,10,10,0.95); padding: 40px 0 110px 0; 
+            border-top: 1px solid rgba(255,255,255,0.05); color: #777; font-size: 0.85rem; margin-top: 50px;
+        }
+        .nav-bottom { 
+            position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); 
+            backdrop-filter: blur(15px); z-index: 1000; display: flex; justify-content: space-around; padding: 12px 0; 
+            border-top: 1px solid rgba(255,255,255,0.05); 
+        }
+        .nav-item { text-align: center; color: #777; text-decoration: none; font-size: 0.75rem; flex: 1; }
+        .nav-item.active { color: var(--radom-red); font-weight: 700; }
+        .nav-item i { font-size: 1.4rem; display: block; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
+                <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 40px; margin-right: 10px;">
+                <span>GIEŁDA <span class="text-danger">RADOM</span></span>
+            </a>
+            <a href="/profil" class="btn btn-sm btn-outline-light rounded-pill px-3">Wróć do Garażu</a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="glass-card">
+                    <h2 class="fw-900 text-white mb-4"><i class="bi bi-person-gear text-danger me-2"></i>USTAWIENIA PROFILU</h2>
+                    
+                    <form action="/ustawienia_profilu" method="POST">
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <label class="small text-muted fw-bold mb-2">TYP KONTA</label>
+                                <select name="account_type" class="form-select" id="accountSelector" onchange="toggleFirma(this.value)">
+                                    <option value="private" {% if current_user.account_type == 'private' %}selected{% endif %}>Osoba Prywatna</option>
+                                    <option value="company" {% if current_user.account_type == 'company' %}selected{% endif %}>Firma / Handlarz / Komis</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="small text-muted fw-bold mb-2">KRAJ ZAMIESZKANIA / DZIAŁALNOŚCI</label>
+                                <input type="text" name="kraj" class="form-control" value="{{ current_user.kraj or 'Polska' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="small text-muted fw-bold mb-2">MIEJSCOWOŚĆ</label>
+                                <input type="text" name="lokalizacja" class="form-control" value="{{ current_user.lokalizacja or 'Radom' }}">
+                            </div>
+
+                            <div id="firmaSection" class="col-12" style="display: {% if current_user.account_type == 'company' %}block{% else %}none{% endif %};">
+                                <div class="p-3 rounded-4 border border-warning border-opacity-25 bg-black bg-opacity-25">
+                                    <h5 class="text-warning fw-bold mb-3"><i class="bi bi-shop me-2"></i>Dane Firmowe</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12 mb-2">
+                                            <label class="small text-muted fw-bold mb-2">PEŁNA NAZWA FIRMY</label>
+                                            <input type="text" name="company_name" class="form-control" value="{{ current_user.company_name or '' }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small text-muted fw-bold mb-2">NIP</label>
+                                            <input type="text" name="nip" class="form-control" value="{{ current_user.nip or '' }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small text-muted fw-bold mb-2">ADRES (ULICA, NR)</label>
+                                            <input type="text" name="adres" class="form-control" value="{{ current_user.adres or '' }}">
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <label class="small text-muted fw-bold mb-2">WIZYTÓWKA / OPIS DZIAŁALNOŚCI</label>
+                                            <textarea name="opis_firmy" class="form-control" rows="4" placeholder="Opisz swój komis lub usługi...">{{ current_user.opis_firmy or '' }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn-submit w-100">ZAPISZ ZMIANY I WRÓĆ</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="seo-footer">
+        <div class="container text-center">
+            <h5 class="text-white fw-bold">Giełda <span class="text-danger">Radom</span></h5>
+            <p class="small opacity-50">&copy; 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </footer>
+
+    <div class="nav-bottom">
+        <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
+        <a href="/profil" class="nav-item active"><i class="bi bi-speedometer2"></i> Garaż</a>
+        <a href="/kontakt" class="nav-item"><i class="bi bi-envelope"></i> Kontakt</a>
+    </div>
+
+    <script>
+        function toggleFirma(val) {
+            document.getElementById('firmaSection').style.display = (val === 'company' ? 'block' : 'none');
+        }
+    </script>
+</body>
+</html>
