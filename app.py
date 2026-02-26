@@ -1534,7 +1534,7 @@ def admin_edytuj_user(user_id):
     
     db.session.commit()
     flash(f'Zaktualizowano dane adresowe/firmowe dla: {user.username}.', 'success')
-    return redirect('/profil')
+    return render_template('edytuj_profil.html', edit_user=user)
 
 
 @app.route('/admin/wyslij_powitania', methods=['POST'])
