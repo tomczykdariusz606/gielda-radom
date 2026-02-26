@@ -207,9 +207,10 @@
                     <h2 class="fw-bold text-white m-0 text-truncate">{{ current_user.username }}</h2>
                     
                     <div class="mt-2 d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-secondary rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#ustawieniaModal">
-                            <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
-                        </button>
+                        <a href="/ustawienia_profilu" class="btn btn-sm btn-outline-secondary rounded-pill fw-bold">
+    <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
+</a>
+
                         
                         <form id="avatarForm" action="/zmien_avatar" method="POST" enctype="multipart/form-data" class="m-0">
                             <label class="btn btn-sm btn-outline-info rounded-pill fw-bold mb-0" style="cursor: pointer;">
