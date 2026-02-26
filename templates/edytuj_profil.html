@@ -11,7 +11,8 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Edytuj Profil - Giełda Radom</title>
+    
+    <title>{% if edit_user %}Edycja: {{ edit_user.username }}{% else %}Edytuj Profil{% endif %} - Giełda Radom</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -71,13 +72,17 @@
 </head>
 <body>
 
+    {% set u = edit_user if edit_user else current_user %}
+
     <nav class="navbar navbar-dark p-3">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
                 <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 40px; margin-right: 10px;">
                 <span>GIEŁDA <span class="text-danger">RADOM</span></span>
             </a>
-            <a href="/profil" class="btn btn-sm btn-outline-light rounded-pill px-3">Wróć do Garażu</a>
+            <a href="{% if edit_user %}/admin/uzytkownicy{% else %}/profil{% endif %}" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Powrót
+            </a>
         </div>
     </nav>
 
@@ -85,54 +90,58 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="glass-card">
-                    <h2 class="fw-900 text-white mb-4"><i class="bi bi-person-gear text-danger me-2"></i>USTAWIENIA PROFILU</h2>
+                    <h2 class="fw-900 text-white mb-2">
+                        <i class="bi bi-person-gear text-danger me-2"></i>
+                        {% if edit_user %}EDYTUJESZ: {{ u.username }}{% else %}USTAWIENIA PROFILU{% endif %}
+                    </h2>
+                    <p class="text-white-50 small mb-4">Adres e-mail: {{ u.email }}</p>
                     
-                    <form action="/ustawienia_profilu" method="POST">
+                    <form action="{% if edit_user %}{{ url_for('admin_edytuj_user', user_id=u.id) }}{% else %}{{ url_for('ustawienia_profilu') }}{% endif %}" method="POST">
                         <div class="row g-4">
                             <div class="col-md-12">
                                 <label class="small text-muted fw-bold mb-2">TYP KONTA</label>
                                 <select name="account_type" class="form-select" id="accountSelector" onchange="toggleFirma(this.value)">
-                                    <option value="private" {% if current_user.account_type == 'private' %}selected{% endif %}>Osoba Prywatna</option>
-                                    <option value="company" {% if current_user.account_type == 'company' %}selected{% endif %}>Firma / Handlarz / Komis</option>
+                                    <option value="private" {% if u.account_type == 'private' %}selected{% endif %}>Osoba Prywatna</option>
+                                    <option value="company" {% if u.account_type == 'company' %}selected{% endif %}>Firma / Handlarz / Komis</option>
                                 </select>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="small text-muted fw-bold mb-2">KRAJ ZAMIESZKANIA / DZIAŁALNOŚCI</label>
-                                <input type="text" name="kraj" class="form-control" value="{{ current_user.kraj or 'Polska' }}">
+                                <label class="small text-muted fw-bold mb-2">KRAJ</label>
+                                <input type="text" name="kraj" class="form-control" value="{{ u.kraj or 'Polska' }}">
                             </div>
 
                             <div class="col-md-6">
                                 <label class="small text-muted fw-bold mb-2">MIEJSCOWOŚĆ</label>
-                                <input type="text" name="lokalizacja" class="form-control" value="{{ current_user.lokalizacja or 'Radom' }}">
+                                <input type="text" name="lokalizacja" class="form-control" value="{{ u.lokalizacja or 'Radom' }}">
                             </div>
 
-                            <div id="firmaSection" class="col-12" style="display: {% if current_user.account_type == 'company' %}block{% else %}none{% endif %};">
+                            <div id="firmaSection" class="col-12" style="display: {% if u.account_type == 'company' or edit_user %}block{% else %}none{% endif %};">
                                 <div class="p-3 rounded-4 border border-warning border-opacity-25 bg-black bg-opacity-25">
                                     <h5 class="text-warning fw-bold mb-3"><i class="bi bi-shop me-2"></i>Dane Firmowe</h5>
                                     <div class="row g-3">
                                         <div class="col-12 mb-2">
                                             <label class="small text-muted fw-bold mb-2">PEŁNA NAZWA FIRMY</label>
-                                            <input type="text" name="company_name" class="form-control" value="{{ current_user.company_name or '' }}">
+                                            <input type="text" name="company_name" class="form-control" value="{{ u.company_name or '' }}">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="small text-muted fw-bold mb-2">NIP</label>
-                                            <input type="text" name="nip" class="form-control" value="{{ current_user.nip or '' }}">
+                                            <input type="text" name="nip" class="form-control" value="{{ u.nip or '' }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="small text-muted fw-bold mb-2">ADRES (ULICA, NR)</label>
-                                            <input type="text" name="adres" class="form-control" value="{{ current_user.adres or '' }}">
+                                            <label class="small text-muted fw-bold mb-2">DOKŁADNY ADRES</label>
+                                            <input type="text" name="adres" class="form-control" value="{{ u.adres or '' }}" placeholder="ulica, nr domu">
                                         </div>
                                         <div class="col-12 mt-3">
                                             <label class="small text-muted fw-bold mb-2">WIZYTÓWKA / OPIS DZIAŁALNOŚCI</label>
-                                            <textarea name="opis_firmy" class="form-control" rows="4" placeholder="Opisz swój komis lub usługi...">{{ current_user.opis_firmy or '' }}</textarea>
+                                            <textarea name="opis_firmy" class="form-control" rows="4" placeholder="Opisz swój komis lub usługi...">{{ u.opis_firmy or '' }}</textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-12 mt-4">
-                                <button type="submit" class="btn-submit w-100">ZAPISZ ZMIANY I WRÓĆ</button>
+                                <button type="submit" class="btn-submit w-100">ZAPISZ ZMIANY I ZAKOŃCZ</button>
                             </div>
                         </div>
                     </form>
