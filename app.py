@@ -911,7 +911,11 @@ def ustawienia_profilu():
     current_user.kraj = request.form.get('kraj', 'Polska')
     db.session.commit()
     flash('Dane profilu zostały zapisane!', 'success')
-    return redirect('/profil')
+        return redirect(url_for('profil'))
+    
+    # TO JEST KLUCZOWE: Jeśli wejdziesz na /ustawienia_profilu przez link, pokaż stronę
+    return render_template('edytuj_profil.html')
+
 
 @app.route('/dodaj', methods=['POST'])
 @login_required
