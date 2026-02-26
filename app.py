@@ -865,7 +865,7 @@ def car_details(car_id):
     db.session.commit()
     return render_template('details.html', car=car, now=datetime.utcnow())
 
-# --- POPRAWIONY PROFIL (Z OBSŁUGĄ PAGINACJI I STATYSTYK) ---
+# --- POPRAWIONY PROFIL ---
 @app.route('/profil')
 @login_required
 def profil():
@@ -891,9 +891,7 @@ def profil():
     return render_template('profil.html', cars=pagination.items, pagination=pagination, favorites=favorites, now=datetime.utcnow(), 
                            user_count=user_count, online_count=online_count, total_views=total_views)
 
-
-
-# --- NOWOŚĆ: LISTA UŻYTKOWNIKÓW DLA ADMINA ---
+# --- LISTA UŻYTKOWNIKÓW DLA ADMINA ---
 @app.route('/admin/uzytkownicy')
 @login_required
 def admin_uzytkownicy():
@@ -902,23 +900,35 @@ def admin_uzytkownicy():
     users = User.query.all()
     return render_template('admin_users.html', users=users, now=datetime.utcnow())
 
+# --- USUWANIE USERA ---
+@app.route('/admin/usun_usera/<int:user_id>', methods=['POST'])
+@login_required
+def usun_usera(user_id):
+    if current_user.username != 'admin' and current_user.id != 1:
+        abort(403)
+    u = User.query.get_or_404(user_id)
+    if u.id != current_user.id:
+        db.session.delete(u)
+        db.session.commit()
+        flash(f'Użytkownik {u.username} usunięty.', 'success')
+    return redirect(url_for('admin_uzytkownicy'))
 
-# --- USTAWIENIA PROFILU Z ZAPISEM DANYCH (NIP, KRAJ, ADRES) ---
+# --- USTAWIENIA PROFILU ---
 @app.route('/ustawienia_profilu', methods=['GET', 'POST'])
 @login_required
 def ustawienia_profilu():
-    current_user.account_type = request.form.get('account_type', 'private')
-    current_user.company_name = request.form.get('company_name', '')
-    current_user.nip = request.form.get('nip', '')
-    current_user.adres = request.form.get('adres', '')
-    current_user.opis_firmy = request.form.get('opis_firmy', '')
-    current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
-    current_user.kraj = request.form.get('kraj', 'Polska')
+    if request.method == 'POST':
+        current_user.account_type = request.form.get('account_type', 'private')
+        current_user.company_name = request.form.get('company_name', '')
+        current_user.nip = request.form.get('nip', '')
+        current_user.adres = request.form.get('adres', '')
+        current_user.opis_firmy = request.form.get('opis_firmy', '')
+        current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
+        current_user.kraj = request.form.get('kraj', 'Polska')
         db.session.commit()
-    flash('Dane profilu zostały zapisane!', 'success')
-        return redirect(url_for('profil')) # <-- TU JEST BŁĄD (za duże wcięcie)
+        flash('Dane profilu zostały zapisane!', 'success')
+        return redirect(url_for('profil'))
     
-    # TO JEST KLUCZOWE: Jeśli wejdziesz na /ustawienia_profilu przez link, pokaż stronę
     return render_template('edytuj_profil.html')
 
 
