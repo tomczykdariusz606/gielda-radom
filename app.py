@@ -1453,7 +1453,10 @@ def polityka_privacy():
         current_legal = {"title": "Polityka Prywatności", "intro": "Błąd ładowania treści."}
 
     return render_template('polityka.html', legal=current_legal, lang=lang)
-
+@app.route('/polityka-prywatnosci')
+def polityka_prywatnosci_redirect():
+    # Zwróć uwagę na 'polityka_privacy' - to musi być nazwa funkcji powyżej!
+    return redirect(url_for('polityka_privacy'), code=301)
 # --- EDYCJA OGŁOSZENIA ---
 @app.route('/edytuj/<int:id>', methods=['GET','POST'])
 @login_required
