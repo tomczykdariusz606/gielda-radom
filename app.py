@@ -918,24 +918,27 @@ def usun_usera(user_id):
 @login_required
 def ustawienia_profilu():
     if request.method == 'POST':
-        current_user.account_type = request.form.get('account_type', 'private')
+        current_user.kraj = request.form.get('kraj', 'Polska')
+        current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
         current_user.company_name = request.form.get('company_name', '')
         current_user.nip = request.form.get('nip', '')
         current_user.adres = request.form.get('adres', '')
         current_user.opis_firmy = request.form.get('opis_firmy', '')
-        current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
-        current_user.kraj = request.form.get('kraj', 'Polska')
-    if 'avatar' in request.files:
-    file = request.files['avatar']
-    if file and file.filename != '' and allowed_file(file.filename):
-        filename = save_optimized_image(file)
-        if filename:
-            u.avatar_url = url_for('static', filename='uploads/' + filename)
+        current_user.account_type = request.form.get('account_type', 'private')
+
+        if 'avatar' in request.files:
+            file = request.files['avatar']
+            if file and file.filename != '' and allowed_file(file.filename):
+                fname = save_optimized_image(file)
+                if fname:
+                    current_user.avatar_url = url_for('static', filename='uploads/' + fname)
+
         db.session.commit()
-        flash('Dane profilu zostały zapisane!', 'success')
+        flash('Twój profil został zaktualizowany!', 'success')
         return redirect(url_for('profil'))
     
     return render_template('edytuj_profil.html')
+
 
 
 
