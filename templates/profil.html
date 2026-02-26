@@ -949,7 +949,8 @@
                                                                                 <td>
                                             {% if u.id != current_user.id %}
                                             <div class="d-flex justify-content-center gap-2">
-                                                <button type="button" class="btn btn-sm btn-outline-warning border-0" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="Edytuj dane firmy/adres">
+                                                <button type="button" class="btn btn-sm btn-outline-warning border-0" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="Edytuj dane firmy/adres">
+
                                                     <i class="bi bi-pencil-square"></i>
                                                 </button>
                                                 
