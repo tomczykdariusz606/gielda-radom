@@ -18,6 +18,27 @@
             border: 1px solid rgba(240, 196, 32, 0.3);
             border-radius: 20px; padding: 40px 20px; text-align: center; margin-top: 30px; margin-bottom: 30px;
         }
+<style>
+    .market-cat-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; }
+    .market-cat-grid::-webkit-scrollbar { display: none; }
+    .cat-pill { 
+        background: #1a1a1a; border: 1px solid #333; color: #aaa; 
+        padding: 8px 20px; border-radius: 50px; text-decoration: none; 
+        white-space: nowrap; transition: 0.3s; font-weight: 600; font-size: 0.9rem;
+    }
+    .cat-pill:hover, .cat-pill.active { background: #f0c420; color: #000; border-color: #f0c420; }
+</style>
+
+<div class="market-cat-grid">
+    <a href="/rozmaitosci" class="cat-pill {% if not request.args.get('sub') %}active{% endif %}">Wszystko</a>
+    <a href="/rozmaitosci?sub=Opony i Felgi" class="cat-pill {% if request.args.get('sub') == 'Opony i Felgi' %}active{% endif %}">Opony i Felgi</a>
+    <a href="/rozmaitosci?sub=Części Karoserii" class="cat-pill {% if request.args.get('sub') == 'Części Karoserii' %}active{% endif %}">Blacharka</a>
+    <a href="/rozmaitosci?sub=Silnik i Osprzęt" class="cat-pill {% if request.args.get('sub') == 'Silnik i Osprzęt' %}active{% endif %}">Silnik</a>
+    <a href="/rozmaitosci?sub=Narzędzia Ogrodowe" class="cat-pill {% if request.args.get('sub') == 'Narzędzia Ogrodowe' %}active{% endif %}">Ogród</a>
+    <a href="/rozmaitosci?sub=Meble" class="cat-pill {% if request.args.get('sub') and 'Meble' in request.args.get('sub') %}active{% endif %}">Meble</a>
+    <a href="/rozmaitosci?sub=Elektronarzędzia" class="cat-pill {% if request.args.get('sub') == 'Elektronarzędzia' %}active{% endif %}">Elektronarzędzia</a>
+</div>
+
         .item-card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; }
         .item-card:hover { border-color: #f0c420; box-shadow: 0 10px 30px rgba(240, 196, 32, 0.15); transform: translateY(-3px); }
         .item-img { height: 200px; object-fit: cover; width: 100%; }
