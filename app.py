@@ -899,7 +899,7 @@ def profil():
 
 
 # --- USTAWIENIA PROFILU Z ZAPISEM DANYCH (NIP, KRAJ, ADRES) ---
-@app.route('/ustawienia_profilu', methods=['POST'])
+@app.route('/ustawienia_profilu', methods=['GET', 'POST'])
 @login_required
 def ustawienia_profilu():
     current_user.account_type = request.form.get('account_type', 'private')
