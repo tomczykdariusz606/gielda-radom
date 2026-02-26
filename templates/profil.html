@@ -906,6 +906,25 @@
             });
         }
 
+        // BARDZO BEZPIECZNY SKRYPT OBSŁUGI NOWYCH ZDJĘĆ
+        // ... (Twój obecny kod galerii zostaje bez zmian) ...
+
+        // --- DODAJ TO ---
+        function openEditUserModal(userId) {
+            // Najpierw ukryj główną tabelę usersModal
+            const usersModalEl = document.getElementById('usersModal');
+            const usersModal = bootstrap.Modal.getInstance(usersModalEl) || new bootstrap.Modal(usersModalEl);
+            usersModal.hide();
+
+            // Poczekaj chwilę, aż animacja znikania (fade) się skończy, i dopiero wtedy pokaż ołówek
+            setTimeout(() => {
+                const editModalEl = document.getElementById('editUserModal' + userId);
+                if(editModalEl) {
+                    const editModal = new bootstrap.Modal(editModalEl);
+                    editModal.show();
+                }
+            }, 500); // 500ms to bezpieczny margines na opadnięcie tła
+        }
 
     </script>
 
