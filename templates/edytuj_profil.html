@@ -11,8 +11,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <title>{% if edit_user %}Edycja: {{ edit_user.username }}{% else %}Edytuj Profil{% endif %} - Giełda Radom</title>
+    <title>Edytuj Profil - Giełda Radom</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -27,27 +26,36 @@
             background-size: cover; background-position: center; background-attachment: fixed;
             position: relative; min-height: 100vh;
         }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.70); z-index: -1; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: -1; }
         
-        .navbar { 
-            background: rgba(15, 15, 15, 0.85); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border-bottom: 2px solid var(--radom-red); 
-        }
+        .navbar { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(15px); border-bottom: 2px solid var(--radom-red); }
 
         .glass-card {
-            background: rgba(25, 25, 30, 0.75);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            background: rgba(25, 25, 30, 0.75); backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px; padding: 2rem;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
+        /* Avatar Styling */
+        .avatar-wrapper { position: relative; width: 130px; height: 130px; margin: 0 auto 25px; }
+        .avatar-img { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 3px solid var(--radom-red); padding: 5px; background: #000; }
+        .avatar-upload-btn {
+            position: absolute; bottom: 5px; right: 5px;
+            background: var(--radom-red); color: white; border-radius: 50%;
+            width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+            border: 3px solid #1a1a1a; cursor: pointer; transition: 0.3s;
+        }
+        .avatar-upload-btn:hover { transform: scale(1.1); background: #b1252f; }
+
         .form-control, .form-select { 
             background-color: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.2); 
             color: white; padding: 12px; border-radius: 12px;
         }
-        .form-control:focus { background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); color: white; box-shadow: 0 0 15px rgba(206,43,55,0.4); }
+        .form-control:focus, .form-select:focus { 
+            background-color: rgba(0,0,0,0.8); border-color: var(--radom-red); 
+            color: white; box-shadow: 0 0 15px rgba(206,43,55,0.4); 
+        }
         
         .btn-submit {
             background: linear-gradient(135deg, var(--radom-red), #911620);
@@ -56,10 +64,6 @@
         }
         .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(206,43,55,0.5); }
 
-        .seo-footer {
-            background: rgba(10,10,10,0.95); padding: 40px 0 110px 0; 
-            border-top: 1px solid rgba(255,255,255,0.05); color: #777; font-size: 0.85rem; margin-top: 50px;
-        }
         .nav-bottom { 
             position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); 
             backdrop-filter: blur(15px); z-index: 1000; display: flex; justify-content: space-around; padding: 12px 0; 
@@ -77,30 +81,36 @@
     <nav class="navbar navbar-dark p-3">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
-                <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 40px; margin-right: 10px;">
+                <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; margin-right: 10px;">
                 <span>GIEŁDA <span class="text-danger">RADOM</span></span>
             </a>
-            <a href="{% if edit_user %}/admin/uzytkownicy{% else %}/profil{% endif %}" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                <i class="bi bi-arrow-left me-1"></i> Powrót
-            </a>
+            <a href="{% if edit_user %}/admin/uzytkownicy{% else %}/profil{% endif %}" class="btn btn-sm btn-outline-light rounded-pill px-3">Anuluj</a>
         </div>
     </nav>
 
-    <div class="container py-5">
+    <div class="container py-5 mb-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="glass-card">
-                    <h2 class="fw-900 text-white mb-2">
-                        <i class="bi bi-person-gear text-danger me-2"></i>
-                        {% if edit_user %}EDYTUJESZ: {{ u.username }}{% else %}USTAWIENIA PROFILU{% endif %}
+                    <h2 class="fw-900 text-white text-center mb-1">
+                        {% if edit_user %}EDYTUJESZ: {{ u.username }}{% else %}USTAWIENIA KONTA{% endif %}
                     </h2>
-                    <p class="text-white-50 small mb-4">Adres e-mail: {{ u.email }}</p>
+                    <p class="text-center text-white-50 small mb-4">{{ u.email }}</p>
                     
-                    <form action="{% if edit_user %}{{ url_for('admin_edytuj_user', user_id=u.id) }}{% else %}{{ url_for('ustawienia_profilu') }}{% endif %}" method="POST">
+                    <form action="{% if edit_user %}{{ url_for('admin_edytuj_user', user_id=u.id) }}{% else %}{{ url_for('ustawienia_profilu') }}{% endif %}" method="POST" enctype="multipart/form-data">
+                        
+                        <div class="avatar-wrapper">
+                            <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" id="preview" class="avatar-img shadow-lg">
+                            <label for="avatarFile" class="avatar-upload-btn">
+                                <i class="bi bi-camera-fill"></i>
+                            </label>
+                            <input type="file" name="avatar" id="avatarFile" hidden accept="image/*" onchange="previewImage(this)">
+                        </div>
+
                         <div class="row g-4">
                             <div class="col-md-12">
-                                <label class="small text-muted fw-bold mb-2">TYP KONTA</label>
-                                <select name="account_type" class="form-select" id="accountSelector" onchange="toggleFirma(this.value)">
+                                <label class="small text-muted fw-bold mb-2">RODZAJ DZIAŁALNOŚCI</label>
+                                <select name="account_type" class="form-select" onchange="toggleFirma(this.value)">
                                     <option value="private" {% if u.account_type == 'private' %}selected{% endif %}>Osoba Prywatna</option>
                                     <option value="company" {% if u.account_type == 'company' %}selected{% endif %}>Firma / Handlarz / Komis</option>
                                 </select>
@@ -108,40 +118,47 @@
 
                             <div class="col-md-6">
                                 <label class="small text-muted fw-bold mb-2">KRAJ</label>
-                                <input type="text" name="kraj" class="form-control" value="{{ u.kraj or 'Polska' }}">
+                                <select name="kraj" class="form-select">
+                                    <option value="Polska" {% if u.kraj == 'Polska' %}selected{% endif %}>Polska</option>
+                                    <option value="Niemcy" {% if u.kraj == 'Niemcy' %}selected{% endif %}>Niemcy</option>
+                                    <option value="Belgia" {% if u.kraj == 'Belgia' %}selected{% endif %}>Belgia</option>
+                                    <option value="Holandia" {% if u.kraj == 'Holandia' %}selected{% endif %}>Holandia</option>
+                                    <option value="Francja" {% if u.kraj == 'Francja' %}selected{% endif %}>Francja</option>
+                                    <option value="Inny" {% if u.kraj == 'Inny' %}selected{% endif %}>Inny</option>
+                                </select>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="small text-muted fw-bold mb-2">MIEJSCOWOŚĆ</label>
-                                <input type="text" name="lokalizacja" class="form-control" value="{{ u.lokalizacja or 'Radom' }}">
+                                <input type="text" name="lokalizacja" class="form-control" value="{{ u.lokalizacja or 'Radom' }}" placeholder="np. Radom">
                             </div>
 
-                            <div id="firmaSection" class="col-12" style="display: {% if u.account_type == 'company' or edit_user %}block{% else %}none{% endif %};">
-                                <div class="p-3 rounded-4 border border-warning border-opacity-25 bg-black bg-opacity-25">
-                                    <h5 class="text-warning fw-bold mb-3"><i class="bi bi-shop me-2"></i>Dane Firmowe</h5>
+                            <div id="firmaFields" class="col-12" style="display: {% if u.account_type == 'company' or edit_user %}block{% else %}none{% endif %};">
+                                <div class="p-4 rounded-4 bg-black bg-opacity-50 border border-secondary border-opacity-25 shadow-inner">
+                                    <h6 class="text-danger fw-bold mb-3"><i class="bi bi-briefcase me-2"></i>DANE FIRMOWE</h6>
                                     <div class="row g-3">
-                                        <div class="col-12 mb-2">
-                                            <label class="small text-muted fw-bold mb-2">PEŁNA NAZWA FIRMY</label>
+                                        <div class="col-12">
+                                            <label class="small text-muted fw-bold">PEŁNA NAZWA FIRMY</label>
                                             <input type="text" name="company_name" class="form-control" value="{{ u.company_name or '' }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="small text-muted fw-bold mb-2">NIP</label>
+                                            <label class="small text-muted fw-bold">NIP</label>
                                             <input type="text" name="nip" class="form-control" value="{{ u.nip or '' }}">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="small text-muted fw-bold mb-2">DOKŁADNY ADRES</label>
-                                            <input type="text" name="adres" class="form-control" value="{{ u.adres or '' }}" placeholder="ulica, nr domu">
+                                            <label class="small text-muted fw-bold">ADRES SIEDZIBY</label>
+                                            <input type="text" name="adres" class="form-control" value="{{ u.adres or '' }}">
                                         </div>
-                                        <div class="col-12 mt-3">
-                                            <label class="small text-muted fw-bold mb-2">WIZYTÓWKA / OPIS DZIAŁALNOŚCI</label>
-                                            <textarea name="opis_firmy" class="form-control" rows="4" placeholder="Opisz swój komis lub usługi...">{{ u.opis_firmy or '' }}</textarea>
+                                        <div class="col-12">
+                                            <label class="small text-muted fw-bold">OPIS FIRMY / O NAS</label>
+                                            <textarea name="opis_firmy" class="form-control" rows="3">{{ u.opis_firmy or '' }}</textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-12 mt-4">
-                                <button type="submit" class="btn-submit w-100">ZAPISZ ZMIANY I ZAKOŃCZ</button>
+                                <button type="submit" class="btn-submit w-100 shadow">ZAPISZ ZMIANY I POWRÓĆ</button>
                             </div>
                         </div>
                     </form>
@@ -149,13 +166,6 @@
             </div>
         </div>
     </div>
-
-    <footer class="seo-footer">
-        <div class="container text-center">
-            <h5 class="text-white fw-bold">Giełda <span class="text-danger">Radom</span></h5>
-            <p class="small opacity-50">&copy; 2026 Giełda Radom. Wszystkie prawa zastrzeżone.</p>
-        </div>
-    </footer>
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
@@ -165,7 +175,18 @@
 
     <script>
         function toggleFirma(val) {
-            document.getElementById('firmaSection').style.display = (val === 'company' ? 'block' : 'none');
+            const section = document.getElementById('firmaFields');
+            section.style.display = (val === 'company' ? 'block' : 'none');
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
         }
     </script>
 </body>
