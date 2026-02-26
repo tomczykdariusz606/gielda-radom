@@ -891,3 +891,218 @@
         </div>
     </div>
     {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- 1. FUNKCJE FORMULARZA I UI ---
+        function adj() { 
+            const radio = document.querySelector('input[name="typ"]:checked');
+            if (!radio) return;
+            const v = radio.value; 
+            const ukryj = (v === 'Inne'); 
+            document.querySelectorAll('.tech').forEach(e => { e.style.display = ukryj ? 'none' : 'block'; }); 
+        }
+        
+        function getGPS(btn) { 
+            if(!navigator.geolocation) { alert('Brak GPS w Twojej przeglądarce'); return; } 
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>'; 
+            navigator.geolocation.getCurrentPosition(pos => { 
+                document.getElementById('gps_lat').value = pos.coords.latitude; 
+                document.getElementById('gps_lon').value = pos.coords.longitude; 
+                btn.className = "btn btn-success w-100 btn-sm rounded-pill py-2"; 
+                btn.innerHTML = "<i class='bi bi-check-lg'></i> Lokalizacja OK"; 
+            }, err => { 
+                alert('Błąd GPS. Upewnij się, że przeglądarka ma uprawnienia do lokalizacji.'); 
+                btn.innerHTML = originalText;
+            }); 
+        }
+        
+        function loadingEfekt(form) { 
+            document.getElementById('loaderOverlay').style.display = 'flex'; 
+        }
+
+        function acceptCookies() { 
+            localStorage.setItem('cookiesAccepted', 'true'); 
+            const cb = document.getElementById('cookie-banner');
+            if(cb) cb.style.display = 'none'; 
+        }
+
+        // --- 2. OBSŁUGA ROZWIJANYCH LIST (DROPDOWN) ---
+        function setVal(name, val, label) {
+            const input = document.getElementById('val_' + name);
+            const btn = document.getElementById('btn_' + name);
+            if(input) input.value = val;
+            if(btn) btn.innerText = label || val;
+        }
+
+        function setProfileDropdown(name, val, label) {
+            setVal(name, val, label);
+        }
+
+        function setProfileAccountType(val, label) {
+            setVal('profile_account', val, label);
+            const sekcja = document.getElementById('sekcja_firma');
+            if(sekcja) sekcja.style.display = (val === 'company' ? 'block' : 'none');
+        }
+
+        // --- 3. SZTUCZNA INTELIGENCJA (GEMINI) I SKANOWANIE ---
+        async function performAnalysis(file) {
+            const toast = document.getElementById('aiToast'); 
+            if(toast) toast.style.display = 'block';
+            
+            const fd = new FormData(); 
+            fd.append('scan_image', file); 
+            
+            try { 
+                const r = await fetch('/api/analyze-car', {method:'POST', body:fd}); 
+                const d = await r.json(); 
+                
+                if(d.marka){ 
+                    if(d.kategoria){ 
+                        let radio = document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); 
+                        if(radio){ radio.checked = true; adj(); }
+                    } 
+                    
+                    document.querySelector('[name="marka"]').value = d.marka || ''; 
+                    document.querySelector('[name="model"]').value = d.model || '';
+                    if(d.vin) document.querySelector('[name="vin"]').value = d.vin; 
+                    if(d.rok_sugestia) document.querySelector('[name="rok"]').value = d.rok_sugestia; 
+                    if(d.opis_wizualny) document.querySelector('[name="opis"]').value = d.opis_wizualny;
+                    if(d.moc_sugestia) document.querySelector('[name="moc"]').value = d.moc_sugestia;
+                    if(d.kolor) document.querySelector('[name="kolor"]').value = d.kolor;
+                    
+                    if (d.wyposazenie_wykryte) {
+                        d.wyposazenie_wykryte.forEach(item => {
+                            let chk = document.querySelector(`input[name="wyposazenie"][value="${item}"]`);
+                            if (chk) chk.checked = true;
+                        });
+                    }
+                    
+                    if(d.paliwo_sugestia && d.kategoria !== 'Inne'){
+                        let t_label = d.paliwo_sugestia;
+                        // Mapowanie tłumaczeń (uproszczone dla JS)
+                        if(d.paliwo_sugestia === 'Benzyna') t_label = "{{ t.get('petrol', 'Benzyna') }}";
+                        else if(d.paliwo_sugestia === 'Diesel') t_label = "{{ t.get('diesel', 'Diesel') }}";
+                        else if(d.paliwo_sugestia === 'Hybryda') t_label = "{{ t.get('hybrid', 'Hybryda') }}";
+                        else if(d.paliwo_sugestia === 'Elektryczny') t_label = "{{ t.get('electric', 'Elektryczny') }}";
+                        else if(d.paliwo_sugestia === 'LPG') t_label = "{{ t.get('lpg', 'LPG') }}";
+                        
+                        setVal('paliwo', d.paliwo_sugestia, t_label);
+                    } 
+                    
+                    if(toast) {
+                        toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione przez AI!'; 
+                        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+                    }
+                } else { 
+                    if(toast) toast.style.display = 'none'; 
+                } 
+            } catch(e){ 
+                console.error("Błąd AI:", e); 
+                if(toast) toast.style.display = 'none'; 
+            } 
+        }
+
+        async function scanCar(input){ 
+            if(!input || !input.files[0]) return; 
+            const mainInput = document.getElementById('mainGalleryInput'); 
+            
+            if(mainInput) {
+                const dt = new DataTransfer(); 
+                dt.items.add(input.files[0]); 
+                mainInput.files = dt.files;
+                
+                // Ręczne wywołanie eventu 'change', żeby zaktualizować interfejs
+                mainInput.dispatchEvent(new Event('change'));
+            }
+            
+            const headerLabel = document.getElementById('photoLabel'); 
+            if(headerLabel) {
+                headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }} <span class="text-success ms-2">✅ SKAN DODANY!</span>';
+            }
+            
+            performAnalysis(input.files[0]);
+        }
+
+        // --- 4. ZARZĄDZANIE UNIWERSALNYM MODALEM ADMINA (BEZPIECZNE DLA PAGINACJI) ---
+        document.body.addEventListener('click', function(e) {
+            // Nasłuchujemy kliknięć w przycisk edycji w tabeli
+            const btn = e.target.closest('.edit-user-btn');
+            
+            if (btn) {
+                // 1. Wyciągamy dane schowane w atrybutach przycisku
+                const userId = btn.getAttribute('data-id');
+                const username = btn.getAttribute('data-username');
+                
+                // 2. Wstrzykujemy dane do uniwersalnego modalu
+                const titleEl = document.getElementById('editModalUsername');
+                const formEl = document.getElementById('universalEditForm');
+                
+                if (titleEl) titleEl.textContent = username;
+                if (formEl) formEl.action = '/admin/edytuj_user/' + userId;
+                
+                document.getElementById('editKraj').value = btn.getAttribute('data-kraj');
+                document.getElementById('editLokalizacja').value = btn.getAttribute('data-lokalizacja');
+                document.getElementById('editAdres').value = btn.getAttribute('data-adres');
+                document.getElementById('editCompany').value = btn.getAttribute('data-company');
+                document.getElementById('editNip').value = btn.getAttribute('data-nip');
+                
+                // 3. Chowamy dużą tabelę z użytkownikami
+                const usersModalEl = document.getElementById('usersModal');
+                if (usersModalEl) {
+                    const usersModal = bootstrap.Modal.getInstance(usersModalEl);
+                    if (usersModal) usersModal.hide();
+                }
+                
+                // 4. Pokazujemy wypełniony modal edycji po ułamku sekundy
+                setTimeout(() => {
+                    const editModalEl = document.getElementById('universalEditModal');
+                    if(editModalEl) {
+                        const editModal = new bootstrap.Modal(editModalEl);
+                        editModal.show();
+                    }
+                }, 400);
+            }
+        });
+
+        // --- 5. INICJALIZACJA STRONY ---
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ciasteczka
+            if (!localStorage.getItem('cookiesAccepted')) { 
+                const cb = document.getElementById('cookie-banner');
+                if(cb) cb.style.display = 'block'; 
+            }
+
+            // Obsługa i limity galerii zdjęć
+            const galleryInput = document.getElementById('mainGalleryInput');
+            if (galleryInput) {
+                galleryInput.addEventListener('change', function() {
+                    const headerLabel = document.getElementById('photoLabel'); 
+                    if(headerLabel && headerLabel.innerText.includes("SKAN")) { 
+                        headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; 
+                    }
+                    
+                    if (this.files.length > 18) { 
+                        alert('⚠️ MAX 18 zdjęć.'); 
+                        const dt = new DataTransfer(); 
+                        for (let i = 0; i < 18; i++) { dt.items.add(this.files[i]); } 
+                        this.files = dt.files; 
+                    }
+                    
+                    const countText = document.getElementById('fileCountText');
+                    if(countText) {
+                        if(this.files.length > 0) {
+                            countText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> ' + this.files.length + ' {{ t.get("files_ready", "gotowych zdjęć") }}</span>';
+                            countText.parentElement.style.borderColor = '#198754';
+                        } else {
+                            countText.innerHTML = "{{ t.get('select_multiple', 'Zaznacz kilka zdjęć na raz') }}";
+                            countText.parentElement.style.borderColor = 'rgba(255,255,255,0.2)';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+
