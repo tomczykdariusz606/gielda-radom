@@ -713,7 +713,9 @@ def generate_360_trigger(car_id):
 @app.route('/')
 def index():
     q = request.args.get('q', '').strip()
-    query = Car.query
+    
+    # 1. ZMIANA: Domyślnie bierzemy tylko auta (wykluczamy Marketplace)
+    query = Car.query.filter(Car.typ.notin_(['Rozmaitosci', 'DomOgrad', 'Inne']))
     
     if q:
         terms = q.split()
@@ -728,8 +730,11 @@ def index():
             ))
         query = query.filter(and_(*conditions))
     
+    # Jeśli użytkownik jednak wybierze coś z filtrów na indexie
     cat = request.args.get('typ', '')
-    if cat: query = query.filter(Car.typ == cat)
+    if cat: 
+        # Nadpisujemy filtr, jeśli ktoś ręcznie kliknął kategorię
+        query = Car.query.filter(Car.typ == cat)
     
     paliwo = request.args.get('paliwo', '')
     if paliwo: query = query.filter(Car.paliwo == paliwo)
@@ -743,17 +748,26 @@ def index():
     max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
+    # 2. DODATEK: Pobieramy te 4 ostatnie przedmioty do nowej sekcji na dole
+    recent_items = Car.query.filter(Car.typ.in_(['Rozmaitosci', 'DomOgrad', 'Inne'])).order_by(Car.data_dodania.desc()).limit(4).all()
+
     page = request.args.get('page', 1, type=int)
     pagination = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
     
-    return render_template('index.html', cars=pagination.items, pagination=pagination, now=datetime.utcnow())
+    # 3. ZMIANA: Przekazujemy 'recent_items' do szablonu
+    return render_template('index.html', 
+                           cars=pagination.items, 
+                           pagination=pagination, 
+                           recent_items=recent_items, 
+                           now=datetime.utcnow())
+
 
 
 
 @app.route('/szukaj')
 def szukaj():
     try:
-        # 1. POBIERAMY TYP AUTA Z KAFELKÓW (Z LINKU)
+        # 1. POBIERAMY TYP AUTA Z KAFELKÓW
         typ_auta = request.args.get('typ', '')
         
         marka = request.args.get('marka', '').strip()
@@ -782,13 +796,18 @@ def szukaj():
         przebieg_min = get_int('przebieg_min')
         przebieg_max = get_int('przebieg_max')
 
+        # --- LOGIKA FILTROWANIA ---
         query = Car.query
 
-        # 2. NAJWAŻNIEJSZE: FILTRUJEMY BAZĘ PO KLIKNIĘTYM KAFELKU
+        # 2. KLUCZOWA ZMIANA: Separacja światów
         if typ_auta: 
+            # Jeśli wybrano konkretny kafel (np. SUV, Moto, Ciezarowe)
             query = query.filter(Car.typ == typ_auta)
+        else:
+            # Jeśli wybrano "Wszystkie" - domyślnie ukrywamy graty i dom/ogród
+            query = query.filter(Car.typ.notin_(['Rozmaitosci', 'DomOgrad', 'Inne']))
 
-        # Reszta standardowych filtrów
+        # Reszta filtrów pozostaje bez zmian
         if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
         if model: query = query.filter(Car.model.ilike(f'%{model}%'))
         if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
@@ -819,19 +838,17 @@ def szukaj():
 
 
 
-
 @app.route('/rozmaitosci')
 def rozmaitosci():
     sub = request.args.get('sub')
     page = request.args.get('page', 1, type=int)
     
-    # Podstawowe filtrowanie: tylko rzeczy niebędące autami
+    # ZMIANA: Pokazujemy TYLKO te kategorie, które są ukryte w głównej wyszukiwarce
     query = Car.query.filter(Car.typ.in_(['Rozmaitosci', 'DomOgrad', 'Inne']))
     
-    # Jeśli użytkownik kliknął konkretną podkategorię (zapisaliśmy ją w 'nadwozie')
     if sub:
         query = query.filter(Car.nadwozie == sub)
-    
+ 
     pagination = query.order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
     
     return render_template('rozmaitosci.html', items=pagination.items, pagination=pagination, now=datetime.utcnow())
