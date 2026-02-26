@@ -1069,6 +1069,70 @@ def dodaj_ogloszenie():
         return redirect(url_for('profil'))
 
 
+
+
+
+@app.route('/dodaj_przedmiot', methods=['GET', 'POST'])
+@login_required
+def dodaj_przedmiot():
+    if request.method == 'GET':
+        lang = request.cookies.get('lang', 'pl')
+        return render_template('dodaj_przedmiot.html', lang=lang)
+    
+    try:
+        files = request.files.getlist('zdjecia')
+        saved_paths = []
+        
+        for file in files[:18]:
+            if file and allowed_file(file.filename):
+                fname = save_optimized_image(file)
+                if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+                
+        main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+        
+        cena_str = str(request.form.get('cena', '0')).replace(',', '.').replace(' ', '').strip()
+        try: cena_val = float(cena_str)
+        except ValueError: cena_val = 0.0
+
+        new_item = Car(
+            marka=request.form.get('producent', ''),
+            model=request.form.get('nazwa', ''),
+            cena=cena_val,
+            waluta=request.form.get('waluta', 'PLN'),
+            typ=request.form.get('typ', 'Rozmaitosci'),
+            nadwozie=request.form.get('podkategoria', ''),
+            skrzynia=request.form.get('stan', 'Używany'),
+            vin=request.form.get('ean', ''),
+            opis=request.form.get('opis', ''),
+            telefon=request.form.get('telefon', ''),
+            rok=0, przebieg=0, moc=0, paliwo='', pojemnosc='', kolor='',
+            img=main_img,
+            zrodlo=current_user.lokalizacja,
+            user_id=current_user.id,
+            data_dodania=datetime.utcnow()
+        )
+        
+        db.session.add(new_item)
+        db.session.flush() 
+        for p in saved_paths:
+            db.session.add(CarImage(image_path=p, car_id=new_item.id))
+            
+        db.session.commit()
+        flash('Ogłoszenie w dziale Rozmaitości zostało dodane!', 'success')
+        return redirect(url_for('profil'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Wystąpił błąd przy zapisie: {str(e)}', 'danger')
+        return redirect(url_for('profil'))
+
+
+
+
+
+
+
+
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
