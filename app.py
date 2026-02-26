@@ -917,14 +917,19 @@ def usun_usera(user_id):
 @app.route('/ustawienia_profilu', methods=['GET', 'POST'])
 @login_required
 def ustawienia_profilu():
+    # Pobieramy język, żeby t.get nie wywaliło błędu
+    lang = request.cookies.get('lang', 'pl')
+    t_dict = TRANSLATIONS.get(lang, TRANSLATIONS['pl'])
+
     if request.method == 'POST':
+        # Zapis danych (używamy current_user dla profilu własnego)
+        current_user.account_type = request.form.get('account_type', 'private')
         current_user.kraj = request.form.get('kraj', 'Polska')
         current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
         current_user.company_name = request.form.get('company_name', '')
         current_user.nip = request.form.get('nip', '')
         current_user.adres = request.form.get('adres', '')
         current_user.opis_firmy = request.form.get('opis_firmy', '')
-        current_user.account_type = request.form.get('account_type', 'private')
 
         if 'avatar' in request.files:
             file = request.files['avatar']
@@ -934,10 +939,11 @@ def ustawienia_profilu():
                     current_user.avatar_url = url_for('static', filename='uploads/' + fname)
 
         db.session.commit()
-        flash('Twój profil został zaktualizowany!', 'success')
+        flash('Zapisano!', 'success')
         return redirect(url_for('profil'))
     
-    return render_template('edytuj_profil.html')
+    # Przekazujemy 't' bezpośrednio, żeby uniknąć błędu 500
+    return render_template('edytuj_profil.html', t=t_dict)
 
 
 
