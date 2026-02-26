@@ -669,3 +669,225 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="ustawieniaModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-4 border border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="fw-bold text-white"><i class="bi bi-person-gear me-2 text-danger"></i>Ustawienia Konta</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/ustawienia_profilu" method="POST">
+                    <div class="modal-body p-4">
+                        
+                        <div class="mb-3">
+                            <label class="small text-muted fw-bold mb-2">Typ Konta</label>
+                            <input type="hidden" name="account_type" id="val_profile_account" value="{{ current_user.account_type or 'private' }}">
+                            <div class="dropdown">
+                                <button class="btn custom-dropdown-btn dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" id="btn_profile_account">
+                                    {% if current_user.account_type == 'company' %}{{ t.get('company', 'Firma / Handlarz') }}{% else %}{{ t.get('private_person', 'Osoba Prywatna') }}{% endif %}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                                    <li><a class="dropdown-item" href="#" onclick="setProfileAccountType('private', `{{ t.get('private_person', 'Osoba Prywatna') }}`); return false;">{{ t.get('private_person', 'Osoba Prywatna') }}</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setProfileAccountType('company', `{{ t.get('company', 'Firma / Handlarz') }}`); return false;">{{ t.get('company', 'Firma / Handlarz') }}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-5">
+                                <label class="small text-muted fw-bold">Kraj</label>
+                                <input type="hidden" name="kraj" id="val_profile_kraj" value="{{ current_user.kraj or 'Polska' }}">
+                                <div class="dropdown h-100">
+                                    <button class="btn custom-dropdown-btn dropdown-toggle w-100 h-100" type="button" data-bs-toggle="dropdown" id="btn_profile_kraj">
+                                        {% if current_user.kraj == 'Niemcy' %}🇩🇪 Niemcy{% elif current_user.kraj == 'Belgia' %}🇧🇪 Belgia{% elif current_user.kraj == 'Holandia' %}🇳🇱 Holandia{% elif current_user.kraj == 'Francja' %}🇫🇷 Francja{% elif current_user.kraj == 'Inny' %}🌍 Inny{% else %}🇵🇱 Polska{% endif %}
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark w-100 shadow-lg">
+                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Polska', '🇵🇱 Polska'); return false;">🇵🇱 Polska</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Niemcy', '🇩🇪 Niemcy'); return false;">🇩🇪 Niemcy</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Belgia', '🇧🇪 Belgia'); return false;">🇧🇪 Belgia</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Holandia', '🇳🇱 Holandia'); return false;">🇳🇱 Holandia</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Francja', '🇫🇷 Francja'); return false;">🇫🇷 Francja</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="setProfileDropdown('profile_kraj', 'Inny', '🌍 Inny'); return false;">🌍 Inny</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <label class="small text-muted fw-bold">Miejscowość (np. Radom)</label>
+                                <input type="text" name="lokalizacja" class="form-control" value="{{ current_user.lokalizacja }}">
+                            </div>
+                        </div>
+
+                        <div id="sekcja_firma" style="display: {% if current_user.account_type == 'company' %}block{% else %}none{% endif %};">
+                            <hr class="border-secondary my-4">
+                            <h6 class="text-warning fw-bold small mb-3"><i class="bi bi-shop me-1"></i> DANE FIRMY</h6>
+                            
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">Nazwa Firmy</label>
+                                <input type="text" name="company_name" class="form-control" value="{{ current_user.company_name or '' }}">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="small text-muted fw-bold">NIP</label>
+                                    <input type="text" name="nip" class="form-control" value="{{ current_user.nip or '' }}">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small text-muted fw-bold">Adres (Ulica, Nr)</label>
+                                    <input type="text" name="adres" class="form-control" placeholder="np. Warszawska 10" value="{{ current_user.adres or '' }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">Wizytówka (Krótki opis działalności)</label>
+                                <textarea name="opis_firmy" class="form-control" rows="3" placeholder="np. Import aut z Niemiec. Działamy od 10 lat...">{{ current_user.opis_firmy or '' }}</textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer border-secondary pt-0 border-0">
+                        <button type="submit" class="btn btn-danger w-100 fw-bold rounded-pill">ZAPISZ ZMIANY</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="cookie-banner" style="position: fixed; bottom: 85px; left: 10px; right: 10px; background: rgba(26,26,26,0.95); border: 1px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.8); border-radius: 15px; backdrop-filter: blur(10px);">
+        <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+            <span class="text-light small">🍪 Używamy plików cookies do obsługi Twojej sesji.</span>
+            <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">Zgoda</button>
+        </div>
+    </div>
+
+    <div id="loaderOverlay">
+        <video autoplay muted loop playsinline id="loaderVideo">
+            <source src="{{ url_for('static', filename='loading.mp4') }}" type="video/mp4">
+            <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
+        </video> 
+        <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
+    </div>
+
+    <div id="aiToast"><i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...</div>
+
+    {% if current_user.username == 'admin' or current_user.id == 1 %}
+    <div class="modal fade" id="usersModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border border-secondary text-white">
+                <div class="modal-header border-secondary">
+                    <h5 class="fw-bold"><i class="bi bi-people-fill me-2 text-danger"></i> Baza Użytkowników</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive" style="max-height: 60vh;">
+                        <table class="table table-dark table-hover mb-0 text-center align-middle">
+                            <thead style="position: sticky; top: 0; background: #1a1a1a; z-index: 10;">
+                                <tr class="text-secondary small text-uppercase">
+                                    <th>ID</th>
+                                    <th>Login</th>
+                                    <th>Typ Konta</th>
+                                    <th>Email</th>
+                                    <th>Akcja</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if all_users is defined %}
+                                    {% for u in all_users %}
+                                    <tr>
+                                        <td>{{ u.id }}</td>
+                                        <td class="fw-bold text-white">
+                                            <img src="{{ u.avatar_url or url_for('static', filename='watermark.png') }}" width="25" height="25" class="rounded-circle me-2" style="object-fit:cover;">
+                                            {{ u.username }}
+                                        </td>
+                                        <td class="small">
+                                            {% if u.account_type == 'company' %}
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-shop"></i> {{ u.company_name }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary"><i class="bi bi-person"></i> Prywatne</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="small text-muted">{{ u.email }}</td>
+                                        <td>
+                                            {% if u.id != current_user.id %}
+                                            <div class="d-flex justify-content-center gap-2">
+                                                
+                                                <button type="button" class="btn btn-sm btn-outline-warning border-0 edit-user-btn" 
+                                                    data-id="{{ u.id }}" 
+                                                    data-username="{{ u.username }}"
+                                                    data-kraj="{{ u.kraj or '' }}"
+                                                    data-lokalizacja="{{ u.lokalizacja or '' }}"
+                                                    data-adres="{{ u.adres or '' }}"
+                                                    data-company="{{ u.company_name or '' }}"
+                                                    data-nip="{{ u.nip or '' }}"
+                                                    title="Edytuj dane firmy/adres">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+
+                                                <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
+                                                    <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button>
+                                                </form>
+                                            </div>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">TY</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="5" class="text-muted py-4">Brak zdefiniowanej zmiennej 'all_users' w backendzie.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade text-start" id="universalEditModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-warning fw-bold">
+                        <i class="bi bi-pencil-square"></i> Edycja: <span id="editModalUsername"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                
+                <form id="universalEditForm" action="" method="POST">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small text-muted mb-1">Kraj</label>
+                                <input type="text" id="editKraj" name="kraj" class="form-control bg-black text-white border-secondary" placeholder="np. Niemcy">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-muted mb-1">Miejscowość</label>
+                                <input type="text" id="editLokalizacja" name="lokalizacja" class="form-control bg-black text-white border-secondary">
+                            </div>
+                            <div class="col-12">
+                                <label class="small text-muted mb-1">Dokładny adres</label>
+                                <input type="text" id="editAdres" name="adres" class="form-control bg-black text-white border-secondary">
+                            </div>
+                        </div>
+                        
+                        <hr class="border-secondary my-4">
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="small text-muted mb-1">Nazwa Firmy / Komisu</label>
+                                <input type="text" id="editCompany" name="company_name" class="form-control bg-black text-white border-secondary">
+                            </div>
+                            <div class="col-12">
+                                <label class="small text-muted mb-1">NIP</label>
+                                <input type="text" id="editNip" name="nip" class="form-control bg-black text-white border-secondary">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer border-secondary pt-0 border-0">
+                        <button type="button" class="btn btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 shadow">ZAPISZ ZMIANY</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
