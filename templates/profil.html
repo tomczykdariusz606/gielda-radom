@@ -968,10 +968,10 @@
                                                                                 <td>
                                             {% if u.id != current_user.id %}
                                             <div class="d-flex justify-content-center gap-2">
-                                                <button type="button" class="btn btn-sm btn-outline-warning border-0" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#editUserModal{{ u.id }}" title="Edytuj dane firmy/adres">
+                                                <button type="button" class="btn btn-sm btn-outline-warning border-0" onclick="openEditUserModal('{{ u.id }}')" title="Edytuj dane firmy/adres">
+    <i class="bi bi-pencil-square"></i>
+</button>
 
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
                                                 
                                                 <form action="/admin/usun_user/{{ u.id }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
                                                     <button class="btn btn-sm btn-outline-danger border-0"><i class="bi bi-trash-fill"></i></button>
