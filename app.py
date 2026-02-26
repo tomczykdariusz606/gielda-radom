@@ -813,6 +813,21 @@ def szukaj():
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
 
 
+
+@app.route('/rozmaitosci')
+def rozmaitosci():
+    # Pobieramy auta, które mają typ "Inne"
+    # Tutaj w przyszłości możesz rozbudować logikę o części, opony itp.
+    page = request.args.get('page', 1, type=int)
+    
+    # Filtrujemy bazę tylko dla kategorii "Inne"
+    pagination = Car.query.filter(Car.typ == 'Inne').order_by(Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
+    
+    return render_template('rozmaitosci.html', items=pagination.items, pagination=pagination, now=datetime.utcnow())
+
+
+
+
 # --- TRASA DLA PROFILU SPRZEDAWCY ---
 @app.route('/sprzedawca/<int:user_id>')
 def sprzedawca_oferty(user_id):
