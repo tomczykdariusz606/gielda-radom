@@ -1,105 +1,212 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}" data-bs-theme="dark">
+<html lang="pl" data-bs-theme="light">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Rynek Rozmaitości - Giełda Radom</title>
+    
+    <title>Rynek Rozmaitości - Części, Dom i Ogród | Giełda Radom</title>
+    <meta name="description" content="Kupuj i sprzedawaj części samochodowe, narzędzia, meble i wyposażenie domu w Radomiu. Najlepsze lokalne okazje na Giełdzie Radom Marketplace.">
+    <meta name="robots" content="index, follow">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     
     <style>
+        :root { 
+            --m-yellow: #f0c420; 
+            --m-bg: #f8f9fa; 
+            --m-card: #ffffff;
+            --text-dark: #1a1a1a;
+        }
+
         body { 
-            background-color: #121212; color: #e0e0e0; font-family: 'Inter', sans-serif; 
-            padding-bottom: 80px;
+            background-color: var(--m-bg); 
+            color: var(--text-dark); 
+            font-family: 'Inter', sans-serif; 
+            padding-bottom: 90px; /* Miejsce na dolny navbar */
         }
-        .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid #f0c420; }
+
+        /* GÓRNY NAVBAR */
+        .navbar { 
+            background: #ffffff; 
+            border-bottom: 3px solid var(--m-yellow); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+        }
         
+        /* BANER GŁÓWNY */
         .hero-banner {
-            background: linear-gradient(135deg, rgba(240, 196, 32, 0.1), rgba(0,0,0,0.8));
-            border: 1px solid rgba(240, 196, 32, 0.3);
-            border-radius: 20px; padding: 40px 20px; text-align: center; margin-top: 30px; margin-bottom: 30px;
+            background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%);
+            border: 1px solid #f0c420;
+            border-radius: 20px; 
+            padding: 40px 20px; 
+            text-align: center; 
+            margin-top: 30px; 
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(240, 196, 32, 0.08);
         }
 
-        /* Styl pigułek kategorii */
-        .market-cat-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; }
+        /* PIGUŁKI KATEGORII (SCROLLOWANE NA MOBILE) */
+        .market-cat-grid { 
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; 
+        }
         .market-cat-grid::-webkit-scrollbar { display: none; }
-        .cat-pill { 
-            background: #1a1a1a; border: 1px solid #333; color: #aaa; 
-            padding: 8px 20px; border-radius: 50px; text-decoration: none; 
-            white-space: nowrap; transition: 0.3s; font-weight: 600; font-size: 0.9rem;
-        }
-        .cat-pill:hover, .cat-pill.active { background: #f0c420; color: #000; border-color: #f0c420; }
-
-        .item-card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; overflow: hidden; transition: 0.3s; }
-        .item-card:hover { border-color: #f0c420; box-shadow: 0 10px 30px rgba(240, 196, 32, 0.15); transform: translateY(-3px); }
-        .item-img { height: 200px; object-fit: cover; width: 100%; }
         
-        .nav-bottom {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #0a0a0a; z-index: 99999;
-            display: flex; justify-content: space-around; padding: 12px 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.8); border-top: 1px solid #333;
+        .cat-pill { 
+            background: #ffffff; border: 1px solid #dee2e6; color: #495057; 
+            padding: 10px 24px; border-radius: 50px; text-decoration: none; 
+            white-space: nowrap; transition: 0.3s; font-weight: 600; font-size: 0.95rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
-        .nav-item { text-align: center; color: #666; text-decoration: none; font-size: 0.75rem; flex: 1; }
-        .nav-item.active { color: #f0c420; font-weight: 700; }
-        .nav-item i { font-size: 1.4rem; margin-bottom: 3px; display: block; }
+        .cat-pill:hover, .cat-pill.active { 
+            background: var(--m-yellow); color: #000; border-color: var(--m-yellow); 
+            box-shadow: 0 5px 15px rgba(240, 196, 32, 0.3); transform: translateY(-2px);
+        }
+
+        /* KARTY OGŁOSZEŃ */
+        .item-card { 
+            background: var(--m-card); border: 1px solid #eee; border-radius: 20px; 
+            overflow: hidden; transition: 0.3s; box-shadow: 0 5px 20px rgba(0,0,0,0.03); 
+        }
+        .item-card:hover { 
+            border-color: var(--m-yellow); box-shadow: 0 15px 30px rgba(0,0,0,0.08); transform: translateY(-5px); 
+        }
+        .item-img { height: 220px; object-fit: cover; width: 100%; border-bottom: 1px solid #f0f0f0; }
+        .item-price { color: #dc3545; font-weight: 900; font-size: 1.4rem; letter-spacing: -0.5px; }
+
+        /* STOPKA SEO */
+        .seo-footer { background: #fff; border-top: 1px solid #eee; padding: 50px 0; margin-top: 60px; color: #777; }
+        .footer-link { color: #444; text-decoration: none; font-weight: 600; transition: 0.2s; }
+        .footer-link:hover { color: var(--m-yellow); }
+
+        /* DOLNY NAVBAR (Mobile) */
+        .nav-bottom {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; z-index: 99999;
+            display: flex; justify-content: space-around; padding: 10px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05); border-top: 1px solid #eee;
+        }
+        .nav-item { text-align: center; color: #6c757d; text-decoration: none; font-size: 0.75rem; flex: 1; transition: 0.2s; }
+        .nav-item i { font-size: 1.5rem; margin-bottom: 2px; display: block; transition: 0.2s; }
+        
+        .nav-item.active { color: var(--text-dark); font-weight: 800; }
+        .nav-item.active i { color: var(--m-yellow); transform: scale(1.1); }
+        .nav-item:hover { color: var(--text-dark); }
+
+        @media (min-width: 992px) {
+            .nav-bottom { display: none; }
+            body { padding-bottom: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-dark py-3">
+    <nav class="navbar py-3">
         <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="/">
-                <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 40px; margin-right: 10px;">
+            <a class="navbar-brand fw-bold fs-4 d-flex align-items-center text-dark" href="/">
+                <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; margin-right: 10px; opacity: 0.8;" alt="Giełda Radom">
                 <span>GIEŁDA <span class="text-warning">RADOM</span></span>
             </a>
-            <a href="/szukaj" class="btn btn-outline-light btn-sm rounded-pill px-3">Wróć do aut</a>
+            <a href="/szukaj" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold shadow-sm d-none d-md-block">
+                <i class="bi bi-car-front me-1"></i> Giełda Aut
+            </a>
         </div>
     </nav>
 
     <div class="container">
+        
         <div class="hero-banner">
-            <i class="bi bi-shop text-warning display-1 mb-3"></i>
-            <h1 class="fw-bold text-white mb-2">Rynek Rozmaitości</h1>
-            <p class="text-muted mb-0">Części samochodowe, felgi, opony i domowe okazje.</p>
+            <i class="bi bi-shop text-warning display-3 mb-2"></i>
+            <h1 class="fw-bold text-dark mb-2">Rynek Rozmaitości</h1>
+            <p class="text-muted mb-0 fs-5">Kupuj i sprzedawaj części, narzędzia oraz wyposażenie domu.</p>
         </div>
 
-        <div class="market-cat-grid">
+        <div class="market-cat-grid px-1">
             <a href="/rozmaitosci" class="cat-pill {% if not request.args.get('sub') %}active{% endif %}">Wszystko</a>
             <a href="/rozmaitosci?sub=Opony i Felgi" class="cat-pill {% if request.args.get('sub') == 'Opony i Felgi' %}active{% endif %}">Opony i Felgi</a>
             <a href="/rozmaitosci?sub=Części Karoserii" class="cat-pill {% if request.args.get('sub') == 'Części Karoserii' %}active{% endif %}">Blacharka</a>
             <a href="/rozmaitosci?sub=Silnik i Osprzęt" class="cat-pill {% if request.args.get('sub') == 'Silnik i Osprzęt' %}active{% endif %}">Silnik</a>
             <a href="/rozmaitosci?sub=Narzędzia Ogrodowe" class="cat-pill {% if request.args.get('sub') == 'Narzędzia Ogrodowe' %}active{% endif %}">Ogród</a>
-            <a href="/rozmaitosci?sub=Meble" class="cat-pill {% if request.args.get('sub') and 'Meble' in request.args.get('sub') %}active{% endif %}">Meble</a>
+            <a href="/rozmaitosci?sub=Meble Domowe" class="cat-pill {% if request.args.get('sub') and 'Meble' in request.args.get('sub') %}active{% endif %}">Meble</a>
             <a href="/rozmaitosci?sub=Elektronarzędzia" class="cat-pill {% if request.args.get('sub') == 'Elektronarzędzia' %}active{% endif %}">Elektronarzędzia</a>
         </div>
 
-        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
             {% for item in items %}
             <div class="col">
                 <a href="/ogloszenie/{{ item.id }}" class="text-decoration-none">
                     <div class="card item-card h-100">
-                        <img src="{{ item.img }}" class="item-img" loading="lazy">
-                        <div class="card-body bg-dark">
-                            <h6 class="fw-bold text-white mb-1 text-truncate">{{ item.marka }} {{ item.model }}</h6>
-                            <div class="text-warning fw-bold fs-5 mt-2">{{ "{:,.0f}".format(item.cena).replace(',', ' ') }} {{ item.waluta }}</div>
+                        <img src="{{ item.img }}" class="item-img" loading="lazy" alt="{{ item.marka }} {{ item.model }}">
+                        <div class="card-body bg-white d-flex flex-column">
+                            <span class="badge bg-light text-secondary border mb-2 align-self-start" style="font-size: 0.7rem;">{{ item.nadwozie }}</span>
+                            <h6 class="fw-bold text-dark mb-1 text-truncate" title="{{ item.marka }} {{ item.model }}">{{ item.marka }} {{ item.model }}</h6>
+                            <div class="item-price mt-auto pt-2">{{ "{:,.0f}".format(item.cena).replace(',', ' ') }} <span class="fs-6 text-dark">{{ item.waluta }}</span></div>
                         </div>
                     </div>
                 </a>
             </div>
             {% else %}
-            <div class="col-12 text-center py-5">
-                <p class="text-muted">Brak ogłoszeń w tej kategorii.</p>
-                <a href="/dodaj_przedmiot" class="btn btn-warning fw-bold rounded-pill text-dark mt-3">Dodaj pierwsze ogłoszenie</a>
+            <div class="col-12 text-center py-5 mt-4">
+                <i class="bi bi-box-seam text-muted opacity-25" style="font-size: 5rem;"></i>
+                <h4 class="fw-bold text-dark mt-3">Brak ogłoszeń w tej kategorii</h4>
+                <p class="text-muted">Bądź pierwszy i wystaw swój przedmiot na sprzedaż.</p>
+                <a href="/dodaj_przedmiot" class="btn btn-dark fw-bold rounded-pill px-4 py-2 mt-2 shadow">
+                    <i class="bi bi-plus-lg me-1"></i> Dodaj darmowe ogłoszenie
+                </a>
             </div>
             {% endfor %}
         </div>
     </div>
 
+    <footer class="seo-footer mt-auto">
+        <div class="container">
+            <div class="row g-4 text-center text-md-start">
+                <div class="col-md-4">
+                    <h5 class="text-dark fw-bold mb-3">Rynek Rozmaitości Radom</h5>
+                    <p class="small opacity-75">Szybka i bezpieczna sprzedaż części oraz wyposażenia domowego. Dodaj ogłoszenie w 3 sekundy dzięki wsparciu sztucznej inteligencji.</p>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h6 class="text-dark fw-bold mb-3">Popularne Części</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/rozmaitosci?sub=Opony i Felgi" class="footer-link">Alufelgi i Opony</a></li>
+                        <li><a href="/rozmaitosci?sub=Części Karoserii" class="footer-link">Elementy blacharskie</a></li>
+                        <li><a href="/rozmaitosci?sub=Narzędzia Warsztatowe" class="footer-link">Sprzęt do warsztatu</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h6 class="text-dark fw-bold mb-3">Dom i Ogród</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/rozmaitosci?sub=Elektronarzędzia" class="footer-link">Elektronarzędzia</a></li>
+                        <li><a href="/rozmaitosci?sub=Narzędzia Ogrodowe" class="footer-link">Kosiarki i maszyny</a></li>
+                        <li><a href="/rozmaitosci?sub=Meble Domowe" class="footer-link">Meble i wyposażenie</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary mt-5 mb-4 opacity-25">
+            <div class="text-center small opacity-50">&copy; 2026 Giełda Radom Marketplace. Wszelkie prawa zastrzeżone.</div>
+        </div>
+    </footer>
+
     <div class="nav-bottom">
-        <a href="/szukaj" class="nav-item"><i class="bi bi-car-front"></i> Auta</a>
-        <a href="/rozmaitosci" class="nav-item active"><i class="bi bi-shop"></i> Części</a>
-        <a href="/profil" class="nav-item"><i class="bi bi-plus-circle"></i> Dodaj</a>
+        <a href="/szukaj" class="nav-item">
+            <i class="bi bi-car-front"></i> 
+            <span>Auta</span>
+        </a>
+        <a href="/rozmaitosci" class="nav-item active">
+            <i class="bi bi-shop"></i> 
+            <span>Części</span>
+        </a>
+        <a href="/profil" class="nav-item">
+            <i class="bi bi-plus-circle"></i> 
+            <span>Dodaj</span>
+        </a>
     </div>
 
 </body>
