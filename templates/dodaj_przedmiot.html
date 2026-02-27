@@ -1,89 +1,53 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="pl">
 <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17939880807"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17939880807');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Giełda Radom - Dodaj Przedmiot</title>
+    
+    <title>Wystaw przedmiot za darmo - Market Giełda Radom</title>
+    <meta name="description" content="Dodaj ogłoszenie w kilka sekund. Nasza AI automatycznie rozpozna przedmiot i napisze opis. Najlepszy marketplace w Radomiu.">
+    <meta name="keywords" content="giełda radom, marketplace radom, sprzedam części, narzędzia ogrodowe, ogłoszenia radom">
+    <meta name="robots" content="index, follow">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --m-yellow: #f0c420;
-            --m-green: #28a745;
-            --m-bg: #f8f9fa;
-            --m-card: #ffffff;
-        }
+        :root { --m-yellow: #f0c420; --m-bg: #ffffff; }
+        body { background-color: #f4f7f6; color: #1a1a1a; font-family: 'Inter', sans-serif; }
 
-        body { 
-            background-color: var(--m-bg); 
-            color: #212529; 
-            font-family: 'Inter', sans-serif; 
-            padding-bottom: 0px; 
-        }
+        /* HEADER */
+        .navbar { background: #fff; border-bottom: 2px solid var(--m-yellow); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 
-        /* Navbar Light */
-        .navbar { 
-            background: #fff; 
-            border-bottom: 3px solid var(--m-yellow); 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+        /* FORMULARZ */
+        .form-panel { background: #fff; border-radius: 20px; padding: 25px; border: 1px solid #e0e0e0; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        .form-control, .form-select { border-radius: 12px; padding: 12px; border: 2px solid #eee; }
+        .form-control:focus { border-color: var(--m-yellow); box-shadow: none; }
 
-        /* Panel Formularza */
-        .form-panel { 
-            background: var(--m-card); 
-            border: 1px solid #dee2e6; 
-            border-radius: 20px; 
-            padding: 30px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.04); 
-        }
+        /* AI SCANNER BOX */
+        .scanner-box { background: #fff; border: 2px dashed var(--m-yellow); border-radius: 20px; padding: 25px; text-align: center; margin-bottom: 25px; }
+        .btn-ai { background: var(--m-yellow); color: #000; font-weight: 800; border-radius: 50px; padding: 12px 25px; border: none; transition: 0.3s; }
 
-        .form-control, .form-select { 
-            background-color: #fff; 
-            border: 2px solid #eee; 
-            border-radius: 12px; 
-            padding: 12px; 
-        }
-
-        .form-control:focus { 
-            border-color: var(--m-yellow); 
-            box-shadow: 0 0 0 4px rgba(240, 196, 32, 0.1); 
-        }
-
-        /* AI Scanner - Wysoki Kontrast */
-        .scanner-box { 
-            background: #fff;
-            border: 2px dashed var(--m-yellow); 
-            border-radius: 20px; 
-            padding: 30px; 
-            text-align: center; 
-            margin-bottom: 30px;
-        }
-
-        .btn-gold-ai { 
-            background: var(--m-yellow); 
-            color: #000; 
-            border: none; 
-            font-weight: 800; 
-            border-radius: 50px; 
-            padding: 12px 30px; 
-            box-shadow: 0 4px 15px rgba(240, 196, 32, 0.2);
-            transition: 0.3s;
-        }
-
-        /* Kafle Kategorii */
-        .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        /* KATEGORIE */
+        .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .cat-item input { display: none; }
         .cat-label { 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 90px; background: #fff; border: 2px solid #eee; border-radius: 16px; 
-            cursor: pointer; color: #888; transition: 0.2s; font-weight: bold; 
+            height: 80px; background: #fff; border: 2px solid #eee; border-radius: 15px; 
+            cursor: pointer; font-weight: bold; color: #777; transition: 0.2s;
         }
-        #cat_rozm:checked + .cat-label { border-color: var(--m-yellow); color: #000; background: #fffdf5; }
-        #cat_dom:checked + .cat-label { border-color: var(--m-green); color: var(--m-green); background: #fafffb; }
+        .cat-item input:checked + .cat-label { border-color: var(--m-yellow); color: #000; background: #fffef5; }
 
-        /* LOADER - TU BYŁY PROBLEMY Z WYŚRODKOWANIEM */
+        /* IDEALNIE WYŚRODKOWANE LOADERY */
         #loaderOverlay { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
             background: rgba(255, 255, 255, 0.98); 
@@ -92,164 +56,122 @@
             flex-direction: column; 
             align-items: center;      /* Środek poziomo */
             justify-content: center;   /* Środek pionowo */
-            text-align: center;        /* Środek tekstu */
+            text-align: center;
         }
-
         #loaderText { 
-            color: #000 !important; 
-            font-weight: 900 !important; 
-            margin-top: 25px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            font-size: 1.2rem;
-            max-width: 80%;
+            color: #000; font-weight: 900; margin-top: 20px; 
+            text-transform: uppercase; font-size: 1.2rem; max-width: 80%;
         }
 
-        /* TOAST - Ciemny dymek na jasnym tle */
+        /* TOAST DLA AI */
         #aiToast { 
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); 
-            background: #1a1a1a; color: var(--m-yellow); 
-            padding: 16px 32px; border-radius: 50px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
-            z-index: 9999; display: none; font-weight: bold; 
-            border: 1px solid var(--m-yellow);
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
+            background: #000; color: var(--m-yellow); padding: 12px 25px; 
+            border-radius: 50px; display: none; z-index: 10000; font-weight: bold;
         }
 
-        .btn-submit { background: #000; color: #fff; font-weight: 900; border-radius: 14px; padding: 18px; border: none; width: 100%; transition: 0.3s; }
+        .btn-submit { background: #000; color: #fff; font-weight: 900; border-radius: 12px; padding: 16px; border: none; width: 100%; }
         .btn-submit:hover { background: var(--m-yellow); color: #000; }
-
-        .seo-footer { background: #fff; border-top: 1px solid #eee; padding: 40px 0; margin-top: 50px; color: #888; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-light py-3 mb-4">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold fs-4" href="/profil">
+    <div id="loaderOverlay">
+        <div class="spinner-border text-warning" style="width: 3.5rem; height: 3.5rem; border-width: 0.4em;" role="status"></div>
+        <h4 id="loaderText">ANALIZA PRZEDMIOTU...</h4>
+    </div>
+
+    <div id="aiToast"></div>
+
+    <nav class="navbar py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/profil">
                 <i class="bi bi-arrow-left me-2"></i> GIEŁDA <span class="text-warning">MARKET</span>
             </a>
-            <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; opacity: 0.5;">
         </div>
     </nav>
 
-    <div class="container mb-5">
+    <div class="container mt-4 mb-5">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-7">
                 
                 <div class="scanner-box">
-                    <div class="mb-3 fw-bold text-muted small" style="letter-spacing: 1px;">
-                        <i class="bi bi-stars text-warning"></i> GEMINI AI MARKET SCANNER
-                    </div>
-                    <h5 class="fw-bold mb-4">Zrób zdjęcie, AI wypełni resztę za Ciebie</h5>
+                    <p class="small fw-bold text-muted mb-2 uppercase">System Analizy Gemini AI</p>
+                    <h5 class="fw-bold mb-3">Zrób zdjęcie, resztę zrobi AI</h5>
                     <div class="d-flex justify-content-center gap-2">
-                        <label class="btn btn-gold-ai"><i class="bi bi-camera-fill me-2"></i> APARAT<input type="file" accept="image/*" capture="environment" hidden onchange="scanMarketItem(this)"></label>
+                        <label class="btn btn-ai"><i class="bi bi-camera-fill me-2"></i> APARAT<input type="file" accept="image/*" capture="environment" hidden onchange="scanMarketItem(this)"></label>
                         <label class="btn btn-outline-dark rounded-pill px-4 fw-bold"><i class="bi bi-images me-2"></i> GALERIA<input type="file" accept="image/*" hidden onchange="scanMarketItem(this)"></label>
                     </div>
                 </div>
 
                 <div class="form-panel">
-                    <form action="/dodaj_przedmiot" method="POST" enctype="multipart/form-data" id="marketForm" onsubmit="showZapisLoader(); return true;">
+                    <form action="/dodaj_przedmiot" method="POST" enctype="multipart/form-data" id="marketForm" onsubmit="showZapisLoader()">
                         
                         <div class="cat-grid">
                             <div class="cat-item">
-                                <input type="radio" name="typ" id="cat_rozm" value="Rozmaitosci" checked onchange="updateSubcats()">
-                                <label for="cat_rozm" class="cat-label"><i class="bi bi-tools mb-2"></i> Części & Auto</label>
+                                <input type="radio" name="typ" id="cat_parts" value="Rozmaitosci" checked onchange="updateSubcats()">
+                                <label for="cat_parts" class="cat-label"><i class="bi bi-tools fs-4 mb-1"></i> CZĘŚCI</label>
                             </div>
                             <div class="cat-item">
-                                <input type="radio" name="typ" id="cat_dom" value="DomOgrad" onchange="updateSubcats()">
-                                <label for="cat_dom" class="cat-label"><i class="bi bi-house-door mb-2"></i> Dom & Ogród</label>
+                                <input type="radio" name="typ" id="cat_home" value="DomOgrad" onchange="updateSubcats()">
+                                <label for="cat_home" class="cat-label"><i class="bi bi-house-door fs-4 mb-1"></i> DOM / OGRÓD</label>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="fw-bold small text-muted mb-2">ZDJĘCIA (MAX 18)</label>
+                            <label class="fw-bold small text-muted mb-2">ZDJĘCIA PRZEDMIOTU</label>
                             <input type="file" name="zdjecia" id="mainGallery" multiple accept="image/*" class="d-none" required>
-                            <label for="mainGallery" class="form-control text-center d-flex flex-column justify-content-center align-items-center" style="cursor: pointer; border: 2px dashed #ccc; min-height: 120px; background: #fafafa;">
-                                <i class="bi bi-plus-circle fs-1 text-muted mb-2"></i>
-                                <span id="fileCountText" class="fw-bold">Wybierz zdjęcia z telefonu</span>
+                            <label for="mainGallery" class="form-control text-center d-flex flex-column align-items-center justify-content-center" style="cursor: pointer; border: 2px dashed #ccc; min-height: 100px; background: #fafafa;">
+                                <i class="bi bi-plus-circle fs-2 mb-1 text-muted"></i>
+                                <span id="fileCountText">Dodaj zdjęcia</span>
                             </label>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Kategoria</label>
                                 <select name="podkategoria" id="select_podkategoria" class="form-select" required></select>
                             </div>
-
-                            <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Tytuł ogłoszenia</label>
-                                <input type="text" name="nazwa" id="ai_nazwa" class="form-control" placeholder="..." required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Producent</label>
-                                <input type="text" name="producent" id="ai_producent" class="form-control" placeholder="...">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Cena (PLN)</label>
-                                <input type="number" name="cena" class="form-control fw-bold border-danger" required>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Stan</label>
-                                <select name="stan" class="form-select">
-                                    <option value="Nowy">Nowy</option>
-                                    <option value="Używany" selected>Używany</option>
-                                    <option value="Uszkodzony">Uszkodzony</option>
-                                </select>
-                            </div>
-
                             <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-end mb-1">
-                                    <label class="small fw-bold text-muted">Opis</label>
-                                    <button type="button" class="btn btn-sm btn-link text-warning fw-bold text-decoration-none" onclick="reGenerateDesc()">
-                                        <i class="bi bi-magic"></i> GENERUJ OPIS GEMINI
-                                    </button>
-                                </div>
-                                <textarea name="opis" id="ai_opis" class="form-control" rows="6" required></textarea>
+                                <input type="text" name="nazwa" id="ai_nazwa" class="form-control" placeholder="Tytuł ogłoszenia" required>
                             </div>
-
+                            <div class="col-6">
+                                <input type="text" name="producent" id="ai_producent" class="form-control" placeholder="Producent / Marka">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="cena" class="form-control fw-bold border-danger" placeholder="Cena (PLN)" required>
+                            </div>
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Telefon</label>
-                                <input type="text" name="telefon" class="form-control" value="{{ current_user.telefon }}" required>
+                                <textarea name="opis" id="ai_opis" class="form-control" rows="5" placeholder="Opis przedmiotu..." required></textarea>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-submit mt-5 shadow-lg">OPUBLIKUJ NA RYNKU</button>
+                        <button type="submit" class="btn btn-submit mt-4">OPUBLIKUJ OGŁOSZENIE</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="loaderOverlay">
-        <div class="spinner-border text-warning" style="width: 4rem; height: 4rem; border-width: 0.5em;" role="status"></div>
-        <h4 id="loaderText">ANALIZA PRZEDMIOTU...</h4>
-    </div>
-
-    <div id="aiToast"></div>
-
     <script>
         const subMap = {
-            "Rozmaitosci": ["Opony i Felgi", "Części Karoserii", "Silnik i Osprzęt", "Oświetlenie", "Wnętrze i Audio", "Narzędzia Warsztatowe", "Akcesoria"],
-            "DomOgrad": ["Narzędzia Ogrodowe", "Meble Domowe", "Elektronarzędzia", "Materiały Budowlane", "Dekoracje i Inne"]
+            "Rozmaitosci": ["Opony i Felgi", "Silnik", "Karoseria", "Wnętrze", "Akcesoria"],
+            "DomOgrad": ["Narzędzia", "Meble", "Ogród", "Budowlane"]
         };
 
         function updateSubcats() {
-            const isParts = document.getElementById('cat_rozm').checked;
+            const isParts = document.getElementById('cat_parts').checked;
             const select = document.getElementById('select_podkategoria');
             const key = isParts ? "Rozmaitosci" : "DomOgrad";
             select.innerHTML = subMap[key].map(s => `<option value="${s}">${s}</option>`).join('');
         }
         updateSubcats();
 
-        // 1. ANALIZA AI
         async function performMarketAnalysis(file) {
             const loader = document.getElementById('loaderOverlay');
             const loaderText = document.getElementById('loaderText');
             const toast = document.getElementById('aiToast');
             
-            loaderText.innerText = "GEMINI AI ANALIZUJE PRZEDMIOT...";
+            loaderText.innerText = "GEMINI ANALIZUJE PRZEDMIOT...";
             loader.style.display = 'flex';
 
             const fd = new FormData();
@@ -261,56 +183,37 @@
                 
                 loader.style.display = 'none';
 
-                if(d.marka || d.model) {
-                    const desc = (d.opis_wizualny || "").toLowerCase();
-                    const isHome = d.kategoria === 'Inne' || desc.includes('dom') || desc.includes('ogród') || desc.includes('mebel');
-                    
-                    document.getElementById(isHome ? 'cat_dom' : 'cat_rozm').checked = true;
-                    updateSubcats();
-
+                if(d.marka) {
                     document.getElementById('ai_nazwa').value = (d.marka + " " + (d.model || "")).trim();
                     document.getElementById('ai_producent').value = d.marka || "";
                     document.getElementById('ai_opis').value = d.opis_wizualny || "";
                     
-                    toast.innerHTML = '<i class="bi bi-stars me-2"></i> Dane uzupełnione przez AI';
-                    toast.style.display = 'block';
-                    setTimeout(() => toast.style.display = 'none', 3000);
+                    toast.innerText = "AI uzupełniło formularz!";
+                    toast.style.display = "block";
+                    setTimeout(() => toast.style.display = "none", 3000);
                 }
             } catch(e) { 
                 loader.style.display = 'none';
-                console.error(e);
             }
         }
 
-        // 2. ZAPIS - Zmiana tekstu na "Publikacja"
         function showZapisLoader() {
             const loader = document.getElementById('loaderOverlay');
             const loaderText = document.getElementById('loaderText');
-            loaderText.innerText = "PUBLIKACJA OGŁOSZENIA W TOKU...";
+            loaderText.innerText = "PUBLIKACJA OGŁOSZENIA...";
             loader.style.display = 'flex';
         }
 
         function scanMarketItem(input) {
             if(!input.files[0]) return;
-            const dt = new DataTransfer();
-            dt.items.add(input.files[0]);
-            document.getElementById('mainGallery').files = dt.files;
             performMarketAnalysis(input.files[0]);
-            input.value = ""; 
         }
 
         document.getElementById('mainGallery').addEventListener('change', function() {
-            if(this.files && this.files[0]) {
-                document.getElementById('fileCountText').innerText = "Załadowano " + this.files.length + " zdjęć";
-                performMarketAnalysis(this.files[0]);
+            if(this.files.length > 0) {
+                document.getElementById('fileCountText').innerText = "Wybrano: " + this.files.length;
             }
         });
-
-        function reGenerateDesc() {
-            const gallery = document.getElementById('mainGallery');
-            if(gallery.files[0]) performMarketAnalysis(gallery.files[0]);
-            else alert("Najpierw dodaj zdjęcie!");
-        }
     </script>
 </body>
 </html>
