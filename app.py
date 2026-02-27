@@ -1857,10 +1857,28 @@ def usun_konto():
 def sitemap():
     base = request.url_root.rstrip('/')
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    for p in ['', 'login', 'register', 'kontakt', 'regulamin']:
-        xml += f'<url><loc>{base}/{p}</loc><changefreq>weekly</changefreq></url>\n'
-    for car in Car.query.order_by(Car.data_dodania.desc()).all():
-        xml += f'<url><loc>{base}/ogloszenie/{car.id}</loc><changefreq>daily</changefreq></url>\n'
+    
+    # 1. Główne i statyczne strony serwisu (Poprawiona 'polityka')
+    static_pages = {
+        '': '1.0', 
+        'rozmaitosci': '0.9', 
+        'szukaj': '0.8',
+        'login': '0.5', 
+        'register': '0.5', 
+        'kontakt': '0.5', 
+        'regulamin': '0.5', 
+        'polityka': '0.5'  # <--- ZMIANA NA POPRAWNY URL
+    }
+    
+    for page, priority in static_pages.items():
+        xml += f'  <url>\n    <loc>{base}/{page}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>{priority}</priority>\n  </url>\n'
+        
+    # 2. Dynamiczne ogłoszenia (Wspólny URL /ogloszenie/id dla aut i rozmaitości)
+    for item in Car.query.order_by(Car.data_dodania.desc()).all():
+        lastmod = item.data_dodania.strftime('%Y-%m-%d') if item.data_dodania else datetime.utcnow().strftime('%Y-%m-%d')
+        
+        xml += f'  <url>\n    <loc>{base}/ogloszenie/{item.id}</loc>\n    <lastmod>{lastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
+        
     xml += '</urlset>'
     return make_response(xml, 200, {'Content-Type': 'application/xml'})
 
@@ -1868,6 +1886,7 @@ def sitemap():
 def robots():
     txt = f"User-agent: *\nAllow: /\nSitemap: {request.url_root.rstrip('/')}/sitemap.xml"
     return make_response(txt, 200, {'Content-Type': 'text/plain'})
+
 
 # --- INICJALIZACJA BAZY (MIGRACJE) ---
 def update_db():
