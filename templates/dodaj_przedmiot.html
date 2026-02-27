@@ -312,12 +312,15 @@
         </div>
     </footer>
 
-        <script>
+            <script>
         // MAPOWANIE PODKATEGORII
         const subMap = {
             "Rozmaitosci": ["Opony i Felgi", "Części Karoserii", "Silnik i Osprzęt", "Oświetlenie", "Wnętrze i Audio", "Narzędzia Warsztatowe", "Akcesoria"],
             "DomOgrad": ["Narzędzia Ogrodowe", "Meble Domowe", "Elektronarzędzia", "Materiały Budowlane", "Dekoracje i Inne"]
         };
+
+        // ZMIENNA BLOKUJĄCA PODWÓJNĄ ANALIZĘ
+        let aiAlreadyUsed = false;
 
         function updateSubcats() {
             const isParts = document.getElementById('cat_parts').checked;
@@ -346,14 +349,12 @@
             try {
                 const r = await fetch('/api/analyze-car', {method:'POST', body:fd});
                 
-                // Zabezpieczenie: jeśli backend zwróci błąd 500, łapiemy to.
                 if (!r.ok) throw new Error(`Błąd serwera HTTP: ${r.status}`);
 
                 const d = await r.json();
                 loader.style.display = 'none';
 
                 if(d.marka || d.model || d.opis_wizualny) {
-                    // Bezpieczne pobieranie danych (zabezpieczenie przed null)
                     const opis = d.opis_wizualny || "";
                     const marka = d.marka || "";
                     const model = d.model || "";
@@ -362,29 +363,24 @@
                     const title = `${marka} ${model}`.trim();
                     const titleLower = title.toLowerCase();
                     
-                    // Słowa kluczowe dla domu/ogrodu
                     const homeKeywords = ['dom', 'ogród', 'mebel', 'kosiarka', 'narzędzie', 'elektronarzędzie', 'rtv', 'agd', 'golarka', 'philips', 'kuchni', 'szafa', 'stół', 'wiertarka', 'szlifierka'];
                     
                     let isHome = d.kategoria === 'Inne' || homeKeywords.some(k => desc.includes(k) || titleLower.includes(k));
                     
-                    // Przełączanie głównych kafli
                     document.getElementById(isHome ? 'cat_home' : 'cat_parts').checked = true;
                     updateSubcats();
 
-                    // Wypełnianie pól w formularzu
                     document.getElementById('ai_nazwa').value = title || "Nieznany przedmiot";
                     document.getElementById('ai_producent').value = marka;
                     document.getElementById('ai_opis').value = opis;
                     
                     if(d.vin && d.vin.length < 15) document.getElementById('ai_ean').value = d.vin; 
                     
-                    // Zabezpieczenie przed złą ceną (usuwa spacje i litery)
                     if(d.cena_sugestia) {
                         const czystaCena = String(d.cena_sugestia).replace(/[^0-9]/g, '');
                         if(czystaCena) document.getElementById('ai_cena').value = czystaCena;
                     }
 
-                    // Inteligentne szukanie podkategorii
                     const select = document.getElementById('select_podkategoria');
                     for (let option of select.options) {
                         const optVal = option.value.toLowerCase().split(' ')[0];
@@ -394,6 +390,9 @@
                         }
                     }
                     
+                    // ZAZNACZAMY, ŻE AI ZOSTAŁO UŻYTE
+                    aiAlreadyUsed = true;
+
                     toast.innerHTML = '<i class="bi bi-stars me-2 fs-5"></i> Gemini AI uzupełniło dane!';
                     toast.style.display = 'block';
                     setTimeout(() => { toast.style.display = 'none'; }, 3000);
@@ -403,7 +402,6 @@
             } catch(e) { 
                 loader.style.display = 'none';
                 console.error("Szczegóły błędu:", e);
-                // Wyświetlamy prawdziwy powód błędu
                 alert("Błąd połączenia z API: " + e.message);
             }
         }
@@ -415,39 +413,55 @@
             loader.style.display = 'flex';
         }
 
-        // OBSŁUGA PRZYCISKÓW "SKANUJ"
+        // OBSŁUGA PRZYCISKÓW "SKANUJ" (Górne przyciski AI)
         function scanMarketItem(input) {
             if(!input.files[0]) return;
+            
+            // Jesli skanujemy przez gorne przyciski, dodajemy plik do glownej galerii
             const dt = new DataTransfer();
             dt.items.add(input.files[0]);
-            document.getElementById('mainGallery').files = dt.files;
             
+            // Jesli w glownej galerii sa juz jakies zdjecia, to dodajemy tez stare (zeby nie usunac)
+            const mainGallery = document.getElementById('mainGallery');
+            if(mainGallery.files.length > 0) {
+                 for(let i=0; i<mainGallery.files.length; i++) {
+                     dt.items.add(mainGallery.files[i]);
+                 }
+            }
+            mainGallery.files = dt.files;
+            
+            document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-images me-1"></i> Załadowano ${mainGallery.files.length} zdjęć</span>`;
+            
+            // Górny skaner zawsze wymusza analizę AI
             performMarketAnalysis(input.files[0]);
-            document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Skan gotowy</span>`;
-            
-            // UWAGA: Usunąłem czyszczenie inputu, które psuło wysyłanie pliku!
         }
 
-        // OBSŁUGA KLIKNIĘCIA W GŁÓWNĄ GALERIĘ
+        // OBSŁUGA KLIKNIĘCIA W GŁÓWNĄ GALERIĘ (Dolne pole na zdjęcia)
         document.getElementById('mainGallery').addEventListener('change', function() {
             if(this.files && this.files.length > 0) {
                 document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-images me-1"></i> Załadowano ${this.files.length} zdjęć</span>`;
-                performMarketAnalysis(this.files[0]);
+                
+                // URUCHAMIAJ AI TYLKO JEŚLI JESZCZE NIE BYŁO UŻYTE
+                if (!aiAlreadyUsed) {
+                    performMarketAnalysis(this.files[0]);
+                }
             } else {
                 document.getElementById('fileCountText').innerHTML = `Kliknij, aby dodać zdjęcia`;
             }
         });
 
-        // RĘCZNE GENEROWANIE OPISU
+        // RĘCZNE GENEROWANIE OPISU (Przycisk nad tekstem)
         function reGenerateDesc() {
             const gallery = document.getElementById('mainGallery');
             if(gallery.files && gallery.files[0]) {
+                // Wymuszamy analizę, nawet jeśli była już użyta
                 performMarketAnalysis(gallery.files[0]);
             } else {
                 alert("Aby wygenerować opis, musisz najpierw dodać zdjęcie przedmiotu.");
             }
         }
     </script>
+
 
 
 </body>
