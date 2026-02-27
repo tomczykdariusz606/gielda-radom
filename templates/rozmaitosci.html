@@ -10,7 +10,7 @@
     </script>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <title>Rynek Rozmaitości - Części, Dom i Ogród | Giełda Radom</title>
     <meta name="description" content="Kupuj i sprzedawaj części samochodowe, narzędzia, meble i wyposażenie domu w Radomiu. Najlepsze lokalne okazje na Giełdzie Radom Marketplace.">
@@ -32,14 +32,20 @@
             background-color: var(--m-bg); 
             color: var(--text-dark); 
             font-family: 'Inter', sans-serif; 
-            padding-bottom: 90px; /* Miejsce na dolny navbar */
+            /* Miejsce na dolny navbar i bezpieczna strefa dla iPhone */
+            padding-bottom: calc(90px + env(safe-area-inset-bottom)); 
         }
 
-        /* GÓRNY NAVBAR */
+        /* GÓRNY NAVBAR - CHOWANY */
         .navbar { 
             background: #ffffff; 
             border-bottom: 3px solid var(--m-yellow); 
             box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            transition: top 0.3s ease-in-out;
+            padding-top: max(10px, env(safe-area-inset-top));
         }
         
         /* BANER GŁÓWNY */
@@ -54,7 +60,7 @@
             box-shadow: 0 10px 30px rgba(240, 196, 32, 0.08);
         }
 
-        /* PIGUŁKI KATEGORII (SCROLLOWANE NA MOBILE) */
+        /* PIGUŁKI KATEGORII (SCROLLOWANE) */
         .market-cat-grid { 
             display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; scrollbar-width: none; 
         }
@@ -75,6 +81,7 @@
         .item-card { 
             background: var(--m-card); border: 1px solid #eee; border-radius: 20px; 
             overflow: hidden; transition: 0.3s; box-shadow: 0 5px 20px rgba(0,0,0,0.03); 
+            position: relative;
         }
         .item-card:hover { 
             border-color: var(--m-yellow); box-shadow: 0 15px 30px rgba(0,0,0,0.08); transform: translateY(-5px); 
@@ -83,25 +90,37 @@
         .item-price { color: #dc3545; font-weight: 900; font-size: 1.4rem; letter-spacing: -0.5px; }
 
         /* STOPKA SEO */
-        .seo-footer { background: #fff; border-top: 1px solid #eee; padding: 50px 0; margin-top: 60px; color: #777; }
+        .seo-footer { 
+            background: #fff; border-top: 1px solid #eee; 
+            padding: 50px 0 110px 0; /* 110px robi miejsce na dolny navbar na mobile */
+            margin-top: 60px; color: #777; 
+        }
         .footer-link { color: #444; text-decoration: none; font-weight: 600; transition: 0.2s; }
         .footer-link:hover { color: var(--m-yellow); }
 
         /* DOLNY NAVBAR (Mobile) */
         .nav-bottom {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; z-index: 99999;
-            display: flex; justify-content: space-around; padding: 10px 0;
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; z-index: 1000;
+            display: flex; justify-content: space-around; padding: 12px 0;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.05); border-top: 1px solid #eee;
         }
         .nav-item { text-align: center; color: #6c757d; text-decoration: none; font-size: 0.75rem; flex: 1; transition: 0.2s; }
-        .nav-item i { font-size: 1.5rem; margin-bottom: 2px; display: block; transition: 0.2s; }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 2px; display: block; transition: 0.2s; }
         
         .nav-item.active { color: var(--text-dark); font-weight: 800; }
         .nav-item.active i { color: var(--m-yellow); transform: scale(1.1); }
         .nav-item:hover { color: var(--text-dark); }
 
+        /* BANER COOKIES (Ciemny dla kontrastu na jasnej stronie) */
+        #cookie-banner {
+            position: fixed; left: 0; right: 0; background: #1a1a1a; 
+            border-top: 2px solid var(--m-yellow); padding: 15px; text-align: center; 
+            z-index: 9999; display: none; box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+        }
+
         @media (min-width: 992px) {
             .nav-bottom { display: none; }
+            .seo-footer { padding-bottom: 50px; }
             body { padding-bottom: 0; }
         }
     </style>
@@ -114,9 +133,16 @@
                 <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; margin-right: 10px; opacity: 0.8;" alt="Giełda Radom">
                 <span>GIEŁDA <span class="text-warning">RADOM</span></span>
             </a>
-            <a href="/szukaj" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold shadow-sm d-none d-md-block">
-                <i class="bi bi-car-front me-1"></i> Giełda Aut
-            </a>
+            <div class="d-flex gap-2 align-items-center">
+                <a href="/" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold shadow-sm d-none d-md-block">
+                    <i class="bi bi-car-front me-1"></i> Giełda Aut
+                </a>
+                {% if current_user.is_authenticated %}
+                    <a href="/profil" class="btn btn-dark rounded-pill btn-sm fw-bold px-3 shadow">Profil</a>
+                {% else %}
+                    <a href="/login" class="btn btn-dark rounded-pill btn-sm fw-bold px-3 shadow">Zaloguj</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 
@@ -144,8 +170,17 @@
                 <a href="/ogloszenie/{{ item.id }}" class="text-decoration-none">
                     <div class="card item-card h-100">
                         <img src="{{ item.img }}" class="item-img" loading="lazy" alt="{{ item.marka }} {{ item.model }}">
+                        
+                        <div class="position-absolute top-0 end-0 m-2">
+                            {% if item.skrzynia == 'Nowy' %}
+                                <span class="badge bg-success shadow-sm">NOWY</span>
+                            {% else %}
+                                <span class="badge bg-dark text-white shadow-sm">UŻYWANY</span>
+                            {% endif %}
+                        </div>
+
                         <div class="card-body bg-white d-flex flex-column">
-                            <span class="badge bg-light text-secondary border mb-2 align-self-start" style="font-size: 0.7rem;">{{ item.nadwozie }}</span>
+                            <span class="badge bg-light text-secondary border mb-2 align-self-start text-uppercase" style="font-size: 0.7rem;">{{ item.nadwozie }}</span>
                             <h6 class="fw-bold text-dark mb-1 text-truncate" title="{{ item.marka }} {{ item.model }}">{{ item.marka }} {{ item.model }}</h6>
                             <div class="item-price mt-auto pt-2">{{ "{:,.0f}".format(item.cena).replace(',', ' ') }} <span class="fs-6 text-dark">{{ item.waluta }}</span></div>
                         </div>
@@ -168,25 +203,26 @@
     <footer class="seo-footer mt-auto">
         <div class="container">
             <div class="row g-4 text-center text-md-start">
-                <div class="col-md-4">
-                    <h5 class="text-dark fw-bold mb-3">Rynek Rozmaitości Radom</h5>
+                <div class="col-12 col-md-4">
+                    <h5 class="text-dark fw-bold mb-3">Giełda <span class="text-warning">Radom</span></h5>
                     <p class="small opacity-75">Szybka i bezpieczna sprzedaż części oraz wyposażenia domowego. Dodaj ogłoszenie w 3 sekundy dzięki wsparciu sztucznej inteligencji.</p>
                 </div>
                 <div class="col-6 col-md-4">
-                    <h6 class="text-dark fw-bold mb-3">Popularne Części</h6>
+                    <h6 class="text-dark fw-bold mb-3">OFERTA</h6>
                     <ul class="list-unstyled">
-                        <li><a href="/rozmaitosci?sub=Opony i Felgi" class="footer-link">Alufelgi i Opony</a></li>
-                        <li><a href="/rozmaitosci?sub=Części Karoserii" class="footer-link">Elementy blacharskie</a></li>
-                        <li><a href="/rozmaitosci?sub=Narzędzia Warsztatowe" class="footer-link">Sprzęt do warsztatu</a></li>
+                        <li><a href="/" class="footer-link">Samochody Osobowe</a></li>
+                        <li><a href="/rozmaitosci" class="footer-link">Rynek Rozmaitości</a></li>
+                        <li><a href="/profil" class="footer-link">Dodaj Ogłoszenie</a></li>
                     </ul>
                 </div>
-                <div class="col-6 col-md-4">
-                    <h6 class="text-dark fw-bold mb-3">Dom i Ogród</h6>
+                <div class="col-6 col-md-4 text-md-end">
+                    <h6 class="text-dark fw-bold mb-3">INFORMACJE</h6>
                     <ul class="list-unstyled">
-                        <li><a href="/rozmaitosci?sub=Elektronarzędzia" class="footer-link">Elektronarzędzia</a></li>
-                        <li><a href="/rozmaitosci?sub=Narzędzia Ogrodowe" class="footer-link">Kosiarki i maszyny</a></li>
-                        <li><a href="/rozmaitosci?sub=Meble Domowe" class="footer-link">Meble i wyposażenie</a></li>
+                        <li><a href="/kontakt" class="footer-link">Kontakt</a></li>
+                        <li><a href="/regulamin" class="footer-link">Regulamin</a></li>
+                        <li><a href="/polityka-prywatnosci" class="footer-link">Polityka Prywatności</a></li>
                     </ul>
+                    <a href="/sitemap.xml" style="display: none;">Sitemap</a>
                 </div>
             </div>
             <hr class="border-secondary mt-5 mb-4 opacity-25">
@@ -194,8 +230,17 @@
         </div>
     </footer>
 
+    <div id="cookie-banner">
+        <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
+            <span class="text-light small">
+                🍪 <strong>Ta strona używa plików cookies</strong> w celu analizy ruchu i obsługi logowania. Korzystając ze strony, zgadzasz się na ich użycie zgodnie z <a href="/polityka-prywatnosci" class="text-warning">Polityką Prywatności</a>.
+            </span>
+            <button onclick="acceptCookies()" class="btn btn-sm btn-warning fw-bold px-4 rounded-pill text-dark">AKCEPTUJĘ</button>
+        </div>
+    </div>
+
     <div class="nav-bottom">
-        <a href="/szukaj" class="nav-item">
+        <a href="/" class="nav-item">
             <i class="bi bi-car-front"></i> 
             <span>Auta</span>
         </a>
@@ -207,7 +252,50 @@
             <i class="bi bi-plus-circle"></i> 
             <span>Dodaj</span>
         </a>
+        <a href="/kontakt" class="nav-item">
+            <i class="bi bi-envelope"></i> 
+            <span>Kontakt</span>
+        </a>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // OBSŁUGA BANERA COOKIES
+            if (!localStorage.getItem('cookiesAccepted')) { 
+                const cookieBanner = document.getElementById('cookie-banner');
+                cookieBanner.style.display = 'block';
+                // Dostosowanie pozycji nad dolnym navbarem na urządzeniach mobilnych
+                if (window.innerWidth < 992) {
+                    cookieBanner.style.bottom = '68px'; // Wysokość nav-bottom + cień
+                } else {
+                    cookieBanner.style.bottom = '0px';
+                }
+            }
+            
+            // SMART NAVBAR (Chowanie paska na scrollowanie)
+            let lastScrollTop = 0;
+            const navbar = document.querySelector('.navbar');
+            const scrollThreshold = 100;
+
+            window.addEventListener('scroll', function() {
+                let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                
+                if (scrollTop > lastScrollTop && scrollTop > scrollThreshold) {
+                    // W dół - chowaj
+                    navbar.style.top = "-100px";
+                } else {
+                    // W górę - pokazuj
+                    navbar.style.top = "0";
+                }
+                lastScrollTop = scrollTop;
+            });
+        });
+
+        function acceptCookies() {
+            localStorage.setItem('cookiesAccepted', 'true');
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
