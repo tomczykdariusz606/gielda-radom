@@ -9,24 +9,37 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Inter', sans-serif; padding-bottom: 80px; }
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Inter', sans-serif; padding-bottom: 0px; }
         .navbar { background: rgba(0,0,0,0.9); border-bottom: 2px solid #f0c420; }
         .form-panel { background: #1a1a1a; border: 1px solid #333; border-radius: 20px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .form-control, .form-select { background-color: rgba(0,0,0,0.5); border: 1px solid #444; color: white; border-radius: 12px; padding: 12px; }
         .form-control:focus, .form-select:focus { border-color: #f0c420; box-shadow: 0 0 15px rgba(240, 196, 32, 0.3); }
-        .btn-submit { background: #f0c420; color: #000; font-weight: 900; border-radius: 14px; padding: 15px; text-transform: uppercase; border: none; transition: 0.3s; }
-        .btn-submit:hover { background: #d4a017; transform: translateY(-2px); }
         
+        /* Styl kategorii */
         .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
         .cat-item input { display: none; }
         .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90px; background: rgba(0,0,0,0.5); border: 2px solid #333; border-radius: 16px; cursor: pointer; color: #888; transition: 0.2s; font-weight: bold; }
         .cat-label i { font-size: 2rem; margin-bottom: 5px; }
-        
         #cat_rozm:checked + .cat-label { border-color: #f0c420; color: #f0c420; background: rgba(240, 196, 32, 0.1); box-shadow: 0 0 20px rgba(240, 196, 32, 0.3); }
         #cat_dom:checked + .cat-label { border-color: #28a745; color: #28a745; background: rgba(40, 167, 69, 0.1); box-shadow: 0 0 20px rgba(40, 167, 69, 0.3); }
 
+        /* AI Scanner Style */
+        .scanner-box { border: 2px dashed #f0c420; border-radius: 20px; padding: 25px; text-align: center; background: rgba(240, 196, 32, 0.05); margin-bottom: 25px; }
+        .btn-gold-ai { background: linear-gradient(135deg, #f0c420, #d4a017); color: #000; border: none; font-weight: 900; border-radius: 50px; padding: 12px 25px; transition: 0.3s; }
+        .btn-gold-ai:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(240, 196, 32, 0.4); }
+
+        .btn-submit { background: #f0c420; color: #000; font-weight: 900; border-radius: 14px; padding: 15px; text-transform: uppercase; border: none; transition: 0.3s; }
+        .btn-submit:hover { background: #d4a017; transform: translateY(-2px); }
+        
+        #aiToast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #f0c420; color: black; padding: 15px 25px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999; font-weight: bold; display: none; text-align: center; width: 90%; max-width: 400px; }
+
         #loaderOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .spinner-border { width: 4rem; height: 4rem; color: #f0c420; }
+
+        /* SEO Footer */
+        .seo-footer { background: #0a0a0a; padding: 60px 0 30px 0; border-top: 1px solid #333; color: #777; margin-top: 50px; }
+        .footer-link { color: #aaa; text-decoration: none; transition: 0.2s; font-size: 0.9rem; }
+        .footer-link:hover { color: #f0c420; }
     </style>
 </head>
 <body>
@@ -36,16 +49,27 @@
             <a class="navbar-brand fw-bold fs-4" href="/profil">
                 <i class="bi bi-arrow-left me-2"></i> Wróć do Garażu
             </a>
+            <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; opacity: 0.8;">
         </div>
     </nav>
 
     <div class="container mb-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h3 class="fw-bold text-white mb-4"><i class="bi bi-box-seam text-warning me-2"></i> Dodaj Przedmiot</h3>
                 
+                <div class="scanner-box shadow-lg">
+                    <div class="mb-3 fw-bold text-warning" style="letter-spacing: 2px;">
+                        <i class="bi bi-stars"></i> GEMINI AI MARKET EXPERT
+                    </div>
+                    <p class="small text-muted mb-3">Zrób zdjęcie przedmiotu, a AI rozpozna kategorię, producenta i stworzy opis!</p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <label class="btn btn-gold-ai"><i class="bi bi-camera-fill me-2"></i> SKANUJ APARATEM<input type="file" accept="image/*" capture="environment" hidden onchange="scanMarketItem(this)"></label>
+                        <label class="btn btn-outline-light rounded-pill px-4 fw-bold"><i class="bi bi-folder-fill me-2"></i> PLIK<input type="file" accept="image/*" hidden onchange="scanMarketItem(this)"></label>
+                    </div>
+                </div>
+
                 <div class="form-panel">
-                    <form action="/dodaj_przedmiot" method="POST" enctype="multipart/form-data" onsubmit="document.getElementById('loaderOverlay').style.display='flex'; return true;">
+                    <form action="/dodaj_przedmiot" method="POST" enctype="multipart/form-data" id="marketForm" onsubmit="document.getElementById('loaderOverlay').style.display='flex'; return true;">
                         
                         <div class="cat-grid">
                             <div class="cat-item">
@@ -59,28 +83,31 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="fw-bold text-muted mb-2">ZDJĘCIA (Max 18)</label>
-                            <input type="file" name="zdjecia" multiple accept="image/*" id="galleryInput" class="d-none" required>
-                            <label for="galleryInput" class="form-control text-center d-flex flex-column justify-content-center align-items-center" style="cursor: pointer; border: 2px dashed #666; min-height: 100px;">
-                                <i class="bi bi-camera fs-2 text-warning mb-2"></i>
-                                <span id="fileCount" class="text-white fw-bold">Kliknij, aby dodać zdjęcia</span>
+                            <label class="fw-bold text-muted mb-2 d-flex justify-content-between">
+                                ZDJĘCIA (Max 18) <span class="text-warning small" id="photoStatus"></span>
+                            </label>
+                            <input type="file" name="zdjecia" id="mainGallery" multiple accept="image/*" class="d-none" required>
+                            <label for="mainGallery" class="form-control text-center d-flex flex-column justify-content-center align-items-center" style="cursor: pointer; border: 2px dashed #666; min-height: 120px; transition: 0.3s;" id="galleryLabel">
+                                <i class="bi bi-images fs-1 text-warning mb-2"></i>
+                                <span id="fileCountText" class="text-white fw-bold">Wybierz zdjęcia z galerii</span>
+                                <small class="text-muted">Pierwsze zdjęcie zostanie użyte do analizy AI</small>
                             </label>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Dokładna Podkategoria</label>
+                                <label class="small fw-bold text-muted mb-1">Podkategoria</label>
                                 <select name="podkategoria" id="select_podkategoria" class="form-select fw-bold text-warning border-warning bg-dark" required>
-                                    </select>
+                                </select>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Nazwa / Model</label>
-                                <input type="text" name="nazwa" class="form-control" placeholder="np. Komplet Felg 17 / Kosiarka" required>
+                                <label class="small fw-bold text-muted mb-1">Nazwa Przedmiotu</label>
+                                <input type="text" name="nazwa" id="ai_nazwa" class="form-control" placeholder="np. Komplet Felg 17 / Kosiarka" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Producent (Opcjonalnie)</label>
-                                <input type="text" name="producent" class="form-control" placeholder="np. BBS / Makita">
+                                <label class="small fw-bold text-muted mb-1">Producent</label>
+                                <input type="text" name="producent" id="ai_producent" class="form-control" placeholder="np. BBS / Makita">
                             </div>
 
                             <div class="col-md-6">
@@ -104,80 +131,148 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="small fw-bold text-warning mb-1">Kod EAN / Numer Seryjny (Wymagany wg prawa)</label>
-                                <input type="text" name="ean" class="form-control text-uppercase border-warning" placeholder="Wpisz kod kreskowy...">
+                                <label class="small fw-bold text-warning mb-1">Kod EAN / Numer Seryjny</label>
+                                <input type="text" name="ean" id="ai_ean" class="form-control text-uppercase border-warning" placeholder="Wpisz kod kreskowy...">
                             </div>
 
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Opis (Zastosowanie, wymiary, wady itp.)</label>
-                                <textarea name="opis" class="form-control" rows="5" placeholder="Dokładnie opisz sprzedawany przedmiot..." required></textarea>
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <label class="small fw-bold text-muted">Opis Przedmiotu</label>
+                                    <button type="button" class="btn btn-sm btn-outline-warning border-0 fw-bold" onclick="reGenerateDesc()"><i class="bi bi-magic"></i> GENERUJ OPIS AI</button>
+                                </div>
+                                <textarea name="opis" id="ai_opis" class="form-control" rows="6" placeholder="Dokładnie opisz sprzedawany przedmiot..." required></textarea>
                             </div>
 
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Telefon Kontaktowy</label>
-                                <input type="text" name="telefon" class="form-control" required>
+                                <label class="small fw-bold text-muted mb-1">Twój Telefon</label>
+                                <input type="text" name="telefon" class="form-control" value="{{ current_user.telefon if current_user.telefon else '' }}" required>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-submit w-100 mt-4 shadow-lg"><i class="bi bi-check2-circle me-2"></i> WYSTAW PRZEDMIOT</button>
+                        <button type="submit" class="btn btn-submit w-100 mt-4 shadow-lg">WYSTAW OGŁOSZENIE</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+    <footer class="seo-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h6 class="text-white fw-bold mb-3">Rynek Rozmaitości Radom</h6>
+                    <p class="small opacity-50">Sprzedawaj i kupuj części samochodowe, narzędzia oraz wyposażenie domu w Radomiu i okolicach. Darmowe ogłoszenia wspierane przez Gemini AI.</p>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h6 class="text-white fw-bold mb-3">Kategorie Części</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/rozmaitosci?sub=Opony i Felgi" class="footer-link">Opony i Felgi Radom</a></li>
+                        <li><a href="/rozmaitosci?sub=Części Karoserii" class="footer-link">Blacharka i Karoseria</a></li>
+                        <li><a href="/rozmaitosci?sub=Narzędzia Warsztatowe" class="footer-link">Narzędzia Warsztatowe</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-4">
+                    <h6 class="text-white fw-bold mb-3">Kategorie Dom i Ogród</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/rozmaitosci?sub=Narzędzia Ogrodowe" class="footer-link">Kosiarki i Narzędzia</a></li>
+                        <li><a href="/rozmaitosci?sub=Meble Domowe" class="footer-link">Meble i Wyposażenie</a></li>
+                        <li><a href="/rozmaitosci?sub=Elektronarzędzia" class="footer-link">Wiertarki i Szlifierki</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="border-secondary mt-5 mb-4">
+            <div class="text-center small opacity-50">&copy; 2026 Giełda Radom - Wszystkie prawa zastrzeżone.</div>
+        </div>
+    </footer>
+
     <div id="loaderOverlay">
         <div class="spinner-border" role="status"></div>
-        <h4 class="text-warning mt-3 fw-bold">DODAWANIE OGŁOSZENIA...</h4>
+        <h4 class="text-warning mt-3 fw-bold" id="loaderText">DODAWANIE OGŁOSZENIA...</h4>
     </div>
 
-    <script>
-        // Logika wyświetlania nazwy wgranych plików (zdjęć)
-        document.getElementById('galleryInput').addEventListener('change', function() {
-            const count = this.files.length;
-            const label = document.getElementById('fileCount');
-            if(count > 0) {
-                label.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill"></i> Załadowano ${count} zdjęć</span>`;
-                label.parentElement.style.borderColor = '#28a745';
-            } else {
-                label.innerHTML = 'Kliknij, aby dodać zdjęcia';
-                label.parentElement.style.borderColor = '#666';
-            }
-        });
+    <div id="aiToast"><i class="bi bi-stars me-2"></i> Gemini AI analizuje przedmiot...</div>
 
-        // Magia zmiany list rozwijanych na podstawie wybranego dużego kafla
+    <script>
+        // Dynamiczne podkategorie
         function updateSubcats() {
             const isParts = document.getElementById('cat_rozm').checked;
             const select = document.getElementById('select_podkategoria');
-            
             if(isParts) {
                 select.className = "form-select fw-bold text-warning border-warning bg-dark";
-                select.innerHTML = `
-                    <option value="Opony i Felgi">Opony i Felgi</option>
-                    <option value="Części Karoserii">Części Karoserii (Blacharka)</option>
-                    <option value="Silnik i Osprzęt">Silnik i Osprzęt</option>
-                    <option value="Oświetlenie">Oświetlenie (Lampy)</option>
-                    <option value="Wnętrze i Audio">Wnętrze i Audio</option>
-                    <option value="Narzędzia Warsztatowe">Narzędzia Warsztatowe</option>
-                    <option value="Oleje i Chemia">Oleje i Chemia</option>
-                    <option value="Akcesoria">Inne Akcesoria Motoryzacyjne</option>
-                `;
+                select.innerHTML = `<option value="Opony i Felgi">Opony i Felgi</option><option value="Części Karoserii">Części Karoserii</option><option value="Silnik i Osprzęt">Silnik i Osprzęt</option><option value="Oświetlenie">Oświetlenie</option><option value="Narzędzia Warsztatowe">Narzędzia Warsztatowe</option><option value="Akcesoria">Inne Akcesoria</option>`;
             } else {
                 select.className = "form-select fw-bold text-success border-success bg-dark";
-                select.innerHTML = `
-                    <option value="Narzędzia Ogrodowe">Narzędzia Ogrodowe (Kosiarki itp.)</option>
-                    <option value="Meble Domowe">Meble Domowe</option>
-                    <option value="Wyposażenie Ogrodu">Meble i Wyposażenie Ogrodu</option>
-                    <option value="Materiały Budowlane">Materiały Budowlane</option>
-                    <option value="Elektronarzędzia">Elektronarzędzia (Wiertarki itp.)</option>
-                    <option value="Rośliny i Nasiona">Rośliny i Nasiona</option>
-                    <option value="Dekoracje i Inne">Dekoracje i Inne</option>
-                `;
+                select.innerHTML = `<option value="Narzędzia Ogrodowe">Narzędzia Ogrodowe</option><option value="Meble Domowe">Meble Domowe</option><option value="Elektronarzędzia">Elektronarzędzia</option><option value="Materiały Budowlane">Materiały Budowlane</option><option value="Dekoracje i Inne">Dekoracje i Inne</option>`;
             }
         }
-        
-        // Uruchom od razu, żeby na start pokazało listę części
         updateSubcats();
+
+        // LOGIKA AI (Analiza)
+        async function performMarketAnalysis(file) {
+            const toast = document.getElementById('aiToast');
+            toast.style.display = 'block';
+            const fd = new FormData();
+            fd.append('scan_image', file);
+            
+            try {
+                const r = await fetch('/api/analyze-car', {method:'POST', body:fd});
+                const d = await r.json();
+                
+                if(d.marka || d.model) {
+                    // 1. Przypisz Kategorię (Rozpoznajemy czy to auto-części czy dom)
+                    if(d.kategoria === 'Inne' || d.opis_wizualny?.toLowerCase().includes('dom') || d.opis_wizualny?.toLowerCase().includes('ogród')) {
+                        document.getElementById('cat_dom').checked = true;
+                    } else {
+                        document.getElementById('cat_rozm').checked = true;
+                    }
+                    updateSubcats();
+
+                    // 2. Wypełnij pola
+                    document.getElementById('ai_nazwa').value = (d.marka + " " + d.model).trim() || d.marka || d.model;
+                    document.getElementById('ai_producent').value = d.marka || '';
+                    document.getElementById('ai_opis').value = d.opis_wizualny || '';
+                    if(d.vin && d.vin.length < 15) document.getElementById('ai_ean').value = d.vin; // AI czasem bierze EAN jako VIN
+                    
+                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> AI uzupełniło dane przedmiotu!';
+                    setTimeout(() => toast.style.display='none', 3000);
+                }
+            } catch(e) {
+                toast.style.display = 'none';
+                console.error("AI Error:", e);
+            }
+        }
+
+        // Obsługa wyboru plików z galerii
+        document.getElementById('mainGallery').addEventListener('change', function() {
+            const count = this.files.length;
+            const label = document.getElementById('fileCountText');
+            if(count > 0) {
+                label.innerHTML = `<span class="text-success">Załadowano ${count} zdjęć</span>`;
+                document.getElementById('galleryLabel').style.borderColor = '#28a745';
+                // Automatyczne skanowanie pierwszego zdjęcia
+                performMarketAnalysis(this.files[0]);
+            }
+        });
+
+        // Skanowanie dedykowanym przyciskiem
+        function scanMarketItem(input) {
+            if(!input.files[0]) return;
+            // Przerzuć plik do głównej galerii
+            const dt = new DataTransfer();
+            dt.items.add(input.files[0]);
+            document.getElementById('mainGallery').files = dt.files;
+            document.getElementById('mainGallery').dispatchEvent(new Event('change'));
+        }
+
+        // Ponowne generowanie samego opisu
+        function reGenerateDesc() {
+            const gallery = document.getElementById('mainGallery');
+            if(gallery.files[0]) {
+                performMarketAnalysis(gallery.files[0]);
+            } else {
+                alert("Najpierw dodaj zdjęcie przedmiotu!");
+            }
+        }
     </script>
 </body>
 </html>
