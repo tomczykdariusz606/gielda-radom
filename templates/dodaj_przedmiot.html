@@ -312,7 +312,7 @@
         </div>
     </footer>
 
-    <script>
+        <script>
         // MAPOWANIE PODKATEGORII
         const subMap = {
             "Rozmaitosci": ["Opony i Felgi", "Części Karoserii", "Silnik i Osprzęt", "Oświetlenie", "Wnętrze i Audio", "Narzędzia Warsztatowe", "Akcesoria"],
@@ -324,12 +324,11 @@
             const select = document.getElementById('select_podkategoria');
             const key = isParts ? "Rozmaitosci" : "DomOgrad";
             
-            // Zmiana koloru selecta w zależności od głównej kategorii
             select.className = isParts ? "form-select fw-bold text-dark border-warning" : "form-select fw-bold text-dark border-success";
             select.innerHTML = subMap[key].map(s => `<option value="${s}">${s}</option>`).join('');
         }
         
-        // Wywołanie na start, aby wypełnić select
+        // Wywołanie na start
         updateSubcats();
 
         // GŁÓWNA FUNKCJA ANALIZY AI
@@ -338,7 +337,6 @@
             const loaderText = document.getElementById('loaderText');
             const toast = document.getElementById('aiToast');
             
-            // 1. Wyświetl idealnie wyśrodkowany Loader Analizy
             loaderText.innerText = "GEMINI AI ANALIZUJE PRZEDMIOT...";
             loader.style.display = 'flex';
 
@@ -347,60 +345,73 @@
             
             try {
                 const r = await fetch('/api/analyze-car', {method:'POST', body:fd});
-                const d = await r.json();
                 
+                // Zabezpieczenie: jeśli backend zwróci błąd 500, łapiemy to.
+                if (!r.ok) throw new Error(`Błąd serwera HTTP: ${r.status}`);
+
+                const d = await r.json();
                 loader.style.display = 'none';
 
                 if(d.marka || d.model || d.opis_wizualny) {
-                    const desc = (d.opis_wizualny || "").toLowerCase();
-                    const title = (d.marka + " " + (d.model || "")).toLowerCase();
+                    // Bezpieczne pobieranie danych (zabezpieczenie przed null)
+                    const opis = d.opis_wizualny || "";
+                    const marka = d.marka || "";
+                    const model = d.model || "";
                     
-                    // 2. LOGIKA KATEGORII: Szukamy słów związanych z domem/ogrodem/elektroniką
+                    const desc = opis.toLowerCase();
+                    const title = `${marka} ${model}`.trim();
+                    const titleLower = title.toLowerCase();
+                    
+                    // Słowa kluczowe dla domu/ogrodu
                     const homeKeywords = ['dom', 'ogród', 'mebel', 'kosiarka', 'narzędzie', 'elektronarzędzie', 'rtv', 'agd', 'golarka', 'philips', 'kuchni', 'szafa', 'stół', 'wiertarka', 'szlifierka'];
                     
-                    // Jeżeli w AI przyszło "Inne" lub znaleźliśmy słowo kluczowe, przełączamy na DomOgrad
-                    let isHome = d.kategoria === 'Inne' || homeKeywords.some(k => desc.includes(k) || title.includes(k));
+                    let isHome = d.kategoria === 'Inne' || homeKeywords.some(k => desc.includes(k) || titleLower.includes(k));
                     
+                    // Przełączanie głównych kafli
                     document.getElementById(isHome ? 'cat_home' : 'cat_parts').checked = true;
-                    updateSubcats(); // Aktualizujemy podkategorie dla wybranego kafla
+                    updateSubcats();
 
-                    // 3. WYPEŁNIANIE PÓL FORMULARZA
-                    document.getElementById('ai_nazwa').value = (d.marka + " " + (d.model || "")).trim() || "Nieznany przedmiot";
-                    document.getElementById('ai_producent').value = d.marka || "";
-                    document.getElementById('ai_opis').value = d.opis_wizualny || "";
-                    if(d.vin && d.vin.length < 15) document.getElementById('ai_ean').value = d.vin; // Często czyta numer seryjny jako VIN
-                    if(d.cena_sugestia) document.getElementById('ai_cena').value = d.cena_sugestia;
+                    // Wypełnianie pól w formularzu
+                    document.getElementById('ai_nazwa').value = title || "Nieznany przedmiot";
+                    document.getElementById('ai_producent').value = marka;
+                    document.getElementById('ai_opis').value = opis;
+                    
+                    if(d.vin && d.vin.length < 15) document.getElementById('ai_ean').value = d.vin; 
+                    
+                    // Zabezpieczenie przed złą ceną (usuwa spacje i litery)
+                    if(d.cena_sugestia) {
+                        const czystaCena = String(d.cena_sugestia).replace(/[^0-9]/g, '');
+                        if(czystaCena) document.getElementById('ai_cena').value = czystaCena;
+                    }
 
-                    // 4. PRÓBA DOPASOWANIA PODKATEGORII
+                    // Inteligentne szukanie podkategorii
                     const select = document.getElementById('select_podkategoria');
                     for (let option of select.options) {
-                        const optVal = option.value.toLowerCase().split(' ')[0]; // np. "opony", "meble", "narzędzia"
-                        if (desc.includes(optVal) || title.includes(optVal)) {
+                        const optVal = option.value.toLowerCase().split(' ')[0];
+                        if (desc.includes(optVal) || titleLower.includes(optVal)) {
                             select.value = option.value;
                             break;
                         }
                     }
                     
-                    // 5. WYŚWIETLENIE SUKCESU (TOAST)
                     toast.innerHTML = '<i class="bi bi-stars me-2 fs-5"></i> Gemini AI uzupełniło dane!';
                     toast.style.display = 'block';
                     setTimeout(() => { toast.style.display = 'none'; }, 3000);
                 } else {
-                    alert("AI nie mogło rozpoznać przedmiotu. Wypełnij dane ręcznie.");
+                    alert("AI nie znalazło danych. Wypełnij pola ręcznie.");
                 }
             } catch(e) { 
                 loader.style.display = 'none';
-                console.error("Błąd podczas łączenia z API Gemini:", e);
-                alert("Wystąpił błąd podczas analizy zdjęcia.");
+                console.error("Szczegóły błędu:", e);
+                // Wyświetlamy prawdziwy powód błędu
+                alert("Błąd połączenia z API: " + e.message);
             }
         }
 
         // ZAPIS FORMULARZA
         function showZapisLoader() {
             const loader = document.getElementById('loaderOverlay');
-            const loaderText = document.getElementById('loaderText');
-            // Zmieniamy tekst loadera na publikację
-            loaderText.innerText = "PUBLIKACJA OGŁOSZENIA W TOKU...";
+            document.getElementById('loaderText').innerText = "PUBLIKACJA OGŁOSZENIA W TOKU...";
             loader.style.display = 'flex';
         }
 
@@ -411,20 +422,16 @@
             dt.items.add(input.files[0]);
             document.getElementById('mainGallery').files = dt.files;
             
-            // Uruchom analizę
             performMarketAnalysis(input.files[0]);
-            
-            // Zaktualizuj tekst na kafelku galerii
             document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Skan gotowy</span>`;
             
-            input.value = ""; // Reset inputu, aby móc wgrać to samo zdjęcie ponownie w razie potrzeby
+            // UWAGA: Usunąłem czyszczenie inputu, które psuło wysyłanie pliku!
         }
 
         // OBSŁUGA KLIKNIĘCIA W GŁÓWNĄ GALERIĘ
         document.getElementById('mainGallery').addEventListener('change', function() {
             if(this.files && this.files.length > 0) {
                 document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-images me-1"></i> Załadowano ${this.files.length} zdjęć</span>`;
-                // Automatyczna analiza pierwszego dodanego zdjęcia
                 performMarketAnalysis(this.files[0]);
             } else {
                 document.getElementById('fileCountText').innerHTML = `Kliknij, aby dodać zdjęcia`;
@@ -441,6 +448,7 @@
             }
         }
     </script>
+
 
 </body>
 </html>
