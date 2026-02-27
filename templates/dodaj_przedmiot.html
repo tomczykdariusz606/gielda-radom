@@ -348,7 +348,7 @@
         // Wywołanie na start
         updateSubcats();
 
-        // GŁÓWNA FUNKCJA ANALIZY AI
+                // GŁÓWNA FUNKCJA ANALIZY AI
         async function performMarketAnalysis(file) {
             const loader = document.getElementById('loaderOverlay');
             const loaderText = document.getElementById('loaderText');
@@ -361,7 +361,8 @@
             fd.append('scan_image', file);
             
             try {
-                const r = await fetch('/api/analyze-car', {method:'POST', body:fd});
+                // TUTAJ ZMIANA: Uderzamy w nowy, dedykowany endpoint!
+                const r = await fetch('/api/analyze-market', {method:'POST', body:fd});
                 
                 if (!r.ok) throw new Error(`Błąd serwera HTTP: ${r.status}`);
 
@@ -369,57 +370,37 @@
                 loader.style.display = 'none';
 
                 if(d.marka || d.model || d.opis_wizualny) {
-                    const opis = d.opis_wizualny || "";
-                    const marka = d.marka || "";
-                    const model = d.model || "";
                     
-                    const desc = opis.toLowerCase();
-                    const title = `${marka} ${model}`.trim();
-                    const titleLower = title.toLowerCase();
-                    
-                    // Słowa dla kategorii głównych
-                    const homeKeywords = ['dom', 'ogród', 'mebel', 'kosiark', 'narzędzi', 'elektronarzędzi', 'rtv', 'agd', 'golark', 'philips', 'kuchni', 'szaf', 'stół', 'wiertark', 'szlifierk'];
-                    
-                    let isHome = d.kategoria === 'Inne' || homeKeywords.some(k => desc.includes(k) || titleLower.includes(k));
-                    
-                    // 1. Zmiana kategorii głównej
+                    // 1. Ustawienie głównej kategorii wprost z AI
+                    const isHome = (d.kategoria === "DomOgrad");
                     document.getElementById(isHome ? 'cat_home' : 'cat_parts').checked = true;
-                    updateSubcats();
+                    updateSubcats(); // Odświeża drugą listę rozwijaną
 
-                    // 2. Wypełnianie pól tekstowych
-                    document.getElementById('ai_nazwa').value = title || "Nieznany przedmiot";
-                    document.getElementById('ai_producent').value = marka;
-                    document.getElementById('ai_opis').value = opis;
-                    
-                    if(d.vin && d.vin.length < 15) document.getElementById('ai_ean').value = d.vin; 
-                    
-                    if(d.cena_sugestia) {
-                        const czystaCena = String(d.cena_sugestia).replace(/[^0-9]/g, '');
-                        if(czystaCena) document.getElementById('ai_cena').value = czystaCena;
-                    }
-
-                    // 3. INTELIGENTNE SZUKANIE PODKATEGORII
-                    let matchedSubcat = null;
-                    for (const [subcat, keywords] of Object.entries(subcatKeywords)) {
-                        if (keywords.some(k => desc.includes(k) || titleLower.includes(k))) {
-                            matchedSubcat = subcat;
-                            break;
-                        }
-                    }
-
-                    if (matchedSubcat) {
+                    // 2. Ustawienie podkategorii z AI
+                    if(d.podkategoria) {
                         const select = document.getElementById('select_podkategoria');
                         for (let option of select.options) {
-                            if (option.value === matchedSubcat) {
+                            if (option.value === d.podkategoria) {
                                 select.value = option.value;
                                 break;
                             }
                         }
                     }
+
+                    // 3. Wypełnienie tekstów
+                    const title = `${d.marka || ""} ${d.model || ""}`.trim();
+                    document.getElementById('ai_nazwa').value = title || "Nieznany przedmiot";
+                    document.getElementById('ai_producent').value = d.marka || "";
+                    document.getElementById('ai_opis').value = d.opis_wizualny || "";
+                    
+                    if(d.cena_sugestia) {
+                        const czystaCena = String(d.cena_sugestia).replace(/[^0-9]/g, '');
+                        if(czystaCena) document.getElementById('ai_cena').value = czystaCena;
+                    }
                     
                     aiAlreadyUsed = true;
 
-                    toast.innerHTML = '<i class="bi bi-stars me-2 fs-5"></i> Gemini AI uzupełniło dane!';
+                    toast.innerHTML = '<i class="bi bi-stars me-2 fs-5"></i> Gemini AI precyzyjnie oceniło sprzęt!';
                     toast.style.display = 'block';
                     setTimeout(() => { toast.style.display = 'none'; }, 3000);
                 } else {
@@ -428,9 +409,10 @@
             } catch(e) { 
                 loader.style.display = 'none';
                 console.error("Szczegóły błędu:", e);
-                alert("Błąd połączenia z API: " + e.message);
+                alert("Błąd połączenia z nowym API: " + e.message);
             }
         }
+
 
         // ZAPIS FORMULARZA
         function showZapisLoader() {
