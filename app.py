@@ -1253,6 +1253,74 @@ def analyze_car():
         print(f"Błąd AI: {e}")
         return jsonify({"error": "Nie udało się przeanalizować zdjęcia."}), 500
 
+@app.route('/api/analyze-market', methods=['POST'])
+@login_required
+def analyze_market():
+    dzisiaj = datetime.utcnow().date()
+    # Reset dziennego limitu zapytań
+    if current_user.last_ai_request_date != dzisiaj:
+        current_user.ai_requests_today = 0
+        current_user.last_ai_request_date = dzisiaj
+        db.session.commit()
+
+    # Ustalanie limitów (Admin = 500, Użytkownik = 6)
+    if current_user.username == 'admin' or current_user.id == 1:
+        LIMIT = 500
+    else:
+        LIMIT = 6
+
+    if current_user.ai_requests_today >= LIMIT:
+        return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
+
+    file = request.files.get('scan_image')
+    if not file:
+        return jsonify({"error": "Brak pliku"}), 400
+
+    try:
+        image_data = file.read()
+        
+        # Nowy Mózg: Ekspert od przedmiotów codziennego użytku i części
+        prompt = """
+        Jesteś wybitnym rzeczoznawcą i handlowcem. Specjalizujesz się w częściach samochodowych, narzędziach, sprzęcie RTV/AGD oraz wyposażeniu domu i ogrodu.
+        Przeanalizuj to zdjęcie przedmiotu na sprzedaż i zwróć TYLKO czysty obiekt JSON.
+        
+        Twoje zadania:
+        1. Rozpoznaj co to za przedmiot. Określ 'marka' (np. Bosch, BMW, Philips, IKEA - jeśli rozpoznajesz) oraz 'model' (np. Maska silnika E90, Wiertarka udarowa, Golarka elektryczna).
+        2. Przypisz główną 'kategoria': wybierz absolutnie tylko "Rozmaitosci" (jeśli to części samochodowe, opony, narzędzia warsztatowe) ALBO "DomOgrad" (jeśli to elektronika domowa, sprzęt AGD, meble, narzędzia ogrodowe).
+        3. Wybierz idealną 'podkategoria'. MUSI to być dokładnie jedna z tych wartości:
+           - Jeśli Rozmaitosci: "Opony i Felgi", "Części Karoserii", "Silnik i Osprzęt", "Oświetlenie", "Wnętrze i Audio", "Narzędzia Warsztatowe", "Akcesoria".
+           - Jeśli DomOgrad: "Narzędzia Ogrodowe", "Meble Domowe", "Elektronarzędzia", "Materiały Budowlane", "Dekoracje i Inne".
+        4. Oszacuj uczciwą cenę rynkową używanego przedmiotu w PLN (zapisz jako liczbę całkowitą w 'cena_sugestia').
+        5. Napisz bardzo atrakcyjny, sprzedażowy 'opis_wizualny' (ok. 3-4 zdania). Opisz to, co faktycznie widzisz na zdjęciu (stan obudowy, lakieru, zarysowania). Pisz w tonie osoby sprzedającej ten przedmiot.
+
+        Format JSON:
+        { 
+            "kategoria": "DomOgrad",
+            "podkategoria": "Elektronarzędzia",
+            "marka": "Makita", 
+            "model": "Wkrętarka 18V", 
+            "cena_sugestia": 350, 
+            "opis_wizualny": "Na sprzedaż solidna wkrętarka Makita. Wizualnie nosi normalne ślady użytkowania, obudowa cała i niepopękana. Sprzęt idealny do domowych remontów." 
+        }
+        """
+        
+        # Odpytanie modelu Gemini
+        resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
+        
+        # Czyszczenie odpowiedzi do czystego JSONa
+        text_response = resp.text.replace('```json', '').replace('```', '').strip()
+        data = json.loads(text_response)
+        
+        # Zapisanie użycia limitu do bazy
+        current_user.ai_requests_today += 1
+        db.session.commit()
+        
+        return jsonify(data)
+        
+    except Exception as e:
+        print(f"Błąd AI Market: {e}")
+        return jsonify({"error": "Nie udało się przeanalizować przedmiotu."}), 500
+
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
