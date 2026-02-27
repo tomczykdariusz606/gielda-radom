@@ -312,11 +312,25 @@
         </div>
     </footer>
 
-            <script>
+                <script>
         // MAPOWANIE PODKATEGORII
         const subMap = {
             "Rozmaitosci": ["Opony i Felgi", "Części Karoserii", "Silnik i Osprzęt", "Oświetlenie", "Wnętrze i Audio", "Narzędzia Warsztatowe", "Akcesoria"],
             "DomOgrad": ["Narzędzia Ogrodowe", "Meble Domowe", "Elektronarzędzia", "Materiały Budowlane", "Dekoracje i Inne"]
+        };
+
+        // SŁOWNIK SŁÓW KLUCZOWYCH DLA PODKATEGORII
+        const subcatKeywords = {
+            "Opony i Felgi": ["opon", "felg", "koł", "kołp", "alufelg"],
+            "Części Karoserii": ["mask", "zderzak", "drzwi", "błotnik", "klap", "lusterk", "szyb", "grill", "karoseri", "atrap"],
+            "Silnik i Osprzęt": ["silnik", "rozrząd", "pomp", "wtrysk", "chłodnic", "alternator", "rozrusznik", "skrzyni", "sprzęgł", "turb", "filtr", "wydech"],
+            "Oświetlenie": ["lamp", "reflektor", "żarówk", "xenon", "led", "kierunkowskaz", "światł", "halog"],
+            "Wnętrze i Audio": ["fotel", "kanap", "kierownic", "radi", "głośnik", "tapicerk", "licznik", "nawigacj", "kokpit"],
+            "Narzędzia Warsztatowe": ["klucz", "podnośnik", "lewar", "kompresor", "spawark", "migomat"],
+            "Narzędzia Ogrodowe": ["kosiark", "podkaszark", "pił", "wąż", "szpadel", "grabi", "sekator"],
+            "Meble Domowe": ["szaf", "stół", "krzesł", "łóżk", "komod", "regał"],
+            "Elektronarzędzia": ["wiertark", "szlifierk", "wkrętark", "wyrzynark", "młot"],
+            "Materiały Budowlane": ["płytk", "panel", "farb", "klej", "cegł", "cement", "styropian"]
         };
 
         // ZMIENNA BLOKUJĄCA PODWÓJNĄ ANALIZĘ
@@ -363,13 +377,16 @@
                     const title = `${marka} ${model}`.trim();
                     const titleLower = title.toLowerCase();
                     
-                    const homeKeywords = ['dom', 'ogród', 'mebel', 'kosiarka', 'narzędzie', 'elektronarzędzie', 'rtv', 'agd', 'golarka', 'philips', 'kuchni', 'szafa', 'stół', 'wiertarka', 'szlifierka'];
+                    // Słowa dla kategorii głównych
+                    const homeKeywords = ['dom', 'ogród', 'mebel', 'kosiark', 'narzędzi', 'elektronarzędzi', 'rtv', 'agd', 'golark', 'philips', 'kuchni', 'szaf', 'stół', 'wiertark', 'szlifierk'];
                     
                     let isHome = d.kategoria === 'Inne' || homeKeywords.some(k => desc.includes(k) || titleLower.includes(k));
                     
+                    // 1. Zmiana kategorii głównej
                     document.getElementById(isHome ? 'cat_home' : 'cat_parts').checked = true;
                     updateSubcats();
 
+                    // 2. Wypełnianie pól tekstowych
                     document.getElementById('ai_nazwa').value = title || "Nieznany przedmiot";
                     document.getElementById('ai_producent').value = marka;
                     document.getElementById('ai_opis').value = opis;
@@ -381,16 +398,25 @@
                         if(czystaCena) document.getElementById('ai_cena').value = czystaCena;
                     }
 
-                    const select = document.getElementById('select_podkategoria');
-                    for (let option of select.options) {
-                        const optVal = option.value.toLowerCase().split(' ')[0];
-                        if (desc.includes(optVal) || titleLower.includes(optVal)) {
-                            select.value = option.value;
+                    // 3. INTELIGENTNE SZUKANIE PODKATEGORII
+                    let matchedSubcat = null;
+                    for (const [subcat, keywords] of Object.entries(subcatKeywords)) {
+                        if (keywords.some(k => desc.includes(k) || titleLower.includes(k))) {
+                            matchedSubcat = subcat;
                             break;
                         }
                     }
+
+                    if (matchedSubcat) {
+                        const select = document.getElementById('select_podkategoria');
+                        for (let option of select.options) {
+                            if (option.value === matchedSubcat) {
+                                select.value = option.value;
+                                break;
+                            }
+                        }
+                    }
                     
-                    // ZAZNACZAMY, ŻE AI ZOSTAŁO UŻYTE
                     aiAlreadyUsed = true;
 
                     toast.innerHTML = '<i class="bi bi-stars me-2 fs-5"></i> Gemini AI uzupełniło dane!';
@@ -413,15 +439,12 @@
             loader.style.display = 'flex';
         }
 
-        // OBSŁUGA PRZYCISKÓW "SKANUJ" (Górne przyciski AI)
         function scanMarketItem(input) {
             if(!input.files[0]) return;
             
-            // Jesli skanujemy przez gorne przyciski, dodajemy plik do glownej galerii
             const dt = new DataTransfer();
             dt.items.add(input.files[0]);
             
-            // Jesli w glownej galerii sa juz jakies zdjecia, to dodajemy tez stare (zeby nie usunac)
             const mainGallery = document.getElementById('mainGallery');
             if(mainGallery.files.length > 0) {
                  for(let i=0; i<mainGallery.files.length; i++) {
@@ -432,16 +455,13 @@
             
             document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-images me-1"></i> Załadowano ${mainGallery.files.length} zdjęć</span>`;
             
-            // Górny skaner zawsze wymusza analizę AI
             performMarketAnalysis(input.files[0]);
         }
 
-        // OBSŁUGA KLIKNIĘCIA W GŁÓWNĄ GALERIĘ (Dolne pole na zdjęcia)
         document.getElementById('mainGallery').addEventListener('change', function() {
             if(this.files && this.files.length > 0) {
                 document.getElementById('fileCountText').innerHTML = `<span class="text-success fw-bold"><i class="bi bi-images me-1"></i> Załadowano ${this.files.length} zdjęć</span>`;
                 
-                // URUCHAMIAJ AI TYLKO JEŚLI JESZCZE NIE BYŁO UŻYTE
                 if (!aiAlreadyUsed) {
                     performMarketAnalysis(this.files[0]);
                 }
@@ -450,17 +470,16 @@
             }
         });
 
-        // RĘCZNE GENEROWANIE OPISU (Przycisk nad tekstem)
         function reGenerateDesc() {
             const gallery = document.getElementById('mainGallery');
             if(gallery.files && gallery.files[0]) {
-                // Wymuszamy analizę, nawet jeśli była już użyta
                 performMarketAnalysis(gallery.files[0]);
             } else {
                 alert("Aby wygenerować opis, musisz najpierw dodać zdjęcie przedmiotu.");
             }
         }
     </script>
+
 
 
 
