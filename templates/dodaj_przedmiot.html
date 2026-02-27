@@ -12,9 +12,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
-    <title>Wystaw przedmiot za darmo - Market Giełda Radom</title>
-    <meta name="description" content="Dodaj ogłoszenie w kilka sekund. Nasza sztuczna inteligencja Gemini AI automatycznie rozpozna przedmiot i napisze profesjonalny opis.">
-    <meta name="keywords" content="giełda radom, marketplace radom, darmowe ogłoszenia, części samochodowe, meble, narzędzia">
+    <title>Wystaw przedmiot - Marketplace Giełda Radom</title>
+    <meta name="description" content="Dodaj ogłoszenie w kilka sekund. Gemini AI automatycznie rozpozna przedmiot, dobierze kategorię i napisze opis.">
     <meta name="robots" content="index, follow">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -22,131 +21,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { 
-            --m-yellow: #f0c420; 
-            --m-green: #28a745;
-            --m-bg: #f4f7f6; 
-            --m-card: #ffffff;
-        }
+        :root { --m-yellow: #f0c420; --m-green: #28a745; --m-bg: #f4f7f6; }
+        body { background-color: var(--m-bg); color: #1a1a1a; font-family: 'Inter', sans-serif; min-height: 100vh; }
 
-        body { 
-            background-color: var(--m-bg); 
-            color: #1a1a1a; 
-            font-family: 'Inter', sans-serif; 
-            min-height: 100vh;
-        }
+        .navbar { background: #fff; border-bottom: 3px solid var(--m-yellow); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .form-panel { background: #fff; border-radius: 25px; padding: 30px; border: 1px solid #e0e0e0; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        .form-control, .form-select { border-radius: 12px; padding: 12px; border: 2px solid #eee; background-color: #fcfcfc; }
+        .form-control:focus { border-color: var(--m-yellow); box-shadow: 0 0 0 4px rgba(240, 196, 32, 0.1); }
 
-        /* NAVBAR LIGHT */
-        .navbar { 
-            background: #ffffff; 
-            border-bottom: 3px solid var(--m-yellow); 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+        .scanner-box { background: #fff; border: 2px dashed var(--m-yellow); border-radius: 25px; padding: 30px; text-align: center; margin-bottom: 30px; }
+        .btn-ai { background: var(--m-yellow); color: #000; font-weight: 800; border-radius: 50px; padding: 12px 35px; border: none; transition: 0.3s; box-shadow: 0 5px 15px rgba(240, 196, 32, 0.3); }
 
-        /* FORMULARZ PANEL */
-        .form-panel { 
-            background: var(--m-card); 
-            border-radius: 25px; 
-            padding: 30px; 
-            border: 1px solid #e0e0e0; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.02); 
-        }
-
-        .form-control, .form-select { 
-            border-radius: 12px; 
-            padding: 12px; 
-            border: 2px solid #eee; 
-            background-color: #fcfcfc;
-        }
-
-        .form-control:focus { 
-            border-color: var(--m-yellow); 
-            box-shadow: 0 0 0 4px rgba(240, 196, 32, 0.1); 
-            background-color: #fff;
-        }
-
-        /* AI SCANNER BOX */
-        .scanner-box { 
-            background: #ffffff; 
-            border: 2px dashed var(--m-yellow); 
-            border-radius: 25px; 
-            padding: 30px; 
-            text-align: center; 
-            margin-bottom: 30px;
-        }
-
-        .btn-ai { 
-            background: var(--m-yellow); 
-            color: #000; 
-            font-weight: 800; 
-            border-radius: 50px; 
-            padding: 12px 35px; 
-            border: none; 
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(240, 196, 32, 0.3);
-        }
-        .btn-ai:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240, 196, 32, 0.4); }
-
-        /* KATEGORIE KAFLE */
         .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
         .cat-item input { display: none; }
-        .cat-label { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100px; background: #fff; border: 2px solid #eee; border-radius: 20px; 
-            cursor: pointer; font-weight: bold; color: #888; transition: 0.3s;
-        }
+        .cat-label { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100px; background: #fff; border: 2px solid #eee; border-radius: 20px; cursor: pointer; font-weight: bold; color: #888; transition: 0.3s; }
         .cat-label i { font-size: 2rem; margin-bottom: 5px; }
         
         #cat_parts:checked + .cat-label { border-color: var(--m-yellow); color: #000; background: #fffdf2; }
         #cat_home:checked + .cat-label { border-color: var(--m-green); color: var(--m-green); background: #f0fdf4; }
 
-        /* IDEALNIE WYŚRODKOWANY LOADER */
+        /* LOADER - PEŁNE WYŚRODKOWANIE */
         #loaderOverlay { 
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: rgba(255, 255, 255, 0.98); 
-            z-index: 99999; 
-            display: none; 
-            flex-direction: column; 
-            align-items: center;      /* Środek poziomo */
-            justify-content: center;   /* Środek pionowo */
-            text-align: center;
+            background: rgba(255, 255, 255, 0.98); z-index: 99999; 
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center;
         }
+        #loaderText { color: #000 !important; font-weight: 900 !important; margin-top: 25px; text-transform: uppercase; font-size: 1.3rem; max-width: 85%; }
 
-        #loaderText { 
-            color: #000 !important; 
-            font-weight: 900 !important; 
-            margin-top: 25px; 
-            text-transform: uppercase; 
-            font-size: 1.3rem; 
-            letter-spacing: 1px;
-            max-width: 85%;
-        }
-
-        /* TOAST DLA AI */
-        #aiToast { 
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); 
-            background: #1a1a1a; color: var(--m-yellow); padding: 16px 32px; 
-            border-radius: 50px; display: none; z-index: 10000; font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            border: 1px solid var(--m-yellow);
-        }
-
-        .btn-submit { 
-            background: #1a1a1a; 
-            color: #fff; 
-            font-weight: 900; 
-            border-radius: 15px; 
-            padding: 18px; 
-            border: none; 
-            width: 100%; 
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
+        #aiToast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: var(--m-yellow); padding: 16px 32px; border-radius: 50px; display: none; z-index: 10000; font-weight: bold; border: 1px solid var(--m-yellow); }
+        .btn-submit { background: #1a1a1a; color: #fff; font-weight: 900; border-radius: 15px; padding: 18px; border: none; width: 100%; transition: 0.3s; text-transform: uppercase; }
         .btn-submit:hover { background: var(--m-yellow); color: #000; transform: translateY(-3px); }
-
+        
         .seo-footer { background: #fff; border-top: 1px solid #eee; padding: 50px 0; margin-top: 60px; color: #777; }
         .footer-link { color: #444; text-decoration: none; font-weight: 600; transition: 0.2s; }
-        .footer-link:hover { color: var(--m-yellow); }
     </style>
 </head>
 <body>
@@ -160,9 +67,7 @@
 
     <nav class="navbar py-3">
         <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold fs-4" href="/profil">
-                <i class="bi bi-chevron-left me-2"></i> GIEŁDA <span class="text-warning">MARKET</span>
-            </a>
+            <a class="navbar-brand fw-bold fs-4" href="/profil"><i class="bi bi-chevron-left me-2"></i> GIEŁDA <span class="text-warning">MARKET</span></a>
             <img src="{{ url_for('static', filename='watermark.png') }}" style="height: 35px; opacity: 0.5;">
         </div>
     </nav>
@@ -171,11 +76,9 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 
-                <div class="scanner-box shadow-sm">
-                    <p class="small fw-bold text-muted mb-2 text-uppercase" style="letter-spacing: 1px;">
-                        <i class="bi bi-stars text-warning"></i> Inteligentny Asystent Gemini AI
-                    </p>
-                    <h4 class="fw-bold mb-4">Zrób zdjęcie przedmiotu – AI uzupełni dane</h4>
+                <div class="scanner-box">
+                    <p class="small fw-bold text-muted mb-2 text-uppercase"><i class="bi bi-stars text-warning"></i> Skaner Gemini AI</p>
+                    <h4 class="fw-bold mb-4">Wystaw w 3 sekundy ze zdjęcia</h4>
                     <div class="d-flex justify-content-center gap-3">
                         <label class="btn btn-ai shadow">
                             <i class="bi bi-camera-fill me-2 fs-5"></i> APARAT
@@ -194,75 +97,58 @@
                         <div class="cat-grid">
                             <div class="cat-item">
                                 <input type="radio" name="typ" id="cat_parts" value="Rozmaitosci" checked onchange="updateSubcats()">
-                                <label for="cat_parts" class="cat-label">
-                                    <i class="bi bi-tools"></i> Części & Auto
-                                </label>
+                                <label for="cat_parts" class="cat-label"><i class="bi bi-tools"></i> Części & Auto</label>
                             </div>
                             <div class="cat-item">
                                 <input type="radio" name="typ" id="cat_home" value="DomOgrad" onchange="updateSubcats()">
-                                <label for="cat_home" class="cat-label">
-                                    <i class="bi bi-house-heart"></i> Dom & Ogród
-                                </label>
+                                <label for="cat_home" class="cat-label"><i class="bi bi-house-heart"></i> Dom & Ogród</label>
                             </div>
                         </div>
 
-                        <div class="mb-4 text-center">
-                            <label class="fw-bold small text-muted mb-2 d-block text-uppercase">Galeria zdjęć (Max 18)</label>
+                        <div class="mb-4">
+                            <label class="fw-bold small text-muted mb-2 d-block text-uppercase">ZDJĘCIA (Max 18)</label>
                             <input type="file" name="zdjecia" id="mainGallery" multiple accept="image/*" class="d-none" required>
                             <label for="mainGallery" class="form-control text-center d-flex flex-column align-items-center justify-content-center" style="cursor: pointer; border: 2px dashed #ccc; min-height: 150px; background: #fafafa;">
                                 <i class="bi bi-cloud-plus fs-1 text-muted mb-2"></i>
-                                <span id="fileCountText" class="fw-bold">Kliknij, aby dodać zdjęcia</span>
-                                <small class="text-muted">Pierwsze zdjęcie zostanie użyte do skanu AI</small>
+                                <span id="fileCountText" class="fw-bold">Dodaj zdjęcia przedmiotu</span>
                             </label>
                         </div>
 
                         <div class="row g-4">
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Kategoria szczegółowa</label>
+                                <label class="small fw-bold text-muted mb-1">Podkategoria</label>
                                 <select name="podkategoria" id="select_podkategoria" class="form-select" required></select>
                             </div>
-
                             <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Tytuł ogłoszenia</label>
-                                <input type="text" name="nazwa" id="ai_nazwa" class="form-control" placeholder="Co sprzedajesz?" required>
+                                <label class="small fw-bold text-muted mb-1">Nazwa</label>
+                                <input type="text" name="nazwa" id="ai_nazwa" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="small fw-bold text-muted mb-1">Marka / Producent</label>
-                                <input type="text" name="producent" id="ai_producent" class="form-control" placeholder="np. Bosch, IKEA, BMW">
+                                <label class="small fw-bold text-muted mb-1">Producent</label>
+                                <input type="text" name="producent" id="ai_producent" class="form-control">
                             </div>
-
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted mb-1">Cena (PLN)</label>
-                                <input type="number" name="cena" id="ai_cena" class="form-control fw-bold border-danger fs-5" placeholder="0.00" required>
+                                <input type="number" name="cena" class="form-control fw-bold fs-5 text-danger" required>
                             </div>
-                            
                             <div class="col-md-6">
                                 <label class="small fw-bold text-muted mb-1">Stan</label>
-                                <select name="stan" class="form-select fw-bold">
-                                    <option value="Nowy">✨ Nowy</option>
+                                <select name="stan" id="ai_stan" class="form-select fw-bold">
+                                    <option value="Nowy">Nowy</option>
                                     <option value="Używany" selected>Używany</option>
-                                    <option value="Uszkodzony">Uszkodzony / Na części</option>
+                                    <option value="Uszkodzony">Na części</option>
                                 </select>
                             </div>
-
-                            <div class="col-12">
-                                <label class="small fw-bold text-warning mb-1">Kod EAN / Numer seryjny (Opcjonalnie)</label>
-                                <input type="text" name="ean" id="ai_ean" class="form-control text-uppercase" placeholder="Wpisz kod...">
-                            </div>
-
                             <div class="col-12">
                                 <div class="d-flex justify-content-between align-items-end mb-1">
-                                    <label class="small fw-bold text-muted">Opis przedmiotu</label>
-                                    <button type="button" class="btn btn-sm btn-link text-warning fw-bold text-decoration-none p-0" onclick="reGenerateDesc()">
-                                        <i class="bi bi-magic"></i> GENERUJ OPIS GEMINI
-                                    </button>
+                                    <label class="small fw-bold text-muted">Opis</label>
+                                    <button type="button" class="btn btn-sm btn-link text-warning fw-bold text-decoration-none p-0" onclick="reGenerateDesc()"><i class="bi bi-magic"></i> GENERUJ OPIS AI</button>
                                 </div>
-                                <textarea name="opis" id="ai_opis" class="form-control" rows="6" placeholder="Opisz swój przedmiot..." required></textarea>
+                                <textarea name="opis" id="ai_opis" class="form-control" rows="6" required></textarea>
                             </div>
-
                             <div class="col-12">
-                                <label class="small fw-bold text-muted mb-1">Telefon kontaktowy</label>
-                                <input type="text" name="telefon" class="form-control" value="{{ current_user.telefon if current_user.telefon else '' }}" required>
+                                <label class="small fw-bold text-muted mb-1">Telefon</label>
+                                <input type="text" name="telefon" class="form-control" value="{{ current_user.telefon }}" required>
                             </div>
                         </div>
 
@@ -273,33 +159,7 @@
         </div>
     </div>
 
-    <footer class="seo-footer">
-        <div class="container">
-            <div class="row g-4 text-center text-md-start">
-                <div class="col-md-4">
-                    <h6 class="text-dark fw-bold mb-3">Rynek Rozmaitości Radom</h6>
-                    <p class="small opacity-75">Szybka i bezpieczna sprzedaż części oraz wyposażenia. Wykorzystaj moc Gemini AI.</p>
-                </div>
-                <div class="col-6 col-md-4">
-                    <h6 class="text-dark fw-bold mb-3">Kategorie Części</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/rozmaitosci?sub=Opony i Felgi" class="footer-link">Opony i Felgi</a></li>
-                        <li><a href="/rozmaitosci?sub=Części Karoserii" class="footer-link">Karoseria</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-4">
-                    <h6 class="text-dark fw-bold mb-3">Kategorie Dom</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/rozmaitosci?sub=Elektronarzędzia" class="footer-link">Elektronarzędzia</a></li>
-                        <li><a href="/rozmaitosci?sub=Narzędzia Ogrodowe" class="footer-link">Ogród</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <script>
-        // MAPOWANIE PODKATEGORII
         const subMap = {
             "Rozmaitosci": ["Opony i Felgi", "Części Karoserii", "Silnik i Osprzęt", "Oświetlenie", "Wnętrze i Audio", "Narzędzia Warsztatowe", "Akcesoria"],
             "DomOgrad": ["Narzędzia Ogrodowe", "Meble Domowe", "Elektronarzędzia", "Materiały Budowlane", "Dekoracje i Inne"]
@@ -313,13 +173,11 @@
         }
         updateSubcats();
 
-        // ANALIZA AI (SKANOWANIE)
         async function performMarketAnalysis(file) {
             const loader = document.getElementById('loaderOverlay');
             const loaderText = document.getElementById('loaderText');
             const toast = document.getElementById('aiToast');
             
-            // Ustawiamy napisy dla AI
             loaderText.innerText = "GEMINI AI ANALIZUJE PRZEDMIOT...";
             loader.style.display = 'flex';
 
@@ -334,36 +192,43 @@
 
                 if(d.marka || d.model) {
                     const desc = (d.opis_wizualny || "").toLowerCase();
-                    const isHome = d.kategoria === 'Inne' || desc.includes('dom') || desc.includes('ogród') || desc.includes('narzędzi') || desc.includes('mebel');
+                    const title = (d.marka + " " + (d.model || "")).toLowerCase();
+                    
+                    // INTELIGENTNE PRZEŁĄCZANIE KATEGORII (np. dla golarki, kosiarki, mebli)
+                    const homeKeywords = ['dom', 'ogród', 'mebel', 'kosiarka', 'narzędzie', 'elektronarzędzie', 'rtv', 'agd', 'golarka', 'philips', 'kuchnia'];
+                    let isHome = d.kategoria === 'Inne' || homeKeywords.some(k => desc.includes(k) || title.includes(k));
                     
                     document.getElementById(isHome ? 'cat_home' : 'cat_parts').checked = true;
-                    updateSubcats();
+                    updateSubcats(); // Aktualizujemy listę select pod nową kategorię
 
+                    // Wypelnianie pól
                     document.getElementById('ai_nazwa').value = (d.marka + " " + (d.model || "")).trim();
                     document.getElementById('ai_producent').value = d.marka || "";
                     document.getElementById('ai_opis').value = d.opis_wizualny || "";
-                    if(d.vin && d.vin.length < 15) document.getElementById('ai_ean').value = d.vin;
-
-                    toast.innerHTML = '<i class="bi bi-stars me-2"></i> Dane uzupełnione przez AI';
+                    
+                    // Próba automatycznego wybrania podkategorii
+                    const select = document.getElementById('select_podkategoria');
+                    for (let option of select.options) {
+                        if (desc.includes(option.value.toLowerCase().split(' ')[0])) {
+                            select.value = option.value;
+                            break;
+                        }
+                    }
+                    
+                    toast.innerHTML = '<i class="bi bi-stars me-2"></i> Gemini AI uzupełniło dane!';
                     toast.style.display = 'block';
-                    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+                    setTimeout(() => toast.style.display = 'none', 3000);
                 }
-            } catch(e) { 
-                loader.style.display = 'none';
-                console.error("AI Error:", e);
-            }
+            } catch(e) { loader.style.display = 'none'; }
         }
 
-        // ZAPIS DO BAZY (WYSYŁANIE)
         function showZapisLoader() {
             const loader = document.getElementById('loaderOverlay');
             const loaderText = document.getElementById('loaderText');
-            // Zmieniamy napis na odpowiedni dla etapu zapisu
             loaderText.innerText = "PUBLIKACJA OGŁOSZENIA W TOKU...";
             loader.style.display = 'flex';
         }
 
-        // OBSŁUGA PLIKÓW
         function scanMarketItem(input) {
             if(!input.files[0]) return;
             const dt = new DataTransfer();
@@ -383,8 +248,9 @@
         function reGenerateDesc() {
             const gallery = document.getElementById('mainGallery');
             if(gallery.files[0]) performMarketAnalysis(gallery.files[0]);
-            else alert("Najpierw dodaj zdjęcie przedmiotu!");
+            else alert("Dodaj zdjęcie!");
         }
     </script>
+
 </body>
 </html>
