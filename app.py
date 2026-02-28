@@ -495,11 +495,11 @@ def update_market_valuation(car):
     Cena: {car.cena} {car.waluta}. Silnik: {car.pojemnosc} {car.paliwo}, Moc: {car.moc} KM.
     
     ZADANIA DO WYKONANIA:
-    1. Stan Wizualny (Analiza Załączonego Zdjęcia): Oceń stan lakieru/blacharki (w skali 1-10) i krótko go opisz.
-    2. Wycena Rynkowa (Polska): Podaj widełki (Min-Max) i Średnią dla tego modelu w Polsce.
-    3. Efektywność Energetyczna: Podaj realne średnie spalanie (miasto, trasa, mieszany) dla tej jednostki napędowej oraz przydziel europejską klasę energetyczną (od A do G) na podstawie szacowanej emisji CO2.
-    4. Ekspertyza Silnika: Podaj opinię o tym konkretnym silniku (awaryjność, typowe usterki, np. problemy z rozrządem, branie oleju).
-    5. Werdykt: Ocen opłacalność (score 1-100).
+    1. Stan Wizualny: Oceń stan lakieru/blacharki ze zdjęcia (w skali 1-10) i krótko go opisz.
+    2. Wycena Rynkowa: Podaj widełki (Min-Max) i Średnią dla tego modelu w Polsce.
+    3. Analiza Ceny: Napisz 1-2 zdania tłumaczące, dlaczego ta konkretna cena ({car.cena} {car.waluta}) jest "OKAZJĄ", "DOBRĄ CENĄ" lub "ZAWYŻONĄ" na tle rynku.
+    4. Efektywność Energetyczna: Podaj realne średnie spalanie (miasto, trasa, mieszany) oraz przydziel europejską klasę energetyczną (od A do G).
+    5. Ekspertyza Silnika: Napisz 2-3 zdania opinii TYLKO o tym konkretnym silniku (awaryjność, typowe usterki, na co uważać).
     
     Zwróć TYLKO czysty JSON bez formatowania markdown:
     {{
@@ -510,20 +510,21 @@ def update_market_valuation(car):
         "pl_avg": (liczba),
         "pl_max": (liczba),
         "paint_score": (liczba 1-10),
-        "paint_status": (krótki opis np. "Lakier zadbany, drobne rysy widoczne na zderzaku"),
+        "paint_status": (krótki opis np. "Lakier zadbany, drobne rysy"),
         "klasa_energetyczna": (litera A-G),
         "spalanie": {{
             "miasto": "X.X",
             "trasa": "X.X",
             "mieszany": "X.X"
         }},
-        "expert_comment": (opinia o silniku i werdykt cenowy)
+        "price_comment": (twój komentarz z punktu 3),
+        "engine_comment": (twoja ekspertyza z punktu 5)
     }}
     """
 
     try:
         content = [prompt]
-        if image_file: content.append(image_file) # Dodajemy zdjęcie, o którym zapomniałem!
+        if image_file: content.append(image_file)
 
         response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
@@ -535,6 +536,7 @@ def update_market_valuation(car):
         db.session.commit()
     except Exception as e:
         print(f"AI Update Market Error: {e}")
+
 
 
 @app.template_filter('from_json')
