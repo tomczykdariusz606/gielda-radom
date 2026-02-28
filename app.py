@@ -475,6 +475,7 @@ def check_ai_limit():
 def update_market_valuation(car):
     if not model_ai: return
 
+    # 1. PRZYGOTOWANIE ZDJĘCIA DO ANALIZY LAKIERU
     img_path = car.img
     if 'static/' in img_path:
         img_path = img_path.replace(url_for('static', filename=''), 'static/')
@@ -487,43 +488,54 @@ def update_market_valuation(car):
     except Exception as e:
         print(f"Błąd zdjęcia dla AI: {e}")
 
+    # 2. KOMPLEKSOWY PROMPT DLA GEMINI
     prompt = f"""
-    Jesteś rzeczoznawcą samochodowym na rynku Polskim.
-    Analizujesz: {car.marka} {car.model}, Rok: {car.rok}, {car.przebieg} km, Cena: {car.cena} {car.waluta}.
+    Jesteś rzeczoznawcą samochodowym i ekspertem technicznym.
+    Analizujesz auto: {car.marka} {car.model}, Rok: {car.rok}, Przebieg: {car.przebieg} km, 
+    Cena: {car.cena} {car.waluta}. Silnik: {car.pojemnosc} {car.paliwo}, Moc: {car.moc} KM.
     
-    ZADANIA:
-    1. Rynkowa Wycena (PL): Podaj realne widełki cenowe (Min-Max) i Średnią dla tego modelu w Polsce.
-    2. Stan Wizualny (ze zdjęcia): Oceń stan lakieru/blacharki (1-10).
-    3. Werdykt: Porównaj cenę sprzedawcy ({car.cena} {car.waluta}) do Rynku.
+    ZADANIA DO WYKONANIA:
+    1. Stan Wizualny (Analiza Załączonego Zdjęcia): Oceń stan lakieru/blacharki (w skali 1-10) i krótko go opisz.
+    2. Wycena Rynkowa (Polska): Podaj widełki (Min-Max) i Średnią dla tego modelu w Polsce.
+    3. Efektywność Energetyczna: Podaj realne średnie spalanie (miasto, trasa, mieszany) dla tej jednostki napędowej oraz przydziel europejską klasę energetyczną (od A do G) na podstawie szacowanej emisji CO2.
+    4. Ekspertyza Silnika: Podaj opinię o tym konkretnym silniku (awaryjność, typowe usterki, np. problemy z rozrządem, branie oleju).
+    5. Werdykt: Ocen opłacalność (score 1-100).
     
-    Zwróć TYLKO JSON:
+    Zwróć TYLKO czysty JSON bez formatowania markdown:
     {{
         "score": (liczba 1-100),
         "label": (np. "SUPER OKAZJA", "DOBRA CENA", "DROGO"),
         "color": ("success", "warning", "info", "danger"),
-        "pl_min": (liczba - dolna granica ceny w PL),
-        "pl_avg": (liczba - średnia cena w PL),
-        "pl_max": (liczba - górna granica ceny w PL),
+        "pl_min": (liczba),
+        "pl_avg": (liczba),
+        "pl_max": (liczba),
         "paint_score": (liczba 1-10),
-        "paint_status": (krótki opis np. "Lakier zadbany", "Widoczne rysy"),
-        "expert_comment": (Krótkie podsumowanie dla kupującego)
+        "paint_status": (krótki opis np. "Lakier zadbany, drobne rysy widoczne na zderzaku"),
+        "klasa_energetyczna": (litera A-G),
+        "spalanie": {{
+            "miasto": "X.X",
+            "trasa": "X.X",
+            "mieszany": "X.X"
+        }},
+        "expert_comment": (opinia o silniku i werdykt cenowy)
     }}
     """
 
     try:
         content = [prompt]
-        if image_file: content.append(image_file)
+        if image_file: content.append(image_file) # Dodajemy zdjęcie, o którym zapomniałem!
 
         response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         
-        json.loads(clean_json) 
+        json.loads(clean_json) # Weryfikacja
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
-        print(f"AI Error: {e}")
+        print(f"AI Update Market Error: {e}")
+
 
 @app.template_filter('from_json')
 def from_json_filter(value):
