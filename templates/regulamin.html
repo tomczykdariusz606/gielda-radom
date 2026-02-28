@@ -56,6 +56,17 @@
         }
         .nav-item { text-align: center; color: #777; text-decoration: none; font-size: 0.75rem; flex: 1; }
         .nav-item i { font-size: 1.4rem; display: block; }
+        
+        .seo-footer {
+            background: rgba(10,10,10,0.95);
+            padding: 40px 0 30px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #777;
+            font-size: 0.85rem;
+            margin-bottom: 60px; /* Miejsce na dolne menu na mobile */
+        }
+        .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
+        .footer-link:hover { color: var(--radom-red); }
     </style>
 </head>
 <body>
@@ -103,15 +114,23 @@
                         <p class="small">• {{ reg.reg_p4_6 }}</p>
                     </div>
 
+                    <section class="mt-4">
+                        <h2>{{ reg.reg_h5 }}</h2>
+                        <p>{{ reg.reg_p5_1 }}</p>
+                        <p>{{ reg.reg_p5_2 }}</p>
+                        <p>{{ reg.reg_p5_3 }}</p>
+                    </section>
+
                     <div class="mt-5 p-4 border border-secondary rounded-4 bg-black bg-opacity-25 text-center">
                         <p class="mb-0 small fw-bold">{{ reg.reg_contact }} <br> 
-                        <a href="mailto:dariusztom@go2.pl" class="text-danger">dariusztom@go2.pl</a></p>
+                        <a href="mailto:kontakt@gieldaradom.pl" class="text-danger">kontakt@gieldaradom.pl</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-        <footer class="seo-footer">
+    
+    <footer class="seo-footer">
         <div class="container">
             <div class="row g-4">
                 <div class="col-12 col-md-4 text-center text-md-start">
@@ -139,12 +158,10 @@
             </div>
             <hr class="border-secondary my-4">
             <div class="text-center small opacity-50">
-    &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
-</div>
-
+                &copy; 2026 Giełda Radom. Wszelkie prawa zastrzeżone. Projekt i realizacja: ADT & AI Team.
+            </div>
         </div>
     </footer>
-
 
     <div class="nav-bottom">
         <a href="/szukaj" class="nav-item"><i class="bi bi-search"></i> Szukaj</a>
