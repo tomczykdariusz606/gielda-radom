@@ -128,6 +128,7 @@
         }
         .pulse-btn { animation: pulse-green 2s infinite; }
         
+        /* GÓRNY PANEL AI */
         .expert-panel { 
             background: rgba(30, 30, 30, 0.65);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -137,6 +138,15 @@
         }
         .expert-header { padding: 15px 20px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
         .badge-ai-pro { background: linear-gradient(90deg, #FFD700, #b8860b); color: black; font-weight: 900; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; letter-spacing: 1px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .market-bar-container { position: relative; height: 12px; background: #222; border-radius: 6px; margin: 45px 10px 25px 10px; border: 1px solid #444; }
+        .market-bar-gradient { position: absolute; top: 0; left: 0; height: 100%; width: 100%; border-radius: 6px; background: linear-gradient(90deg, #198754 0%, #ffc107 50%, #dc3545 100%); opacity: 0.4; }
+        .avg-marker { position: absolute; top: -8px; left: 50%; width: 2px; height: 28px; background: #fff; z-index: 1; opacity: 0.5; }
+        .avg-label { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .user-dot { position: absolute; top: -8px; width: 28px; height: 28px; background: white; border: 6px solid #ce2b37; border-radius: 50%; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 20px rgba(206, 43, 55, 0.9); transition: left 1s ease-out; }
+        .user-price-label { position: absolute; bottom: -35px; transform: translateX(-50%); font-weight: 800; color: white; font-size: 0.85rem; background: #ce2b37; padding: 3px 10px; border-radius: 4px; white-space: nowrap; box-shadow: 0 5px 10px rgba(0,0,0,0.5); }
+        .user-price-label::after { content: ''; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); border-width: 0 5px 5px 5px; border-style: solid; border-color: transparent transparent #ce2b37 transparent; }
+        .paint-gauge { width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(0,0,0,0.5); border: 1px solid #333; }
+        .paint-inner { width: 60px; height: 60px; background: #161616; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: white; }
         
         .seo-footer {
             background: rgba(10,10,10,0.95);
@@ -246,62 +256,51 @@
             {% if car.ai_label %}{% set ai = car.ai_label|from_json %}{% if ai %}
             <div class="expert-panel">
                 <div class="expert-header">
-                    <div class="text-white small text-uppercase fw-bold"><i class="bi bi-robot me-2 text-warning"></i>RAPORT ZAAWANSOWANY GEMINI AI</div>
+                    <div class="text-white small text-uppercase fw-bold"><i class="bi bi-cpu-fill me-2 text-info"></i>Analiza Rynku & Stanu</div>
                     <span class="badge-ai-pro">GEMINI EXPERT</span>
                 </div>
 
                 <div class="p-4">
-                    <div class="row g-4 align-items-center">
-                        
-                        <div class="col-md-4 border-end border-secondary border-opacity-25">
-                            <label class="small text-white-50 fw-bold d-block mb-3 text-uppercase"><i class="bi bi-camera me-1 text-info"></i> Z analizy zdjęcia</label>
-                            <h6 class="text-white fw-bold mb-1">Stan wizualny: <span class="text-{% if (ai.paint_score or 5) >= 8 %}success{% elif (ai.paint_score or 5) >= 5 %}warning{% else %}danger{% endif %}">{{ ai.paint_score or '-' }}/10</span></h6>
-                            <div class="progress mb-2 bg-dark" style="height: 6px;">
-                                <div class="progress-bar bg-{% if (ai.paint_score or 5) >= 8 %}success{% elif (ai.paint_score or 5) >= 5 %}warning{% else %}danger{% endif %}" style="width: {{ (ai.paint_score or 5) * 10 }}%"></div>
-                            </div>
-                            <p class="small text-white-50 fst-italic mb-0" style="font-size: 0.8rem;">{{ ai.paint_status }}</p>
+                    <div class="row align-items-center mb-4">
+                        <div class="col-8 border-end border-secondary border-opacity-25">
+                            <div class="small text-muted mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Ocena Oferty</div>
+                            <h2 class="fw-bold mb-1 text-{{ ai.color }}">{{ ai.label }}</h2>
                         </div>
-
-                        <div class="col-md-4 border-end border-secondary border-opacity-25">
-                            <label class="small text-white-50 fw-bold d-block mb-3 text-uppercase"><i class="bi bi-fuel-pump me-1 text-warning"></i> Zużycie / Emisja</label>
-                            
-                            <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-dark border border-secondary text-white me-2">KLASA {{ ai.klasa_energetyczna|default('?') }}</span>
-                                <div class="flex-grow-1" style="height: 10px; background: linear-gradient(90deg, #198754, #ffc107, #dc3545); border-radius: 5px; position: relative;">
-                                    {% set positions = {'A': '0%', 'B': '16%', 'C': '33%', 'D': '50%', 'E': '66%', 'F': '83%', 'G': '95%'} %}
-                                    <i class="bi bi-caret-down-fill text-white" style="position: absolute; top: -14px; left: {{ positions[ai.klasa_energetyczna] if ai.klasa_energetyczna in positions else '50%' }}; font-size: 1.2rem; text-shadow: 0px 2px 5px rgba(0,0,0,0.8);"></i>
-                                </div>
+                        <div class="col-4 text-center">
+                            <div class="paint-gauge mx-auto mb-2" style="background: conic-gradient({{ 'var(--radom-red)' if (ai.paint_score or 5) < 5 else '#198754' }} {{ (ai.paint_score or 5) * 36 }}deg, #222 0deg);">
+                                <div class="paint-inner">{{ ai.paint_score or '-' }}</div>
                             </div>
-
-                            <div class="d-flex justify-content-between small border-bottom border-secondary border-opacity-25 pb-1 mb-1">
-                                <span class="text-white-50">Miasto:</span> <strong class="text-danger">{{ ai.spalanie.miasto if ai.spalanie else '--' }} l</strong>
-                            </div>
-                            <div class="d-flex justify-content-between small border-bottom border-secondary border-opacity-25 pb-1 mb-1">
-                                <span class="text-white-50">Trasa:</span> <strong class="text-success">{{ ai.spalanie.trasa if ai.spalanie else '--' }} l</strong>
-                            </div>
-                            <div class="d-flex justify-content-between small">
-                                <span class="text-white fw-bold">Średnio:</span> <strong class="text-white fw-bold">{{ ai.spalanie.mieszany if ai.spalanie else '--' }} l</strong>
-                            </div>
+                            <div class="small text-muted fw-bold" style="font-size:0.6rem;">KONDYCJA WIZUALNA</div>
+                            <div class="text-white small mt-1 fw-bold lh-sm" style="font-size: 0.8rem;">{{ ai.paint_status }}</div>
                         </div>
-
-                        <div class="col-md-4">
-                            <label class="small text-white-50 fw-bold d-block mb-2 text-uppercase"><i class="bi bi-chat-quote me-1 text-danger"></i> Okiem Eksperta</label>
-                            <p class="small text-white mb-3" style="line-height: 1.4;">{{ ai.expert_comment }}</p>
-                            
-                            <div class="text-center bg-black bg-opacity-50 p-2 rounded border border-secondary border-opacity-25">
-                                <div class="small text-white-50 mb-1" style="font-size: 0.7rem;">Wycena Rynkowa:</div>
-                                <div class="fw-bold text-white fs-6">{{ "{:,.0f}".format(ai.pl_min|default(0)).replace(',', ' ') }} - {{ "{:,.0f}".format(ai.pl_max|default(0)).replace(',', ' ') }} {{ car.waluta }}</div>
-                                <span class="badge bg-{{ ai.color }} mt-2 shadow-sm w-100 py-2">{{ ai.label }} (Ocena: {{ ai.score }}/100)</span>
-                            </div>
-                        </div>
-
                     </div>
-                </div>
 
+                    <hr class="border-secondary opacity-25 my-4">
+
+                    {% if ai.pl_min and ai.pl_max %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between text-muted small fw-bold mb-1 font-monospace" style="font-size: 0.75rem;">
+                            <span>MIN: {{ "{:,.0f}".format(ai.pl_min) }}</span>
+                            <span class="text-white opacity-50">RYNEK</span>
+                            <span>MAX: {{ "{:,.0f}".format(ai.pl_max) }}</span>
+                        </div>
+
+                        <div class="market-bar-container">
+                            <div class="market-bar-gradient"></div>
+                            <div class="avg-marker"></div>
+                            <div class="avg-label">ŚREDNIA {{ "{:,.0f}".format(ai.pl_avg/1000) }}k</div>
+                            {% set range = ai.pl_max - ai.pl_min %}{% if range > 0 %}{% set pos = ((car.cena - ai.pl_min) / range) * 100 %}{% else %}{% set pos = 50 %}{% endif %}
+                            {% if pos < 0 %}{% set pos = 0 %}{% endif %}{% if pos > 100 %}{% set pos = 100 %}{% endif %}
+                            <div class="user-dot" style="left: {{ pos }}%;"><div class="user-price-label">TA OFERTA</div></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
                 <div class="bg-black bg-opacity-50 px-3 py-3 border-top border-secondary border-opacity-25">
                     <div class="row align-items-center">
                         <div class="col-7">
-                            <small class="text-muted d-block fst-italic" style="font-size: 0.6rem;">Model Gemini 3.0 Flash. Aktualizacja: {{ car.ai_valuation_data }}</small>
+                            <small class="text-muted d-block fst-italic" style="font-size: 0.6rem;">Model Gemini 3.0 Pro. Aktualizacja: {{ car.ai_valuation_data }}</small>
                         </div>
                         <div class="col-5 text-end">
                             <button onclick="shareOffer()" class="btn btn-sm btn-outline-warning rounded-pill fw-bold shadow-sm" style="font-size: 0.7rem;"><i class="bi bi-share-fill me-1"></i> UDOSTĘPNIJ</button>
@@ -310,6 +309,7 @@
                 </div>
             </div>
             {% endif %}{% endif %}
+
             <div class="card glass-panel mb-4 shadow-sm">
                 <div class="card-header bg-transparent border-secondary text-muted small fw-bold text-uppercase p-3">
                     <i class="bi bi-file-text-fill me-2"></i> OPIS POJAZDU
@@ -378,10 +378,6 @@
                                     {% if 'Nagłośnienie' in item or 'Audio' in item %}{% set icon = 'bi-speaker text-danger' %}{% endif %}
                                     {% if 'Kierownica' in item %}{% set icon = 'bi-vinyl text-white-50' %}{% endif %}
                                     {% if 'Relingi' in item %}{% set icon = 'bi-distribute-vertical text-secondary' %}{% endif %}
-                                    
-                                    {% set var_name = 'eq_' + item.split(' ')[0].lower().replace('.', '') %}
-                                    {% if item == 'Poduszki powietrzne' %}{% set var_name = 'eq_airbags' %}{% endif %}
-                                    {% if item == 'Skórzana tapicerka' %}{% set var_name = 'eq_leather' %}{% endif %}
 
                                     <div class="col-6 col-md-4 col-lg-4">
                                         <div class="d-flex align-items-center p-3 rounded-3 bg-black bg-opacity-50 border border-secondary border-opacity-25 h-100" style="transition: 0.3s; cursor: default;" onmouseover="this.style.borderColor='var(--radom-red)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.25)'; this.style.transform='translateY(0)';">
@@ -396,6 +392,73 @@
                 </div>
             </div>
             {% endif %}
+
+            {% if car.ai_label %}{% set ai = car.ai_label|from_json %}
+            {% if ai and (ai.spalanie or ai.klasa_energetyczna) %}
+            <div class="card glass-panel mb-4 shadow-lg border-0" style="background: linear-gradient(145deg, rgba(20,20,25,0.9), rgba(15,15,18,0.95)); border-top: 3px solid #198754 !important;">
+                <div class="card-header bg-transparent border-secondary border-opacity-25 text-white small fw-bold text-uppercase p-3 d-flex align-items-center">
+                    <i class="bi bi-shield-check me-2 text-success fs-5"></i> DANE TECHNICZNE, SPALANIE I OPINIA
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="row g-5 align-items-center mb-4">
+                        <div class="col-md-5 border-end border-secondary border-opacity-25">
+                            <div class="text-white-50 small text-uppercase fw-bold mb-3">Klasa efektywności CO₂</div>
+                            <div class="d-flex flex-column gap-1 position-relative" style="max-width: 220px;">
+                                {% set colors = {'A': '#00a651', 'B': '#5cb85c', 'C': '#cddc39', 'D': '#f0c420', 'E': '#f89406', 'F': '#e54d42', 'G': '#d9534f'} %}
+                                {% for letter in ['A','B','C','D','E','F','G'] %}
+                                    <div class="d-flex align-items-center position-relative mb-1">
+                                        <div class="badge text-white rounded-1 px-3 py-1 text-start d-flex align-items-center" 
+                                             style="width: {{ 45 + loop.index0 * 8 }}%; background-color: {{ colors[letter] }}; font-size: 0.85rem; height: 26px; box-shadow: inset 1px 1px 3px rgba(255,255,255,0.2); border: 1px solid rgba(0,0,0,0.5);">
+                                            {{ letter }}
+                                        </div>
+                                        
+                                        {% if ai.klasa_energetyczna == letter %}
+                                            <div class="position-absolute d-flex align-items-center" style="left: calc({{ 45 + loop.index0 * 8 }}% + 4px);">
+                                                <i class="bi bi-caret-left-fill fs-3" style="color: {{ colors[letter] }}; line-height: 0; filter: drop-shadow(-2px 0 5px rgba(0,0,0,0.8));"></i>
+                                                <span class="badge bg-dark border border-secondary text-white ms-0 fs-6 px-2 py-1 shadow-lg" style="box-shadow: 0 5px 15px rgba(0,0,0,0.8) !important;">{{ letter }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="text-white-50 small text-uppercase fw-bold mb-3">Szacowane zużycie paliwa</div>
+                            
+                            <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-2 mb-3">
+                                <span class="text-white"><i class="bi bi-buildings me-2 text-muted"></i>Cykl miejski</span>
+                                <span class="fs-5 fw-bold text-danger">{{ ai.spalanie.miasto if ai.spalanie else '--' }} <span class="fs-6 text-muted">l/100km</span></span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 pb-2 mb-3">
+                                <span class="text-white"><i class="bi bi-sign-turn-right me-2 text-muted"></i>Cykl pozamiejski</span>
+                                <span class="fs-5 fw-bold text-success">{{ ai.spalanie.trasa if ai.spalanie else '--' }} <span class="fs-6 text-muted">l/100km</span></span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-white fw-bold"><i class="bi bi-arrow-repeat me-2 text-muted"></i>Cykl mieszany</span>
+                                <span class="fs-4 fw-bold text-white">{{ ai.spalanie.mieszany if ai.spalanie else '--' }} <span class="fs-6 text-white-50">l/100km</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if ai.expert_comment %}
+                    <div class="mt-2 pt-4 border-top border-secondary border-opacity-25">
+                        <div class="text-white-50 small text-uppercase fw-bold mb-3"><i class="bi bi-chat-quote me-2 text-info"></i>Opinia eksperta o silniku ({{ car.pojemnosc }})</div>
+                        <div class="p-3 bg-black bg-opacity-50 rounded-3 border border-secondary border-opacity-25 position-relative" style="border-left: 4px solid #0dcaf0 !important;">
+                            <i class="bi bi-quote position-absolute top-0 start-0 ms-2 text-white opacity-10" style="font-size: 3rem; margin-top: -10px;"></i>
+                            <p class="mb-0 text-white position-relative" style="line-height: 1.6; font-size: 0.95rem; z-index: 2;">
+                                {{ ai.expert_comment }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endif %}{% endif %}
             </div>
 
         <div class="col-lg-4">
