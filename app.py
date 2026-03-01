@@ -472,6 +472,8 @@ def check_ai_limit():
         db.session.commit()
     return current_user.ai_requests_today < 1000
 
+
+
 def update_market_valuation(car):
     if not model_ai: return
 
@@ -488,20 +490,25 @@ def update_market_valuation(car):
     except Exception as e:
         print(f"Błąd zdjęcia dla AI: {e}")
 
-    # 2. KOMPLEKSOWY PROMPT DLA GEMINI
+        # 2. KOMPLEKSOWY I RESTRYKCYJNY PROMPT DLA GEMINI
     prompt = f"""
     Jesteś rzeczoznawcą samochodowym i ekspertem technicznym.
-    Analizujesz auto: {car.marka} {car.model}, Rok: {car.rok}, Przebieg: {car.przebieg} km, 
-    Cena: {car.cena} {car.waluta}. Silnik: {car.pojemnosc} {car.paliwo}, Moc: {car.moc} KM.
+    Analizujesz BEZWZGLĘDNIE auto o poniższych parametrach:
+    Marka i model: {car.marka} {car.model}
+    Rok produkcji: {car.rok}
+    Przebieg: {car.przebieg} km
+    Cena: {car.cena} {car.waluta}
+    DOKŁADNY SILNIK DO ANALIZY: Pojemność: {car.pojemnosc}, Paliwo: {car.paliwo}, Moc: {car.moc} KM.
     
-    ZADANIA DO WYKONANIA:
+    ZADANIA DO WYKONANIA (MUSISZ OPISYWAĆ TYLKO SILNIK {car.pojemnosc} {car.paliwo} {car.moc} KM, zignoruj ewentualne znaczki na klapie ze zdjęcia):
     1. Stan Wizualny: Oceń stan lakieru/blacharki ze zdjęcia (w skali 1-10) i krótko go opisz.
-    2. Wycena Rynkowa: Podaj widełki (Min-Max) i Średnią dla tego modelu w Polsce.
-    3. Analiza Ceny: Napisz 1-2 zdania tłumaczące, dlaczego ta konkretna cena ({car.cena} {car.waluta}) jest "OKAZJĄ", "DOBRĄ CENĄ" lub "ZAWYŻONĄ" na tle rynku.
-    4. Efektywność Energetyczna: Podaj realne średnie spalanie (miasto, trasa, mieszany) oraz przydziel europejską klasę energetyczną (od A do G).
-    5. Ekspertyza Silnika: Napisz 2-3 zdania opinii TYLKO o tym konkretnym silniku (awaryjność, typowe usterki, na co uważać).
+    2. Wycena Rynkowa: Podaj widełki (Min-Max) i Średnią dla tego auta z tym silnikiem w Polsce.
+    3. Analiza Ceny: Napisz 1-2 zdania tłumaczące, dlaczego ta konkretna cena ({car.cena} {car.waluta}) jest adekwatna do rynku.
+    4. Efektywność Energetyczna: Podaj realne średnie spalanie (miasto, trasa, mieszany) DLA SILNIKA {car.pojemnosc} {car.paliwo} oraz przydziel klasę (od A do G).
+    5. Ekspertyza Silnika: Napisz 2-3 zdania opinii DOTYCZĄCEJ WYŁĄCZNIE JEDNOSTKI {car.pojemnosc} {car.paliwo} (typowe usterki tego silnika, na co uważać). Jeśli nie znasz tego silnika, napisz "Brak wystarczających danych o tej jednostce".
     
     Zwróć TYLKO czysty JSON bez formatowania markdown:
+
     {{
         "score": (liczba 1-100),
         "label": (np. "SUPER OKAZJA", "DOBRA CENA", "DROGO"),
