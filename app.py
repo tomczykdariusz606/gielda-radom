@@ -1189,11 +1189,14 @@ def dodaj_przedmiot():
 @login_required
 def analyze_car():
     dzisiaj = datetime.utcnow().date()
-    # Reset dziennego limitu zapytań
+        # Reset dziennego limitu zapytań
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
+
+    # ZABEZPIECZENIE: Zmiana pustej wartości na twarde zero dla nowych userów
+    uzyte_dzis = current_user.ai_requests_today or 0
 
     # Ustalanie limitów (Admin = 500, Użytkownik = 6)
     if current_user.username == 'admin' or current_user.id == 1:
@@ -1201,7 +1204,8 @@ def analyze_car():
     else:
         LIMIT = 6
 
-    if current_user.ai_requests_today >= LIMIT:
+    if uzyte_dzis >= LIMIT:
+
         return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
 
     file = request.files.get('scan_image')
