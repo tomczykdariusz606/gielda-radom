@@ -952,32 +952,34 @@
             const sekcja = document.getElementById('sekcja_firma');
             if(sekcja) sekcja.style.display = (val === 'company' ? 'block' : 'none');
         }
-
-        // --- 3. SZTUCZNA INTELIGENCJA (GEMINI) I SKANOWANIE ---
         async function performAnalysis(file) {
             const toast = document.getElementById('aiToast'); 
-            if(toast) toast.style.display = 'block';
+            if(toast) {
+                toast.innerHTML = '<i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...';
+                toast.style.display = 'block';
+            }
             
-            const fd = new FormData(); 
-            fd.append('scan_image', file); 
-            
+            const fd = new FormData(); fd.append('scan_image', file); 
             try { 
                 const r = await fetch('/api/analyze-car', {method:'POST', body:fd}); 
                 const d = await r.json(); 
                 
+                // DODANE: Jeśli serwer odrzuci (bo limit), pokaż użytkownikowi komunikat!
+                if(d.error) {
+                    alert("⚠️ Informacja: " + d.error);
+                    if(toast) toast.style.display = 'none';
+                    return;
+                }
+
                 if(d.marka){ 
-                    if(d.kategoria){ 
-                        let radio = document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); 
-                        if(radio){ radio.checked = true; adj(); }
-                    } 
-                    
-                    document.querySelector('[name="marka"]').value = d.marka || ''; 
-                    document.querySelector('[name="model"]').value = d.model || '';
-                    if(d.vin) document.querySelector('[name="vin"]').value = d.vin; 
-                    if(d.rok_sugestia) document.querySelector('[name="rok"]').value = d.rok_sugestia; 
-                    if(d.opis_wizualny) document.querySelector('[name="opis"]').value = d.opis_wizualny;
-                    if(d.moc_sugestia) document.querySelector('[name="moc"]').value = d.moc_sugestia;
-                    if(d.kolor) document.querySelector('[name="kolor"]').value = d.kolor;
+                    if(d.kategoria){ let rc=document.querySelector(`input[name="typ"][value="${d.kategoria}"]`); if(rc){ rc.checked=true; adj(); }} 
+                    let m = document.querySelector('[name="marka"]'); if(m) m.value=d.marka; 
+                    let md = document.querySelector('[name="model"]'); if(md) md.value=d.model;
+                    let vn = document.querySelector('[name="vin"]'); if(vn && d.vin) vn.value=d.vin; 
+                    let rk = document.querySelector('[name="rok"]'); if(rk) rk.value=d.rok_sugestia||''; 
+                    let op = document.querySelector('[name="opis"]'); if(op) op.value=d.opis_wizualny||'';
+                    let mc = document.querySelector('[name="moc"]'); if(mc && d.moc_sugestia) mc.value=d.moc_sugestia;
+                    let kl = document.querySelector('[name="kolor"]'); if(kl && d.kolor) kl.value=d.kolor;
                     
                     if (d.wyposazenie_wykryte) {
                         d.wyposazenie_wykryte.forEach(item => {
@@ -985,52 +987,41 @@
                             if (chk) chk.checked = true;
                         });
                     }
-                    
-                    if(d.paliwo_sugestia && d.kategoria !== 'Inne'){
+                    if(d.paliwo_sugestia && d.kategoria!=='Inne'){
                         let t_label = d.paliwo_sugestia;
-                        // Mapowanie tłumaczeń (uproszczone dla JS)
                         if(d.paliwo_sugestia === 'Benzyna') t_label = "{{ t.get('petrol', 'Benzyna') }}";
                         else if(d.paliwo_sugestia === 'Diesel') t_label = "{{ t.get('diesel', 'Diesel') }}";
                         else if(d.paliwo_sugestia === 'Hybryda') t_label = "{{ t.get('hybrid', 'Hybryda') }}";
                         else if(d.paliwo_sugestia === 'Elektryczny') t_label = "{{ t.get('electric', 'Elektryczny') }}";
                         else if(d.paliwo_sugestia === 'LPG') t_label = "{{ t.get('lpg', 'LPG') }}";
-                        
                         setVal('paliwo', d.paliwo_sugestia, t_label);
                     } 
-                    
                     if(toast) {
-                        toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione przez AI!'; 
+                        toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione!'; 
                         setTimeout(() => { toast.style.display = 'none'; }, 3000);
                     }
                 } else { 
                     if(toast) toast.style.display = 'none'; 
                 } 
             } catch(e){ 
-                console.error("Błąd AI:", e); 
+                console.error(e); 
                 if(toast) toast.style.display = 'none'; 
+                alert("❌ Wystąpił błąd serwera. Upewnij się, że nie dodajesz naraz więcej niż jednego auta.");
             } 
         }
 
         async function scanCar(input){ 
-            if(!input || !input.files[0]) return; 
+            if(!input.files[0]) return; 
+            // ZMIANA: Zabezpieczono ładowanie przed błędem "fileInput is null"
             const mainInput = document.getElementById('mainGalleryInput'); 
-            
             if(mainInput) {
-                const dt = new DataTransfer(); 
-                dt.items.add(input.files[0]); 
-                mainInput.files = dt.files;
-                
-                // Ręczne wywołanie eventu 'change', żeby zaktualizować interfejs
-                mainInput.dispatchEvent(new Event('change'));
+                const dt = new DataTransfer(); dt.items.add(input.files[0]); mainInput.files = dt.files;
             }
-            
             const headerLabel = document.getElementById('photoLabel'); 
-            if(headerLabel) {
-                headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }} <span class="text-success ms-2">✅ SKAN DODANY!</span>';
-            }
-            
+            if(headerLabel) headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }} <span class="text-success ms-2">✅ SKAN DODANY!</span>';
             performAnalysis(input.files[0]);
         }
+
 
         // --- 4. ZARZĄDZANIE UNIWERSALNYM MODALEM ADMINA (BEZPIECZNE DLA PAGINACJI) ---
         document.body.addEventListener('click', function(e) {
