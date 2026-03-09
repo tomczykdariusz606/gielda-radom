@@ -1213,7 +1213,20 @@ def analyze_car():
         return jsonify({"error": "Brak pliku"}), 400
 
     try:
-        image_data = file.read()
+        # --- NOWE: OPTYMALIZACJA W LOCIE DLA TELEFONÓW ---
+        img_obj = Image.open(file)
+        img_obj = ImageOps.exif_transpose(img_obj) # Naprawia obrócone zdjęcia z telefonu
+        img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS) # Zmniejsza rozdzielczość
+        
+        # Konwersja i zapis do pamięci RAM jako lekki JPEG
+        if img_obj.mode != 'RGB':
+            img_obj = img_obj.convert('RGB')
+            
+        img_byte_arr = io.BytesIO()
+        img_obj.save(img_byte_arr, format='JPEG', quality=85)
+        image_data = img_byte_arr.getvalue()
+        mime_type = 'image/jpeg'
+        # --------------------------------------------------
         
         # Mózg operacji: Precyzyjny prompt dla Gemini 3.0 Flash
         prompt = """
@@ -1302,7 +1315,20 @@ def analyze_market():
         return jsonify({"error": "Brak pliku"}), 400
 
     try:
-        image_data = file.read()
+        # --- NOWE: OPTYMALIZACJA W LOCIE DLA TELEFONÓW ---
+        img_obj = Image.open(file)
+        img_obj = ImageOps.exif_transpose(img_obj) # Naprawia obrócone zdjęcia z telefonu
+        img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS) # Zmniejsza rozdzielczość
+        
+        # Konwersja i zapis do pamięci RAM jako lekki JPEG
+        if img_obj.mode != 'RGB':
+            img_obj = img_obj.convert('RGB')
+            
+        img_byte_arr = io.BytesIO()
+        img_obj.save(img_byte_arr, format='JPEG', quality=85)
+        image_data = img_byte_arr.getvalue()
+        mime_type = 'image/jpeg'
+        # --------------------------------------------------
         
         # Nowy Mózg: Ekspert od przedmiotów codziennego użytku i części
         prompt = """
