@@ -1212,12 +1212,11 @@ def analyze_car():
     if not file:
         return jsonify({"error": "Brak pliku"}), 400
 
-        try:
+    try:       # <---- POPRAWNE! (Cofnięte o 4 spacje)
         # 1. Pobieramy surowe dane (na wypadek, gdyby kompresja się nie udała, np. iPhone HEIC)
         raw_image_data = file.read()
         image_data = raw_image_data
         mime_type = file.mimetype
-        
         # 2. Próbujemy bezpiecznie skompresować zdjęcie, by oszczędzić RAM
         try:
             file.seek(0) # Wymuszamy cofnięcie kursora czytania pliku
