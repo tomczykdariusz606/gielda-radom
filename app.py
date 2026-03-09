@@ -1269,7 +1269,7 @@ def analyze_car():
         # ---------------------------------------------------------------
 
         # Zapisanie użycia limitu do bazy
-        current_user.ai_requests_today += 1
+        current_user.ai_requests_today = uzyte_dzis + 1  # <--- UŻYWAMY BEZPIECZNEJ ZMIENNEJ
         db.session.commit()
         
         return jsonify(data)
@@ -1337,7 +1337,7 @@ def analyze_market():
         data = json.loads(text_response)
         
         # Zapisanie użycia limitu do bazy
-        current_user.ai_requests_today += 1
+        current_user.ai_requests_today = uzyte_dzis + 1  # <--- UŻYWAMY BEZPIECZNEJ ZMIENNEJ
         db.session.commit()
         
         return jsonify(data)
