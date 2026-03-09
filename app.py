@@ -1212,21 +1212,30 @@ def analyze_car():
     if not file:
         return jsonify({"error": "Brak pliku"}), 400
 
-    try:
-        # --- NOWE: OPTYMALIZACJA W LOCIE DLA TELEFONÓW ---
-        img_obj = Image.open(file)
-        img_obj = ImageOps.exif_transpose(img_obj) # Naprawia obrócone zdjęcia z telefonu
-        img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS) # Zmniejsza rozdzielczość
+        try:
+        # 1. Pobieramy surowe dane (na wypadek, gdyby kompresja się nie udała, np. iPhone HEIC)
+        raw_image_data = file.read()
+        image_data = raw_image_data
+        mime_type = file.mimetype
         
-        # Konwersja i zapis do pamięci RAM jako lekki JPEG
-        if img_obj.mode != 'RGB':
-            img_obj = img_obj.convert('RGB')
+        # 2. Próbujemy bezpiecznie skompresować zdjęcie, by oszczędzić RAM
+        try:
+            file.seek(0) # Wymuszamy cofnięcie kursora czytania pliku
+            img_obj = Image.open(file)
+            img_obj = ImageOps.exif_transpose(img_obj)
+            img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
             
-        img_byte_arr = io.BytesIO()
-        img_obj.save(img_byte_arr, format='JPEG', quality=85)
-        image_data = img_byte_arr.getvalue()
-        mime_type = 'image/jpeg'
-        # --------------------------------------------------
+            if img_obj.mode != 'RGB':
+                img_obj = img_obj.convert('RGB')
+                
+            img_byte_arr = io.BytesIO()
+            img_obj.save(img_byte_arr, format='JPEG', quality=85)
+            image_data = img_byte_arr.getvalue()
+            mime_type = 'image/jpeg'
+        except Exception as compression_error:
+            # Jeśli to dziwny format z telefonu (HEIC), ignorujemy błąd kompresji i idziemy dalej z oryginałem
+            print(f"Ostrzeżenie kompresji: {compression_error}. Wysyłam oryginał.")
+
         
         # Mózg operacji: Precyzyjny prompt dla Gemini 3.0 Flash
         prompt = """
