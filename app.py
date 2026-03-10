@@ -84,9 +84,6 @@ if not os.path.exists(VIDEOS_360_FOLDER):
 
 
 # --- KONFIGURACJA MAILA (HOME.PL) ---
- 
-
-# --- OSTATECZNA KONFIGURACJA POCZTY (HOME.PL) ---
 app.config['MAIL_SERVER'] = 'serwer2602674.home.pl'
 app.config['MAIL_PORT'] = 587                       
 app.config['MAIL_USE_TLS'] = True                   
@@ -98,9 +95,6 @@ app.config['MAIL_PASSWORD'] = '3331343Daro@'
 
 # Klienci zobaczą pełen profesjonalizm
 app.config['MAIL_DEFAULT_SENDER'] = ('Giełda Radom', 'kontakt@gieldaradom.pl')
-
- 
-
 
 db = SQLAlchemy(app)
 mail = Mail(app)
@@ -283,9 +277,6 @@ TRANSLATIONS = {
     }
 }
 
-
-
-
 @app.context_processor
 def inject_conf_var():
     lang = request.cookies.get('lang', 'pl')
@@ -314,7 +305,6 @@ class User(UserMixin, db.Model):
     google_id = db.Column(db.String(100), unique=True, nullable=True)
     avatar_url = db.Column(db.String(500), nullable=True)
     
-    # --- NOWE: DANE FIRMOWE I KRAJ ---
     account_type = db.Column(db.String(20), default='private') 
     company_name = db.Column(db.String(100), nullable=True)
     kraj = db.Column(db.String(50), default='Polska')
@@ -350,17 +340,19 @@ class Car(db.Model):
     rok = db.Column(db.Integer, nullable=False)
     cena = db.Column(db.Float, nullable=False)
     
-    # --- NOWE: WALUTA (PLN/EUR) ---
     waluta = db.Column(db.String(10), default='PLN')
     
     opis = db.Column(db.Text, nullable=False)
     telefon = db.Column(db.String(20), nullable=False)
+    
+    # ZDJĘCIE GŁÓWNE I JEGO MINIATURA
     img = db.Column(db.String(200), nullable=False)
+    thumb = db.Column(db.String(200), nullable=True) # NOWA KOLUMNA DLA MINIATURKI
+    
     zrodlo = db.Column(db.String(50), default='Radom')
     is_360_premium = db.Column(db.Boolean, default=False)
     is_reserved = db.Column(db.Boolean, default=False)
     
-    # Dane techniczne
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     vin = db.Column(db.String(20), nullable=True)
@@ -374,12 +366,11 @@ class Car(db.Model):
     moc = db.Column(db.Integer, nullable=True)
     kolor = db.Column(db.String(50), nullable=True)
     
-    # AI i Statystyki
     is_promoted = db.Column(db.Boolean, default=False)
     ai_label = db.Column(db.String(500), nullable=True)
     ai_valuation_data = db.Column(db.String(50), nullable=True)
     views = db.Column(db.Integer, default=0)
-    wyswietlenia = db.Column(db.Integer, default=0) # Legacy field
+    wyswietlenia = db.Column(db.Integer, default=0) 
     
     data_dodania = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -387,7 +378,9 @@ class Car(db.Model):
 
 class CarImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # DODATKOWE ZDJĘCIA GALERII I ICH MINIATURY
     image_path = db.Column(db.String(200), nullable=False)
+    thumb_path = db.Column(db.String(200), nullable=True) # NOWA KOLUMNA DLA MINIATURKI
     car_id = db.Column(db.Integer, db.ForeignKey('car.id'), nullable=False)
     
 @login_manager.user_loader
@@ -399,7 +392,7 @@ def load_user(user_id):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def save_optimized_image(file):
+def save_optimized_image(file, is_car_image=False):
     if not file or not allowed_file(file.filename):
         return None
     
@@ -408,60 +401,55 @@ def save_optimized_image(file):
         filename = f"{uuid.uuid4().hex}.{ext}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
-        # Otwieranie obrazu przez PIL i poprawa rotacji
         image = Image.open(file)
         image = ImageOps.exif_transpose(image)
         
-        # Konwersja do RGBA, jeśli oryginalny obraz to wymaga (np. PNG z przezroczystością)
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
 
-        # Skalowanie głównego obrazu
         image.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
         
-        # --- NAKŁADANIE ZNAKU WODNEGO ---
         watermark_path = os.path.join(app.root_path, 'static', 'watermark.png')
         if os.path.exists(watermark_path):
             watermark = Image.open(watermark_path).convert("RGBA")
             
-            # Dostosowanie rozmiaru znaku wodnego (np. 20% szerokości obrazu)
             wm_width = int(image.width * 0.20)
             wm_ratio = wm_width / float(watermark.width)
             wm_height = int(float(watermark.height) * float(wm_ratio))
             watermark = watermark.resize((wm_width, wm_height), Image.Resampling.LANCZOS)
             
-            # Dodanie przezroczystości do znaku wodnego (np. 50%)
             alpha = watermark.split()[3]
             alpha = alpha.point(lambda p: p * 0.5)
             watermark.putalpha(alpha)
             
-            # Obliczanie pozycji (np. w prawym dolnym rogu z marginesem 20px)
             margin = 20
             position = (image.width - wm_width - margin, image.height - wm_height - margin)
             
-            # Nałożenie na nowy obraz kompozytowy
             transparent = Image.new('RGBA', image.size, (0,0,0,0))
             transparent.paste(image, (0,0))
             transparent.paste(watermark, position, mask=watermark)
             image = transparent
         
-        # --- ZAPIS JAKO WEBP ---
-        # Dla WebP trzeba zrzucić przezroczystość na czarne lub białe tło przed kompresją
         final_image = Image.new("RGB", image.size, (255, 255, 255))
         final_image.paste(image, mask=image.split()[3])
         
         final_image.save(filepath, format='WEBP', quality=80)
         
+        # JEŚLI TO ZDJĘCIE AUTA/PRZEDMIOTU -> TWORZYMY DODATKOWO LEKKĄ MINIATURKĘ
+        if is_car_image:
+            thumb_filename = f"thumb_{filename}"
+            thumb_filepath = os.path.join(app.config['UPLOAD_FOLDER'], thumb_filename)
+            
+            # Wycina i skaluje idealny środek zdjęcia pod wymiar 400x300 (bez zniekształceń)
+            thumb_img = ImageOps.fit(final_image, (400, 300), method=Image.Resampling.LANCZOS)
+            thumb_img.save(thumb_filepath, format='WEBP', quality=75)
+            
+            return filename, thumb_filename
+        
         return filename
     except Exception as e:
         print(f"Błąd zapisu i znaku wodnego: {e}")
         return None
-
-
-
-
-
-
 
 def check_ai_limit():
     if not current_user.is_authenticated: return False
@@ -472,12 +460,9 @@ def check_ai_limit():
         db.session.commit()
     return current_user.ai_requests_today < 1000
 
-
-
 def update_market_valuation(car):
     if not model_ai: return
 
-    # 1. PRZYGOTOWANIE ZDJĘCIA DO ANALIZY LAKIERU
     img_path = car.img
     if 'static/' in img_path:
         img_path = img_path.replace(url_for('static', filename=''), 'static/')
@@ -490,7 +475,7 @@ def update_market_valuation(car):
     except Exception as e:
         print(f"Błąd zdjęcia dla AI: {e}")
 
-        # 2. KOMPLEKSOWY I RESTRYKCYJNY PROMPT DLA GEMINI
+    # TWOJE ZABEZPIECZENIE SILNIKA ZACHOWANE W 100%
     prompt = f"""
     Jesteś rzeczoznawcą samochodowym i ekspertem technicznym.
     Analizujesz BEZWZGLĘDNIE auto o poniższych parametrach:
@@ -536,15 +521,13 @@ def update_market_valuation(car):
         response = model_ai.generate_content(content)
         clean_json = response.text.replace('```json', '').replace('```', '').strip()
         
-        json.loads(clean_json) # Weryfikacja
+        json.loads(clean_json) 
         
         car.ai_label = clean_json
         car.ai_valuation_data = datetime.now().strftime("%Y-%m-%d")
         db.session.commit()
     except Exception as e:
         print(f"AI Update Market Error: {e}")
-
-
 
 @app.template_filter('from_json')
 def from_json_filter(value):
@@ -631,10 +614,8 @@ https://gieldaradom.pl
             print(f"Błąd wysyłania potwierdzenia na {email}: {e}")
 
 def wyslij_potwierdzenie_ogloszenia(email, username, marka, model):
-    if email: # Upewniamy się, że użytkownik ma podany email
+    if email: 
         Thread(target=wyslij_potwierdzenie_ogloszenia_async, args=(app, email, username, marka, model)).start()
-
-
 
 # --- TRASY GOOGLE LOGIN ---
 @app.route('/login/google')
@@ -668,7 +649,6 @@ def google_callback():
                 username = f"{base_username}{counter}"
                 counter += 1
 
-            # Przy logowaniu z Google domyślnie to konto prywatne
             user = User(
                 username=username,
                 email=email,
@@ -680,7 +660,7 @@ def google_callback():
             )
             db.session.add(user)
             db.session.commit()
-            wyslij_powitanie(user.email, user.username) # <--- DODANO WYSYŁKĘ MAILA
+            wyslij_powitanie(user.email, user.username) 
             flash(f'Konto utworzone pomyślnie! Witaj {username}.', 'success')
         else:
             changed = False
@@ -703,21 +683,16 @@ def google_callback():
 
 # --- GŁÓWNE TRASY APLIKACJI ---
 
-
 @app.route('/generate_360/<int:car_id>')
 @login_required
 def generate_360_trigger(car_id):
-    # Zabezpieczenie: Tylko Admin
     if current_user.username != 'admin' and current_user.id != 1:
         abort(403)
 
     car = Car.query.get_or_404(car_id)
-    
-    # Tworzymy ścieżkę do pliku MP4 z numerem ID auta
     video_filename = f"{car.id}.mp4"
     video_path = os.path.join(app.root_path, 'static', 'uploads', '360_videos', video_filename)
     
-    # Zamiast odpalać skrypty, serwer po prostu patrzy, czy wgrałeś przez FTP plik wideo
     if os.path.exists(video_path):
         car.is_360_premium = True
         db.session.commit()
@@ -727,15 +702,10 @@ def generate_360_trigger(car_id):
 
     return redirect(url_for('profil'))
 
-
-
-
-
 @app.route('/')
 def index():
     q = request.args.get('q', '').strip()
     
-    # 1. ZMIANA: Domyślnie bierzemy tylko auta (wykluczamy Marketplace)
     query = Car.query.filter(Car.typ.notin_(['Rozmaitosci', 'DomOgrad', 'Inne']))
     
     if q:
@@ -751,10 +721,8 @@ def index():
             ))
         query = query.filter(and_(*conditions))
     
-    # Jeśli użytkownik jednak wybierze coś z filtrów na indexie
     cat = request.args.get('typ', '')
     if cat: 
-        # Nadpisujemy filtr, jeśli ktoś ręcznie kliknął kategorię
         query = Car.query.filter(Car.typ == cat)
     
     paliwo = request.args.get('paliwo', '')
@@ -769,28 +737,21 @@ def index():
     max_przebieg = request.args.get('max_przebieg', type=int)
     if max_przebieg: query = query.filter(Car.przebieg <= max_przebieg)
 
-    # 2. DODATEK: Pobieramy te 4 ostatnie przedmioty do nowej sekcji na dole
     recent_items = Car.query.filter(Car.typ.in_(['Rozmaitosci', 'DomOgrad', 'Inne'])).order_by(Car.data_dodania.desc()).limit(4).all()
 
     page = request.args.get('page', 1, type=int)
     pagination = query.order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).paginate(page=page, per_page=24, error_out=False)
     
-    # 3. ZMIANA: Przekazujemy 'recent_items' do szablonu
     return render_template('index.html', 
                            cars=pagination.items, 
                            pagination=pagination, 
                            recent_items=recent_items, 
                            now=datetime.utcnow())
 
-
-
-
 @app.route('/szukaj')
 def szukaj():
     try:
-        # 1. POBIERAMY TYP AUTA Z KAFELKÓW
         typ_auta = request.args.get('typ', '')
-        
         marka = request.args.get('marka', '').strip()
         model = request.args.get('model', '').strip()
         kolor = request.args.get('kolor', '').strip()
@@ -817,18 +778,13 @@ def szukaj():
         przebieg_min = get_int('przebieg_min')
         przebieg_max = get_int('przebieg_max')
 
-        # --- LOGIKA FILTROWANIA ---
         query = Car.query
 
-        # 2. KLUCZOWA ZMIANA: Separacja światów
         if typ_auta: 
-            # Jeśli wybrano konkretny kafel (np. SUV, Moto, Ciezarowe)
             query = query.filter(Car.typ == typ_auta)
         else:
-            # Jeśli wybrano "Wszystkie" - domyślnie ukrywamy graty i dom/ogród
             query = query.filter(Car.typ.notin_(['Rozmaitosci', 'DomOgrad', 'Inne']))
 
-        # Reszta filtrów pozostaje bez zmian
         if marka: query = query.filter(Car.marka.ilike(f'%{marka}%'))
         if model: query = query.filter(Car.model.ilike(f'%{model}%'))
         if kolor: query = query.filter(Car.kolor.ilike(f'%{kolor}%'))
@@ -857,14 +813,11 @@ def szukaj():
     except Exception as e:
         return f"<h1 style='color:red;padding:20px;'>BŁĄD WYSZUKIWARKI: {str(e)}</h1>"
 
-
-
 @app.route('/rozmaitosci')
 def rozmaitosci():
     sub = request.args.get('sub')
     page = request.args.get('page', 1, type=int)
     
-    # ZMIANA: Pokazujemy TYLKO te kategorie, które są ukryte w głównej wyszukiwarce
     query = Car.query.filter(Car.typ.in_(['Rozmaitosci', 'DomOgrad', 'Inne']))
     
     if sub:
@@ -874,27 +827,20 @@ def rozmaitosci():
     
     return render_template('rozmaitosci.html', items=pagination.items, pagination=pagination, now=datetime.utcnow())
 
-
-
-
-
-# --- TRASA DLA PROFILU SPRZEDAWCY ---
 @app.route('/sprzedawca/<int:user_id>')
 def sprzedawca_oferty(user_id):
     sprzedawca = User.query.get_or_404(user_id)
-    # Pobieramy auta tylko tego użytkownika
     cars = Car.query.filter_by(user_id=user_id).order_by(Car.is_promoted.desc(), Car.data_dodania.desc()).all()
     
     return render_template('sprzedawca.html', sprzedawca=sprzedawca, cars=cars, now=datetime.utcnow())
-# --- NOWA TRASA ZMIANY MINIATURKI ---
+
 @app.route('/zmien_avatar', methods=['POST'])
 @login_required
 def zmien_avatar():
     if 'avatar' in request.files:
         file = request.files['avatar']
         if file and allowed_file(file.filename):
-            # Zapisuje obraz używając Twojej funkcji optymalizującej (WebP + Znak wodny)
-            filename = save_optimized_image(file)
+            filename = save_optimized_image(file, is_car_image=False)
             if filename:
                 current_user.avatar_url = url_for('static', filename='uploads/' + filename)
                 db.session.commit()
@@ -926,7 +872,6 @@ def car_details(car_id):
             
     if should_update and model_ai:
         try:
-            # ZABEZPIECZENIE: Uruchamiamy wycenę AI TYLKO dla samochodów
             if car.typ not in ['Rozmaitosci', 'DomOgrad', 'Inne']:
                 update_market_valuation(car)
         except:
@@ -934,14 +879,12 @@ def car_details(car_id):
             
     db.session.commit()
     
-    # ROZDZIELENIE SZABLONÓW: Inny dla części, inny dla aut
     if car.typ in ['Rozmaitosci', 'DomOgrad', 'Inne']:
         return render_template('inne.html', car=car, now=datetime.utcnow())
     else:
         return render_template('details.html', car=car, now=datetime.utcnow())
 
 
-# --- POPRAWIONY PROFIL ---
 @app.route('/profil')
 @login_required
 def profil():
@@ -967,7 +910,7 @@ def profil():
     return render_template('profil.html', cars=pagination.items, pagination=pagination, favorites=favorites, now=datetime.utcnow(), 
                            user_count=user_count, online_count=online_count, total_views=total_views)
 
-# --- LISTA UŻYTKOWNIKÓW DLA ADMINA ---
+
 @app.route('/admin/uzytkownicy')
 @login_required
 def admin_uzytkownicy():
@@ -976,7 +919,6 @@ def admin_uzytkownicy():
     users = User.query.all()
     return render_template('admin_users.html', users=users, now=datetime.utcnow())
 
-# --- USUWANIE USERA ---
 @app.route('/admin/usun_usera/<int:user_id>', methods=['POST'])
 @login_required
 def usun_usera(user_id):
@@ -989,16 +931,13 @@ def usun_usera(user_id):
         flash(f'Użytkownik {u.username} usunięty.', 'success')
     return redirect(url_for('admin_uzytkownicy'))
 
-# --- USTAWIENIA PROFILU ---
 @app.route('/ustawienia_profilu', methods=['GET', 'POST'])
 @login_required
 def ustawienia_profilu():
-    # Pobieramy język, żeby t.get nie wywaliło błędu
     lang = request.cookies.get('lang', 'pl')
     t_dict = TRANSLATIONS.get(lang, TRANSLATIONS['pl'])
 
     if request.method == 'POST':
-        # Zapis danych (używamy current_user dla profilu własnego)
         current_user.account_type = request.form.get('account_type', 'private')
         current_user.kraj = request.form.get('kraj', 'Polska')
         current_user.lokalizacja = request.form.get('lokalizacja', 'Radom')
@@ -1010,7 +949,7 @@ def ustawienia_profilu():
         if 'avatar' in request.files:
             file = request.files['avatar']
             if file and file.filename != '' and allowed_file(file.filename):
-                fname = save_optimized_image(file)
+                fname = save_optimized_image(file, is_car_image=False)
                 if fname:
                     current_user.avatar_url = url_for('static', filename='uploads/' + fname)
 
@@ -1018,12 +957,10 @@ def ustawienia_profilu():
         flash('Zapisano!', 'success')
         return redirect(url_for('profil'))
     
-    # Przekazujemy 't' bezpośrednio, żeby uniknąć błędu 500
     return render_template('edytuj_profil.html', t=t_dict)
 
 
-
-
+# --- POPRAWIONE ZAPISYWANIE AUTA Z TRY..EXCEPT ---
 @app.route('/dodaj', methods=['POST'])
 @login_required
 def dodaj_ogloszenie():
@@ -1031,30 +968,34 @@ def dodaj_ogloszenie():
         files = request.files.getlist('zdjecia')
         saved_paths = []
         
-        # 1. BEZPIECZNE POBIERANIE SKANÓW (Ochrona przed błędem "NoneType")
         if 'scan_image_cam' in request.files and request.files['scan_image_cam'].filename != '':
-            fname = save_optimized_image(request.files['scan_image_cam'])
-            if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+            res = save_optimized_image(request.files['scan_image_cam'], is_car_image=True)
+            if res: 
+                fname, tfname = res
+                saved_paths.append((url_for('static', filename='uploads/' + fname), url_for('static', filename='uploads/' + tfname)))
             
         elif 'scan_image_file' in request.files and request.files['scan_image_file'].filename != '':
-            fname = save_optimized_image(request.files['scan_image_file'])
-            if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+            res = save_optimized_image(request.files['scan_image_file'], is_car_image=True)
+            if res: 
+                fname, tfname = res
+                saved_paths.append((url_for('static', filename='uploads/' + fname), url_for('static', filename='uploads/' + tfname)))
             
         for file in files[:18]:
             if file and allowed_file(file.filename):
-                fname = save_optimized_image(file)
-                if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+                res = save_optimized_image(file, is_car_image=True)
+                if res: 
+                    fname, tfname = res
+                    saved_paths.append((url_for('static', filename='uploads/' + fname), url_for('static', filename='uploads/' + tfname)))
                 
-        main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+        main_img = saved_paths[0][0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+        main_thumb = saved_paths[0][1] if saved_paths else None
         
-        # 2. BEZPIECZNE PARSOWANIE GPS
         try: lat = float(request.form.get('lat', ''))
         except ValueError: lat = None
         
         try: lon = float(request.form.get('lon', ''))
         except ValueError: lon = None
         
-        # 3. BEZPIECZNE PARSOWANIE LICZB (Odporne na spacje, przecinki i brak danych)
         cena_str = str(request.form.get('cena', '0')).replace(',', '.').replace(' ', '').strip()
         try: cena_val = float(cena_str)
         except ValueError: cena_val = 0.0
@@ -1071,7 +1012,6 @@ def dodaj_ogloszenie():
         wyposazenie_list = request.form.getlist('wyposazenie')
         wyposazenie_str = ",".join(wyposazenie_list)
 
-        # 4. TWORZENIE NOWEGO AUTA
         new_car = Car(
             marka=request.form.get('marka', ''),
             model=request.form.get('model', ''),
@@ -1091,6 +1031,7 @@ def dodaj_ogloszenie():
             moc=moc_val, 
             kolor=request.form.get('kolor', ''),
             img=main_img,
+            thumb=main_thumb,
             zrodlo=current_user.lokalizacja,
             user_id=current_user.id,
             latitude=lat,
@@ -1098,32 +1039,27 @@ def dodaj_ogloszenie():
             data_dodania=datetime.utcnow()
         )
         
-        # 5. ZAPIS DO BAZY
         db.session.add(new_car)
-        db.session.flush() # Pobranie ID przed całkowitym zapisem
+        db.session.flush() 
         
-        for p in saved_paths:
-            db.session.add(CarImage(image_path=p, car_id=new_car.id))
+        for p, tp in saved_paths:
+            db.session.add(CarImage(image_path=p, thumb_path=tp, car_id=new_car.id))
             
         db.session.commit()
         
-        # 6. WYSYŁKA MAILA (Działa w tle)
         wyslij_potwierdzenie_ogloszenia(current_user.email, current_user.username, new_car.marka, new_car.model)
         
         flash('Dodano ogłoszenie!', 'success')
         return redirect(url_for('profil'))
 
     except Exception as e:
-        # COFANIE ZMIAN W BAZIE W RAZIE AWARII
         db.session.rollback()
         print(f"BŁĄD PRZY DODAWANIU AUTA: {e}")
         flash(f'Wystąpił błąd przy zapisie: {str(e)}', 'danger')
         return redirect(url_for('profil'))
 
 
-
-
-
+# --- POPRAWIONE ZAPISYWANIE PRZEDMIOTU Z TRY..EXCEPT ---
 @app.route('/dodaj_przedmiot', methods=['GET', 'POST'])
 @login_required
 def dodaj_przedmiot():
@@ -1137,10 +1073,13 @@ def dodaj_przedmiot():
         
         for file in files[:18]:
             if file and allowed_file(file.filename):
-                fname = save_optimized_image(file)
-                if fname: saved_paths.append(url_for('static', filename='uploads/' + fname))
+                res = save_optimized_image(file, is_car_image=True)
+                if res: 
+                    fname, tfname = res
+                    saved_paths.append((url_for('static', filename='uploads/' + fname), url_for('static', filename='uploads/' + tfname)))
                 
-        main_img = saved_paths[0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+        main_img = saved_paths[0][0] if saved_paths else 'https://placehold.co/600x400?text=Brak+Zdjecia'
+        main_thumb = saved_paths[0][1] if saved_paths else None
         
         cena_str = str(request.form.get('cena', '0')).replace(',', '.').replace(' ', '').strip()
         try: cena_val = float(cena_str)
@@ -1159,6 +1098,7 @@ def dodaj_przedmiot():
             telefon=request.form.get('telefon', ''),
             rok=0, przebieg=0, moc=0, paliwo='', pojemnosc='', kolor='',
             img=main_img,
+            thumb=main_thumb,
             zrodlo=current_user.lokalizacja,
             user_id=current_user.id,
             data_dodania=datetime.utcnow()
@@ -1166,8 +1106,8 @@ def dodaj_przedmiot():
         
         db.session.add(new_item)
         db.session.flush() 
-        for p in saved_paths:
-            db.session.add(CarImage(image_path=p, car_id=new_item.id))
+        for p, tp in saved_paths:
+            db.session.add(CarImage(image_path=p, thumb_path=tp, car_id=new_item.id))
             
         db.session.commit()
         flash('Ogłoszenie w dziale Rozmaitości zostało dodane!', 'success')
@@ -1179,47 +1119,35 @@ def dodaj_przedmiot():
         return redirect(url_for('profil'))
 
 
-
-
-
-
-
-
 @app.route('/api/analyze-car', methods=['POST'])
 @login_required
 def analyze_car():
     dzisiaj = datetime.utcnow().date()
-        # Reset dziennego limitu zapytań
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
 
-    # ZABEZPIECZENIE: Zmiana pustej wartości na twarde zero dla nowych userów
     uzyte_dzis = current_user.ai_requests_today or 0
 
-    # Ustalanie limitów (Admin = 500, Użytkownik = 6)
     if current_user.username == 'admin' or current_user.id == 1:
         LIMIT = 500
     else:
         LIMIT = 6
 
     if uzyte_dzis >= LIMIT:
-
         return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
 
     file = request.files.get('scan_image')
     if not file:
         return jsonify({"error": "Brak pliku"}), 400
 
-    try:       # <---- POPRAWNE! (Cofnięte o 4 spacje)
-        # 1. Pobieramy surowe dane (na wypadek, gdyby kompresja się nie udała, np. iPhone HEIC)
+    try:
         raw_image_data = file.read()
         image_data = raw_image_data
         mime_type = file.mimetype
-        # 2. Próbujemy bezpiecznie skompresować zdjęcie, by oszczędzić RAM
         try:
-            file.seek(0) # Wymuszamy cofnięcie kursora czytania pliku
+            file.seek(0)
             img_obj = Image.open(file)
             img_obj = ImageOps.exif_transpose(img_obj)
             img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
@@ -1232,11 +1160,8 @@ def analyze_car():
             image_data = img_byte_arr.getvalue()
             mime_type = 'image/jpeg'
         except Exception as compression_error:
-            # Jeśli to dziwny format z telefonu (HEIC), ignorujemy błąd kompresji i idziemy dalej z oryginałem
             print(f"Ostrzeżenie kompresji: {compression_error}. Wysyłam oryginał.")
 
-        
-        # Mózg operacji: Precyzyjny prompt dla Gemini 3.0 Flash
         prompt = """
         Jesteś ekspertem motoryzacyjnym. Przeanalizuj to zdjęcie samochodu i zwróć TYLKO czysty obiekt JSON.
         
@@ -1271,14 +1196,10 @@ def analyze_car():
         }
         """
         
-        # Odpytanie modelu Gemini
-        resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
-        
-        # Czyszczenie odpowiedzi do czystego JSONa
+        resp = model_ai.generate_content([prompt, {"mime_type": mime_type, "data": image_data}])
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
         data = json.loads(text_response)
         
-        # --- DORZUCANIE PODSTAW NA ŚLEPO (EFEKT BOGATEGO WYPOSAŻENIA) ---
         if "wyposazenie_wykryte" not in data or not isinstance(data["wyposazenie_wykryte"], list):
             data["wyposazenie_wykryte"] = []
             
@@ -1287,10 +1208,8 @@ def analyze_car():
         for opcja in podstawy_do_zaznaczenia:
             if opcja not in data["wyposazenie_wykryte"]:
                 data["wyposazenie_wykryte"].append(opcja)
-        # ---------------------------------------------------------------
 
-        # Zapisanie użycia limitu do bazy
-        current_user.ai_requests_today = uzyte_dzis + 1  # <--- UŻYWAMY BEZPIECZNEJ ZMIENNEJ
+        current_user.ai_requests_today = uzyte_dzis + 1  
         db.session.commit()
         
         return jsonify(data)
@@ -1303,19 +1222,19 @@ def analyze_car():
 @login_required
 def analyze_market():
     dzisiaj = datetime.utcnow().date()
-    # Reset dziennego limitu zapytań
     if current_user.last_ai_request_date != dzisiaj:
         current_user.ai_requests_today = 0
         current_user.last_ai_request_date = dzisiaj
         db.session.commit()
 
-    # Ustalanie limitów (Admin = 500, Użytkownik = 6)
+    uzyte_dzis = current_user.ai_requests_today or 0
+
     if current_user.username == 'admin' or current_user.id == 1:
         LIMIT = 500
     else:
         LIMIT = 6
 
-    if current_user.ai_requests_today >= LIMIT:
+    if uzyte_dzis >= LIMIT:
         return jsonify({"error": f"Osiągnięto dzienny limit AI ({LIMIT}). Wróć jutro!"}), 429
 
     file = request.files.get('scan_image')
@@ -1323,12 +1242,10 @@ def analyze_market():
         return jsonify({"error": "Brak pliku"}), 400
 
     try:
-        # --- NOWE: OPTYMALIZACJA W LOCIE DLA TELEFONÓW ---
         img_obj = Image.open(file)
-        img_obj = ImageOps.exif_transpose(img_obj) # Naprawia obrócone zdjęcia z telefonu
-        img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS) # Zmniejsza rozdzielczość
+        img_obj = ImageOps.exif_transpose(img_obj)
+        img_obj.thumbnail((1024, 1024), Image.Resampling.LANCZOS) 
         
-        # Konwersja i zapis do pamięci RAM jako lekki JPEG
         if img_obj.mode != 'RGB':
             img_obj = img_obj.convert('RGB')
             
@@ -1336,9 +1253,7 @@ def analyze_market():
         img_obj.save(img_byte_arr, format='JPEG', quality=85)
         image_data = img_byte_arr.getvalue()
         mime_type = 'image/jpeg'
-        # --------------------------------------------------
         
-        # Nowy Mózg: Ekspert od przedmiotów codziennego użytku i części
         prompt = """
         Jesteś wybitnym rzeczoznawcą i handlowcem. Specjalizujesz się w częściach samochodowych, narzędziach, sprzęcie RTV/AGD oraz wyposażeniu domu i ogrodu.
         Przeanalizuj to zdjęcie przedmiotu na sprzedaż i zwróć TYLKO czysty obiekt JSON.
@@ -1363,15 +1278,11 @@ def analyze_market():
         }
         """
         
-        # Odpytanie modelu Gemini
-        resp = model_ai.generate_content([prompt, {"mime_type": file.mimetype, "data": image_data}])
-        
-        # Czyszczenie odpowiedzi do czystego JSONa
+        resp = model_ai.generate_content([prompt, {"mime_type": mime_type, "data": image_data}])
         text_response = resp.text.replace('```json', '').replace('```', '').strip()
         data = json.loads(text_response)
         
-        # Zapisanie użycia limitu do bazy
-        current_user.ai_requests_today = uzyte_dzis + 1  # <--- UŻYWAMY BEZPIECZNEJ ZMIENNEJ
+        current_user.ai_requests_today = uzyte_dzis + 1 
         db.session.commit()
         
         return jsonify(data)
@@ -1379,7 +1290,6 @@ def analyze_market():
     except Exception as e:
         print(f"Błąd AI Market: {e}")
         return jsonify({"error": "Nie udało się przeanalizować przedmiotu."}), 500
-
 
 @app.route('/api/generuj-opis', methods=['POST'])
 @login_required
@@ -1392,7 +1302,6 @@ def generuj_opis_ai():
     
     data = request.json
     try:
-        # 1. Wyciągamy pięknie wyselekcjonowane dane z frontendu
         marka = data.get('marka', '')
         model = data.get('model', '')
         rok = data.get('rok', '')
@@ -1400,9 +1309,8 @@ def generuj_opis_ai():
         cena = data.get('cena', '')
         paliwo = data.get('paliwo', '')
         pojemnosc = data.get('pojemnosc', '')
-        wyposazenie = data.get('wyposazenie', '') # Tu są nasze Matrixy i Masaże!
+        wyposazenie = data.get('wyposazenie', '') 
 
-        # 2. Tworzymy dedykowany, precyzyjny prompt dla modelu Flash
         prompt = f"""
         Jesteś profesjonalnym copywriterem i ekspertem sprzedaży aut Premium.
         Napisz chwytliwy, rzetelny i zachęcający do zakupu opis dla tego pojazdu:
@@ -1451,31 +1359,32 @@ def delete_car(car_id):
         c = Car.query.get(car_id)
         if c and (c.user_id == current_user.id or current_user.username == 'admin'):
             
-            # 1. Usuwanie folderu ze zdjęciami 360 (jeśli auto miało status premium)
             render_path = os.path.join(app.root_path, 'static', 'uploads', '360_renders', str(car_id))
             if os.path.exists(render_path):
-                import shutil
                 shutil.rmtree(render_path, ignore_errors=True)
             
-            # 2. Usuwanie pliku wideo 360 (jeśli istnieje)
             video_path = os.path.join(app.root_path, 'static', 'uploads', '360_videos', f"{car_id}.mp4")
             if os.path.exists(video_path):
                 os.remove(video_path)
 
-            # 3. Usuwanie zwykłych zdjęć z serwera (żeby nie zapchać dysku)
             for img in c.images:
-                # Oczyszczanie ścieżki (np. usuwanie początkowego slasha, by os.path.join zadziałał)
                 img_relative_path = img.image_path.lstrip('/') 
                 img_full_path = os.path.join(app.root_path, img_relative_path)
-                
-                # Nie usuwamy systemowych placeholderów ani znaków wodnych
                 if os.path.exists(img_full_path) and 'placehold' not in img_full_path and 'watermark' not in img_full_path:
                     try:
                         os.remove(img_full_path)
-                    except Exception as e:
-                        print(f"Nie udało się usunąć fizycznego zdjęcia {img_full_path}: {e}")
+                    except Exception:
+                        pass
+                
+                if img.thumb_path:
+                    thumb_relative_path = img.thumb_path.lstrip('/')
+                    thumb_full_path = os.path.join(app.root_path, thumb_relative_path)
+                    if os.path.exists(thumb_full_path):
+                        try:
+                            os.remove(thumb_full_path)
+                        except Exception:
+                            pass
 
-            # 4. Usunięcie rekordu z bazy (Cascade automatycznie usunie powiązane CarImage z bazy SQL)
             db.session.delete(c)
             db.session.commit()
             flash('Ogłoszenie zostało pomyślnie usunięte.', 'success')
@@ -1489,8 +1398,6 @@ def delete_car(car_id):
         
     return redirect(url_for('profil'))
 
-
-
 @app.route('/odswiez/<int:car_id>', methods=['POST'])
 @login_required
 def refresh_car(car_id):
@@ -1499,14 +1406,12 @@ def refresh_car(car_id):
     if c.user_id == current_user.id or current_user.username == 'admin' or current_user.id == 1:
         now = datetime.utcnow()
         
-        # --- LIMIT PODBIJANIA CO 3 DNI (Dla zwykłych użytkowników) ---
         if current_user.username != 'admin' and current_user.id != 1:
             roznica = now - c.data_dodania
             if roznica < timedelta(days=3):
                 pozostalo_h = int(72 - (roznica.total_seconds() / 3600))
                 flash(f'Ogłoszenie można podbijać co 3 dni. Spróbuj ponownie za ok. {pozostalo_h} godz.', 'warning')
                 return redirect(request.referrer or url_for('profil'))
-        # -------------------------------------------------------------
         
         c.data_dodania = now
         if current_user.username == 'admin' or current_user.id == 1:
@@ -1516,8 +1421,6 @@ def refresh_car(car_id):
         flash('Ogłoszenie zaktualizowane i podbite na samą górę!', 'success')
         
     return redirect(request.referrer or url_for('profil'))
-
-
 
 @app.route('/toggle_favorite/<int:car_id>')
 @login_required
@@ -1530,7 +1433,6 @@ def toggle_favorite(car_id):
     db.session.commit()
     return redirect(request.referrer)
 
-# --- REJESTRACJA I LOGOWANIE ---
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method=='POST':
@@ -1560,12 +1462,12 @@ def register():
                 password_hash=generate_password_hash(request.form['password']),
                 account_type=acc_type,
                 company_name=comp_name,
-                kraj=user_kraj,          # Zapisywanie kraju
-                lokalizacja=user_lokal   # Zapisywanie miejscowości
+                kraj=user_kraj,          
+                lokalizacja=user_lokal   
             ))
             db.session.commit()
             
-            wyslij_powitanie(request.form['email'], request.form['username']) # <--- DODANO WYSYŁKĘ MAILA
+            wyslij_powitanie(request.form['email'], request.form['username'])
             
             flash('Konto założone! Zaloguj się.', 'success')
             return redirect(url_for('login'))
@@ -1576,7 +1478,6 @@ def logout():
     logout_user()
     return redirect('/')
 
-# --- RESET HASŁA ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
@@ -1608,9 +1509,6 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html')
 
-# --- STRONY STATYCZNE ---
-# --- FUNKCJA WYSYŁAJĄCA MAIL W TLE ---
-# --- FUNKCJA WYSYŁAJĄCA MAIL W TLE (Z DEBUGOWANIEM) ---
 def wyslij_wiadomosc_z_formularza(app, imie, email_nadawcy, wiadomosc):
     with app.app_context():
         print("\n" + "="*50)
@@ -1630,10 +1528,8 @@ def wyslij_wiadomosc_z_formularza(app, imie, email_nadawcy, wiadomosc):
             print(f"SZCZEGÓŁY: {str(e)}")
             print("="*50 + "\n")
 
-# --- ODBIÓR DANYCH ZE STRONY ---
 @app.route('/kontakt', methods=['GET', 'POST'])
 def kontakt():
-    # 1. Logika tłumaczeń
     lang = request.cookies.get('lang', 'pl')
     path = os.path.join(app.root_path, 'translations', 'legal.json')
     try:
@@ -1644,26 +1540,17 @@ def kontakt():
         print(f"Błąd wczytywania tłumaczeń: {e}")
         current_texts = {}
 
-    sukces = False # Flaga oznaczająca udane wysłanie
+    sukces = False 
     
-    # 2. Reakcja na kliknięcie "Wyślij"
     if request.method == 'POST':
         imie = request.form.get('imie')
         email_nadawcy = request.form.get('email')
         wiadomosc = request.form.get('wiadomosc')
         
-        # Odpalamy maila w tle (strona odświeży się natychmiast, zero czekania!)
         Thread(target=wyslij_wiadomosc_z_formularza, args=(app, imie, email_nadawcy, wiadomosc)).start()
-        
-        sukces = True # Zmieniamy flagę, żeby HTML wiedział, co pokazać
+        sukces = True 
 
-    # 3. Zwracamy widok (przekazując bezpośrednio flagę 'sukces')
     return render_template('kontakt.html', legal=current_texts, lang=lang, sukces=sukces)
-
-
-    # --- 3. ZWROT SZABLONU DLA ZWYKŁEGO WEJŚCIA (GET) ---
-    return render_template('kontakt.html', legal=current_texts, lang=lang)
-
 
 @app.route('/regulamin')
 def regulamin():
@@ -1674,36 +1561,30 @@ def regulamin():
             all_texts = json.load(f)
         current_reg = all_texts.get(lang, all_texts.get('pl'))
     except:
-        current_reg = {"reg_title": "Regulamin"} # Fallback
+        current_reg = {"reg_title": "Regulamin"} 
 
     return render_template('regulamin.html', reg=current_reg, lang=lang)
 
 @app.route('/polityka')
 def polityka_privacy():
-    # Pobieramy język z ciasteczka (tak jak robisz to w inject_conf_var)
     lang = request.cookies.get('lang', 'pl')
-    
-    # Ścieżka do Twojego pliku z tłumaczeniami
-    # Zakładamy strukturę: /twoj_projekt/translations/legal.json
     path = os.path.join(app.root_path, 'translations', 'legal.json')
     
     try:
         with open(path, encoding='utf-8') as f:
             all_texts = json.load(f)
-        
-        # Pobieramy sekcję dla danego języka, jeśli brak - fallback na polski
         current_legal = all_texts.get(lang, all_texts.get('pl'))
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Błąd ładowania legal.json: {e}")
-        # Prosty fallback, żeby strona nie wywaliła błędu 500
         current_legal = {"title": "Polityka Prywatności", "intro": "Błąd ładowania treści."}
 
     return render_template('polityka.html', legal=current_legal, lang=lang)
+
 @app.route('/polityka-prywatnosci')
 def polityka_prywatnosci_redirect():
-    # Zwróć uwagę na 'polityka_privacy' - to musi być nazwa funkcji powyżej!
     return redirect(url_for('polityka_privacy'), code=301)
-# --- EDYCJA OGŁOSZENIA ---
+
+
 @app.route('/edytuj/<int:id>', methods=['GET','POST'])
 @login_required
 def edytuj(id):
@@ -1718,7 +1599,7 @@ def edytuj(id):
             car.model = request.form.get('model')
             car.vin = request.form.get('vin')
             car.cena = float(request.form.get('cena') or 0)
-            car.waluta = request.form.get('waluta', 'PLN') # --- ZAPISYWANIE WALUTY
+            car.waluta = request.form.get('waluta', 'PLN') 
             car.rok = int(request.form.get('rok') or 0)
             car.przebieg = int(request.form.get('przebieg') or 0)
             car.moc = int(request.form.get('moc') or 0)
@@ -1731,9 +1612,6 @@ def edytuj(id):
             car.telefon = request.form.get('telefon')
             car.opis = request.form.get('opis')
     
-                        # ... (tutaj masz inne rzeczy jak car.opis, car.pojemnosc) ...
-            
-            # --- ZAPIS GPS TYLKO DLA ADMINA ---
             if current_user.username == 'admin' or current_user.id == 1:
                 try:
                     lat_str = request.form.get('lat', '').replace(',', '.')
@@ -1742,10 +1620,7 @@ def edytuj(id):
                     lon_str = request.form.get('lon', '').replace(',', '.')
                     car.longitude = float(lon_str) if lon_str else None
                 except ValueError:
-                    pass # Jeśli admin wpisze bzdury (np. litery), system to zignoruje
-            # ----------------------------------
-
-            
+                    pass 
 
             wyposazenie_list = request.form.getlist('wyposazenie')
             car.wyposazenie = ",".join(wyposazenie_list)
@@ -1753,8 +1628,14 @@ def edytuj(id):
             files = request.files.getlist('zdjecia')
             for file in files:
                 if file and allowed_file(file.filename):
-                    filename = save_optimized_image(file)
-                    db.session.add(CarImage(image_path=url_for('static', filename='uploads/'+filename), car_id=car.id))
+                    res = save_optimized_image(file, is_car_image=True)
+                    if res:
+                        fname, tfname = res
+                        db.session.add(CarImage(
+                            image_path=url_for('static', filename='uploads/'+fname), 
+                            thumb_path=url_for('static', filename='uploads/'+tfname),
+                            car_id=car.id
+                        ))
             
             db.session.commit()
             flash('Zapisano zmiany!', 'success')
@@ -1765,7 +1646,7 @@ def edytuj(id):
             
     return render_template('edytuj.html', car=car)
 
-# --- NARZĘDZIA ADMINA ---
+
 @app.route('/admin/backup-db')
 @login_required
 def backup_db():
@@ -1806,32 +1687,26 @@ def admin_edytuj_user(user_id):
     user = User.query.get_or_404(user_id)
     
     if request.method == 'POST':
-        # 1. Zapis danych tekstowych
         user.kraj = request.form.get('kraj', user.kraj)
         user.adres = request.form.get('adres', user.adres)
         user.lokalizacja = request.form.get('lokalizacja', user.lokalizacja)
         user.company_name = request.form.get('company_name', user.company_name)
         user.nip = request.form.get('nip', user.nip)
-        user.account_type = request.form.get('account_type', user.account_type) # Dodane, żeby admin mógł zmienić typ konta
+        user.account_type = request.form.get('account_type', user.account_type)
         user.opis_firmy = request.form.get('opis_firmy', user.opis_firmy)
 
-        # 2. Obsługa zdjęcia (awatara)
         if 'avatar' in request.files:
             file = request.files['avatar']
             if file and file.filename != '' and allowed_file(file.filename):
-                filename = save_optimized_image(file)
+                filename = save_optimized_image(file, is_car_image=False)
                 if filename:
                     user.avatar_url = url_for('static', filename='uploads/' + filename)
 
-        # 3. Zapis w bazie i powrót
         db.session.commit()
         flash(f'Zaktualizowano profil użytkownika: {user.username}.', 'success')
         return redirect(url_for('admin_uzytkownicy')) 
     
-    # Wyświetlamy formularz edycji dla metody GET
     return render_template('edytuj_profil.html', edit_user=user)
-
-
 
 
 @app.route('/admin/wyslij_powitania', methods=['POST'])
@@ -1885,7 +1760,6 @@ https://gieldaradom.pl
     flash(f'Sukces! Wysłano powitalnego e-maila do {wyslane} użytkowników.', 'success')
     return redirect(url_for('profil'))
 
-
 @app.route('/usun_zdjecie/<int:image_id>', methods=['POST'])
 @login_required
 def usun_zdjecie(image_id):
@@ -1893,7 +1767,24 @@ def usun_zdjecie(image_id):
     car = Car.query.get(img.car_id)
     if car.user_id != current_user.id and current_user.username != 'admin':
         return jsonify({'success': False, 'message': 'Brak uprawnień'}), 403
-        
+    
+    img_relative_path = img.image_path.lstrip('/') 
+    img_full_path = os.path.join(app.root_path, img_relative_path)
+    if os.path.exists(img_full_path) and 'placehold' not in img_full_path and 'watermark' not in img_full_path:
+        try:
+            os.remove(img_full_path)
+        except Exception:
+            pass
+
+    if img.thumb_path:
+        thumb_relative_path = img.thumb_path.lstrip('/')
+        thumb_full_path = os.path.join(app.root_path, thumb_relative_path)
+        if os.path.exists(thumb_full_path):
+            try:
+                os.remove(thumb_full_path)
+            except Exception:
+                pass
+                
     db.session.delete(img)
     db.session.commit()
     return jsonify({'success': True})
@@ -1917,7 +1808,6 @@ def sitemap():
     base = request.url_root.rstrip('/')
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     
-    # 1. Główne i statyczne strony serwisu (Poprawiona 'polityka')
     static_pages = {
         '': '1.0', 
         'rozmaitosci': '0.9', 
@@ -1926,16 +1816,14 @@ def sitemap():
         'register': '0.5', 
         'kontakt': '0.5', 
         'regulamin': '0.5', 
-        'polityka': '0.5'  # <--- ZMIANA NA POPRAWNY URL
+        'polityka': '0.5' 
     }
     
     for page, priority in static_pages.items():
         xml += f'  <url>\n    <loc>{base}/{page}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>{priority}</priority>\n  </url>\n'
         
-    # 2. Dynamiczne ogłoszenia (Wspólny URL /ogloszenie/id dla aut i rozmaitości)
     for item in Car.query.order_by(Car.data_dodania.desc()).all():
         lastmod = item.data_dodania.strftime('%Y-%m-%d') if item.data_dodania else datetime.utcnow().strftime('%Y-%m-%d')
-        
         xml += f'  <url>\n    <loc>{base}/ogloszenie/{item.id}</loc>\n    <lastmod>{lastmod}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n'
         
     xml += '</urlset>'
@@ -1947,7 +1835,7 @@ def robots():
     return make_response(txt, 200, {'Content-Type': 'text/plain'})
 
 
-# --- INICJALIZACJA BAZY (MIGRACJE) ---
+# --- ZAKTUALIZOWANA INICJALIZACJA BAZY (MIGRACJE) ---
 def update_db():
     with app.app_context():
         db_path = 'instance/gielda.db' 
@@ -1956,7 +1844,6 @@ def update_db():
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         
-        # --- ZAKTUALIZOWANA LISTA KOLUMN (DODANO 360 PREMIUM) ---
         columns_to_add = [
             ("car", "latitude", "FLOAT"),
             ("car", "longitude", "FLOAT"),
@@ -1974,19 +1861,21 @@ def update_db():
             ("user", "adres", "TEXT"),
             ("user", "opis_firmy", "TEXT"),
             ("user", "kraj", "TEXT DEFAULT 'Polska'"),
-            # --- NOWA KOLUMNA DLA FUNKCJI 360 ---
             ("car", "is_360_premium", "BOOLEAN DEFAULT 0"),
-            ("car", "is_reserved", "BOOLEAN DEFAULT 0") # <--- TO DODAJ (pamiętaj o przecinku w linijce wyżej!)
+            ("car", "is_reserved", "BOOLEAN DEFAULT 0"),
+            ("car", "thumb", "TEXT"),
+            ("carimage", "thumb_path", "TEXT")
         ]
         
         for table, col, dtype in columns_to_add:
             try:
                 c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
             except:
-                pass # Kolumna już istnieje
+                pass 
                 
         conn.commit()
         conn.close()
+
 # --- WYSYŁKA PRZYPOMNIENIA O WYGAŚNIĘCIU (2 DNI DO KOŃCA) ---
 def wyslij_przypomnienie_async(app, email, username, marka, model):
     with app.app_context():
@@ -2019,36 +1908,6 @@ https://gieldaradom.pl
 def wyslij_przypomnienia(email, username, marka, model):
     if email:
         Thread(target=wyslij_przypomnienie_async, args=(app, email, username, marka, model)).start()
-# --- WYSYŁKA PRZYPOMNIENIA O WYGAŚNIĘCIU (2 DNI DO KOŃCA) ---
-def wyslij_przypomnienie_async(app, email, username, marka, model):
-    with app.app_context():
-        msg = Message(
-            subject=f"⏰ Twoje ogłoszenie {marka} {model} niedługo wygasa! Nie poddawaj się!",
-            recipients=[email]
-        )
-        msg.body = f"""Cześć {username}! 👋
-
-Piszę, by przypomnieć Ci, że Twoje ogłoszenie dotyczące {marka} {model} jest u nas już od 28 dni i za 2 dni straci ważność.
-
-Jeśli auto jeszcze nie znalazło nowego właściciela – absolutnie się nie martw! Sprzedaż samochodu to czasem kwestia trafienia na odpowiednią osobę w odpowiednim momencie. Prawdziwy kupiec na pewno się znajdzie, więc nie ma co się poddawać! 💪
-
-Zaloguj się do swojego Garażu i kliknij zielony przycisk "Odśwież" (ikona strzałek) przy swoim ogłoszeniu. Dzięki temu auto znów powędruje na samą górę listy wyszukiwania i zyska kolejne 30 dni ważności. Wszystko oczywiście całkowicie za darmo.
-
-👉 https://gieldaradom.pl/profil
-
-Trzymam kciuki za udaną transakcję! W razie pytań, jestem do dyspozycji.
-
-Pozdrawiam serdecznie,
-Dariusz
-Właściciel serwisu | ADT & AI Team
-https://gieldaradom.pl
-"""
-        try:
-            mail.send(msg)
-        except Exception as e:
-            print(f"Błąd wysyłania przypomnienia na {email}: {e}")
-
-
 
 # ==========================================
 # --- AUTOMATYZACJA W TLE (APSCHEDULER) ---
@@ -2057,7 +1916,6 @@ def automatyczne_sprawdzanie_wygasajacych():
     """Funkcja odpalana automatycznie przez harmonogram."""
     with app.app_context():
         now = datetime.utcnow()
-        # Szukamy aut dodanych między 28 a 29 dni temu
         start_date = now - timedelta(days=29)
         end_date = now - timedelta(days=28)
         
@@ -2072,13 +1930,10 @@ def automatyczne_sprawdzanie_wygasajacych():
                 
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] AUTO-CRON: Wysłano {wyslane} przypomnień o wygasaniu ogłoszeń.")
 
-# Uruchamiamy harmonogram
 scheduler = BackgroundScheduler(daemon=True)
-# Ustawiamy, aby system sam wysyłał maile CODZIENNIE rano o 10:00
 scheduler.add_job(automatyczne_sprawdzanie_wygasajacych, 'cron', hour=10, minute=0)
 scheduler.start()
 
-# Zabezpieczenie: grzeczne zamykanie harmonogramu przy restarcie aplikacji
 atexit.register(lambda: scheduler.shutdown())
 # ==========================================
 
