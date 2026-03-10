@@ -89,28 +89,46 @@
             background: #000; border-radius: 20px; overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;
         }
+        
         .gallery-img { height: 450px; object-fit: contain; width: 100%; cursor: zoom-in; background: #000; }
         @media (max-width: 768px) { .gallery-img { height: 300px; } }
 
-        /* Style dla miniatur galerii */
+        /* ZAAWANSOWANA BLOKADA KOPIOWANIA ZDJĘĆ */
+        .no-copy {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            -webkit-touch-callout: none; /* Blokuje "Zapisz obraz" na iOS */
+            pointer-events: auto; /* Pozwala na klikanie, ale skrypty blokują prawy przycisk */
+        }
+
+        /* POPRAWIONE MINIATURY GALERII (Odporne na zgniatanie) */
         .carousel-indicators {
             position: relative; right: auto; bottom: auto; left: auto;
             display: flex; overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start;
-            margin: 0; padding: 10px; background: rgba(0,0,0,0.8);
+            margin: 0; padding: 12px 10px; background: rgba(0,0,0,0.85);
             -webkit-overflow-scrolling: touch; border-top: 1px solid #222;
+            gap: 8px; /* Odstęp między miniaturami */
         }
         .carousel-indicators button {
-            width: 80px !important; height: 60px !important; flex-shrink: 0;
+            flex: 0 0 80px !important; /* Sztywna szerokość - ZAKAZ ZGNIATANIA */
+            width: 80px !important; 
+            height: 60px !important; 
             text-indent: 0 !important; background-color: transparent !important;
             border: 2px solid transparent !important; opacity: 0.5 !important;
-            margin: 0 5px !important; padding: 0 !important; border-radius: 8px;
+            margin: 0 !important; padding: 0 !important; border-radius: 8px;
             overflow: hidden; transition: 0.3s;
         }
         .carousel-indicators button.active {
             opacity: 1 !important; border-color: var(--radom-red) !important; transform: scale(1.05);
         }
         .carousel-indicators img, .carousel-indicators video { width: 100%; height: 100%; object-fit: cover; }
-        .carousel-indicators::-webkit-scrollbar { height: 6px; }
+        
+        /* Styl paska przewijania w miniaturach */
+        .carousel-indicators::-webkit-scrollbar { height: 8px; }
+        .carousel-indicators::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
         .carousel-indicators::-webkit-scrollbar-thumb { background: var(--radom-red); border-radius: 10px; }
 
         /* Style dla strzałek nawigacji */
@@ -228,7 +246,7 @@
     <div class="row g-5">
 
         <div class="col-lg-8">
-            <div class="mb-5 gallery-wrapper position-relative">
+            <div class="mb-5 gallery-wrapper position-relative" oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
                 <div id="carCarousel" class="carousel slide" data-bs-touch="true" data-bs-interval="false">
 
                     <div class="carousel-inner" id="pswp-gallery">
@@ -243,14 +261,14 @@
                                 </span>
                             </div>
                             <video src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" 
-                                   class="d-block w-100 gallery-img" style="object-fit: cover;"
+                                   class="d-block w-100 gallery-img no-copy" style="object-fit: cover;"
                                    autoplay loop muted playsinline webkit-playsinline preload="metadata"></video>
                         </div>
                         {% endif %}
 
                         <div class="carousel-item {% if not car.is_360_premium %}active{% endif %}">
                             <a href="{{ car.img }}" data-pswp-width="1200" data-pswp-height="900" target="_blank">
-                                <img src="{{ car.img }}" class="d-block w-100 gallery-img">
+                                <img src="{{ car.img }}" class="d-block w-100 gallery-img no-copy" draggable="false">
                             </a>
                         </div>
                         
@@ -258,7 +276,7 @@
                             {% if img.image_path != car.img %}
                             <div class="carousel-item">
                                 <a href="{{ img.image_path }}" data-pswp-width="1200" data-pswp-height="900" target="_blank">
-                                    <img src="{{ img.image_path }}" class="d-block w-100 gallery-img">
+                                    <img src="{{ img.image_path }}" class="d-block w-100 gallery-img no-copy" draggable="false">
                                 </a>
                             </div>
                             {% endif %}
@@ -268,13 +286,13 @@
                     <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
                     <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
                     
-                    <div class="carousel-indicators">
+                    <div class="carousel-indicators" oncontextmenu="return false;" ondragstart="return false;">
                         {% set slide_idx = namespace(value=0) %}
                         {% if car.is_360_premium %}
                             <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="active position-relative">
                                 <div class="w-100 h-100 bg-dark d-flex align-items-center justify-content-center">
                                     <i class="bi bi-arrow-repeat text-white position-absolute fs-4 z-2" style="text-shadow: 0 0 5px black;"></i>
-                                    <video src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" class="w-100 h-100 object-fit-cover opacity-50" preload="metadata"></video>
+                                    <video src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" class="w-100 h-100 object-fit-cover opacity-50 no-copy" preload="metadata"></video>
                                 </div>
                             </button>
                             {% set slide_idx.value = slide_idx.value + 1 %}
@@ -282,9 +300,9 @@
                         
                         <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="{% if not car.is_360_premium %}active{% endif %}">
                             {% if car.thumb %}
-                                <img src="{{ car.thumb }}" alt="Miniatura">
+                                <img src="{{ car.thumb }}" class="no-copy" draggable="false" alt="Miniatura">
                             {% else %}
-                                <img src="{{ car.img }}" alt="Miniatura">
+                                <img src="{{ car.img }}" class="no-copy" draggable="false" alt="Miniatura">
                             {% endif %}
                         </button>
                         {% set slide_idx.value = slide_idx.value + 1 %}
@@ -293,9 +311,9 @@
                             {% if img.image_path != car.img %}
                                 <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}">
                                     {% if img.thumb_path %}
-                                        <img src="{{ img.thumb_path }}" alt="Miniatura">
+                                        <img src="{{ img.thumb_path }}" class="no-copy" draggable="false" alt="Miniatura">
                                     {% else %}
-                                        <img src="{{ img.image_path }}" alt="Miniatura">
+                                        <img src="{{ img.image_path }}" class="no-copy" draggable="false" alt="Miniatura">
                                     {% endif %}
                                 </button>
                                 {% set slide_idx.value = slide_idx.value + 1 %}
@@ -734,6 +752,14 @@
 </div>
 {% endif %}
 
+<script>
+    document.addEventListener('contextmenu', function(e) {
+        if (e.target.tagName === 'IMG' || e.target.classList.contains('gallery-img')) {
+            e.preventDefault();
+        }
+    });
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script type="module">
@@ -747,6 +773,7 @@
             link.setAttribute('data-pswp-height', this.height); 
         } 
     });
+    
     const lightbox = new PhotoSwipeLightbox({ 
         gallery: '#pswp-gallery', 
         children: 'a', 
@@ -756,6 +783,18 @@
         pinchToClose: true, 
         bgOpacity: 0.9 
     });
+
+    // DOŁOŻENIE OCHRONY PRZED KOPIOWANIEM DLA ZDJĘĆ W FULLSCREENIE
+    lightbox.on('uiRegister', function() {
+        lightbox.pswp.on('appendHeavy', function() {
+            document.querySelectorAll('.pswp__img').forEach(img => {
+                img.classList.add('no-copy');
+                img.setAttribute('draggable', 'false');
+                img.oncontextmenu = function() { return false; };
+            });
+        });
+    });
+
     lightbox.init();
 </script>
 
