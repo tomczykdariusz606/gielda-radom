@@ -92,6 +92,40 @@
         .gallery-img { height: 450px; object-fit: contain; width: 100%; cursor: zoom-in; background: #000; }
         @media (max-width: 768px) { .gallery-img { height: 300px; } }
 
+        /* NOWE: Style dla miniatur galerii */
+        .carousel-indicators {
+            position: relative; right: auto; bottom: auto; left: auto;
+            display: flex; overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start;
+            margin: 0; padding: 10px; background: rgba(0,0,0,0.8);
+            -webkit-overflow-scrolling: touch; border-top: 1px solid #222;
+        }
+        .carousel-indicators button {
+            width: 80px !important; height: 60px !important; flex-shrink: 0;
+            text-indent: 0 !important; background-color: transparent !important;
+            border: 2px solid transparent !important; opacity: 0.5 !important;
+            margin: 0 5px !important; padding: 0 !important; border-radius: 8px;
+            overflow: hidden; transition: 0.3s;
+        }
+        .carousel-indicators button.active {
+            opacity: 1 !important; border-color: var(--radom-red) !important; transform: scale(1.05);
+        }
+        .carousel-indicators img, .carousel-indicators video { width: 100%; height: 100%; object-fit: cover; }
+        .carousel-indicators::-webkit-scrollbar { height: 6px; }
+        .carousel-indicators::-webkit-scrollbar-thumb { background: var(--radom-red); border-radius: 10px; }
+
+        /* NOWE: Style dla strzałek nawigacji */
+        .carousel-control-prev, .carousel-control-next { width: 12%; opacity: 0.9; }
+        .carousel-control-prev-icon, .carousel-control-next-icon {
+            width: 3.5rem; height: 3.5rem; background-color: rgba(0,0,0,0.7);
+            border-radius: 50%; padding: 1.5rem; background-size: 45%;
+            border: 2px solid rgba(255,255,255,0.3); transition: 0.3s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .carousel-control-prev:hover .carousel-control-prev-icon,
+        .carousel-control-next:hover .carousel-control-next-icon {
+            background-color: var(--radom-red); border-color: white; transform: scale(1.15);
+        }
+
         .glass-panel {
             background: rgba(30, 30, 30, 0.65) !important;
             backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
@@ -198,21 +232,6 @@
         <div class="col-lg-8">
             <div class="mb-5 gallery-wrapper position-relative">
                 <div id="carCarousel" class="carousel slide" data-bs-touch="true" data-bs-interval="false">
-                    <div class="carousel-indicators mb-0 pb-2">
-                        {% set slide_idx = namespace(value=0) %}
-                        {% if car.is_360_premium %}
-                            <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="active"></button>
-                            {% set slide_idx.value = slide_idx.value + 1 %}
-                        {% endif %}
-                        <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="{% if not car.is_360_premium %}active{% endif %}"></button>
-                        {% set slide_idx.value = slide_idx.value + 1 %}
-                        {% for img in car.images %}
-                            {% if img.image_path != car.img %}
-                                <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}"></button>
-                                {% set slide_idx.value = slide_idx.value + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                    </div>
 
                     <div class="carousel-inner" id="pswp-gallery">
                         {% if car.is_360_premium %}
@@ -250,6 +269,34 @@
                     
                     <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
                     <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                    
+                    <div class="carousel-indicators">
+                        {% set slide_idx = namespace(value=0) %}
+                        {% if car.is_360_premium %}
+                            <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="active position-relative">
+                                <div class="w-100 h-100 bg-dark d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-arrow-repeat text-white position-absolute fs-4 z-2" style="text-shadow: 0 0 5px black;"></i>
+                                    <video src="{{ url_for('static', filename='uploads/360_videos/' ~ car.id ~ '.mp4') }}" class="w-100 h-100 object-fit-cover opacity-50" preload="metadata"></video>
+                                </div>
+                            </button>
+                            {% set slide_idx.value = slide_idx.value + 1 %}
+                        {% endif %}
+                        
+                        <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}" class="{% if not car.is_360_premium %}active{% endif %}">
+                            <img src="{{ car.img }}" alt="Miniatura">
+                        </button>
+                        {% set slide_idx.value = slide_idx.value + 1 %}
+                        
+                        {% for img in car.images %}
+                            {% if img.image_path != car.img %}
+                                <button type="button" data-bs-target="#carCarousel" data-bs-slide-to="{{ slide_idx.value }}">
+                                    <img src="{{ img.image_path }}" alt="Miniatura">
+                                </button>
+                                {% set slide_idx.value = slide_idx.value + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
                 </div>
             </div>
 
@@ -467,7 +514,8 @@
         <div class="col-lg-4">
             <div class="sticky-top" style="top: 20px; z-index: 10;">
                 <h2 class="fw-bold mb-0 text-white">{{ car.marka }} {{ car.model }}</h2>
-                <div class="fs-1 fw-bold text-danger mb-3" style="text-shadow: 0 0 20px rgba(206, 43, 55, 0.4); font-family: 'Anton', sans-serif; letter-spacing: 1px;">
+                
+                <div class="fs-1 fw-bold text-danger mb-3" style="text-shadow: 2px 2px 5px rgba(0,0,0,0.9), 0 0 20px rgba(206, 43, 55, 0.6); font-family: 'Anton', sans-serif; letter-spacing: 1px;">
                     {{ "{:,.0f}".format(car.cena).replace(',', ' ') }} {{ car.waluta if car.waluta else 'PLN' }}
                 </div>
 
