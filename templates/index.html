@@ -62,11 +62,13 @@
 
         .hero-wrap { padding: 30px 0 40px 0; }
         
+        /* Zaktualizowany panel szklany dla Hero */
         .glass-panel {
-            background: rgba(30, 30, 30, 0.65) !important;
+            background: linear-gradient(145deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%) !important;
             backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5) !important;
         }
 
         .search-pill-container {
@@ -94,7 +96,7 @@
         .car-card:hover { transform: translateY(-7px); border-color: var(--radom-red); box-shadow: 0 15px 30px rgba(0,0,0,0.5); }
         
         .pulse-btn { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(13, 202, 240, 0); } 100% { box-shadow: 0 0 0 0 rgba(13, 202, 240, 0); } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(206, 43, 55, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(206, 43, 55, 0); } 100% { box-shadow: 0 0 0 0 rgba(206, 43, 55, 0); } }
 
         .lang-btn { text-decoration: none; font-size: 1.3rem; margin-left: 8px; opacity: 0.7; transition: 0.2s; }
         .lang-btn:hover { opacity: 1; transform: scale(1.2); }
@@ -164,65 +166,81 @@
 
 <div class="hero-wrap">
     <div class="container mb-5">
-        <div class="card glass-panel border-info border-opacity-25 shadow-lg overflow-hidden text-start" style="position: relative;">
-            <div style="height: 4px; background: linear-gradient(90deg, #198754, #0dcaf0, #ce2b37);"></div>
-            <div class="card-body p-4 p-md-5">
+        <div class="card glass-panel overflow-hidden text-start position-relative">
+            <div style="position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: rgba(13, 202, 240, 0.15); filter: blur(60px); border-radius: 50%; z-index: 0;"></div>
+            <div style="position: absolute; bottom: -50px; left: -50px; width: 250px; height: 250px; background: rgba(206, 43, 55, 0.15); filter: blur(60px); border-radius: 50%; z-index: 0;"></div>
+            
+            <div style="height: 5px; background: linear-gradient(90deg, #ce2b37, #ff6b6b, #0dcaf0, #198754); position: relative; z-index: 2;"></div>
+            
+            <div class="card-body p-4 p-lg-5 position-relative" style="z-index: 2;">
                 <div class="row align-items-center">
                     <div class="col-lg-8 mb-4 mb-lg-0">
-                        <span class="badge bg-danger mb-3 px-3 py-2 rounded-pill shadow-sm" style="font-size: 0.8rem; letter-spacing: 1px;">
-                            <i class="bi bi-stars"></i> NOWOŚĆ W POLSCE
-                        </span>
-                        <h2 class="fw-bold text-white mb-3" style="font-family: 'Anton', sans-serif; letter-spacing: 1px; font-size: 2.2rem;">
-                            PIERWSZA GIEŁDA NAPĘDZANA PRZEZ <span class="text-info">GEMINI AI</span>
+                        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                            <span class="badge bg-danger px-3 py-2 rounded-pill shadow" style="font-size: 0.85rem; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.3);">
+                                <i class="bi bi-rocket-takeoff-fill me-1"></i> WERSJA 2.0
+                            </span>
+                            <span class="badge bg-dark px-3 py-2 rounded-pill shadow-sm text-info border border-info border-opacity-50" style="font-size: 0.85rem; letter-spacing: 1px; animation: glow-info 2s infinite alternate;">
+                                <i class="bi bi-people-fill me-1"></i> DOŁĄCZ DO 130 000+ KIEROWCÓW
+                            </span>
+                        </div>
+                        
+                        <style>
+                            @keyframes glow-info { from { box-shadow: 0 0 5px rgba(13, 202, 240, 0.2); } to { box-shadow: 0 0 15px rgba(13, 202, 240, 0.6); } }
+                        </style>
+
+                        <h2 class="fw-bold text-white mb-3" style="font-family: 'Anton', sans-serif; letter-spacing: 1px; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1;">
+                            GIEŁDA PRZYSZŁOŚCI NAPĘDZANA PRZEZ <br>
+                            <span style="background: linear-gradient(90deg, #0dcaf0, #a200ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GEMINI AI</span>
                         </h2>
-                        <p class="text-white-50 fs-5 mb-4">
-                            Żadnej ściemy. Nasza sztuczna inteligencja odwala najcięższą pracę za Ciebie, korzystając z prawdziwych danych.
+                        <p class="text-white-50 fs-5 mb-4 fw-light">
+                            Rozwijamy się dla Was! Jeszcze szybsze rozpoznawanie aut, precyzyjne wyceny i innowacyjne widoki 360°. Odkryj nowy wymiar sprzedaży.
                         </p>
                         
-                        <div class="row g-4">
+                        <div class="row g-3 mt-2">
                             <div class="col-md-4">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-camera-fill fs-2 text-success me-3 mt-1"></i>
-                                    <div>
-                                        <h6 class="fw-bold text-white mb-1">Skanuj i Wystaw</h6>
-                                        <p class="small text-muted mb-0">Zrób zdjęcie, a AI w 3 sekundy rozpozna auto i wypełni parametry ogłoszenia.</p>
-                                    </div>
+                                <div class="p-3 rounded-4 h-100" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.borderColor='rgba(25, 135, 84, 0.5)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.transform='translateY(0)';">
+                                    <i class="bi bi-camera-fill fs-3 text-success mb-2 d-block"></i>
+                                    <h6 class="fw-bold text-white mb-1">Skanuj i Wystaw</h6>
+                                    <p class="small text-muted mb-0">Zdjęcie wystarczy. AI uzupełni dane w 3 sekundy.</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-cpu-fill fs-2 text-warning me-3 mt-1"></i>
-                                    <div>
-                                        <h6 class="fw-bold text-white mb-1">Analiza & Opis</h6>
-                                        <p class="small text-muted mb-0">Rzeczoznawcza ocena lakieru, ceny i rzetelny opis handlowy generowany w locie.</p>
-                                    </div>
+                                <div class="p-3 rounded-4 h-100" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.borderColor='rgba(255, 193, 7, 0.5)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.transform='translateY(0)';">
+                                    <i class="bi bi-cpu-fill fs-3 text-warning mb-2 d-block"></i>
+                                    <h6 class="fw-bold text-white mb-1">Ekspert AI</h6>
+                                    <p class="small text-muted mb-0">Rzeczoznawcza ocena i rzetelny opis generowany w locie.</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-view-360 fs-2 text-info me-3 mt-1"></i>
-                                    <div>
-                                        <h6 class="fw-bold text-white mb-1">Prawdziwe 360°</h6>
-                                        <p class="small text-muted mb-0">Interaktywny obrót generowany z kilku prawdziwych zdjęć. Zachowujemy każdy detal!</p>
-                                    </div>
+                                <div class="p-3 rounded-4 h-100" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); transition: 0.3s;" onmouseover="this.style.borderColor='rgba(13, 202, 240, 0.5)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.transform='translateY(0)';">
+                                    <i class="bi bi-view-360 fs-3 text-info mb-2 d-block"></i>
+                                    <h6 class="fw-bold text-white mb-1">Kino 360°</h6>
+                                    <p class="small text-muted mb-0">Interaktywny obrót wokół auta. Detale mają znaczenie.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="col-lg-4 text-center border-start border-secondary border-opacity-25 ps-lg-4 mt-4 mt-lg-0">
-                        <div class="bg-black bg-opacity-50 p-4 rounded-4 border border-secondary border-opacity-25 shadow">
-                            <h5 class="fw-bold text-white mb-2">Zgarnij Pakiet 360°</h5>
-                            <p class="small text-white-50 mb-4">Wystaw auto i zgarnij innowację. Codziennie losujemy ogłoszenia, którym dodajemy wideo 360° <strong>ZA DARMO</strong>!</p>
-                            <a href="/profil" class="btn btn-info btn-lg fw-bold rounded-pill shadow-lg w-100 text-dark pulse-btn">
-                                <i class="bi bi-plus-circle-fill me-2"></i> WYSTAW ZA DARMO
-                            </a>
+                    <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                        <div class="p-4 rounded-4 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(206, 43, 55, 0.15) 0%, rgba(0,0,0,0.8) 100%); border: 1px solid rgba(206, 43, 55, 0.4);">
+                            <div class="position-absolute top-0 end-0 p-2 opacity-25" style="transform: rotate(15deg);">
+                                <i class="bi bi-view-360" style="font-size: 5rem; color: #ce2b37;"></i>
+                            </div>
+                            <div class="position-relative z-index-2">
+                                <span class="badge bg-warning text-dark mb-3 px-3 py-1 rounded-pill fw-bold border border-warning shadow"><i class="bi bi-star-fill me-1"></i> HIT OFERTY</span>
+                                <h4 class="fw-bold text-white mb-2">Zgarnij Pakiet 360°</h4>
+                                <p class="small text-white-50 mb-4">Codziennie losujemy ogłoszenia, którym dodajemy interaktywne wideo 360° <strong>CAŁKOWICIE ZA DARMO</strong>.</p>
+                                <a href="/profil" class="btn btn-danger btn-lg fw-bold rounded-pill shadow-lg w-100 text-white pulse-btn" style="letter-spacing: 1px;">
+                                    <i class="bi bi-plus-circle-fill me-2"></i> WYSTAW ZA DARMO
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
     <div class="container" style="position: relative; z-index: 10;">
         <form action="/" method="get">
             <div class="search-pill-container">
@@ -287,9 +305,15 @@
     <div class="row g-0 rounded-4 overflow-hidden shadow-lg border border-secondary align-items-center" 
          style="background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);">
         <div class="col-md-5 col-lg-4 p-0 position-relative border-end border-secondary">
-            <video autoplay muted loop playsinline class="d-block w-100" style="height: 350px; object-fit: cover;">
+            <video id="promoVid" autoplay muted playsinline class="d-block w-100" style="height: 350px; object-fit: cover;">
                 <source src="{{ url_for('static', filename='promo.mp4') }}" type="video/mp4">
             </video>
+            
+            <button id="promoMuteBtn" class="btn btn-dark btn-sm position-absolute top-0 end-0 m-3 rounded-pill border border-secondary shadow" style="z-index: 20; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); transition: 0.3s;">
+                <i id="promoMuteIcon" class="bi bi-volume-mute-fill me-1"></i> 
+                <span id="promoMuteText" style="font-size: 0.75rem; letter-spacing: 0.5px;">DŹWIĘK</span>
+            </button>
+
             <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
                 <span class="badge bg-danger shadow fw-bold"><i class="bi bi-play-fill"></i> AI DEMO</span>
             </div>
@@ -551,11 +575,10 @@
     document.addEventListener("DOMContentLoaded", function() {
         // COOKIES
         if (!localStorage.getItem('cookiesAccepted')) { 
-            // Pokazujemy baner nad dolnym navbarem na mobile
             const cookieBanner = document.getElementById('cookie-banner');
             cookieBanner.style.display = 'block';
             if (window.innerWidth < 992) {
-                cookieBanner.style.bottom = '60px'; // Wysokość nav-bottom
+                cookieBanner.style.bottom = '60px'; 
             }
         }
         
@@ -570,25 +593,60 @@
         if (sessionStorage.getItem('seenVideoIntro')) { 
             overlay.style.display = 'none'; 
         } else {
-            // 1. Opcja: Użytkownik chce obejrzeć intro
             if (btnPlayIntro) {
                 btnPlayIntro.addEventListener('click', function() {
-                    choices.style.display = 'none'; // Ukrywamy główne przyciski
-                    skipBtn.style.display = 'block'; // Pokazujemy "Pomiń" w rogu
-                    video.muted = false; // Gwarancja dźwięku
+                    choices.style.display = 'none'; 
+                    skipBtn.style.display = 'block'; 
+                    video.muted = false; 
                     video.play();
                 });
             }
-            
-            // 2. Opcja: Użytkownik pomija intro od razu
             if (btnEnterSite) {
                 btnEnterSite.addEventListener('click', function() {
                     finishIntro();
                 });
             }
-            
-            // Zakończenie wideo (automatyczne przejście)
             video.onended = function() { finishIntro(); };
+        }
+
+        // OBSŁUGA DŹWIĘKU W WIDEO PROMO
+        const promoVid = document.getElementById('promoVid');
+        const promoMuteBtn = document.getElementById('promoMuteBtn');
+        const promoMuteIcon = document.getElementById('promoMuteIcon');
+        const promoMuteText = document.getElementById('promoMuteText');
+        const MAX_SOUND_LOOPS = 1; 
+        let soundLoops = 0;
+
+        if (promoMuteBtn && promoVid) {
+            promoMuteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (promoVid.muted) {
+                    promoVid.muted = false;
+                    promoVid.currentTime = 0; 
+                    soundLoops = 0; 
+                    promoMuteIcon.classList.replace('bi-volume-mute-fill', 'bi-volume-up-fill');
+                    promoMuteText.innerText = 'WYCISZ';
+                    promoMuteBtn.classList.replace('btn-dark', 'btn-danger');
+                } else {
+                    promoVid.muted = true;
+                    promoMuteIcon.classList.replace('bi-volume-up-fill', 'bi-volume-mute-fill');
+                    promoMuteText.innerText = 'DŹWIĘK';
+                    promoMuteBtn.classList.replace('btn-danger', 'btn-dark');
+                }
+            });
+
+            promoVid.addEventListener('ended', function() {
+                if (!promoVid.muted) {
+                    soundLoops++;
+                    if (soundLoops >= MAX_SOUND_LOOPS) {
+                        promoVid.muted = true; 
+                        promoMuteIcon.classList.replace('bi-volume-up-fill', 'bi-volume-mute-fill');
+                        promoMuteText.innerText = 'DŹWIĘK';
+                        promoMuteBtn.classList.replace('btn-danger', 'btn-dark');
+                    }
+                }
+                promoVid.play();
+            });
         }
         
         // SMART NAVBAR (Chowanie)
