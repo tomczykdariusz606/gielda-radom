@@ -218,11 +218,20 @@
                     <div class="glass-stat">
                         {% if current_user.username == 'admin' or current_user.id == 1 %}
                             {% set limit = 500 %}{% else %}{% set limit = 6 %}{% endif %}
-                        {% set uzyte = current_user.ai_requests_today %}
+                        
+                        {% set dzisiaj = now.strftime('%Y-%m-%d') %}
+                        {% set data_ostatniego = current_user.last_ai_request_date|string %}
+                        {% set uzyte = current_user.ai_requests_today if data_ostatniego == dzisiaj else 0 %}
+                        
                         {% set pozostalo = limit - uzyte %}{% if pozostalo < 0 %}{% set pozostalo = 0 %}{% endif %}
-                        <div class="d-flex justify-content-between text-white-50 small mb-1"><span>{{ t.get('limit', 'Limit AI') }}</span> <i class="bi bi-robot"></i></div>
+                        
+                        <div class="d-flex justify-content-between text-white-50 small mb-1">
+                            <span style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0.5px;">{{ t.get('limit_today', 'POZOSTAŁO AI NA DZIŚ') }}</span> 
+                            <i class="bi bi-robot text-info"></i>
+                        </div>
                         <h4 class="fw-bold m-0 text-white">{{ pozostalo }}<span class="fs-6 text-muted">/{{ limit }}</span></h4>
-                        <div class="limit-bar-bg"><div class="limit-bar-fill" style="width: {{ (uzyte / limit) * 100 }}%"></div></div>
+                        
+                        <div class="limit-bar-bg"><div class="limit-bar-fill bg-success" style="width: {{ (pozostalo / limit) * 100 }}%"></div></div>
                     </div>
                 </div>
                 <div class="col-6">
