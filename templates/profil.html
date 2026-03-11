@@ -166,7 +166,10 @@
         }
         .ai-progress-bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 20px; }
         .ai-progress-bar { height: 100%; background: linear-gradient(90deg, var(--premium-gold), var(--radom-red)); width: 0%; transition: width 0.5s linear; }
+        
+        /* Animacje */
         @keyframes pulseText { 0% { opacity: 0.4; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.4; transform: scale(0.98); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="pb-0">
@@ -757,10 +760,14 @@
     </div>
 
     <div id="loaderOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px);">
+        
         <video id="loaderVideo" class="rounded-4 shadow-lg border border-success border-2 mb-3" style="width: 100%; max-width: 450px; max-height: 60vh; object-fit: cover;" playsinline preload="auto">
             <source src="{{ url_for('static', filename='loading.mp4') }}" type="video/mp4">
         </video> 
-        <div class="loading-text text-success mt-3" style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; animation: pulseText 1.5s infinite ease-in-out;">
+
+        <img id="loaderSpinningLogo" src="{{ url_for('static', filename='watermark.png') }}" class="d-none mb-4" style="width: 120px; filter: drop-shadow(0 0 15px rgba(206,43,55,0.8)); animation: spin 2s linear infinite;">
+        
+        <div id="loaderText" class="loading-text text-success mt-3" style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; animation: pulseText 1.5s infinite ease-in-out;">
             <i class="bi bi-cloud-arrow-up-fill me-2"></i> Publikowanie oferty...
         </div>
     </div>
@@ -935,15 +942,47 @@
             }); 
         }
         
-        // NOWA FUNKCJA ZAPISU - Z MÓWIĄCĄ MODELKĄ
+        // NOWA FUNKCJA ZAPISU - Z BEZPIECZEŃSTWEM DLA SŁABEGO INTERNETU
         function loadingEfekt(form) { 
             const overlay = document.getElementById('loaderOverlay');
             const video = document.getElementById('loaderVideo');
+            const logo = document.getElementById('loaderSpinningLogo');
+            const text = document.getElementById('loaderText');
+            
             overlay.style.display = 'flex'; 
             
             if(video) {
+                video.style.display = 'block'; 
+                if(logo) logo.classList.add('d-none'); // chowamy logo na starcie
+                
                 video.currentTime = 0;
-                video.play(); // Odpala modelkę z dźwiękiem
+                video.play(); 
+                
+                // Gdy film się fizycznie skończy:
+                video.onended = function() {
+                    // Płynnie chowamy wideo
+                    video.style.transition = "opacity 0.5s ease";
+                    video.style.opacity = "0";
+                    
+                    setTimeout(() => {
+                        video.style.display = "none";
+                        video.style.opacity = "1"; // reset do przyszłych użyć
+                        
+                        // Odkrywamy kręcące się logo
+                        if(logo) {
+                            logo.classList.remove('d-none');
+                            logo.style.opacity = "0";
+                            logo.style.transition = "opacity 0.5s ease";
+                            setTimeout(() => { logo.style.opacity = "1"; }, 50);
+                        }
+                        // Zmieniamy tekst
+                        if(text) {
+                            text.innerHTML = '<i class="bi bi-gear-wide-connected me-2" style="animation: spin 2s linear infinite;"></i> Optymalizacja zdjęć...';
+                            text.classList.remove('text-success');
+                            text.classList.add('text-warning');
+                        }
+                    }, 500);
+                };
             }
         }
 
@@ -971,6 +1010,39 @@
             if(sekcja) sekcja.style.display = (val === 'company' ? 'block' : 'none');
         }
 
+        // --- FUNKCJA "HOLLYWOOD FADE-OUT" DLA SKANERA AI ---
+        function smoothCloseModal(modalId, videoId) {
+            const modal = document.getElementById(modalId);
+            const video = document.getElementById(videoId);
+            if (!modal) return;
+
+            modal.style.transition = "opacity 0.8s ease-out";
+            modal.style.opacity = "0";
+
+            if (video && !video.paused) {
+                let vol = 1.0;
+                const fadeInterval = setInterval(() => {
+                    vol -= 0.1;
+                    if (vol > 0) {
+                        video.volume = vol;
+                    } else {
+                        video.volume = 0;
+                        clearInterval(fadeInterval);
+                    }
+                }, 80); 
+            }
+
+            setTimeout(() => {
+                modal.classList.add('d-none');
+                modal.style.display = 'none';
+                modal.style.opacity = "1"; 
+                if (video) {
+                    video.pause();
+                    video.volume = 1.0; 
+                }
+            }, 800);
+        }
+
         // --- 3. GŁÓWNA FUNKCJA SKANERA Z MODELKĄ ---
         async function performAnalysis(file) {
             const aiModal = document.getElementById('ai-scanner-modal');
@@ -978,11 +1050,13 @@
             const fillBar = document.getElementById('ai-progress-fill');
             const fileCountText = document.getElementById('fileCountText');
             
+            aiModal.style.opacity = "1";
             aiModal.classList.remove('d-none');
             aiModal.style.display = 'flex';
             if(aiVideo) {
+                aiVideo.volume = 1.0;
                 aiVideo.currentTime = 0;
-                aiVideo.play(); // Odpala skanującą modelkę
+                aiVideo.play(); 
             }
             
             if(fillBar) {
@@ -990,7 +1064,7 @@
                 clearInterval(progressInterval);
                 let w = 0;
                 progressInterval = setInterval(() => {
-                    w += 1.5; // Zwolniono postęp, żeby idealnie zgrał się z wideo 17sek
+                    w += 1.5; 
                     if(w > 95) w = 95; 
                     fillBar.style.width = w + '%';
                 }, 250); 
@@ -999,8 +1073,6 @@
             const fd = new FormData(); fd.append('scan_image', file); 
             
             aiAbortController = new AbortController();
-            
-            // ZWIĘKSZONY TIMEOUT DO 19 SEKUND (Zapas dla Twojego wideo 17s)
             const timeoutId = setTimeout(() => {
                 if(aiAbortController) aiAbortController.abort();
             }, 19000);
@@ -1015,10 +1087,8 @@
                 clearTimeout(timeoutId);
                 const d = await r.json(); 
                 
-                if(aiVideo) aiVideo.pause();
-                aiModal.style.display = 'none';
-                aiModal.classList.add('d-none');
                 clearInterval(progressInterval);
+                smoothCloseModal('ai-scanner-modal', 'ai-model-video');
 
                 if(d.error) {
                     alert("⚠️ Informacja: " + d.error);
@@ -1058,10 +1128,8 @@
             } catch(e){ 
                 console.error(e); 
                 clearTimeout(timeoutId);
-                if(aiVideo) aiVideo.pause();
-                aiModal.style.display = 'none';
-                aiModal.classList.add('d-none');
                 clearInterval(progressInterval);
+                smoothCloseModal('ai-scanner-modal', 'ai-model-video');
                 
                 if (e.name === 'AbortError') {
                     console.log('Skanowanie anulowane przez użytkownika lub timeout.');
@@ -1084,14 +1152,10 @@
         // --- OBSŁUGA PRZYCISKU "ANULUJ" W POCZEKAJCE ---
         document.getElementById('cancel-ai-btn').addEventListener('click', function() {
             if (aiAbortController) {
-                aiAbortController.abort(); // Zrywa połącznie z serwerem
+                aiAbortController.abort(); 
             }
-            const aiModal = document.getElementById('ai-scanner-modal');
-            const aiVideo = document.getElementById('ai-model-video');
-            if(aiVideo) aiVideo.pause();
-            aiModal.style.display = 'none';
-            aiModal.classList.add('d-none');
             clearInterval(progressInterval);
+            smoothCloseModal('ai-scanner-modal', 'ai-model-video');
         });
 
 
