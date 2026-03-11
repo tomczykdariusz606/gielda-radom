@@ -62,7 +62,6 @@
 
         .hero-wrap { padding: 30px 0 40px 0; }
         
-        /* Zaktualizowany panel szklany dla Hero */
         .glass-panel {
             background: linear-gradient(145deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%) !important;
             backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important;
@@ -556,7 +555,7 @@
             <i class="bi bi-play-circle-fill me-2"></i> ODTWÓRZ INTRO
         </button>
         <button id="btnEnterSite" class="btn btn-outline-light rounded-pill fw-bold px-4" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);">
-            WEJDŹ NA GIEŁDĘ <i class="bi bi-chevron-double-right ms-1"></i>
+            WEJDŹ NA GIEŁDĘ (<span id="introCountdown">5</span>) <i class="bi bi-chevron-double-right ms-1"></i>
         </button>
     </div>
     
@@ -582,7 +581,7 @@
             }
         }
         
-        // ZMODYFIKOWANA LOGIKA INTRO
+        // ZMODYFIKOWANA LOGIKA INTRO (Z ODLICZANIEM)
         const overlay = document.getElementById('video-intro-layer');
         const video = document.getElementById('introVid');
         const choices = document.getElementById('intro-choices');
@@ -593,8 +592,24 @@
         if (sessionStorage.getItem('seenVideoIntro')) { 
             overlay.style.display = 'none'; 
         } else {
+            let timeLeft = 5;
+            const countdownSpan = document.getElementById('introCountdown');
+            
+            // Start odliczania
+            let autoSkipInterval = setInterval(() => {
+                timeLeft--;
+                if(countdownSpan) countdownSpan.innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(autoSkipInterval);
+                    finishIntro(); // Automatyczne wejście po 5 sek
+                }
+            }, 1000);
+
             if (btnPlayIntro) {
                 btnPlayIntro.addEventListener('click', function() {
+                    // Klient klika odtwórz -> wyłączamy odliczanie, wideo leci dalej
+                    clearInterval(autoSkipInterval); 
                     choices.style.display = 'none'; 
                     skipBtn.style.display = 'block'; 
                     video.muted = false; 
@@ -603,6 +618,7 @@
             }
             if (btnEnterSite) {
                 btnEnterSite.addEventListener('click', function() {
+                    clearInterval(autoSkipInterval); // Ręczne kliknięcie "Wejdź"
                     finishIntro();
                 });
             }
