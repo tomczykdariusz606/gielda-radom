@@ -123,14 +123,6 @@
         .btn-submit-fix { background: linear-gradient(135deg, var(--radom-red), #911620); color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 15px; width: 100%; border-radius: 12px; border: none; box-shadow: 0 8px 25px rgba(206, 43, 55, 0.5); margin-top: 20px; transition: 0.3s; }
         .btn-submit-fix:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(206, 43, 55, 0.7); }
         
-        #aiToast {
-            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-            background: rgba(240, 196, 32, 0.95); color: black; padding: 15px 25px; border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 9999; font-weight: bold; display: none;
-            text-align: center; width: 90%; max-width: 400px; animation: slideUp 0.5s ease-out;
-        }
-        @keyframes slideUp { from { bottom: -100px; } to { bottom: 100px; } }
-        
         #loaderOverlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85); z-index: 99999; display: none;
@@ -174,7 +166,23 @@
         }
         .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
         .footer-link:hover { color: var(--radom-red); }
-
+        
+        /* --- STYLE DLA NOWEGO EKRANU AI MODELKI --- */
+        #ai-scanner-modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(10,10,12,0.98); z-index: 100000; /* Zawsze na samej górze */
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            backdrop-filter: blur(20px);
+        }
+        
+        .ai-progress-bar-container {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 20px;
+        }
+        
+        .ai-progress-bar {
+            height: 100%; background: linear-gradient(90deg, var(--premium-gold), var(--radom-red));
+            width: 0%; transition: width 0.5s linear;
+        }
     </style>
 </head>
 <body class="pb-0">
@@ -899,8 +907,29 @@
         </div>
     </div>
     {% endif %}
+
+    <div id="ai-scanner-modal" class="d-none">
+        <div class="text-center p-4 w-100" style="max-width: 450px;">
+            <video id="ai-model-video" class="rounded-4 shadow-lg border border-danger border-2 mb-3" style="width: 100%; max-height: 60vh; object-fit: cover;" playsinline preload="auto">
+                <source src="{{ url_for('static', filename='ai_modelka.mp4') }}" type="video/mp4">
+                Twoja przeglądarka nie obsługuje wideo.
+            </video>
+            
+            <div class="ai-progress-bar-container mb-4">
+                <div id="ai-progress-fill" class="ai-progress-bar"></div>
+            </div>
+            
+            <button type="button" id="cancel-ai-btn" class="btn btn-outline-light rounded-pill fw-bold px-4 py-3 w-100 shadow">
+                <i class="bi bi-pencil-square me-2"></i> ANULUJ I WPISZ RĘCZNIE
+            </button>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        let aiAbortController = null;
+        let progressInterval = null;
+
         // --- 1. FUNKCJE FORMULARZA I UI ---
         function adj() { 
             const radio = document.querySelector('input[name="typ"]:checked');
@@ -952,22 +981,58 @@
             const sekcja = document.getElementById('sekcja_firma');
             if(sekcja) sekcja.style.display = (val === 'company' ? 'block' : 'none');
         }
+
+        // --- 3. GŁÓWNA FUNKCJA SKANERA Z MODELKĄ ---
         async function performAnalysis(file) {
-            const toast = document.getElementById('aiToast'); 
-            if(toast) {
-                toast.innerHTML = '<i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...';
-                toast.style.display = 'block';
-            }
+            const aiModal = document.getElementById('ai-scanner-modal');
+            const aiVideo = document.getElementById('ai-model-video');
+            const fillBar = document.getElementById('ai-progress-fill');
+            const fileCountText = document.getElementById('fileCountText');
             
+            // Pokaż modal, zresetuj wideo i pasek postępu
+            aiModal.classList.remove('d-none');
+            aiModal.style.display = 'flex';
+            if(aiVideo) {
+                aiVideo.currentTime = 0;
+                aiVideo.play();
+            }
+            if(fillBar) {
+                fillBar.style.width = '0%';
+                clearInterval(progressInterval);
+                let w = 0;
+                progressInterval = setInterval(() => {
+                    w += 2;
+                    if(w > 95) w = 95; // Zatrzymuje się na 95% do czasu zwrotu danych
+                    fillBar.style.width = w + '%';
+                }, 300);
+            }
+
             const fd = new FormData(); fd.append('scan_image', file); 
+            
+            // Zabezpieczenie przed zawieszeniem na 15 sekund
+            aiAbortController = new AbortController();
+            const timeoutId = setTimeout(() => {
+                if(aiAbortController) aiAbortController.abort();
+            }, 15000);
+
             try { 
-                const r = await fetch('/api/analyze-car', {method:'POST', body:fd}); 
+                const r = await fetch('/api/analyze-car', {
+                    method:'POST', 
+                    body:fd,
+                    signal: aiAbortController.signal
+                }); 
+                
+                clearTimeout(timeoutId);
                 const d = await r.json(); 
                 
-                // DODANE: Jeśli serwer odrzuci (bo limit), pokaż użytkownikowi komunikat!
+                // Ukrywamy modelkę
+                if(aiVideo) aiVideo.pause();
+                aiModal.style.display = 'none';
+                aiModal.classList.add('d-none');
+                clearInterval(progressInterval);
+
                 if(d.error) {
                     alert("⚠️ Informacja: " + d.error);
-                    if(toast) toast.style.display = 'none';
                     return;
                 }
 
@@ -996,44 +1061,59 @@
                         else if(d.paliwo_sugestia === 'LPG') t_label = "{{ t.get('lpg', 'LPG') }}";
                         setVal('paliwo', d.paliwo_sugestia, t_label);
                     } 
-                    if(toast) {
-                        toast.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Dane uzupełnione!'; 
-                        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+                    
+                    if(fileCountText) {
+                        fileCountText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Sukces! Sprawdź dane.</span>';
                     }
-                } else { 
-                    if(toast) toast.style.display = 'none'; 
                 } 
             } catch(e){ 
                 console.error(e); 
-                if(toast) toast.style.display = 'none'; 
-                alert("❌ Wystąpił błąd serwera. Upewnij się, że nie dodajesz naraz więcej niż jednego auta.");
+                clearTimeout(timeoutId);
+                if(aiVideo) aiVideo.pause();
+                aiModal.style.display = 'none';
+                aiModal.classList.add('d-none');
+                clearInterval(progressInterval);
+                
+                if (e.name === 'AbortError') {
+                    console.log('Skanowanie anulowane przez użytkownika lub timeout.');
+                    if(fileCountText) fileCountText.innerHTML = '<span class="text-warning">Anulowano. Wpisz ręcznie.</span>';
+                } else {
+                    alert("❌ Wystąpił błąd serwera. Wpisz dane ręcznie.");
+                }
             } 
         }
 
         async function scanCar(input){ 
             if(!input.files[0]) return; 
-            // ZMIANA: Zabezpieczono ładowanie przed błędem "fileInput is null"
             const mainInput = document.getElementById('mainGalleryInput'); 
             if(mainInput) {
                 const dt = new DataTransfer(); dt.items.add(input.files[0]); mainInput.files = dt.files;
             }
-            const headerLabel = document.getElementById('photoLabel'); 
-            if(headerLabel) headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }} <span class="text-success ms-2">✅ SKAN DODANY!</span>';
             performAnalysis(input.files[0]);
         }
+
+        // --- OBSŁUGA PRZYCISKU "ANULUJ" W POCZEKAJCE ---
+        document.getElementById('cancel-ai-btn').addEventListener('click', function() {
+            if (aiAbortController) {
+                aiAbortController.abort(); // Zrywa połącznie z backendem/API
+            }
+            const aiModal = document.getElementById('ai-scanner-modal');
+            const aiVideo = document.getElementById('ai-model-video');
+            if(aiVideo) aiVideo.pause();
+            aiModal.style.display = 'none';
+            aiModal.classList.add('d-none');
+            clearInterval(progressInterval);
+        });
 
 
         // --- 4. ZARZĄDZANIE UNIWERSALNYM MODALEM ADMINA (BEZPIECZNE DLA PAGINACJI) ---
         document.body.addEventListener('click', function(e) {
-            // Nasłuchujemy kliknięć w przycisk edycji w tabeli
             const btn = e.target.closest('.edit-user-btn');
             
             if (btn) {
-                // 1. Wyciągamy dane schowane w atrybutach przycisku
                 const userId = btn.getAttribute('data-id');
                 const username = btn.getAttribute('data-username');
                 
-                // 2. Wstrzykujemy dane do uniwersalnego modalu
                 const titleEl = document.getElementById('editModalUsername');
                 const formEl = document.getElementById('universalEditForm');
                 
@@ -1046,14 +1126,12 @@
                 document.getElementById('editCompany').value = btn.getAttribute('data-company');
                 document.getElementById('editNip').value = btn.getAttribute('data-nip');
                 
-                // 3. Chowamy dużą tabelę z użytkownikami
                 const usersModalEl = document.getElementById('usersModal');
                 if (usersModalEl) {
                     const usersModal = bootstrap.Modal.getInstance(usersModalEl);
                     if (usersModal) usersModal.hide();
                 }
                 
-                // 4. Pokazujemy wypełniony modal edycji po ułamku sekundy
                 setTimeout(() => {
                     const editModalEl = document.getElementById('universalEditModal');
                     if(editModalEl) {
@@ -1066,23 +1144,19 @@
 
         // --- 5. INICJALIZACJA STRONY ---
         document.addEventListener('DOMContentLoaded', function() {
-            // Ciasteczka
             if (!localStorage.getItem('cookiesAccepted')) { 
                 const cb = document.getElementById('cookie-banner');
                 if(cb) cb.style.display = 'block'; 
             }
 
-                        // --- 5. OBSŁUGA GALERII ZDJĘĆ + AUTO AI ---
             const galleryInput = document.getElementById('mainGalleryInput');
             if (galleryInput) {
                 galleryInput.addEventListener('change', function() {
-                    // 1. Reset etykiety skanu
                     const headerLabel = document.getElementById('photoLabel'); 
                     if(headerLabel && headerLabel.innerText.includes("SKAN")) { 
                         headerLabel.innerHTML = '{{ t.get("photos", "ZDJĘCIA") }}'; 
                     }
                     
-                    // 2. Limit 18 zdjęć
                     if (this.files.length > 18) { 
                         alert('⚠️ MAX 18 zdjęć.'); 
                         const dt = new DataTransfer(); 
@@ -1090,13 +1164,11 @@
                         this.files = dt.files; 
                     }
 
-                    // 3. WYZWALACZ ANALIZY AI (Działa od razu po wybraniu plików)
                     if (this.files && this.files.length > 0) {
                         console.log("Auto-AI: Rozpoczynam analizę pierwszego zdjęcia...");
                         performAnalysis(this.files[0]);
                     }
                     
-                    // 4. Aktualizacja licznika w ramce
                     const countText = document.getElementById('fileCountText');
                     if(countText) {
                         if(this.files.length > 0) {
@@ -1114,4 +1186,3 @@
     </script>
 </body>
 </html>
-
