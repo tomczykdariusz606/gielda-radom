@@ -123,15 +123,6 @@
         .btn-submit-fix { background: linear-gradient(135deg, var(--radom-red), #911620); color: white; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 15px; width: 100%; border-radius: 12px; border: none; box-shadow: 0 8px 25px rgba(206, 43, 55, 0.5); margin-top: 20px; transition: 0.3s; }
         .btn-submit-fix:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(206, 43, 55, 0.7); }
         
-        #loaderOverlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85); z-index: 99999; display: none;
-            flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px);
-        }
-        .loading-text { font-family: 'Inter', sans-serif; font-size: 1.2rem; font-weight: 700; color: white; letter-spacing: 3px; text-transform: uppercase; animation: pulseText 1.5s infinite ease-in-out; margin-top: 10px; }
-        #loaderVideo { width: 150px; height: auto; border-radius: 50%; box-shadow: 0 0 50px rgba(206,43,55, 0.5); margin-bottom: 20px; }
-        @keyframes pulseText { 0% { opacity: 0.4; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); color: var(--radom-red); } 100% { opacity: 0.4; transform: scale(0.98); } }
-
         .nav-bottom { 
             position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.90); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
@@ -151,7 +142,6 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;
         }
 
-        /* Wymuszenie z-index dla stabilności modali */
         .modal { z-index: 10000 !important; }
         .modal-backdrop { z-index: 9999 !important; }
         body.modal-open { overflow: hidden !important; padding-right: 0 !important; }
@@ -167,22 +157,16 @@
         .footer-link { color: #b0b3b8; text-decoration: none; transition: 0.2s; }
         .footer-link:hover { color: var(--radom-red); }
         
-        /* --- STYLE DLA NOWEGO EKRANU AI MODELKI --- */
+        /* --- STYLE DLA EKRANÓW AI --- */
         #ai-scanner-modal {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(10,10,12,0.98); z-index: 100000; /* Zawsze na samej górze */
+            background: rgba(10,10,12,0.98); z-index: 100000;
             display: none; flex-direction: column; justify-content: center; align-items: center;
             backdrop-filter: blur(20px);
         }
-        
-        .ai-progress-bar-container {
-            width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 20px;
-        }
-        
-        .ai-progress-bar {
-            height: 100%; background: linear-gradient(90deg, var(--premium-gold), var(--radom-red));
-            width: 0%; transition: width 0.5s linear;
-        }
+        .ai-progress-bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 20px; }
+        .ai-progress-bar { height: 100%; background: linear-gradient(90deg, var(--premium-gold), var(--radom-red)); width: 0%; transition: width 0.5s linear; }
+        @keyframes pulseText { 0% { opacity: 0.4; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.02); } 100% { opacity: 0.4; transform: scale(0.98); } }
     </style>
 </head>
 <body class="pb-0">
@@ -216,9 +200,8 @@
                     
                     <div class="mt-2 d-flex flex-wrap gap-2">
                         <a href="/ustawienia_profilu" class="btn btn-sm btn-outline-secondary rounded-pill fw-bold">
-    <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
-</a>
-
+                            <i class="bi bi-gear-fill me-1"></i> EDYTUJ PROFIL
+                        </a>
                         
                         <form id="avatarForm" action="/zmien_avatar" method="POST" enctype="multipart/form-data" class="m-0">
                             <label class="btn btn-sm btn-outline-info rounded-pill fw-bold mb-0" style="cursor: pointer;">
@@ -267,11 +250,10 @@
         <button class="btn btn-danger w-100 rounded-4 py-3 shadow-lg fw-bold mb-4 fs-5 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#dodajModal">
             <i class="bi bi-plus-circle-fill"></i> {{ t.get('add', 'DODAJ OGŁOSZENIE') }}
         </button>
-           <a href="/dodaj_przedmiot" class="btn btn-warning w-100 rounded-4 py-3 shadow-lg fw-bold mb-5 fs-5 d-flex align-items-center justify-content-center gap-2 text-dark" style="margin-top: -15px;">
-    <i class="bi bi-shop"></i> DODAJ CZĘŚCI / DOM I OGRÓD
-</a>
+        <a href="/dodaj_przedmiot" class="btn btn-warning w-100 rounded-4 py-3 shadow-lg fw-bold mb-5 fs-5 d-flex align-items-center justify-content-center gap-2 text-dark" style="margin-top: -15px;">
+            <i class="bi bi-shop"></i> DODAJ CZĘŚCI / DOM I OGRÓD
+        </a>
  
-
         <h5 class="fw-bold text-white mb-3 ps-2 border-start border-4 border-danger ps-3">{{ t.get('your_ads', 'TWOJE OGŁOSZENIA') }}</h5>
         
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
@@ -279,7 +261,7 @@
             <div class="col">
                 <div class="card car-card h-100">
                     <div class="position-relative">
-                        <img src="{{ car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
+                        <img src="{{ car.thumb or car.img }}" class="card-img-top" style="height: 190px; object-fit: cover; opacity: 0.9;">
                         {% set dni = (now - car.data_dodania).days %}{% set left = 30 - dni %}
                         <span class="position-absolute top-0 end-0 m-2 badge {% if left < 3 %}bg-danger{% else %}bg-black{% endif %} bg-opacity-75 rounded-pill border border-secondary">{% if left > 0 %}{{ left }} {{ t.get('days_left', 'dni') }}{% else %}{{ t.get('expired', 'WYGASŁO') }}{% endif %}</span>
                         {% if car.is_promoted %}<span class="position-absolute top-0 start-0 m-2 badge bg-warning text-dark border border-white shadow fw-bold">GOLD</span>{% endif %}
@@ -399,7 +381,7 @@
             <div class="col">
                 <div class="card car-card h-100 border-warning border-opacity-25">
                     <div class="position-relative">
-                        <img src="{{ f_car.img }}" class="card-img-top" style="height: 160px; object-fit: cover; opacity: 0.8;">
+                        <img src="{{ f_car.thumb or f_car.img }}" class="card-img-top" style="height: 160px; object-fit: cover; opacity: 0.8;">
                         <a href="/toggle_favorite/{{ f_car.id }}" class="position-absolute top-0 end-0 m-2 badge bg-danger rounded-circle p-2" style="cursor:pointer;"><i class="bi bi-heart-fill"></i></a>
                     </div>
                     <div class="card-body">
@@ -412,6 +394,7 @@
             <div class="col-12 text-center text-muted py-4 border border-secondary border-dashed rounded-4 bg-dark bg-opacity-10"><p class="small mb-0 opacity-25">{{ t.get('no_favorites', 'Nie obserwujesz jeszcze żadnych ogłoszeń.') }}</p></div>
             {% endfor %}
         </div>
+        
         {% if current_user.username == 'admin' or current_user.id == 1 %}
         <div class="card admin-box shadow-lg mb-5 border-0" style="background: linear-gradient(145deg, #1a1a1a, #000); border-left: 5px solid #ffc107;">
             <div class="card-header bg-transparent border-warning d-flex justify-content-between align-items-center pt-3 pb-2">
@@ -426,15 +409,13 @@
                 </div>
                 <div class="bg-black bg-opacity-25 p-3 rounded-3 border border-secondary">
                     <a href="/admin/uzytkownicy" class="btn btn-danger w-100 fw-bold shadow-sm mb-3 py-2">
-    <i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI
-</a>
-
+                        <i class="bi bi-people-fill me-2"></i> ZARZĄDZAJ USERAMI
+                    </a>
                     <form action="/admin/wyslij_powitania" method="POST" class="mb-3" onsubmit="return confirm('Czy na pewno chcesz wysłać e-mail powitalny do WSZYSTKICH użytkowników w bazie?');">
                         <button type="submit" class="btn btn-info w-100 fw-bold shadow-sm text-dark" style="letter-spacing: 0.5px;">
                             <i class="bi bi-envelope-paper-fill me-2"></i> WYŚLIJ MAILE POWITALNE
                         </button>
                     </form>
-
                     <div class="d-flex gap-2"><a href="{{ url_for('backup_db') }}" class="btn btn-outline-warning w-100 fw-bold btn-sm py-2"><i class="bi bi-database"></i> SQL</a><a href="{{ url_for('full_backup') }}" class="btn btn-warning w-100 fw-bold btn-sm py-2 text-dark"><i class="bi bi-archive-fill"></i> ZIP</a></div>
                 </div>
             </div>
@@ -465,7 +446,6 @@
                 <div class="col-6 col-md-4 text-center text-md-end">
                     <h6 class="text-white fw-bold mb-3">WSPARCIE</h6>
                     <a href="/sitemap.xml" style="display: none;">Sitemap</a>
-                    
                     <p class="small mb-2 text-muted">Masz pytania?</p>
                     <a href="/kontakt" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
                         <i class="bi bi-envelope-fill me-1"></i> Napisz do nas
@@ -685,6 +665,7 @@
             </div>
         </div>
     </div>
+    
     <div class="modal fade" id="ustawieniaModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg rounded-4 border border-secondary">
@@ -766,22 +747,14 @@
         </div>
     </div>
 
-    <div id="cookie-banner" style="position: fixed; bottom: 85px; left: 10px; right: 10px; background: rgba(26,26,26,0.95); border: 1px solid #ce2b37; padding: 15px; text-align: center; z-index: 9999; display: none; box-shadow: 0 5px 20px rgba(0,0,0,0.8); border-radius: 15px; backdrop-filter: blur(10px);">
-        <div class="container d-flex flex-column flex-md-row justify-content-center align-items-center gap-3">
-            <span class="text-light small">🍪 Używamy plików cookies do obsługi Twojej sesji.</span>
-            <button onclick="acceptCookies()" class="btn btn-sm btn-danger fw-bold px-4 rounded-pill">Zgoda</button>
+    <div id="loaderOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px);">
+        <video id="loaderVideo" class="rounded-4 shadow-lg border border-success border-2 mb-3" style="width: 100%; max-width: 450px; max-height: 60vh; object-fit: cover;" playsinline preload="auto">
+            <source src="{{ url_for('static', filename='loading.mp4') }}" type="video/mp4">
+        </video> 
+        <div class="loading-text text-success mt-3" style="font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; animation: pulseText 1.5s infinite ease-in-out;">
+            <i class="bi bi-cloud-arrow-up-fill me-2"></i> Publikowanie oferty...
         </div>
     </div>
-
-    <div id="loaderOverlay">
-        <video autoplay muted loop playsinline id="loaderVideo">
-            <source src="{{ url_for('static', filename='loading.mp4') }}" type="video/mp4">
-            <img src="{{ url_for('static', filename='watermark.png') }}" class="spinning-logo">
-        </video> 
-        <div class="loading-text">TWORZENIE OGŁOSZENIA...</div>
-    </div>
-
-    <div id="aiToast"><i class="bi bi-stars me-2"></i> Wykryłem zdjęcia! AI analizuje...</div>
 
     {% if current_user.username == 'admin' or current_user.id == 1 %}
     <div class="modal fade" id="usersModal" tabindex="-1">
@@ -912,7 +885,6 @@
         <div class="text-center p-4 w-100" style="max-width: 450px;">
             <video id="ai-model-video" class="rounded-4 shadow-lg border border-danger border-2 mb-3" style="width: 100%; max-height: 60vh; object-fit: cover;" playsinline preload="auto">
                 <source src="{{ url_for('static', filename='ai_modelka.mp4') }}" type="video/mp4">
-                Twoja przeglądarka nie obsługuje wideo.
             </video>
             
             <div class="ai-progress-bar-container mb-4">
@@ -954,8 +926,16 @@
             }); 
         }
         
+        // NOWA FUNKCJA ZAPISU - Z MÓWIĄCĄ MODELKĄ
         function loadingEfekt(form) { 
-            document.getElementById('loaderOverlay').style.display = 'flex'; 
+            const overlay = document.getElementById('loaderOverlay');
+            const video = document.getElementById('loaderVideo');
+            overlay.style.display = 'flex'; 
+            
+            if(video) {
+                video.currentTime = 0;
+                video.play(); // Odpala modelkę z dźwiękiem
+            }
         }
 
         function acceptCookies() { 
@@ -989,12 +969,11 @@
             const fillBar = document.getElementById('ai-progress-fill');
             const fileCountText = document.getElementById('fileCountText');
             
-            // Pokaż modal, zresetuj wideo i pasek postępu
             aiModal.classList.remove('d-none');
             aiModal.style.display = 'flex';
             if(aiVideo) {
                 aiVideo.currentTime = 0;
-                aiVideo.play();
+                aiVideo.play(); // Odpala skanującą modelkę
             }
             if(fillBar) {
                 fillBar.style.width = '0%';
@@ -1002,14 +981,13 @@
                 let w = 0;
                 progressInterval = setInterval(() => {
                     w += 2;
-                    if(w > 95) w = 95; // Zatrzymuje się na 95% do czasu zwrotu danych
+                    if(w > 95) w = 95; 
                     fillBar.style.width = w + '%';
                 }, 300);
             }
 
             const fd = new FormData(); fd.append('scan_image', file); 
             
-            // Zabezpieczenie przed zawieszeniem na 15 sekund
             aiAbortController = new AbortController();
             const timeoutId = setTimeout(() => {
                 if(aiAbortController) aiAbortController.abort();
@@ -1025,7 +1003,6 @@
                 clearTimeout(timeoutId);
                 const d = await r.json(); 
                 
-                // Ukrywamy modelkę
                 if(aiVideo) aiVideo.pause();
                 aiModal.style.display = 'none';
                 aiModal.classList.add('d-none');
@@ -1095,7 +1072,7 @@
         // --- OBSŁUGA PRZYCISKU "ANULUJ" W POCZEKAJCE ---
         document.getElementById('cancel-ai-btn').addEventListener('click', function() {
             if (aiAbortController) {
-                aiAbortController.abort(); // Zrywa połącznie z backendem/API
+                aiAbortController.abort(); // Zrywa połącznie z serwerem
             }
             const aiModal = document.getElementById('ai-scanner-modal');
             const aiVideo = document.getElementById('ai-model-video');
@@ -1106,10 +1083,9 @@
         });
 
 
-        // --- 4. ZARZĄDZANIE UNIWERSALNYM MODALEM ADMINA (BEZPIECZNE DLA PAGINACJI) ---
+        // --- 4. ZARZĄDZANIE UNIWERSALNYM MODALEM ADMINA ---
         document.body.addEventListener('click', function(e) {
             const btn = e.target.closest('.edit-user-btn');
-            
             if (btn) {
                 const userId = btn.getAttribute('data-id');
                 const username = btn.getAttribute('data-username');
@@ -1181,7 +1157,6 @@
                     }
                 });
             }
-
         });
     </script>
 </body>
