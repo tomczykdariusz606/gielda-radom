@@ -975,23 +975,26 @@
                 aiVideo.currentTime = 0;
                 aiVideo.play(); // Odpala skanującą modelkę
             }
+            
             if(fillBar) {
                 fillBar.style.width = '0%';
                 clearInterval(progressInterval);
                 let w = 0;
                 progressInterval = setInterval(() => {
-                    w += 2;
+                    w += 1.5; // Zwolniono postęp, żeby idealnie zgrał się z wideo 17sek
                     if(w > 95) w = 95; 
                     fillBar.style.width = w + '%';
-                }, 300);
+                }, 250); 
             }
 
             const fd = new FormData(); fd.append('scan_image', file); 
             
             aiAbortController = new AbortController();
+            
+            // ZWIĘKSZONY TIMEOUT DO 19 SEKUND (Zapas dla Twojego wideo 17s)
             const timeoutId = setTimeout(() => {
                 if(aiAbortController) aiAbortController.abort();
-            }, 15000);
+            }, 19000);
 
             try { 
                 const r = await fetch('/api/analyze-car', {
